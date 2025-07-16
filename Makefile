@@ -4,7 +4,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c99 -g
+CFLAGS = -Wall -Wextra -std=c99 -g -Wno-deprecated-declarations
 
 # Package names for pkg-config
 PACKAGES = glfw3 glew
