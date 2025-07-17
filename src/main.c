@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-16 14:24:47
+* @Last Modified time: 2025-07-17 11:57:18
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -13,6 +13,7 @@
 #include <OpenGL/gl3.h>
 #include <cglm/cglm.h>
 #include "shader.h"
+#include "obj_loader.h"
 
 
 
@@ -51,7 +52,6 @@ int main() {
     printf("OpenGL version in use: %s\n", version);
 
 
-
     char *vertexBuffer = read_shader_source("shaders/basic.vert");
     char *fragmentBuffer = read_shader_source("shaders/basic.frag");
 
@@ -63,11 +63,29 @@ int main() {
     free(vertexBuffer);
     free(fragmentBuffer);
 
-    GLfloat vertices[] = {
-        -0.5f, -0.5f,                        // Bottom left
-         0.5f, -0.5f,                        // right bottom
-         0.0f,  0.5f                         // top center
-    };
+
+
+
+    GLint modelLoc = glGetUniformLocation(shaderProgram, "model");
+    GLint viewLoc = glGetUniformLocation(shaderProgram, "view");
+    GLint projectionLoc = glGetUniformLocation(shaderProgram, "projection");
+
+    mat4 model, view, projection;
+
+    glm_mat4_identity(model);
+    glm_mat4_identity(view);
+    glm_mat4_identity(projection);
+
+    glm_rotate(model, glm_rad(30.0f), (vec3){0.0f, 1.0f, 0.0f});
+    glm_translate(view, (vec3){0.0f, 0.0f, -3.0f});
+
+    glm_perspective(glm_rad(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f, projection);
+
+    Model model_obj = load_obj_file("models/triangle.obj");
+    printf("Vertex count: %zu\n", model_obj.vertex_count);
+    for (size_t i = 0; i < model_obj.vertex_count; i++) {
+        printf("v %f %f %f\n", model_obj.vertices[i], model_obj.vertices[i+1], model_obj.vertices[i+2]);
+    }
 
     GLuint vao;
     GLuint vbo;
@@ -77,11 +95,10 @@ int main() {
 
     glGenBuffers(1, &vbo);    
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, model_obj.vertex_count * sizeof(float), model_obj.vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
-
 
 
     while(!glfwWindowShouldClose(window)) {
@@ -90,8 +107,13 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
+
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *)model); 
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view); 
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *)projection); 
+
         glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, model_obj.vertex_count / 3);
 
         glfwSwapBuffers(window);
 
@@ -101,6 +123,7 @@ int main() {
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
     glDeleteProgram(shaderProgram);
+    free_model(&model_obj);
     glfwTerminate();
 
     return (0);

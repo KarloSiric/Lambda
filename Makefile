@@ -16,7 +16,7 @@ CFLAGS += $(shell pkg-config --cflags $(PACKAGES))
 LDFLAGS = $(shell pkg-config --libs $(PACKAGES))
 
 # Add OpenGL framework (macOS specific)
-LDFLAGS += -framework OpenGL
+LDFLAGS += -framework OpenGL -lcglm
 
 # Directories
 SRC_DIR = src
