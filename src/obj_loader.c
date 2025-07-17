@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-17 10:35:50
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-17 10:48:36
+* @Last Modified time: 2025-07-17 12:23:46
 */
 
 #include "obj_loader.h"

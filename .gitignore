@@ -1,1 +1,54 @@
-*.txt
+# Build output
+build/
+*.o
+*.so
+*.dylib
+*.dll
+
+# Model files and game assets (user must provide their own)
+models/
+models/objs/
+models/HL1_Original/
+models/HL1_HD/
+
+# Game asset files
+*.mdl
+*.bsp
+*.wad
+*.pak
+*.vpk
+*.gcf
+*.ncf
+
+# Audio files
+*.wav
+*.mp3
+*.ogg
+
+# Texture files that might be extracted
+*.bmp
+*.tga
+*.dds
+*.vtf
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# Logs
+*.log
+
+# Archive files
+*.zip
+*.rar
+*.7z

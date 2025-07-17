@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-17 11:57:18
+* @Last Modified time: 2025-07-17 12:52:28
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -81,7 +81,7 @@ int main() {
 
     glm_perspective(glm_rad(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f, projection);
 
-    Model model_obj = load_obj_file("models/triangle.obj");
+    Model model_obj = load_obj_file("models/objs/triangle.obj");
     printf("Vertex count: %zu\n", model_obj.vertex_count);
     for (size_t i = 0; i < model_obj.vertex_count; i++) {
         printf("v %f %f %f\n", model_obj.vertices[i], model_obj.vertices[i+1], model_obj.vertices[i+2]);
