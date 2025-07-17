@@ -117,10 +117,6 @@ This is an active learning project. Current development focuses on:
 
 This is primarily a learning project, but contributions, suggestions, and educational discussions are welcome!
 
-## License
-
-[Add your chosen license here]
-
 ## Acknowledgments
 
 Built as part of learning graphics programming and 3D file formats. Special thanks to the game development and modding communities for their documentation and resources.
