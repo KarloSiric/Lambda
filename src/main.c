@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-17 12:52:28
+* @Last Modified time: 2025-07-18 11:42:39
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -14,6 +14,8 @@
 #include <cglm/cglm.h>
 #include "shader.h"
 #include "obj_loader.h"
+#include "mdl_loader.h"
+
 
 
 
@@ -46,6 +48,11 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
+
+    // testing MDL file loading:
+    printf("Testing MDL Loader ...\n");
+    dump_mdl_info("models/HL1_Original/barney.mdl");
+    printf("\n");
 
     const GLubyte *version = glGetString(GL_VERSION);
 

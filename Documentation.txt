@@ -345,6 +345,21 @@ Well we need to add into account the lighting and projection and the view. Somet
 So the model transforms our object in its own world. The view then moves the and rotates the world to match
 your camera view and the projection just projects those 3D coordinates into flat 2D screen space.
 
+--- COME BACK LATER AND FINISH ALL
+
+
+
+
+
+
+
+
+
+I have started this Model Viewer with the plan and intention on building a model viewer for teh Half Life 1 mdl files.
+The goal was to try to learn as much as possible on how to do this, and this is my documentation process along the way.
+
+Goal is always knowledge and learning new things along the way so that is what I want to try to do.
+
 
 
 
