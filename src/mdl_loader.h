@@ -8,7 +8,10 @@ typedef struct {
 } vector3_s;
 
 /**
- * Structure based on the official Valve MDL file documentation (Valve SDK)
+ * 
+ * @brief Structure based on the official Valve MDL file documentation (Valve SDK)
+ *        This represents the complete header structure for the Half-Life 1 MDL files
+ * 
  */
 typedef struct __attribute__((packed)) {
     int id;                                // IDST that can be seen using Hex Dump
@@ -25,7 +28,6 @@ typedef struct __attribute__((packed)) {
 
     int flags;                             // Binary flags
 
-    // Data needed for rendering
     int bone_count;
     int bone_offset;
 
@@ -33,10 +35,64 @@ typedef struct __attribute__((packed)) {
     int bodypart_offset;
 
 
-    // Gonna add more data as needed
+    int bonecontroller_count;              // Number of bone controllers
+    int bonecontroller_offset;             // Offset to bone controller data
+    int hitbox_count;                      // Number of collision boxed
+    int hitbox_offset;                     // Offset to hitbox data
+
+
+    int seq_count;                         // Animation sequences
+    int seq_offset;
+    int seqgroup_count;                    // Sequence groups
+    int seqgroup_offset;
+    int texture_count;                     // Texture count
+    int texture_offset;                    // texture data offset
+    int texturedata_offset;                // Texture raw data offset
+
+    int skin_count;                        // skin variations
+    int skin_offset;                       
+
+    int attachment_count;                  // Attachment points
+    int attachment_offset;
 
 
 } mdl_header_s;
+
+
+
+/**
+ * @brief This represents the structure that holds all the bodypart data
+ *        Contains the actual vertex data that will be needed.
+ * 
+ * 
+ */
+typedef struct {
+    char name[64];                         // Bodypart name (e.g "body", "head")
+    int nummodels;                         // Number of model variations
+    int base;                              // Base value for model selectio
+    int modelindex;                        // Offset to model data array
+
+} mdl_bodypart_s;
+
+
+
+/**
+ * @brief Model structure - this is where all of the mesh data lives!
+ * 
+ */
+typedef struct {
+    char name[64];
+    int type;
+    float boundingradius;
+    
+
+
+
+
+
+}
+
+
 
 typedef struct {
     float *vertices;

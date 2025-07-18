@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-18 14:23:33
+* @Last Modified time: 2025-07-18 14:37:36
 */
 
 #include "mdl_loader.h"
@@ -106,11 +106,17 @@ void print_mdl_info(const char *filepath) {
         return;
     }
 
-    // SKIPPING SOME Controller things that we do not need to display for now
-    fseek(file, ftell(file) + 16, SEEK_SET);
+    if (!read_data(file, &mdl_header.bonecontroller_count, sizeof(mdl_header.bonecontroller_count), "bone controller count")) {
+        fclose(file);
+        return;
+    }
 
-    if (!read_data(file, &mdl_header., size_t size, const char *description))
+    if (!read_data(file, &mdl_header.bonecontroller_offset, sizeof(mdl_header.bonecontroller_offset), "bone controller offset")) {
+        fclose(file);
+        return;
+    }
 
+    
 
 
 
