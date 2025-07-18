@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-18 11:42:39
+* @Last Modified time: 2025-07-18 12:58:54
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -49,10 +49,11 @@ int main() {
 
     glfwMakeContextCurrent(window);
 
-    // testing MDL file loading:
-    printf("Testing MDL Loader ...\n");
-    dump_mdl_info("models/HL1_Original/barney.mdl");
-    printf("\n");
+    
+    printf("Printing MDL file information ...\n");
+    print_mdl_info("models/HL1_Original/scientist.mdl");    
+    printf("\n\n");
+
 
     const GLubyte *version = glGetString(GL_VERSION);
 
