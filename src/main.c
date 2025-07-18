@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-18 12:58:54
+* @Last Modified time: 2025-07-18 13:30:08
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -50,7 +50,6 @@ int main() {
     glfwMakeContextCurrent(window);
 
     
-    printf("Printing MDL file information ...\n");
     print_mdl_info("models/HL1_Original/scientist.mdl");    
     printf("\n\n");
 

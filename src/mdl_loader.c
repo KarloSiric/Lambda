@@ -2,10 +2,11 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-18 13:28:12
+* @Last Modified time: 2025-07-18 14:23:33
 */
 
 #include "mdl_loader.h"
+#include <cstdio>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,8 +16,8 @@ static int read_data(FILE *file, void *buffer, size_t size, const char *descript
     if (bytes_read != size) {
         fprintf(stderr, "Failed to read %s: expected %zu bytes and got %zu bytes\n", 
             description, size, bytes_read);
-    }
         return (0);
+    }
 
     return (1);
 }
@@ -89,6 +90,26 @@ void print_mdl_info(const char *filepath) {
         fclose(file);
         return;
     }
+
+    if (!read_data(file, &mdl_header.flags, sizeof(mdl_header.flags), "flags")) {
+        fclose(file);
+        return;
+    }
+
+    if (!read_data(file, &mdl_header.bone_count, sizeof(mdl_header.bone_count), "bone count")) {
+        fclose(file);
+        return;
+    }
+
+    if (!read_data(file, &mdl_header.bone_offset, sizeof(mdl_header.bone_offset), "bone offset")) {
+        fclose(file);
+        return;
+    }
+
+    // SKIPPING SOME Controller things that we do not need to display for now
+    fseek(file, ftell(file) + 16, SEEK_SET);
+
+    if (!read_data(file, &mdl_header., size_t size, const char *description))
 
 
 
