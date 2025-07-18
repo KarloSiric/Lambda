@@ -8,105 +8,110 @@ typedef struct {
 } vector3_s;
 
 /**
- * 
- * @brief Structure based on the official Valve MDL file documentation (Valve SDK)
- *        This represents the complete header structure for the Half-Life 1 MDL files
- * 
+ * @brief Structure EXACTLY matching Valve's official studio.h from GitHub
+ *        Half-Life 1 MDL file header structure (studiohdr_t)
  */
 typedef struct __attribute__((packed)) {
-    int id;                                // IDST that can be seen using Hex Dump
+    int id;                                // IDST magic number
     int version;                           // Format version
     char name[64];                         // Internal model name
-    int dataLength;                        // Data size of MDL file in bytes
+    int length;                            // Data size of MDL file in bytes
 
-    vector3_s eyeposition;                 // Player viewpoint relative to model origin
-    vector3_s illumposition;               // Position of ambient light calculation
-    vector3_s hull_min;                    // Model hull box minimum corner
-    vector3_s hull_max;                    // Model hull box max. corner
-    vector3_s view_bbmin;                  // Bounding box min. for view culling
-    vector3_s view_bbmax;                  // Bounding box max for view culling
+    vector3_s eyeposition;                 // ideal eye position
+    vector3_s min;                         // ideal movement hull size
+    vector3_s max;                         // ideal movement hull size
+    vector3_s bbmin;                       // clipping bounding box
+    vector3_s bbmax;                       // clipping bounding box
 
     int flags;                             // Binary flags
 
-    int bone_count;
-    int bone_offset;
+    int numbones;                          // bones
+    int boneindex;                         // bone data offset
 
-    int bodypart_count;
-    int bodypart_offset;
+    int numbonecontrollers;                // bone controllers
+    int bonecontrollerindex;               // bone controller data offset
 
+    int numhitboxes;                       // complex bounding boxes
+    int hitboxindex;                       // hitbox data offset
 
-    int bonecontroller_count;              // Number of bone controllers
-    int bonecontroller_offset;             // Offset to bone controller data
-    int hitbox_count;                      // Number of collision boxed
-    int hitbox_offset;                     // Offset to hitbox data
+    int numseq;                            // animation sequences
+    int seqindex;                          // sequence data offset
 
+    int numseqgroups;                      // demand loaded sequences
+    int seqgroupindex;                     // sequence group data offset
 
-    int seq_count;                         // Animation sequences
-    int seq_offset;
-    int seqgroup_count;                    // Sequence groups
-    int seqgroup_offset;
-    int texture_count;                     // Texture count
-    int texture_offset;                    // texture data offset
-    int texturedata_offset;                // Texture raw data offset
+    int numtextures;                       // raw textures
+    int textureindex;                      // texture data offset
+    int texturedataindex;                  // raw texture data offset
 
-    int skin_count;                        // skin variations
-    int skin_offset;                       
+    int numskinref;                        // replaceable textures
+    int numskinfamilies;                   // skin families
+    int skinindex;                         // skin data offset
 
-    int attachment_count;                  // Attachment points
-    int attachment_offset;
+    int numbodyparts;                      // *** KEY FIELD: bodyparts ***
+    int bodypartindex;                     // *** KEY FIELD: bodypart data offset ***
 
+    int numattachments;                    // queryable attachable points
+    int attachmentindex;                   // attachment data offset
+
+    int soundtable;                        // sound table
+    int soundindex;                        // sound data offset
+    int soundgroups;                       // sound groups
+    int soundgroupindex;                   // sound group data offset
+
+    int numtransitions;                    // animation transitions
+    int transitionindex;                   // transition data offset
 
 } mdl_header_s;
 
-
-
 /**
- * @brief This represents the structure that holds all the bodypart data
- *        Contains the actual vertex data that will be needed.
- * 
- * 
+ * @brief Bodypart structure - contains models which contain vertex data
  */
 typedef struct {
     char name[64];                         // Bodypart name (e.g "body", "head")
     int nummodels;                         // Number of model variations
-    int base;                              // Base value for model selectio
+    int base;                              // Base value for model selection
     int modelindex;                        // Offset to model data array
-
 } mdl_bodypart_s;
 
-
-
 /**
- * @brief Model structure - this is where all of the mesh data lives!
- * 
+ * @brief Model structure - this is where all mesh data lives!
  */
 typedef struct {
-    char name[64];
-    int type;
-    float boundingradius;
-    
-
-
-
-
-
-}
-
-
-
-typedef struct {
-    float *vertices;
-    size_t vertex_count;
-    // TODO: Add faces, textures and etc..
+    char name[64];                         // Model name
+    int type;                              // Model type
+    float boundingradius;                  // Bounding sphere radius
+    int nummesh;                           // Number of meshes in this model
+    int meshindex;                         // Offset to mesh data
+    int numverts;                          // Number of unique vertices
+    int vertinfoindex;                     // Offset to vertex bone data
+    int vertindex;                         // *** VERTEX COORDINATES OFFSET! ***
+    int numnorms;                          // Number of normals
+    int norminfoindex;                     // Offset to normal bone info
+    int normindex;                         // Offset to normal coordinates
+    int numgroups;                         // Deformation groups
+    int groupindex;                        // Offset to group data
 } mdl_model_s;
 
-mdl_model_s load_mdl_file(const char *filepath);
-void free_mdl_file(mdl_model_s *model);
+/**
+ * @brief Vertex structure - actual 3D coordinate data (vec3_t in Valve code)
+ */
+typedef struct {
+    float x, y, z;                         // 3D coordinates (converted from compressed format)
+} mdl_vertex_s;
+
+/**
+ * @brief Complete model for rendering
+ */
+typedef struct {
+    float *vertices;                       // Extracted vertex coordinates
+    size_t vertex_count;                   // Number of vertices
+} mdl_model_data_s;
+
+// Function prototypes
+mdl_model_data_s load_mdl_file(const char *filepath);
+void free_mdl_file(mdl_model_data_s *model);
 void print_mdl_info(const char *filepath);
-
-
-
-
-
+void extract_mdl_vertices(const char *filepath);
 
 #endif
