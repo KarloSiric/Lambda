@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 23:12:52
+* @Last Modified time: 2025-07-19 23:23:58
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -53,9 +53,20 @@ int main() {
     TESTING PURPOSES ONLY
     // print_mdl_info("models/HL1_Original/scientist.mdl");    
     // printf("\n\n");
+    // testing_mdl_file("models/HL1_Original/scientist.mdl");
     */
 
-    testing_mdl_file("models/HL1_Original/scientist.mdl");
+    printf("==== LOADING SCIENTIST ====\n");
+
+    mdl_complete_model_s scientist = load_mdl_file("models/HL1_Original/scientist.mdl");
+
+    if (scientist.total_model_count == 0) {
+        printf("Failed to load MDL file: '%s' \n", scientist.filename);
+        return (-1);
+    }
+
+    
+
 
 
     const GLubyte *version = glGetString(GL_VERSION);
