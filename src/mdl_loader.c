@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 01:15:17
+* @Last Modified time: 2025-07-19 20:27:30
 */
 
 #include "mdl_loader.h"
@@ -28,9 +28,7 @@ void print_mdl_info(const char *filepath) {
         return;
     }
 
-    printf("FILE opened successfully!\n");
-    printf("Printing position before reading: %ld\n", ftell(file));
-
+    printf("\nFILE opened successfully!\n\n");
     printf("==== MDL FILE INFORMATION ====\n");
     printf("FILE: '%s'\n", filepath);
 
@@ -193,7 +191,7 @@ void print_mdl_info(const char *filepath) {
     
 
     
-    printf("Current position after complete header: %ld\n", ftell(file));
+    printf("Current position after complete header: %ld\n\n", ftell(file));
 
     printf("==== COMPLETE MDL HEADER INFORMATION ====\n");
     printf("MAGIC ID: %.4s\n", (char *)&mdl_header.id);
@@ -224,27 +222,64 @@ void print_mdl_info(const char *filepath) {
     printf("Now jumping to bodypart offset %d to find vertex data...\n", mdl_header.bodypartindex);
 
     fseek(file, mdl_header.bodypartindex, SEEK_SET);
-    mdl_bodypart_s bodypart;
-
+    mdl_bodypart_s bodyparts[mdl_header.numbodyparts];
     for (int i = 0; i < mdl_header.numbodyparts; i++) {
-        if (!read_data(file, &bodypart, sizeof(bodypart), "bodypart")) {
+        
+        long next_bodypart_pos = mdl_header.bodypartindex + ((i + 1) * sizeof(mdl_bodypart_s));
+
+        if (!read_data(file, &bodyparts[i], sizeof(mdl_bodypart_s), "bodypart")) {
             fprintf(stderr, "Cannot read bodypart[%d] at position %ld\n", i, ftell(file));
             return;
         }
 
-        printf("Bodypart[%d] -> name: '%s' \n", i, bodypart.name);
-        printf("Bodypart[%d] -> nummodels: %d \n", i, bodypart.nummodels);
-        printf("Bodypart[%d] -> base: %d \n", i, bodypart.base);
-        printf("Bodypart[%d] -> modelindex: %d \n", i, bodypart.modelindex);
+        printf("\n==== EXPLORING ALL MODELS ====\n");
+        printf("\n---- Bodypart[%d]: '%s' ----\n", i, bodyparts[i].name);
+        printf("Bodypart[%d] -> name: '%s' \n", i, bodyparts[i].name);
+        printf("Bodypart[%d] -> nummodels: %d \n", i, bodyparts[i].nummodels);
+        printf("Bodypart[%d] -> base: %d \n", i, bodyparts[i].base);
+        printf("Bodypart[%d] -> modelindex: %d \n", i, bodyparts[i].modelindex);
+
+        for (int j = 0; j < bodyparts[i].nummodels; j++) {
+            printf("\n---- MODEL[%d][%d] ----\n", i, j);
+
+            int model_offset = bodyparts[i].modelindex + (j * sizeof(mdl_model_s));
+            fseek(file, model_offset, SEEK_SET);
+            mdl_model_s model;
+
+            if (!read_data(file, &model, sizeof(mdl_model_s), "model")) {
+                continue;
+            }
+
+            printf("  MODEL[%d][%d] name: '%s'  \n", i, j, model.name);
+            printf("  MODEL[%d][%d] name: %d  \n", i, j, model.vertindex);
+            printf("  MODEL[%d][%d] name: %d  \n", i, j, model.vertinfoindex);
+
+            //TODO -> here we need to extract the vertices data that is necessary for our OpenGL
+            if (model.numverts > 0) {
+                fseek(file, model.vertindex, SEEK_SET);
+
+                mdl_vertex_s vertices[model.numverts];
+                fread(vertices, sizeof(mdl_vertex_s), model.numverts, file);
+
+                printf("  Printing %d vertices for the MODEL[%d][%d]: '%s'  \n",
+                        model.numverts, i, j, model.name);
+
+                for (int k = 0; k < model.numverts; k++) {
+                    printf("   Vertex[%d]: (x=%.2f, y=%.2f, z=%.2f2)\n", k,
+                            vertices[k].x, vertices[k].y, vertices[k].z);
+                }
+                printf("\n");
+            }
+        }
+
+        if (i < mdl_header.numbodyparts - 1) {
+            fseek(file, next_bodypart_pos, SEEK_SET);
+        }
     }
-
-    
-
-
-
-
-
 
     fclose(file);
 
+}
+
+mdl_model_data_s load_mdl_file(const char *filepath) {
 }
