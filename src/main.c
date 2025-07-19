@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 23:23:58
+* @Last Modified time: 2025-07-19 23:51:16
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -65,7 +65,26 @@ int main() {
         return (-1);
     }
 
+    single_model_s *body = &scientist.models[0];    // Body
+    single_model_s *head = &scientist.models[2];    // Einstein head  
+    single_model_s *hand = &scientist.models[6];    // Needle hand
     
+    printf("Test combination: %s + %s + %s\n", 
+           body->model_name, head->model_name, hand->model_name);
+    
+    // Combine vertices
+    int total_vertices = body->vertex_count + head->vertex_count + hand->vertex_count;
+    float *combined_vertices = malloc(total_vertices * 3 * sizeof(float));
+    
+    // Copy data
+    int offset = 0;
+    memcpy(combined_vertices + offset, body->vertices, body->vertex_count * 3 * sizeof(float));
+    offset += body->vertex_count * 3;
+    memcpy(combined_vertices + offset, head->vertices, head->vertex_count * 3 * sizeof(float));
+    offset += head->vertex_count * 3;
+    memcpy(combined_vertices + offset, hand->vertices, hand->vertex_count * 3 * sizeof(float));
+    
+    printf("Ready to render: %d vertices\n", total_vertices);
 
 
 
@@ -103,11 +122,6 @@ int main() {
 
     glm_perspective(glm_rad(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f, projection);
 
-    Model model_obj = load_obj_file("models/objs/triangle.obj");
-    printf("Vertex count: %zu\n", model_obj.vertex_count);
-    for (size_t i = 0; i < model_obj.vertex_count; i++) {
-        printf("v %f %f %f\n", model_obj.vertices[i], model_obj.vertices[i+1], model_obj.vertices[i+2]);
-    }
 
     GLuint vao;
     GLuint vbo;
@@ -117,7 +131,7 @@ int main() {
 
     glGenBuffers(1, &vbo);    
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, model_obj.vertex_count * sizeof(float), model_obj.vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, total_vertices * 3 * sizeof(float), combined_vertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
@@ -135,7 +149,15 @@ int main() {
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *)projection); 
 
         glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, model_obj.vertex_count / 3);
+        glPointSize(5.0f);
+
+        // TODO: Adding some rotation
+        static float rotation = 0.0f;
+        rotation += 0.005f;
+        glm_mat4_identity(model);
+        glm_rotate(model, rotation, (vec3){0.0f, 1.0f, 0.0f});
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *)model);
+        glDrawArrays(GL_POINTS, 0,  total_vertices);
 
         glfwSwapBuffers(window);
 
@@ -145,7 +167,8 @@ int main() {
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
     glDeleteProgram(shaderProgram);
-    free_model(&model_obj);
+    free(combined_vertices);
+    free_mdl_file(&scientist);
     glfwTerminate();
 
     return (0);

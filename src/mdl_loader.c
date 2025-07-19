@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 23:10:30
+* @Last Modified time: 2025-07-19 23:38:59
 */
 
 #include "mdl_loader.h"
@@ -420,3 +420,16 @@ void testing_mdl_file(const char *filepath) {
 
     printf("Test Completed!\n");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
