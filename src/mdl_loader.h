@@ -100,18 +100,35 @@ typedef struct {
     float x, y, z;                         // 3D coordinates (converted from compressed format)
 } mdl_vertex_s;
 
+
 /**
- * @brief Complete model for rendering
+ * A single comprehensive model 
+ * 
+ * Contains all the data for a single model:
+ * 
+ * E.g. -> bodypart head, model name EinsteinHead 
  */
 typedef struct {
-    float *vertices;                       // Extracted vertex coordinates
-    size_t vertex_count;                   // Number of vertices
-} mdl_model_data_s;
+    float *vertices;                       // Flat array[x1,y1,z1, x2,y2,z2 ...]
+    int vertex_count;                      // number of vertices per model
+    char model_name[64];                   // model name e.g. "EinsteinHead"
+    char bodypart_name[64];                // bodypart name e.g. "heads", ...
+    int bodypart_id;                       // bodypart id: 0, 1, 2 .. etc
+    int model_id;                          // which variation of the bodypart 0, 1, 2 ...
+} single_model_s;                
+
+typedef struct {
+    single_model_s *models;
+    int total_model_count;
+    char filename[64];
+    int bodypart_count;
+} mdl_complete_model_s;
 
 // Function prototypes
-mdl_model_data_s load_mdl_file(const char *filepath);
-void free_mdl_file(mdl_model_data_s *model);
+mdl_complete_model_s load_mdl_file(const char *filepath);
+void free_mdl_file(mdl_complete_model_s *model);
 void print_mdl_info(const char *filepath);
 void extract_mdl_vertices(const char *filepath);
+void testing_mdl_file(const char *filepath);
 
 #endif

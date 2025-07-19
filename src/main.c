@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-18 13:30:08
+* @Last Modified time: 2025-07-19 23:12:52
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -49,9 +49,13 @@ int main() {
 
     glfwMakeContextCurrent(window);
 
-    
-    print_mdl_info("models/HL1_Original/scientist.mdl");    
-    printf("\n\n");
+    /*
+    TESTING PURPOSES ONLY
+    // print_mdl_info("models/HL1_Original/scientist.mdl");    
+    // printf("\n\n");
+    */
+
+    testing_mdl_file("models/HL1_Original/scientist.mdl");
 
 
     const GLubyte *version = glGetString(GL_VERSION);

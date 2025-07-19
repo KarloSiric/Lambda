@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 20:27:30
+* @Last Modified time: 2025-07-19 23:10:30
 */
 
 #include "mdl_loader.h"
@@ -251,8 +251,8 @@ void print_mdl_info(const char *filepath) {
             }
 
             printf("  MODEL[%d][%d] name: '%s'  \n", i, j, model.name);
-            printf("  MODEL[%d][%d] name: %d  \n", i, j, model.vertindex);
-            printf("  MODEL[%d][%d] name: %d  \n", i, j, model.vertinfoindex);
+            printf("  MODEL[%d][%d] vertindex: %d  \n", i, j, model.vertindex);
+            printf("  MODEL[%d][%d] vertinfoindex: %d  \n", i, j, model.vertinfoindex);
 
             //TODO -> here we need to extract the vertices data that is necessary for our OpenGL
             if (model.numverts > 0) {
@@ -281,5 +281,142 @@ void print_mdl_info(const char *filepath) {
 
 }
 
-mdl_model_data_s load_mdl_file(const char *filepath) {
+mdl_complete_model_s load_mdl_file(const char *filepath) {
+    mdl_complete_model_s result = {0};
+    FILE *file = fopen(filepath, "rb");
+    if (!file) {
+        fprintf(stderr, "ERROR - Failed to open filepath: '%s' \n", filepath);
+        return result;
+    }
+
+    // TODO: Reading the whole header file since it is packed tightly
+    mdl_header_s mdl_header;
+    if (!read_data(file, &mdl_header, sizeof(mdl_header_s), "complete header")) {
+        fclose(file);
+        return result;
+    }
+
+    fseek(file, mdl_header.bodypartindex, SEEK_SET);
+    mdl_bodypart_s bodyparts[mdl_header.numbodyparts];
+    for (int i = 0; i < mdl_header.numbodyparts; i++) {
+        if (!read_data(file, &bodyparts[i], sizeof(mdl_bodypart_s), "bodypart")) {
+            fclose(file);
+            return result;
+        }
+    }
+
+    int total_models = 0;
+    for (int i = 0; i < mdl_header.numbodyparts; i++) {
+        total_models += bodyparts[i].nummodels;
+    }
+
+    printf("Total models to load: %d\n", total_models);
+
+    result.models = malloc(total_models * sizeof(single_model_s));
+    if (!result.models) {
+        fprintf(stderr, "Error allocating memory for the models!\n");
+        fclose(file);
+        return result;
+    }
+
+    result.total_model_count = total_models;
+    result.bodypart_count = mdl_header.numbodyparts;
+    strncpy(result.filename, filepath, 63);
+    result.filename[63] = '\0';
+
+    // TODO: We need to fill the data (so we take on big loop)
+    int current_index = 0;
+    for (int i = 0; i < mdl_header.numbodyparts; i++) {
+        for (int j = 0; j < bodyparts[i].nummodels; j++) {
+            // TODO: Fill in the data that is needed here:
+            long model_offset = bodyparts[i].modelindex + (j * sizeof(mdl_model_s));
+            fseek(file, model_offset, SEEK_SET);
+            mdl_model_s model;
+            if (!read_data(file, &model, sizeof(mdl_model_s), "model")) {
+                continue;
+            }
+
+            result.models[current_index].vertex_count = model.numverts;
+            strncpy(result.models[current_index].model_name, model.name, 63);
+            strncpy(result.models[current_index].bodypart_name, bodyparts[i].name, 63);
+            result.models[current_index].model_id = j;
+            result.models[current_index].bodypart_id = i;
+
+            if (model.numverts > 0) {
+                result.models[current_index].vertices = malloc(model.numverts * 3 * sizeof(float));
+
+                fseek(file, model.vertindex, SEEK_SET);
+                mdl_vertex_s vertices[model.numverts];
+                fread(vertices, sizeof(mdl_vertex_s), model.numverts, file);
+
+                for (int k = 0; k < model.numverts; k++) {
+                    result.models[current_index].vertices[k * 3 + 0] = vertices[k].x;
+                    result.models[current_index].vertices[k * 3 + 1] = vertices[k].y;
+                    result.models[current_index].vertices[k * 3 + 2] = vertices[k].z;
+                }
+            } else {
+                result.models[current_index].vertices = NULL;
+            }
+
+            printf("Loaded successfully: %s (%d vertices) \n",
+                    result.models[current_index].model_name,
+                    result.models[current_index].vertex_count);
+
+            current_index++;
+        }
+    }
+
+    return result;
+}
+
+void free_mdl_file(mdl_complete_model_s *model) {
+    if (model->models) {
+        for (int i = 0; i < model->total_model_count; i++) {
+            if (model->models[i].vertices) {
+                free(model->models[i].vertices);
+            }
+        }
+        free(model->models);
+        model->models = NULL;
+        model->total_model_count = 0;
+    }   
+}
+
+void testing_mdl_file(const char *filepath) {
+    printf("==== TESTING MDL FILE ====\n");
+
+    mdl_complete_model_s scientist = load_mdl_file(filepath);
+
+    if (scientist.total_model_count > 0) {
+        printf("SUCCESS! Loaded %d models from '%s' \n",
+                scientist.total_model_count, scientist.filename);
+
+        for (int i = 0; i < scientist.total_model_count; i++) {
+            printf("MODEL[%d]: '%s' (%d vertices) - Bodypart: %s [%d][%d]\n",
+                    i, 
+                    scientist.models[i].model_name, 
+                    scientist.models[i].vertex_count,
+                    scientist.models[i].bodypart_name,
+                    scientist.models[i].bodypart_id,
+                    scientist.models[i].model_id);
+        }
+
+        if (scientist.models[0].vertex_count > 0) {
+            printf("First 3 vertices of first model:\n");
+            for (int i = 0; i < 3; i++) {
+                printf("   Vertex[%d]: (%.2f, %.2f, %.2f)\n",
+                        i, 
+                        scientist.models[0].vertices[i * 3 + 0],
+                        scientist.models[0].vertices[i * 3 + 1], 
+                        scientist.models[0].vertices[i * 3 + 2]);
+            }
+        }
+
+        free_mdl_file(&scientist);
+        printf("Memory freed successfully!\n");
+    } else {
+        printf("Failed to load MDL file!\n");
+    }
+
+    printf("Test Completed!\n");
 }
