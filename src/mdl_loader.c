@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 23:38:59
+* @Last Modified time: 2025-07-20 00:26:26
 */
 
 #include "mdl_loader.h"
@@ -334,6 +334,41 @@ mdl_complete_model_s load_mdl_file(const char *filepath) {
             mdl_model_s model;
             if (!read_data(file, &model, sizeof(mdl_model_s), "model")) {
                 continue;
+            }
+
+            printf("  Model[%d][%d] has %d meshes\n", i, j, model.nummesh);
+            printf("  Mesh data starts at file position: %d\n", model.meshindex);
+
+            if (model.nummesh > 0) {
+                printf("  Reading meshes with correct structure.\n");
+
+                fseek(file, model.meshindex, SEEK_SET);
+
+                for (int m = 0; m < model.nummesh; m++) {
+                    mdl_mesh_s mesh;
+                    if (read_data(file, &mesh, sizeof(mdl_mesh_s), "mesh")) {
+                        printf("  Mesh[%d]: %d triangles at offset %d.\n",
+                                m, mesh.numtris, mesh.triindex);
+
+                        if (mesh.numtris > 0) {
+                            long current_tris_pos = ftell(file);
+                            fseek(file, mesh.triindex, SEEK_SET);
+
+                            printf("      First triangles:\n");
+                            for (int t = 0; t < 3 && t < mesh.numtris; t++) {
+                                mdl_triangle_s triangle;
+                                if (read_data(file, &triangle, sizeof(mdl_triangle_s), "triangle")) {
+                                    printf("        Triangle[%d]: vertices %d, %d, %d\n", 
+                                           t, triangle.vertindex[0], triangle.vertindex[1], triangle.vertindex[2]);
+                                }
+                            }
+
+                            fseek(file, current_tris_pos, SEEK_SET);
+                        }
+                    }
+                }
+
+                printf("\n");
             }
 
             result.models[current_index].vertex_count = model.numverts;

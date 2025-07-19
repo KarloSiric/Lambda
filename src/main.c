@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 23:51:16
+* @Last Modified time: 2025-07-19 23:55:53
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -118,7 +118,7 @@ int main() {
     glm_mat4_identity(projection);
 
     glm_rotate(model, glm_rad(30.0f), (vec3){0.0f, 1.0f, 0.0f});
-    glm_translate(view, (vec3){0.0f, 0.0f, -3.0f});
+    glm_translate(view, (vec3){0.0f, 0.0f, -15.0f});
 
     glm_perspective(glm_rad(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f, projection);
 

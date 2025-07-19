@@ -117,12 +117,39 @@ typedef struct {
     int model_id;                          // which variation of the bodypart 0, 1, 2 ...
 } single_model_s;                
 
+/**
+ * One complete model - one full mdl file
+ */
 typedef struct {
     single_model_s *models;
     int total_model_count;
     char filename[64];
     int bodypart_count;
 } mdl_complete_model_s;
+
+
+/**
+ * One mesh structure - consists of many triangles that forms the model
+ */
+typedef struct {
+    int numtris;
+    int triindex;
+    int skinref;
+    int numnorms;
+    int normindex;
+} mdl_mesh_s;
+
+
+/**
+ * Vertices indexes that form together one triangle for the meshes
+ */
+typedef struct {
+    short vertindex[3];
+} mdl_triangle_s;
+
+
+
+
 
 // Function prototypes
 mdl_complete_model_s load_mdl_file(const char *filepath);
