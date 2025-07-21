@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-20 00:26:26
+* @Last Modified time: 2025-07-21 12:19:41
 */
 
 #include "mdl_loader.h"
@@ -389,6 +389,68 @@ mdl_complete_model_s load_mdl_file(const char *filepath) {
                     result.models[current_index].vertices[k * 3 + 1] = vertices[k].y;
                     result.models[current_index].vertices[k * 3 + 2] = vertices[k].z;
                 }
+
+                result.models[current_index].triangle_indices = NULL;
+                result.models[current_index].triangle_count = 0;
+
+                if (model.nummesh > 0) {
+                    printf("Model has %d meshes to process\n", model.nummesh);
+
+                    int total_triangles = 0;
+                    fseek(file, model.meshindex, SEEK_SET);
+                    long mesh_start_pos = ftell(file);
+                    for (int m = 0; m < model.nummesh; m++) {
+                        mdl_mesh_s mesh;
+                        if (read_data(file, &mesh, sizeof(mdl_mesh_s), "mesh")) {
+                            total_triangles += mesh.numtris;
+                            printf("  Mesh[%d]: %d triangles (running total %d)\n\n", m, mesh.numtris, total_triangles);
+                        }
+                    }
+
+                    printf("Total number of triangles for model '%s': %d\n\n", model.name, total_triangles);
+                    if (total_triangles > 0) {
+                        result.models[current_index].triangle_count = total_triangles;
+                        result.models[current_index].triangle_indices = malloc(total_triangles * 3 * sizeof(int));
+                        int triangle_index = 0;
+                        fseek(file, mesh_start_pos, SEEK_SET);
+
+                        for (int j = 0; j < model.nummesh; j++) {
+                            mdl_mesh_s mesh;
+                            if (read_data(file, &mesh, sizeof(mdl_mesh_s), "mesh")) {
+                                if (mesh.numtris > 0) {
+
+                                    long current_pos = ftell(file);
+                                    fseek(file, mesh.triindex, SEEK_SET);
+
+                                    for (int h = 0; h < mesh.numtris; h++) {
+                                        mdl_triangle_s triangle;
+                                        if (read_data(file, &triangle, sizeof(mdl_triangle_s), "triangle")) {
+                                            if (triangle_index >= total_triangles) {
+
+                                                printf("OVERFLOW: triangle_index %d >= total_triangles %d\n", triangle_index, total_triangles);
+                                                printf("Current model: '%s' \n", model.name);
+                                                printf("Current mesh: %d\n", h);
+                                                printf("Triangle indices: %hu, %hu, %hu",
+                                                        triangle.vertindex[0], triangle.vertindex[1], triangle.vertindex[2]);
+                                                break;
+                                            }
+
+                                            result.models[current_index].triangle_indices[triangle_index * 3 + 0] = triangle.vertindex[0];
+                                            result.models[current_index].triangle_indices[triangle_index * 3 + 1] = triangle.vertindex[1];
+                                            result.models[current_index].triangle_indices[triangle_index * 3 + 2] = triangle.vertindex[2];
+                                            triangle_index++;
+                                        }
+                                    }
+
+                                    fseek(file, current_pos, SEEK_SET);
+                                }
+                            }
+                        }
+                        printf("Successfully stored %d triangles (expected %d)\n", triangle_index, total_triangles);
+                    }
+                }
+
+
             } else {
                 result.models[current_index].vertices = NULL;
             }
@@ -409,6 +471,9 @@ void free_mdl_file(mdl_complete_model_s *model) {
         for (int i = 0; i < model->total_model_count; i++) {
             if (model->models[i].vertices) {
                 free(model->models[i].vertices);
+            }
+            if (model->models[i].triangle_indices) {
+                free(model->models[i].triangle_indices);
             }
         }
         free(model->models);
@@ -456,15 +521,80 @@ void testing_mdl_file(const char *filepath) {
     printf("Test Completed!\n");
 }
 
+void debugging_mdl_file(const char *filepath) {
+
+    mdl_complete_model_s model1 = load_mdl_file(filepath);
+    single_model_s *body = &model1.models[0];
+    single_model_s *head = &model1.models[2];
+    single_model_s *hand = &model1.models[6];
+
+    printf("\n==== DEBUGGING VERTEX DATA====\n");
+    printf("Body model: %s\n", body->model_name);
+    printf("Body vertex count: %d\n", body->vertex_count);
+    
+    if (body->vertex_count > 0) {
+        printf("First 5 vertices od body: \n");
+        for (int i = 0; i < 5 && i < body->vertex_count; i++) {
+            printf("  Vertex[%d]: (%.6f %.6f %.6f)\n",
+                    i, body->vertices[i*3], body->vertices[i*3+1], body->vertices[i*3+2]);
+        }
+    }    
+
+    printf("\nHead model: %s\n", head->model_name);
+    printf("Head vertex count: %d\n", head->vertex_count);
+
+    if (head->vertex_count > 0) {
+        printf("First 3 vertices of the head:\n");
+        for (int j = 0; j < 3 && j < head->vertex_count; j++) {
+            printf("  Vertex[%d]: (%.6f %.6f %.6f)\n",
+                    j, head->vertices[j*3], head->vertices[j*3+1], head->vertices[j*3+2]);
+        }
+    }
+
+    printf("\n==== CALCULATING MODEL BOUNDS ====\n");
+
+    float min_x = body->vertices[0];
+    float max_x = body->vertices[0];
+    float min_y = body->vertices[1];
+    float max_y = body->vertices[1];
+    float min_z = body->vertices[2];
+    float max_z = body->vertices[2];
+
+    for (int i = 0; i < body->vertex_count; i++) {
+        float x = body->vertices[i*3];
+        float y = body->vertices[i*3+1];
+        float z = body->vertices[i*3+2];
+
+        if (x < min_x) min_x = x;
+        if (y < min_y) min_y = y;
+        if (z < min_z) min_z = z;
+        if (y > max_y) max_y = y;
+        if (z < min_z) min_z = z;
+        if (z > max_z) max_z = z;
+    }
+
+    printf("Body bounds: X(%.2f to %.2f) Y(%.2f to %.2f) Z(%.2f to %.2f)\n", 
+       min_x, max_x, min_y, max_y, min_z, max_z);
+
+    float center_x = (min_x + max_x) / 2.0f;
+    float center_y = (min_y + max_y) / 2.0f;
+    float center_z = (min_z + max_z) / 2.0f;
+
+    printf("Body center should be at: (%.2f, %.2f, %.2f)\n", center_x, center_y, center_z);
 
 
+    printf("\n\n ==== FINDING GARBAGE VERTICES ====\n\n");
+    int garbage_count = 0;
+    for (int i = 0; i < body->vertex_count; i++) {
+        float x = body->vertices[i*3];
+        float y = body->vertices[i*3+1];
+        float z = body->vertices[i*3+2];
 
+        if (x < -50 || x > 50 || y < -50 || y > 50 || z < -50 || z > 50) {
+            printf("GARBAGE vertex[%d]: (%.2f %.2f %.2f)\n",
+                    i, x, y, z);
+            garbage_count++;
+        }
+    }
 
-
-
-
-
-
-
-
-
+}

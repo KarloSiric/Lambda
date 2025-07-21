@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-15 13:56:37
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-19 23:55:53
+* @Last Modified time: 2025-07-21 11:33:40
 */
 #define OPENGL_SILENCE_DEPRECATION
 #include <string.h>
@@ -68,21 +68,23 @@ int main() {
     single_model_s *body = &scientist.models[0];    // Body
     single_model_s *head = &scientist.models[2];    // Einstein head  
     single_model_s *hand = &scientist.models[6];    // Needle hand
-    
+        
+    /* 
+     * DEBUGGING INFORMATION GOES HERE
+     * 
+     * This is where I debug things for the loading model that needs to be loaded and so forth
+    */
+    debugging_mdl_file("models/HL1_Original/scientist.mdl");
+
     printf("Test combination: %s + %s + %s\n", 
            body->model_name, head->model_name, hand->model_name);
     
     // Combine vertices
-    int total_vertices = body->vertex_count + head->vertex_count + hand->vertex_count;
+    int total_vertices = body->vertex_count;
     float *combined_vertices = malloc(total_vertices * 3 * sizeof(float));
     
     // Copy data
-    int offset = 0;
-    memcpy(combined_vertices + offset, body->vertices, body->vertex_count * 3 * sizeof(float));
-    offset += body->vertex_count * 3;
-    memcpy(combined_vertices + offset, head->vertices, head->vertex_count * 3 * sizeof(float));
-    offset += head->vertex_count * 3;
-    memcpy(combined_vertices + offset, hand->vertices, hand->vertex_count * 3 * sizeof(float));
+    memcpy(combined_vertices, body->vertices, body->vertex_count * 3 * sizeof(float));
     
     printf("Ready to render: %d vertices\n", total_vertices);
 
@@ -115,10 +117,7 @@ int main() {
 
     glm_mat4_identity(model);
     glm_mat4_identity(view);
-    glm_mat4_identity(projection);
-
-    glm_rotate(model, glm_rad(30.0f), (vec3){0.0f, 1.0f, 0.0f});
-    glm_translate(view, (vec3){0.0f, 0.0f, -15.0f});
+    glm_translate(view, (vec3){0.0f, 0.0f, -15.0f});  // Move camera back
 
     glm_perspective(glm_rad(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f, projection);
 
@@ -154,9 +153,12 @@ int main() {
         // TODO: Adding some rotation
         static float rotation = 0.0f;
         rotation += 0.005f;
+
         glm_mat4_identity(model);
+        glm_translate(model, (vec3){2.51f, -1.11f,-0.04f});
         glm_rotate(model, rotation, (vec3){0.0f, 1.0f, 0.0f});
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *)model);
+
         glDrawArrays(GL_POINTS, 0,  total_vertices);
 
         glfwSwapBuffers(window);

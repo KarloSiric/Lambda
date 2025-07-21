@@ -111,6 +111,8 @@ typedef struct {
 typedef struct {
     float *vertices;                       // Flat array[x1,y1,z1, x2,y2,z2 ...]
     int vertex_count;                      // number of vertices per model
+    int *triangle_indices;        // Number of triangles that form the meshes
+    int triangle_count;                    // number of triangles
     char model_name[64];                   // model name e.g. "EinsteinHead"
     char bodypart_name[64];                // bodypart name e.g. "heads", ...
     int bodypart_id;                       // bodypart id: 0, 1, 2 .. etc
@@ -143,12 +145,10 @@ typedef struct {
 /**
  * Vertices indexes that form together one triangle for the meshes
  */
+
 typedef struct {
     short vertindex[3];
 } mdl_triangle_s;
-
-
-
 
 
 // Function prototypes
@@ -157,5 +157,6 @@ void free_mdl_file(mdl_complete_model_s *model);
 void print_mdl_info(const char *filepath);
 void extract_mdl_vertices(const char *filepath);
 void testing_mdl_file(const char *filepath);
+void debugging_mdl_file(const char *filepath);
 
 #endif
