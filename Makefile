@@ -47,6 +47,12 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
+# Add this section to your Makefile
+test_header: src/test_header.c src/mdl_loader.c
+	$(CC) $(CFLAGS) -o test_header src/test_header.c src/mdl_loader.c -Isrc
+
+.PHONY: test_header
+
 # Show what pkg-config found (useful for debugging)
 debug:
 	@echo "CFLAGS: $(CFLAGS)"
