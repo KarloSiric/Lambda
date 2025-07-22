@@ -151,12 +151,5 @@ typedef struct {
 } mdl_triangle_s;
 
 
-// Function prototypes
-mdl_complete_model_s load_mdl_file(const char *filepath);
-void free_mdl_file(mdl_complete_model_s *model);
-void print_mdl_info(const char *filepath);
-void extract_mdl_vertices(const char *filepath);
-void testing_mdl_file(const char *filepath);
-void debugging_mdl_file(const char *filepath);
 
 #endif
