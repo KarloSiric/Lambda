@@ -2,10 +2,11 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-21 12:19:41
+* @Last Modified time: 2025-07-21 19:52:45
 */
 
 #include "mdl_loader.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -409,8 +410,15 @@ mdl_complete_model_s load_mdl_file(const char *filepath) {
 
                     printf("Total number of triangles for model '%s': %d\n\n", model.name, total_triangles);
                     if (total_triangles > 0) {
-                        result.models[current_index].triangle_count = total_triangles;
-                        result.models[current_index].triangle_indices = malloc(total_triangles * 3 * sizeof(int));
+                        if (result.models[current_index].triangle_count < 0 || result.models[current_index].triangle_count > 100000) {
+                            printf("WARNING: Model '%s' has invalid triangle count: %d. Setting to 0.\n", result.models[current_index].model_name, result.models[current_index].triangle_count);
+                            result.models[current_index].triangle_count = 0;
+                            result.models[current_index].triangle_indices = NULL;
+                        } else {
+                            result.models[current_index].triangle_count = total_triangles;
+                            result.models[current_index].triangle_indices = malloc(total_triangles * 3 * sizeof(int));
+                        }  
+
                         int triangle_index = 0;
                         fseek(file, mesh_start_pos, SEEK_SET);
 
@@ -597,4 +605,57 @@ void debugging_mdl_file(const char *filepath) {
         }
     }
 
+    // After loading triangle indices, add this debug check:
+    printf("\n==== TRIANGLE INDEX VALIDATION ====\n");
+    printf("Body vertex count: %d (valid indices: 0-%d)\n", body->vertex_count, body->vertex_count-1);
+    printf("First 10 triangle indices:\n");
+    for (int i = 0; i < 10 && i < body->triangle_count; i++) {
+        int idx0 = body->triangle_indices[i*3 + 0];
+        int idx1 = body->triangle_indices[i*3 + 1]; 
+        int idx2 = body->triangle_indices[i*3 + 2];
+        
+        printf("  Triangle[%d]: %d, %d, %d", i, idx0, idx1, idx2);
+        
+        // Check if indices are valid
+        if (idx0 >= body->vertex_count || idx1 >= body->vertex_count || idx2 >= body->vertex_count ||
+            idx0 < 0 || idx1 < 0 || idx2 < 0) {
+            printf(" <- INVALID!");
+        }
+        printf("\n");
+    }
+
+
+   // After the triangle index validation, add this:
+    printf("\n==== TRIANGLE VERTEX POSITIONS ====\n");
+    for (int i = 0; i < 3; i++) {  // Check first 3 triangles
+        int idx0 = body->triangle_indices[i*3 + 0];
+        int idx1 = body->triangle_indices[i*3 + 1]; 
+        int idx2 = body->triangle_indices[i*3 + 2];
+        
+        printf("Triangle[%d] connects:\n", i);
+        printf("  Vertex[%d]: (%.2f, %.2f, %.2f)\n", idx0, 
+               body->vertices[idx0*3], body->vertices[idx0*3+1], body->vertices[idx0*3+2]);
+        printf("  Vertex[%d]: (%.2f, %.2f, %.2f)\n", idx1,
+               body->vertices[idx1*3], body->vertices[idx1*3+1], body->vertices[idx1*3+2]);
+        printf("  Vertex[%d]: (%.2f, %.2f, %.2f)\n", idx2,
+               body->vertices[idx2*3], body->vertices[idx2*3+1], body->vertices[idx2*3+2]);
+        
+        // Calculate triangle size
+        float dx1 = body->vertices[idx1*3] - body->vertices[idx0*3];
+        float dy1 = body->vertices[idx1*3+1] - body->vertices[idx0*3+1];
+        float dz1 = body->vertices[idx1*3+2] - body->vertices[idx0*3+2];
+        float edge_length = sqrt(dx1*dx1 + dy1*dy1 + dz1*dz1);
+        printf("  Edge length: %.2f\n\n", edge_length);
+    } 
+
+    printf("\n=== VERTEX BOUNDS CHECK ===\n");
+    printf("Model %s has %d vertices (valid indices 0 - %d)\n", model1.models->model_name, model1.models->vertex_count, model1.models->vertex_count - 1);
+    printf("First 5 vertices:\n");
+    for (int i = 0; i < 5; i++) {
+        printf("  Vertex[%d]: (%.2f, %.2f, %.2f)\n", i,
+           model1.models->vertices[i*3], model1.models->vertices[i*3+1], model1.models->vertices[i*3+2]);
+    }
+
+
+    
 }
