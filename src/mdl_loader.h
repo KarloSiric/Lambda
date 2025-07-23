@@ -186,7 +186,7 @@ typedef struct {
 
 studiohdr_t *mdl_read_header(FILE *file);
 mstudiobodypart_t *mdl_read_bodyparts(FILE *file, studiohdr_t *header);
-
+mstudiomodel_t *mdl_read_models_for_bodyparts(FILE *file, mstudiobodypart_t *bodypart);
 
 
 

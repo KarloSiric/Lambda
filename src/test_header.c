@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-22 11:49:29
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-22 12:15:27
+* @Last Modified time: 2025-07-23 09:48:09
 */
 
 #include "mdl_loader.h"
@@ -23,9 +23,21 @@ int main(void) {
         printf("Version: %d\n", header->version);
         printf("Bodyparts: %d\n", header->numbodyparts);
         printf("Textures: %d\n", header->numtextures);
-
-        free(header);
     }
+
+    mstudiobodypart_t *bodyparts = mdl_read_bodyparts(file, header);
+    if (bodyparts) {
+        printf("\n=== BODYPARTS INFO ===\n");
+        for (int i = 0; i < header->numbodyparts; i++) {
+            printf("  Bodypart[%d]: '%s' (%d models)\n",
+                i, bodyparts[i].name, bodyparts[i].nummodels);
+        }
+        free(bodyparts);
+    } else {
+        printf("FAILED to read bodyparts\n");
+    }
+
+    free(header);
 
     fclose(file);
     return (0);

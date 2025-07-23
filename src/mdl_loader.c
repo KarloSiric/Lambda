@@ -2,10 +2,11 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-22 15:08:41
+* @Last Modified time: 2025-07-23 10:05:18
 */
 
 #include "mdl_loader.h"
+#include <cstdio>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,8 +53,8 @@ mstudiobodypart_t *mdl_read_bodyparts(FILE *file, studiohdr_t *header) {
     }
 
     size_t bytes_read = fread(bodyparts, sizeof(mstudiobodypart_t), header->numbodyparts, file);
-    size_t bodyparts_bytes = sizeof(header->numbodyparts);
-    if (!bytes_read) {
+    size_t bodyparts_bytes = header->numbodyparts * sizeof(mstudiobodypart_t);
+    if (bytes_read != (size_t)header->numbodyparts) {
         fprintf(stderr, "ERROR - Failed to read %d bodyparts, Expected %zu and got %zu bytes.\n",
                 header->numbodyparts, bodyparts_bytes, bytes_read);
         free(bodyparts);
@@ -63,4 +64,24 @@ mstudiobodypart_t *mdl_read_bodyparts(FILE *file, studiohdr_t *header) {
     printf("SUCCESS: Read %d bodyparts, containing %zu bytes.\n",
             header->numbodyparts, bytes_read);
     return bodyparts;
+}
+
+mstudiomodel_t *mdl_read_models_for_bodyparts(FILE *file, mstudiobodypart_t *bodypart) {
+    // TOOD Karlo: Need to read all given models for that bodypart
+
+    fseek(file, bodypart->modelindex, SEEK_SET);
+
+    mstudiomodel_t *models = malloc(bodypart->nummodels * sizeof(mstudiomodel_t));
+    if (!models) {
+        fprintf(stderr, "ERROR - Failed to allocate enough space for %d models.\n", bodypart->nummodels);
+        return NULL;
+    }
+
+    size_t items_read = fread(models, sizeof(mstudiomodel_t), bodypart->nummodels, file);
+    if (items_read != (size_t)bodypart->nummodels) {
+        
+    }
+
+
+
 }
