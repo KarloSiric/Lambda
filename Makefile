@@ -48,10 +48,10 @@ run: $(TARGET)
 	./$(TARGET)
 
 # Add this section to your Makefile
-test_header: src/test_header.c src/mdl_loader.c
-	$(CC) $(CFLAGS) -o test_header src/test_header.c src/mdl_loader.c -Isrc
+tester: src/tester.c src/mdl_loader.c
+	$(CC) $(CFLAGS) -o tester src/tester.c src/mdl_loader.c -Isrc
 
-.PHONY: test_header
+.PHONY: tester
 
 # Show what pkg-config found (useful for debugging)
 debug:
