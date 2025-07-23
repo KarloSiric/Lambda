@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-22 11:49:29
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-23 14:18:41
+* @Last Modified time: 2025-07-23 14:49:20
 */
 
 #include "mdl_loader.h"
@@ -11,7 +11,7 @@
 
 int main(void) {
 
-    FILE *file = fopen("models/HL1_Original/barney.mdl", "rb");
+    FILE *file = fopen("models/HL1_Original/scientist.mdl", "rb");
     if (!file) {
         fprintf(stderr, "ERROR - Failed to open the file.\n");
         return (-1);
@@ -58,12 +58,12 @@ int main(void) {
                     free(vertices);
                 }
 
-                triangle_data_t *triangles = mdl_read_triangles_for_models(file, &models[i]);
+                triangle_data_t *triangles = mdl_read_triangles_for_models(file, &models[m]);
                 if (triangles) {
                     int total_triangles = 0;
 
                     fseek(file, models[i].meshindex, SEEK_SET);
-                    mstudiomesh_t *meshes = malloc(models[i].nummesh * sizeof(mstudiomesh_t));
+                    mstudiomesh_t *meshes = malloc(models[m].nummesh * sizeof(mstudiomesh_t));
                     if (meshes) {
                         fread(meshes, sizeof(mstudiomesh_t), models[i].nummesh, file);
 
@@ -84,7 +84,7 @@ int main(void) {
 
                         bool valid = true;
                         for (int tri = 0; tri < 3; tri++) {
-                            if (triangles[t].triverts[tri].vertindex >= models[i].numverts) {
+                            if (triangles[t].triverts[tri].vertindex >= models[m].numverts) {
                                 valid = false;
                                 break;
                             }
@@ -98,7 +98,7 @@ int main(void) {
                     }
 
                     printf("    SUMMARY: %d total triangles, max vertex index should be < %d\n",
-                            total_triangles, models[i].numverts);
+                            total_triangles, models[m].numverts);
 
                     free(triangles);
                 } else {

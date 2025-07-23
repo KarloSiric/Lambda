@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-23 14:12:11
+* @Last Modified time: 2025-07-23 14:46:38
 */
 
 #include "mdl_loader.h"
@@ -130,8 +130,10 @@ vec3_t *mdl_read_vertices(FILE *file, mstudiomodel_t *model) {
 }
 
 triangle_data_t *mdl_read_triangles_for_models(FILE *file, mstudiomodel_t *model) {
+    printf("  DEBUG: Triangle function called for model '%s'\n", model->name);
+    
     if (model->nummesh == 0) {
-        printf("  Model '%s' has no meshes\n", model->nummesh);
+        printf("  Model '%s' has no meshes\n", model->name);
         return NULL;
     }
 
