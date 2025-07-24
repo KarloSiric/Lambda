@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-22 11:49:29
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-23 14:49:20
+* @Last Modified time: 2025-07-23 14:51:42
 */
 
 #include "mdl_loader.h"
@@ -62,12 +62,12 @@ int main(void) {
                 if (triangles) {
                     int total_triangles = 0;
 
-                    fseek(file, models[i].meshindex, SEEK_SET);
+                    fseek(file, models[m].meshindex, SEEK_SET);
                     mstudiomesh_t *meshes = malloc(models[m].nummesh * sizeof(mstudiomesh_t));
                     if (meshes) {
                         fread(meshes, sizeof(mstudiomesh_t), models[i].nummesh, file);
 
-                        for (int mesh = 0; mesh < models[i].nummesh; mesh++) {
+                        for (int mesh = 0; mesh < models[m].nummesh; mesh++) {
                             total_triangles += meshes[mesh].numtris;
                         }
                         free(meshes);

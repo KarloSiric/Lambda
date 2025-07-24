@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-23 14:46:38
+* @Last Modified time: 2025-07-24 10:59:22
 */
 
 #include "mdl_loader.h"
@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 studiohdr_t *mdl_read_header(FILE *file) {
     rewind(file);
@@ -84,23 +85,6 @@ mstudiomodel_t *mdl_read_models_for_bodyparts(FILE *file, mstudiobodypart_t *bod
         return NULL;
     }
 
-    // printf("\n=== PRINTING MODELS ===\n");
-    // for (int i = 0; i < bodypart->nummodels; i++) {
-    //     printf("MODEL[%d] BELONGS TO BODYPART: '%s' \n",
-    //             i, bodypart->name);
-    //     printf("  MODEL[%d] -> Name: '%s' \n",
-    //             i, models[i].name);
-    //     printf("  MODEL[%d] -> Type: %d \n",
-    //             i, models[i].type);
-    //     printf("  MODEL[%d] -> Nummesh: %d \n",
-    //             i, models[i].nummesh);
-    //     printf("  MODEL[%d] -> Meshindex: %d \n",
-    //             i, models[i].meshindex);
-    //     printf("  MODEL[%d] -> Numverts: %d \n",
-    //             i, models[i].numverts);
-    // }
-
-
     printf("  SUCCESS: Read %d models for bodypart: '%s' \n",
             bodypart->nummodels, bodypart->name);
     return models;
@@ -131,11 +115,14 @@ vec3_t *mdl_read_vertices(FILE *file, mstudiomodel_t *model) {
 
 triangle_data_t *mdl_read_triangles_for_models(FILE *file, mstudiomodel_t *model) {
     printf("  DEBUG: Triangle function called for model '%s'\n", model->name);
-    
+
     if (model->nummesh == 0) {
         printf("  Model '%s' has no meshes\n", model->name);
         return NULL;
     }
+
+    long file_size = mdl_get_file_size(file);
+
 
     fseek(file, model->meshindex, SEEK_SET);    
     mstudiomesh_t *meshes = (mstudiomesh_t *)malloc(model->nummesh * sizeof(mstudiomesh_t));
@@ -145,7 +132,7 @@ triangle_data_t *mdl_read_triangles_for_models(FILE *file, mstudiomodel_t *model
     }
 
     size_t meshes_read = fread(meshes, sizeof(mstudiomesh_t), model->nummesh, file);
-    if (meshes_read != model->nummesh) {
+    if (meshes_read != (size_t)model->nummesh) {
         fprintf(stderr, "ERROR - Failed to read meshes.\n");
         free(meshes);
         return NULL;
@@ -153,6 +140,24 @@ triangle_data_t *mdl_read_triangles_for_models(FILE *file, mstudiomodel_t *model
 
     int total_triangles = 0;
     for (int i = 0; i < model->nummesh; i++) {
+        long triangle_data_start = meshes[i].triindex;
+        long triangle_data_size = meshes[i].numtris * sizeof(mstudiotrivert_t) * 3;
+
+        if (triangle_data_start + triangle_data_size > file_size) {
+            printf("  WARNING: Mesh[%d] triangle data extends beyond file (starts at %ld, needs %ld bytes, file is %ld bytes long.\n",
+                    i, triangle_data_start, triangle_data_size, file_size);
+            printf("  Adjusting triangle count for this mesh\n");
+
+            long available_bytes = file_size - triangle_data_start;
+            int max_triangles = available_bytes / (sizeof(mstudiotrivert_t) * 3);
+            if (max_triangles < 0) {
+                max_triangles = 0;
+            }
+
+            printf("  Mesh claimed %d triangles but can only read %d\n", meshes[i].numtris, max_triangles);
+            meshes[i].numtris = max_triangles;
+        }
+
         total_triangles += meshes[i].numtris;
     }
 
@@ -170,24 +175,138 @@ triangle_data_t *mdl_read_triangles_for_models(FILE *file, mstudiomodel_t *model
     }
 
     int triangles_index = 0;
+    int successful_triangles = 0;
+
     for (int i = 0; i < model->nummesh; i++) {
         
         if (meshes[i].numtris > 0) {
             fseek(file, meshes[i].triindex, SEEK_SET);
+
             for (int j = 0; j < meshes[i].numtris; j++) {
+
+                if (ftell(file) + sizeof(mstudiotrivert_t) * 3 > file_size) {
+                    printf("  WARNING: Would read past end of file at triangle %d, stopping.\n",
+                            triangles_index);
+                    break;
+                }
+
+
                 size_t tri_vertices_read = fread(&triangles[triangles_index].triverts, sizeof(mstudiotrivert_t), 3, file);
                 if (tri_vertices_read != 3) {
+                    if (feof(file)) {
+                        printf("  WARNING: Reached the end of file at triangle %d (read %zu/3 vertices)\n",
+                                triangles_index, tri_vertices_read);
+                    } else {
+                        printf("  WARNING: Failed to read complete triangle %d (read %zu/3 vertices)\n",
+                                triangles_index, tri_vertices_read);
+                    }
                     fprintf(stderr, "ERROR - Failed to read triangle %d\n", triangles_index);
+
                     free(triangles);
                     free(meshes);
-                    return NULL;
+                    break;
                 }
-                triangles_index++;
+
+                bool valid_triangle = true;
+                for (int v = 0; v < 3; v++) {
+                    if (triangles[triangles_index].triverts[v].vertindex >= model->numverts) {
+                        printf("  WARNING: Triangle %d has invalid vertex index %d (max: %d)\n",
+                                triangles_index, triangles[triangles_index].triverts[v].vertindex, model->numverts);
+                        valid_triangle = false;
+                        break;
+                    }
+                }
+
+                if (valid_triangle) {
+                    successful_triangles++;
+                    triangles_index++;
+                } else {
+                    printf("  Skipping invalid triangle %d\n",
+                            triangles_index);
+                }
             }
         }
     } 
 
     free(meshes);
+
+    if (successful_triangles == 0) {
+        printf("  Model '%s' has no valid triangles after corruption filtering.\n",
+                model->name);
+        free(triangles);
+        return NULL;
+    }
+
     printf("  SUCCESS: Read %d triangles for model '%s' \n", total_triangles, model->name);
+
     return triangles;
+}
+
+
+long mdl_get_file_size(FILE *file) {
+    long current_pos = ftell(file);
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, current_pos, SEEK_SET);
+    return size;
+}
+
+
+mdl_complete_model_s *mdl_load_complete_file(const char *filename) {
+    printf("\n=== LOADING COMPLETE MDL FILE: %s ===\n", filename);
+
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        fprintf(stderr, "ERROR - Failed to open the file '%s' \n", filename);
+        return NULL;
+    }
+
+    studiohdr_t *header = mdl_read_header(file);
+    if (!header) {
+        fclose(file);
+        return NULL;
+    }    
+
+    mstudiobodypart_t *bodyparts = mdl_read_bodyparts(file, header);
+    if (!bodyparts) {
+        free(header);
+        fclose(file);
+        return NULL;
+    }
+
+    int total_models = 0;
+    for (int m = 0; m < header->numbodyparts; m++) {
+        total_models += bodyparts[m].nummodels;
+    }
+
+    printf("Total models to process: %d\n", total_models);
+
+    mdl_complete_model_s *complete_model = malloc(sizeof(mdl_complete_model_s));
+    if (!complete_model) {
+        fprintf(stderr, "ERROR - Failed to allocate complete model structure\n");
+        free(bodyparts);
+        free(header);
+        fclose(file);
+        return NULL;
+    }
+
+    complete_model->models = malloc(total_models * sizeof(single_model_s));
+    if (!complete_model->models) {
+        fprintf(stderr, "ERROR - Failed to allocate models array\n");
+        free(complete_model);
+        free(bodyparts);
+        free(header);
+        fclose(file);
+        return NULL;
+    }
+
+    complete_model->total_model_count = total_models;
+    complete_model->bodypart_count = header->numbodyparts;
+    
+
+
+
+
+
+
 }
