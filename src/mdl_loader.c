@@ -2,10 +2,11 @@
 * @Author: karlosiric
 * @Date:   2025-07-18 12:28:34
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-24 10:59:22
+* @Last Modified time: 2025-07-24 11:08:37
 */
 
 #include "mdl_loader.h"
+#include <cstring>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -302,7 +303,28 @@ mdl_complete_model_s *mdl_load_complete_file(const char *filename) {
 
     complete_model->total_model_count = total_models;
     complete_model->bodypart_count = header->numbodyparts;
-    
+    strncpy(complete_model->filename, filename, sizeof(complete_model->filename) - 1);
+    complete_model->filename[sizeof(complete_model->filename) - 1] = '\0'; 
+
+    int model_index = 0;
+    int successful_models = 0;
+
+    for (int bp = 0; bp < header->numbodyparts; bp++) {
+        printf("\nProcessing bodypart[%d]: '%s' (%d models)\n",
+                bp, bodyparts[bp].name, bodyparts[bp].nummodels);
+
+        mstudiomodel_t *models = mdl_read_models_for_bodyparts(file, &bodyparts[bp]);
+        if (!models) {
+            printf("  WARNING: Failed to read models for bodyparts '%s' \n",
+                    bodyparts[bp].name);
+            continue;
+        }
+
+        
+
+
+
+    }
 
 
 
