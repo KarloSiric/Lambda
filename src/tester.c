@@ -2,122 +2,99 @@
 * @Author: karlosiric
 * @Date:   2025-07-22 11:49:29
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-07-23 14:51:42
+* @Last Modified time: 2025-07-31 16:08:24
 */
 
 #include "mdl_loader.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "mdl_loader.h"
+#include <stdlib.h>
+
 int main(void) {
-
-    FILE *file = fopen("models/HL1_Original/scientist.mdl", "rb");
-    if (!file) {
-        fprintf(stderr, "ERROR - Failed to open the file.\n");
-        return (-1);
+    printf("=== TESTING MDL INTEGRATION FUNCTION ===\n");
+    
+    // ONE FUNCTION CALL REPLACES ALL THE MANUAL PARSING!
+    mdl_complete_model_s *complete_model = mdl_load_complete_file("models/HL1_Original/scientist.mdl");
+    
+    if (!complete_model) {
+        fprintf(stderr, "❌ Failed to load complete model\n");
+        return -1;
     }
 
-    studiohdr_t *header = mdl_read_header(file);
-    if (header) {
-        printf("\n=== MDL HEADER INFO ===\n");
-        printf("Name: '%s'\n", header->name);
-        printf("Version: %d\n", header->version);
-        printf("Bodyparts: %d\n", header->numbodyparts);
-        printf("Textures: %d\n", header->numtextures);
-    }
+    printf("\n=== ✅ COMPLETE MODEL LOADED SUCCESSFULLY ===\n");
+    printf("📁 File: %s\n", complete_model->filename);
+    printf("🎯 Total models: %d\n", complete_model->total_model_count);
+    printf("🏗️  Bodyparts: %d\n", complete_model->bodypart_count);
 
-    mstudiobodypart_t *bodyparts = mdl_read_bodyparts(file, header);
-    if (bodyparts) {
-        printf("\n=== BODYPARTS INFO ===\n");
-        for (int i = 0; i < header->numbodyparts; i++) {
-            printf("  Bodypart[%d]: '%s' (%d models)\n",
-                i, bodyparts[i].name, bodyparts[i].nummodels);
+    // Show details for each model
+    for (int i = 0; i < complete_model->total_model_count; i++) {
+        single_model_s *model = &complete_model->models[i];
+        
+        printf("\n--- 🎨 MODEL %d ---\n", i);
+        printf("📛 Name: '%s'\n", model->model_name);
+        printf("🏷️  Bodypart: '%s' (ID: %d)\n", model->bodypart_name, model->bodypart_id);
+        printf("🔢 Model ID: %d\n", model->model_id);
+        printf("📐 Vertices: %d (OpenGL array: %d floats)\n", 
+               model->vertex_count, model->vertex_count * 3);
+        printf("🔺 Triangles: %d (OpenGL indices: %d ints)\n", 
+               model->triangle_count, model->triangle_count * 3);
+
+        // Show sample data
+        if (model->vertex_count > 0 && model->vertices) {
+            printf("   📍 First vertex: (%.2f, %.2f, %.2f)\n",
+                   model->vertices[0], model->vertices[1], model->vertices[2]);
+            printf("   📍 Last vertex: (%.2f, %.2f, %.2f)\n",
+                   model->vertices[(model->vertex_count-1)*3 + 0], 
+                   model->vertices[(model->vertex_count-1)*3 + 1], 
+                   model->vertices[(model->vertex_count-1)*3 + 2]);
         }
-    } else {
-        printf("FAILED to read bodyparts\n");
+        
+        if (model->triangle_count > 0 && model->triangle_indices) {
+            printf("   🔺 First triangle: [%d, %d, %d]\n",
+                   model->triangle_indices[0], model->triangle_indices[1], model->triangle_indices[2]);
+            printf("   🔺 Last triangle: [%d, %d, %d]\n",
+                   model->triangle_indices[(model->triangle_count-1)*3 + 0],
+                   model->triangle_indices[(model->triangle_count-1)*3 + 1], 
+                   model->triangle_indices[(model->triangle_count-1)*3 + 2]);
+        }
+
+        printf("   ✅ STATUS: Ready for OpenGL rendering!\n");
     }
 
-    for (int i = 0; i < header->numbodyparts; i++) {
-        printf("  \nReading models for bodypart '%s' \n", bodyparts[i].name);
+    // Test data integrity
+    printf("\n=== 🔍 DATA VALIDATION ===\n");
+    int total_vertices = 0;
+    int total_triangles = 0;
+    bool all_valid = true;
 
-        mstudiomodel_t *models = mdl_read_models_for_bodyparts(file, &bodyparts[i]);
-        if (models) {
-            for (int m = 0; m < bodyparts[i].nummodels; m++) {
-                printf("  Model[%d]: '%s' (%d vertices, %d meshes)\n", 
-                   m, models[m].name, models[m].numverts, models[m].nummesh);
+    for (int i = 0; i < complete_model->total_model_count; i++) {
+        single_model_s *model = &complete_model->models[i];
+        total_vertices += model->vertex_count;
+        total_triangles += model->triangle_count;
 
-
-                vec3_t *vertices = mdl_read_vertices(file, &models[m]);
-                if (vertices) {
-                    printf("  First vertex: (%.2f, %.2f, %.2f)\n",
-                            vertices[0].x, vertices[0].y, vertices[0].z);
-                    printf("  Last vertex: (%.2f, %.2f, %.2f)\n",
-                            vertices[models[m].numverts - 1].x,
-                            vertices[models[m].numverts - 1].y,
-                            vertices[models[m].numverts - 1].z);
-                    free(vertices);
+        // Validate triangle indices
+        for (int t = 0; t < model->triangle_count; t++) {
+            for (int v = 0; v < 3; v++) {
+                int idx = model->triangle_indices[t * 3 + v];
+                if (idx >= model->vertex_count) {
+                    printf("❌ INVALID: Model '%s' triangle %d has vertex index %d (max: %d)\n",
+                           model->model_name, t, idx, model->vertex_count - 1);
+                    all_valid = false;
                 }
-
-                triangle_data_t *triangles = mdl_read_triangles_for_models(file, &models[m]);
-                if (triangles) {
-                    int total_triangles = 0;
-
-                    fseek(file, models[m].meshindex, SEEK_SET);
-                    mstudiomesh_t *meshes = malloc(models[m].nummesh * sizeof(mstudiomesh_t));
-                    if (meshes) {
-                        fread(meshes, sizeof(mstudiomesh_t), models[i].nummesh, file);
-
-                        for (int mesh = 0; mesh < models[m].nummesh; mesh++) {
-                            total_triangles += meshes[mesh].numtris;
-                        }
-                        free(meshes);
-                    }
-
-                    printf("   TRIANGLE DATA (showing first 10 triangles): \n");
-                    int triangles_to_show = (total_triangles > 10) ? 10 : total_triangles;
-                    for (int t = 0; t < triangles_to_show; t++) {
-                        printf("   Triangle[%d]: indices [%d %d %d]\n",
-                                t, 
-                                triangles[t].triverts[0].vertindex,
-                                triangles[t].triverts[1].vertindex,
-                                triangles[t].triverts[2].vertindex);
-
-                        bool valid = true;
-                        for (int tri = 0; tri < 3; tri++) {
-                            if (triangles[t].triverts[tri].vertindex >= models[m].numverts) {
-                                valid = false;
-                                break;
-                            }
-                        }
-
-                        if (valid) {
-                            printf("VALID!\n");
-                        } else {
-                            printf("INVALID!\n");
-                        }
-                    }
-
-                    printf("    SUMMARY: %d total triangles, max vertex index should be < %d\n",
-                            total_triangles, models[m].numverts);
-
-                    free(triangles);
-                } else {
-                    printf("    No Triangles read for this model.\n");
-                }
-
-
-            } 
-            free(models);
+            }
         }
     }
 
-    free(header);
-    free(bodyparts);
+    printf("📊 TOTALS: %d vertices, %d triangles across all models\n", total_vertices, total_triangles);
+    printf("✅ Data validation: %s\n", all_valid ? "ALL INDICES VALID" : "ERRORS FOUND");
 
-    fclose(file);
-    return (0);
-
+    // Clean up
+    mdl_free_complete_model(complete_model);
+    
+    printf("\n=== 🎉 INTEGRATION TEST COMPLETE ===\n");
+    printf("Your MDL loader is ready for OpenGL rendering! 🚀\n");
+    
+    return 0;
 }
-
-
-

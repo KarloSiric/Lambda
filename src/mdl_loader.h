@@ -190,8 +190,7 @@ vec3_t *mdl_read_vertices(FILE *file, mstudiomodel_t *model);
 triangle_data_t *mdl_read_triangles_for_models(FILE *file, mstudiomodel_t *model);
 long mdl_get_file_size(FILE *file);
 mdl_complete_model_s *mdl_load_complete_file(const char *filename);
-void free_mdl_complete_model(mdl_complete_model_s *complete_model);
-
+void mdl_free_complete_model(mdl_complete_model_s *complete_model);
 
 
 
