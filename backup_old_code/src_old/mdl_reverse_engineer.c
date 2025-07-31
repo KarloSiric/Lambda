@@ -5,6 +5,7 @@
 * @Last Modified time: 2025-07-18 12:28:03
 */
 
+#define GL_SILENCE_DEPRECATION
 #include "mdl_reverse_engineer.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,6 +100,7 @@ void reverse_engineer_ascii(const char *filepath) {
 }
 
 mdl_model_s load_mdl_file_re(const char *filepath) {
+    (void)filepath;  // Mark parameter as unused
     mdl_model_s model = {NULL, 0};
 
     // Adding more as we move along and progress forwards
