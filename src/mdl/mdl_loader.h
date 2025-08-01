@@ -7,7 +7,23 @@
 #define MDL_LOADER_H
 
 #include "../studio.h"
+#include <stdio.h>
+#include <stddef.h>
 
-// Function declarations will go here
+typedef enum
+{
+    MDL_SUCCESS = 0,
+    MDL_ERROR_FILE_NOT_FOUND,
+    MDL_ERROR_INVALID_MAGIC,
+    MDL_ERROR_INVALID_VERSION,
+    MDL_ERROR_FILE_TOO_SMALL
+} mdl_result_t;
+
+
+
+mdl_result_t validate_mdl_magic(int magic);
+mdl_result_t validate_mdl_version(int version);
+
+
 
 #endif // MDL_LOADER_H

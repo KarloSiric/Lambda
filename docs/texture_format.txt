@@ -1,0 +1,47 @@
+/*
+ * Half-Life Texture System Explanation
+ * 
+ * Unlike modern games, Half-Life 1 embeds textures INSIDE the .mdl file:
+ * 
+ * MDL FILE STRUCTURE:
+ * ┌─────────────────┐
+ * │ Studio Header   │ <- studiohdr_t
+ * ├─────────────────┤
+ * │ Bones Data      │ <- mstudiobone_t array
+ * ├─────────────────┤
+ * │ Bodyparts Data  │ <- mstudiobodypart_t array  
+ * ├─────────────────┤
+ * │ Models Data     │ <- mstudiomodel_t array
+ * ├─────────────────┤
+ * │ Meshes Data     │ <- mstudiomesh_t array
+ * ├─────────────────┤
+ * │ Triangle Cmds   │ <- The triangle commands
+ * ├─────────────────┤
+ * │ Vertices        │ <- vec3_t vertex positions
+ * ├─────────────────┤
+ * │ Texture Info    │ <- mstudiotexture_t array
+ * ├─────────────────┤
+ * │ TEXTURE PIXELS  │ <- Raw 8-bit indexed color data
+ * │ Texture 0 data  │    256x256 bytes (indices into palette)
+ * │ Texture 1 data  │    128x128 bytes  
+ * │ ...             │
+ * ├─────────────────┤
+ * │ COLOR PALETTE   │ <- 256 RGB colors (768 bytes total)
+ * │ Color 0: R G B  │    Each color is 3 bytes (RGB)
+ * │ Color 1: R G B  │
+ * │ ... 256 colors  │
+ * └─────────────────┘
+ * 
+ * TEXTURE FORMAT:
+ * - Textures are 8-bit indexed color (like old GIF files)
+ * - Each pixel is 1 byte = index into 256-color palette
+ * - Palette has 256 RGB colors (3 bytes each = 768 total)
+ * - Common sizes: 256x256, 128x128, 64x64
+ * 
+ * EXTRACTION PROCESS:
+ * 1. Read mstudiotexture_t to get width, height, data offset
+ * 2. Read raw pixel indices (width * height bytes)
+ * 3. Read 256-color palette (768 bytes)
+ * 4. Convert: for each pixel, palette[pixel_index] = RGB color
+ * 5. Upload to OpenGL as RGB texture
+ */
