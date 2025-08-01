@@ -23,7 +23,7 @@ typedef enum
 
 mdl_result_t validate_mdl_magic(int magic);
 mdl_result_t validate_mdl_version(int version);
-
+mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size_t *file_size);
 
 
 #endif // MDL_LOADER_H
