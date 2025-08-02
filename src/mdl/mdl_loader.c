@@ -165,7 +165,29 @@ mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main
 
 }
 
+void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data) {
+    if (!texture_data || !texture_header) {
+        printf("\nTexture Information: No texture file found.\n");
+        return;
+    }
+
+    printf("\nTexture Information:\n");
+    printf("  Texture file size: %d bytes\n", texture_header->length);
+    printf("  Number of textures: %d\n", texture_header->numtextures);
 
 
+    if (texture_header->numtextures > 0) {
+        mstudiotexture_t *textures = (mstudiotexture_t *)(texture_data + texture_header->textureindex);
+        for (int i = 0; i < texture_header->numtextures; i++) {
+            printf("  [%d] Name: %s\n", i, textures[i].name);
+            printf("      Width %d, Height %d\n", textures[i].width, textures[i].height);
+            printf("      Flags: %d\n", textures[i].flags);
+        }
+    }
+
+
+
+
+}
   
 

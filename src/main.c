@@ -15,64 +15,48 @@
 int main(int argc, char const *argv[])
 {
     if (argc != 2) {
-        printf("Usage: %s <model.mdl\n>", argv[0]);
-        printf("Example: %s assets/models/headcrab.mdl\n", argv[0]);
+        printf("Usage: %s <model.mdl>\n", argv[0]);
         return (1);
     }
 
-    printf("Testing MDL Loader with: %s\n", argv[1]);
-    unsigned char *file_data = NULL;
-    size_t file_size = 0;
-
-    printf("Loading file ... \n");
-    mdl_result_t result = read_mdl_file(argv[1], &file_data, &file_size);
-    if (result != MDL_SUCCESS) {
-        printf("Failed to load file! Error code: %d\n", 
-                result);
-        return (1);
-    }
-
-    printf("File loaded successfully! Size: %zu bytes\n",
-            file_size);
+    printf("Testing complete model+texture loading: %s\n", argv[1]);
     
-    studiohdr_t *header = NULL;
-    mdl_result_t parser = parse_mdl_header(file_data, &header);
+    // Variables for both model and texture data
+    studiohdr_t *main_header = NULL;
+    studiohdr_t *texture_header = NULL;
+    unsigned char *main_data = NULL;
+    unsigned char *texture_data = NULL;
 
-    if (parser != MDL_SUCCESS) {
-        printf("Failed to parse the header data! Error code: %d\n", parser);
-        free(file_data);
+    // Test your new function!
+    mdl_result_t result = load_model_with_textures(argv[1], &main_header, &texture_header, &main_data, &texture_data);
+    
+    if (result != MDL_SUCCESS) {
+        printf("Failed to load model! Error code: %d\n", result);
         return (1);
     }
 
-    printf("Header parsed successfully!\n");
+    printf("SUCCESS! Model loaded completely!\n\n");
+    
+    // Display main model info
+    printf("=== MAIN MODEL INFO ===\n");
+    printf("  Name: %s\n", main_header->name);
+    printf("  File size: %d bytes\n", main_header->length);
+    printf("  Bones: %d\n", main_header->numbones);
+    printf("  Bodyparts: %d\n", main_header->numbodyparts);
+    printf("  Sequences: %d\n", main_header->numseq);
+    
+    // Display texture info
+    print_texture_info(texture_header, texture_data);
+    
+    // Display bodypart details
+    print_bodypart_info(main_header, main_data);
 
-    printf("Model info:\n");
-    printf("  Magic: %.4s\n", (char *)&header->id);
-    printf("  Version: %d\n", header->version);
-    printf("  Name: %s\n", header->name);
-    printf("  File size: %d\n", header->length);
-
-    printf("  Number of bones: %d\n", header->numbones);
-    printf("  Number of bodyparts: %d\n", header->numbodyparts);
-    printf("  Number of textures: %d\n", header->numtextures);
-    printf("  Number of sequences: %d\n", header->numseq);
-
-    print_bodypart_info(header, file_data);
-
-    printf("Testing texture filename generation: \n");
-    char *data_name = generate_texture_filename("scientist.mdl");
-    char *data_name2 = generate_texture_filename("barney.mdl");
-
-    printf("  scientist.mdl -> %s\n", data_name);
-    printf("  barney.mdl -> %s\n", data_name2);
-
-    free(data_name);
-    free(data_name2);
-
-
-    free(file_data);
-    printf("\nModel analysis completed\n");
-
-
+    // Clean up memory
+    free(main_data);
+    if (texture_data) {
+        free(texture_data);
+    }
+    
+    printf("\nComplete model analysis finished!\n");
     return (0);
 }
