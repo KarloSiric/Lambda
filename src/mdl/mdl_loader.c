@@ -185,12 +185,9 @@ void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data
         }
     }
 
-
-
-
-
-
-
 }
-  
+
+void print_bone_info(studiohdr_t *header, unsigned char *data) {
+    
+}
 

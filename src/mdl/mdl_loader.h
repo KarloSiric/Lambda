@@ -32,4 +32,6 @@ mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main
 char *generate_texture_filename(const char *model_filename);
 void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data);
 void print_bodypart_info(studiohdr_t *header, unsigned char *file_data);
+void print_bone_info(studiohdr_t *header, unsigned char *data); 
+mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstudiobone_t **bones);
 #endif // MDL_LOADER_H
