@@ -148,7 +148,7 @@ mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main
     size_t texture_size;
     mdl_result_t texture_result = read_mdl_file(texture_path, texture_data, &texture_size);
 
-    if (texture_header == MDL_SUCCESS) {
+    if (texture_result == MDL_SUCCESS) {
         texture_result = parse_mdl_header(*texture_data, texture_header);
         if (texture_result != MDL_SUCCESS) {
             free(*texture_data);
@@ -184,6 +184,9 @@ void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data
             printf("      Flags: %d\n", textures[i].flags);
         }
     }
+
+
+
 
 
 
