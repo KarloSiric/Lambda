@@ -51,6 +51,16 @@ int main(int argc, char const *argv[])
     // Display bodypart details
     print_bodypart_info(main_header, main_data);
 
+    mstudiobone_t *bones = NULL;
+    mdl_result_t bone_result = parse_bone_hierarchy(main_header, main_data, &bones);
+
+    if (bone_result == MDL_SUCCESS && bones) {
+        print_bone_info(bones, main_header->numbones);
+    } else {
+        printf("\nFailed to parse bone hierarchy (error: %d)\n", bone_result);
+    }
+
+
     // Clean up memory
     free(main_data);
     if (texture_data) {

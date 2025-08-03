@@ -5,6 +5,7 @@
 
 #include "mdl_loader.h"
 #include "../studio.h"
+#include <cstdio>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -187,7 +188,72 @@ void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data
 
 }
 
-void print_bone_info(studiohdr_t *header, unsigned char *data) {
+mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstudiobone_t **bones) {
+    if (!header || !data || !bones) {
+        fprintf(stderr, "ERROR - Invalid parameters passed to the function call!\n");
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+
+    if (header->numbones == 0) {
+        *bones = NULL;
+        return MDL_SUCCESS;
+    }
+
+    *bones = (mstudiobone_t *)(data + header->boneindex);
+
+    return MDL_SUCCESS;
+}
+
+
+
+void print_bone_info(mstudiobone_t *bones, int bone_count) {
+
+    if (!bones || bone_count == 0) {
+        printf("\nBone Information: No bones found\n");
+        return;
+    }
+
+    printf("\nBone Hierarchy(%d bones):\n", bone_count);
+    for (int i = 0; i < bone_count; i++) {
+        printf(" [%d] %s\n", i, bones[i].name);
+
+        if (bones[i].parent == -1) {
+            printf("     Parent: ROOT (no parent)\n");
+        } else {
+            printf("     Parent: [%d] %s\n", bones[i].parent, bones[bones[i].parent].name);
+        }
+
+        printf("     Position: (%.2f, %.2f, %.2f)\n",
+                bones[i].value[0], bones[i].value[1], bones[i].value[2]);
+        printf("      Rotation: (%.2f, %.2f, %.2f)\n", 
+                bones[i].value[3], bones[i].value[4], bones[i].value[5]);
+        printf("     Scale: (%.2f, %.2f, %.2f)\n",
+                bones[i].scale[0], bones[i].scale[1], bones[i].scale[2]);
+        printf("      Rot Scale: (%.2f, %.2f, %.2f)\n", 
+                bones[i].scale[3], bones[i].scale[4], bones[i].scale[5]);
+        printf("\n");
+    }
+}
+
+mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences) {
+
+    if (!header || !data || !sequences) {
+        fprintf(stderr, "ERROR - Invalid parameters passed to parse_animation_sequences()!\n");
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+
+    if (header->numseq) {
+        *sequences = NULL;
+        return MDL_SUCCESS;
+    }
+
+    *sequences = (mstudioseqdesc_t *)(data + header->seqindex);
+
+    return MDL_SUCCESS;
+}
+
+void print_sequence_info(mstudioseqdesc_t *sequences, int sequence_count) {
     
 }
+
 
