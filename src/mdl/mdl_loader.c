@@ -336,27 +336,21 @@ void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_coun
         printf("        Texture ref: %d\n", meshes[i].skinref);
         printf("        Normals: %d\n", meshes[i].numnorms);
         printf("\n");    
-    }
-    
+    } 
 }
 
+mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_t **vertices) {
+    if (!model || !data || !vertices) {
+        fprintf(stderr, "ERROR - Invalid parameters passed to parse_vertex_data()!\n");
+        return MDL_ERROR_INVALID_PARAMETER;
+    }   
 
+    if (model->numverts == 0) {
+        *vertices = NULL;
+        return MDL_SUCCESS;
+    }
 
+    *vertices = (vec3_t *)(data + model->vertindex);
+    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
