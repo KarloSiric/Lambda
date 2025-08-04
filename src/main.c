@@ -81,10 +81,22 @@ int main(int argc, char const *argv[])
 
         for (int model_index = 0; model_index < bodyparts[bodypart_index].nummodels; model_index++) {
             print_model_info(&models[model_index], bodypart_index, model_index);
+            
+            mstudiomesh_t *meshes = NULL;
+
+            mdl_result_t mesh_result = parse_mesh_data(&models[model_index], main_data, &meshes);
+
+            if (mesh_result == MDL_SUCCESS) {
+                print_mesh_data(meshes, &models[model_index], models[model_index].nummesh);
+            } else {
+                printf("   Failed to parse meshes for model: %s\n", models[model_index].name);
+            }
         }
     }
 
     
+
+
 
 
 

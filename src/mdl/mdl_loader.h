@@ -30,8 +30,11 @@ mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **head
 mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_header, studiohdr_t **texture_header, unsigned char **main_data, unsigned char **texture_data);
 mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstudiobone_t **bones);
 mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences);
+mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes);
 
 
+
+void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count);
 char *generate_texture_filename(const char *model_filename);
 void print_model_info(mstudiomodel_t *model, int bodypart_index, int model_index);
 void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data);

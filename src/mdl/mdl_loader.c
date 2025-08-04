@@ -308,8 +308,39 @@ void print_model_info(mstudiomodel_t *model, int bodypart_index, int model_index
 }
 
 mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes) {
+    if (!model || !data || !meshes) {
+        fprintf(stderr, "ERROR - Invalid parameters passed to parse_mesh_data()!\n");
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+
+    if (model->nummesh == 0) {
+        *meshes = NULL;
+        return MDL_SUCCESS;
+    }
+
+    *meshes = (mstudiomesh_t *)(data + model->meshindex);
+    
+    return MDL_SUCCESS;
+}
+
+void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count) {
+ if (!meshes || mesh_count == 0) {
+        printf("    No meshes found for model: %s\n", model ? model->name : "Unknown");
+        return;
+    }
+
+    printf("    Meshes for Model: %s\n", model->name);
+    for (int i = 0; i < mesh_count; i++) {
+        printf("      Mesh %d:\n", i);
+        printf("        Triangles: %d\n", meshes[i].numtris);
+        printf("        Texture ref: %d\n", meshes[i].skinref);
+        printf("        Normals: %d\n", meshes[i].numnorms);
+        printf("\n");    
+    }
     
 }
+
+
 
 
 
