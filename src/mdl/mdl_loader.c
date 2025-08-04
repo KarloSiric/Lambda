@@ -5,7 +5,6 @@
 
 #include "mdl_loader.h"
 #include "../studio.h"
-#include <cstdio>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -242,7 +241,7 @@ mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data,
         return MDL_ERROR_INVALID_PARAMETER;
     }
 
-    if (header->numseq) {
+    if (header->numseq == 0) {
         *sequences = NULL;
         return MDL_SUCCESS;
     }
@@ -253,7 +252,80 @@ mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data,
 }
 
 void print_sequence_info(mstudioseqdesc_t *sequences, int sequence_count) {
+    if (!sequences || sequence_count == 0) {
+        printf("\nAnimation Sequences: No sequence found\n");
+        return;
+    }
+
+    printf("\nAnimation Sequences: (%d sequences):\n", sequence_count);
+    for (int i = 0; i < sequence_count; i++) {
+        printf(" [%d] %s\n", i, sequences[i].label);
+
+        printf("    Frames: %d @ %.1f fps\n", 
+                sequences[i].numframes, sequences[i].fps);
+        printf("    Activity: %d (weight: %d)\n",
+                sequences[i].activity, sequences[i].actweight);
+        printf("    Events: %d\n", sequences[i].numevents);
+        printf("    Flags: 0x%x", sequences[i].flags);
+
+        if (sequences[i].flags & 0x01) printf(" [LOOPING]");
+        if (sequences[i].flags & 0x08) printf(" [ACTIVITY]");
+
+        printf("\n");
+
+        printf("    Motion: type=%d, bone=%d\n",
+                sequences[i].motiontype, sequences[i].motionbone);
+
+        printf("    Bounding box: (%.1f, %.1f, %.1f) to (%.1f, %.1f, %.1f)\n",
+            sequences[i].bbmin[0], sequences[i].bbmin[1], sequences[i].bbmin[2],
+            sequences[i].bbmax[0], sequences[i].bbmax[1], sequences[i].bbmax[2]);
+        printf("    Blends: %d\n", sequences[i].numblends);
+        printf("\n");
+    }
+}
+
+
+void print_model_info(mstudiomodel_t *model, int bodypart_index, int model_index) {
+    if (!model) {
+        printf("Model [%d][%d]: NULL\n",
+                bodypart_index, model_index);
+        return;
+    }
+
+    printf("   Model[%d][%d]: %s\n",
+            bodypart_index, model_index, model->name);
+    printf("     Type: %d\n", model->type);
+    printf("        Bounding radius: %.2f\n", model->boundingradius);
+    printf("        Vertices: %d\n", model->numverts);
+    printf("        Meshes: %d\n", model->nummesh);
+    printf("        Normals: %d\n", model->numnorms);
+    
+    // Show mesh and vertex indices for debugging
+    printf("        Vertex index: 0x%X\n", model->vertindex);
+    printf("        Mesh index: 0x%X\n", model->meshindex);
+    printf("\n");
+
+}
+
+mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes) {
     
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

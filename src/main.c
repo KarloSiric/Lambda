@@ -60,6 +60,51 @@ int main(int argc, char const *argv[])
         printf("\nFailed to parse bone hierarchy (error: %d)\n", bone_result);
     }
 
+    mstudioseqdesc_t *sequences = NULL;
+    result = parse_animation_sequences(main_header, main_data, &sequences);
+    if (result != MDL_SUCCESS) {
+        fprintf(stderr, "Failed to parse animations\n");
+    }
+
+    print_sequence_info(sequences, main_header->numseq);
+
+    printf("\n=== Detailed Model Analysis ===\n");
+
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
+
+    for (int bodypart_index = 0; bodypart_index < main_header->numbodyparts; bodypart_index++) {
+
+        printf("Bodypart: %d: %s (%d models)\n",
+                bodypart_index, bodyparts[bodypart_index].name, bodyparts[bodypart_index].nummodels);
+
+        mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodyparts[bodypart_index].modelindex);
+
+        for (int model_index = 0; model_index < bodyparts[bodypart_index].nummodels; model_index++) {
+            print_model_info(&models[model_index], bodypart_index, model_index);
+        }
+    }
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    printf("Complete model analysis finished!\n");
 
     // Clean up memory
     free(main_data);
@@ -67,6 +112,5 @@ int main(int argc, char const *argv[])
         free(texture_data);
     }
     
-    printf("\nComplete model analysis finished!\n");
     return (0);
 }
