@@ -3,7 +3,6 @@
 
 
 #include "../studio.h"
-#include "mdl_loader.h"
 
 void print_complete_model_analysis(const char *filename, studiohdr_t *main_header,
                                    studiohdr_t *texture_header, unsigned char *main_data,

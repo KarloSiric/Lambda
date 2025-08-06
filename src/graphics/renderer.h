@@ -6,6 +6,28 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-// Function declarations will go here
+
+#include "../studio.h"
+#include "GLFW/glfw3.h"
+#include <stdbool.h>
+
+
+#define ASPECT_RATIO          (16 / 9)
+#define WIDTH                 ((int) 800)
+#define HEIGHT                ((int) WIDTH * (ASPECT_RATIO))
+
+int init_renderer(int width, int height, const char *title);
+void cleanup_renderer(void);
+
+void render_loop(void);
+bool should_close_window(void);
+
+void render_model(studiohdr_t *header, unsigned char *data);
+void set_wireframe_mode(bool enabled);
+
+void clear_screen(void);
+
+
+
 
 #endif // RENDERER_H

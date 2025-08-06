@@ -4,6 +4,7 @@
  */
 
 #include "main.h"
+#include "mdl/mdl_info.h"
 #include "mdl/mdl_loader.h"
 #include "studio.h"
 #include <stdio.h>
@@ -14,104 +15,25 @@
 
 int main(int argc, char const *argv[])
 {
-    if (argc != 2) {
-        printf("Usage: %s <model.mdl>\n", argv[0]);
-        return (1);
-    }
-
-    printf("Testing complete model+texture loading: %s\n", argv[1]);
     
-    // Variables for both model and texture data
     studiohdr_t *main_header = NULL;
     studiohdr_t *texture_header = NULL;
     unsigned char *main_data = NULL;
     unsigned char *texture_data = NULL;
 
-    // Test your new function!
+    if (argc != 2) {
+        printf("Usage: %s <model.mdl>\n", argv[0]);
+        return (1);
+    }
+
     mdl_result_t result = load_model_with_textures(argv[1], &main_header, &texture_header, &main_data, &texture_data);
-    
+
     if (result != MDL_SUCCESS) {
         printf("Failed to load model! Error code: %d\n", result);
         return (1);
     }
 
-    printf("SUCCESS! Model loaded completely!\n\n");
-    
-    // Display main model info
-    printf("=== MAIN MODEL INFO ===\n");
-    printf("  Name: %s\n", main_header->name);
-    printf("  File size: %d bytes\n", main_header->length);
-    printf("  Bones: %d\n", main_header->numbones);
-    printf("  Bodyparts: %d\n", main_header->numbodyparts);
-    printf("  Sequences: %d\n", main_header->numseq);
-    
-    // Display texture info
-    print_texture_info(texture_header, texture_data);
-    
-    // Display bodypart details
-    print_bodypart_info(main_header, main_data);
-
-    mstudiobone_t *bones = NULL;
-    mdl_result_t bone_result = parse_bone_hierarchy(main_header, main_data, &bones);
-
-    if (bone_result == MDL_SUCCESS && bones) {
-        print_bone_info(bones, main_header->numbones);
-    } else {
-        printf("\nFailed to parse bone hierarchy (error: %d)\n", bone_result);
-    }
-
-    mstudioseqdesc_t *sequences = NULL;
-    result = parse_animation_sequences(main_header, main_data, &sequences);
-    if (result != MDL_SUCCESS) {
-        fprintf(stderr, "Failed to parse animations\n");
-    }
-
-    print_sequence_info(sequences, main_header->numseq);
-
-    printf("\n=== Detailed Model Analysis ===\n");
-
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
-
-    for (int bodypart_index = 0; bodypart_index < main_header->numbodyparts; bodypart_index++) {
-
-        printf("Bodypart: %d: %s (%d models)\n",
-                bodypart_index, bodyparts[bodypart_index].name, bodyparts[bodypart_index].nummodels);
-
-        mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodyparts[bodypart_index].modelindex);
-
-        for (int model_index = 0; model_index < bodyparts[bodypart_index].nummodels; model_index++) {
-            print_model_info(&models[model_index], bodypart_index, model_index);
-            
-            mstudiomesh_t *meshes = NULL;
-
-            mdl_result_t mesh_result = parse_mesh_data(&models[model_index], main_data, &meshes);
-
-            if (mesh_result == MDL_SUCCESS) {
-                print_mesh_data(meshes, &models[model_index], models[model_index].nummesh);
-            } else {
-                printf("   Failed to parse meshes for model: %s\n", models[model_index].name);
-            }
-
-            vec3_t *vertices = NULL;
-
-            if (parse_vertex_data(&models[model_index], main_data, &vertices) == MDL_SUCCESS) {
-                if (vertices && models[model_index].numverts > 0) {
-                    printf("   Vertices:\n");
-                    printf("     First: (%.2f, %.2f, %.2f)\n",
-                            vertices[0][0], vertices[0][1], vertices[0][2]);
-                    if (models[model_index].numverts > 1) {
-                        printf("     Last: (%.2f, %.2f, %.2f)\n",
-                                vertices[models[model_index].numverts - 1][0],
-                                vertices[models[model_index].numverts - 1][1],
-                                vertices[models[model_index].numverts - 1][2]);
-                    }
-                }
-            }
-        }
-    }
-
-
-    printf("Complete model analysis finished!\n");
+    print_complete_model_analysis(argv[1], main_header, texture_header, main_data, texture_data);
 
     // Clean up memory
     free(main_data);

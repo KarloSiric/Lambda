@@ -26,6 +26,7 @@ include_directories(src)
 set(SOURCES
     src/main.c
     src/mdl/mdl_loader.c
+    src/mdl/mdl_info.c
     src/graphics/renderer.c
     src/graphics/camera.c
     src/utils/utils.c
