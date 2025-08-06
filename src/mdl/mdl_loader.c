@@ -351,6 +351,6 @@ mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_
     }
 
     *vertices = (vec3_t *)(data + model->vertindex);
-    
 
+    return MDL_SUCCESS;
 }

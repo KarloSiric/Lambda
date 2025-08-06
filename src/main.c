@@ -91,29 +91,24 @@ int main(int argc, char const *argv[])
             } else {
                 printf("   Failed to parse meshes for model: %s\n", models[model_index].name);
             }
+
+            vec3_t *vertices = NULL;
+
+            if (parse_vertex_data(&models[model_index], main_data, &vertices) == MDL_SUCCESS) {
+                if (vertices && models[model_index].numverts > 0) {
+                    printf("   Vertices:\n");
+                    printf("     First: (%.2f, %.2f, %.2f)\n",
+                            vertices[0][0], vertices[0][1], vertices[0][2]);
+                    if (models[model_index].numverts > 1) {
+                        printf("     Last: (%.2f, %.2f, %.2f)\n",
+                                vertices[models[model_index].numverts - 1][0],
+                                vertices[models[model_index].numverts - 1][1],
+                                vertices[models[model_index].numverts - 1][2]);
+                    }
+                }
+            }
         }
     }
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     printf("Complete model analysis finished!\n");
