@@ -7,6 +7,7 @@
 #include "mdl/mdl_info.h"
 #include "mdl/mdl_loader.h"
 #include "studio.h"
+#include "graphics/renderer.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -34,6 +35,18 @@ int main(int argc, char const *argv[])
     }
 
     print_complete_model_analysis(argv[1], main_header, texture_header, main_data, texture_data);
+
+
+    if (init_renderer(WIDTH, HEIGHT, "Half-Life Model Viewer") != 0) {
+        printf("Failed to initialize renderer!\n");
+        free(main_data);
+        if (texture_data) free(texture_data);
+        return (1);
+    }
+
+    render_loop();
+
+    cleanup_renderer();
 
     // Clean up memory
     free(main_data);
