@@ -61,7 +61,23 @@ int init_renderer(int width, int height, const char *title) {
             glGetString(GL_VERSION));
 
     return (0);
-}   
+}
+
+void cleanup_renderer(void) {
+
+    if (window) {
+        glfwDestroyWindow(window);
+        printf("Shutting down Window ...\n");
+    }
+
+    glfwTerminate();
+
+    printf("GLFW Fully Terminated!\n");
+
+    return;
+}
+
+
 
 
 
