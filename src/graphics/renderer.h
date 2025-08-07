@@ -27,7 +27,4 @@ void set_wireframe_mode(bool enabled);
 
 void clear_screen(void);
 
-
-
-
 #endif // RENDERER_H

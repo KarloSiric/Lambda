@@ -4,7 +4,6 @@
  */
 
 #include "renderer.h"
-#include <cstdio>
 
 
 
@@ -56,8 +55,7 @@ void setup_triangle(void) {
     glEnableVertexAttribArray(0);
 }
 
-static char *read_shader_source(const char *filepath) {
-
+static char *read_shader_source(const char *filepath) { 
     FILE *file = fopen(filepath, "r");
     if (!file) {
         fprintf(stderr, "ERROR - Failed to open the shader file: '%s' \n",
@@ -126,8 +124,8 @@ static GLuint create_shader_program(GLuint vertexShader, GLuint fragmentShader) 
 }
 
 static int load_shaders(void) {
-    char *vertex_shader_file = read_shader_source("shaders/basic.vert");
-    char *fragment_shader_file = read_shader_source("shaders/basic.frag");
+    char *vertex_shader_file = read_shader_source("../shaders/basic.vert");
+    char *fragment_shader_file = read_shader_source("../shaders/basic.frag");
 
     if (!vertex_shader_file || !fragment_shader_file) {
         if (vertex_shader_file) free(vertex_shader_file);
@@ -144,17 +142,18 @@ static int load_shaders(void) {
         return (-1);
     }
 
-    
+    shader_program = create_shader_program(vertexShader, fragmentShader);
 
+    if (shader_program == 0) {
+        fprintf(stderr, "ERROR - Failed to create properly a shader program!\n");
+        return (-1);
+    }
 
+    printf("Shaders loaded and compiled successfully!\n");
+    printf("Shader program up and ready to be used!\n");
 
-
-
-
-
-
+    return (0);
 }
-
 
 
 int init_renderer(int width, int height, const char *title) {  
@@ -204,10 +203,16 @@ int init_renderer(int width, int height, const char *title) {
 
     setup_triangle();
 
-    printf("OpenGL Version: %s\n",
-            glGetString(GL_VERSION));
 
-    return (0);
+    if ( load_shaders() != 0 ) {
+        fprintf(stderr, "ERROR - Failed to load shaders!\n");
+        return ( -1 );
+    }
+
+    printf("OpenGL Version: %s\n",
+            glGetString( GL_VERSION ));
+
+    return ( 0 );
 }
 
 void cleanup_renderer(void) {
@@ -240,6 +245,7 @@ bool should_close_window(void) {
 }
 
 void render_loop(void) {
+    
     while(!should_close_window()) {
 
         clear_screen();
@@ -251,6 +257,7 @@ void render_loop(void) {
 
         glfwPollEvents();
     }
+
 }
 
 void set_wireframe_mode(bool enabled) {
@@ -270,7 +277,5 @@ void render_model(studiohdr_t *header, unsigned char *data) {
     glBindVertexArray(VAO);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
-
 }
-
 
