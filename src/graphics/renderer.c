@@ -77,6 +77,19 @@ void cleanup_renderer(void) {
     return;
 }
 
+void clear_screen(void) {
+
+    glClearColor(0.1f, 0.2f, 0.45f, 1.0f);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+bool should_close_window(void) {
+
+    return (glfwWindowShouldClose(window) ||
+            (glfwGetKey(window, GLFW_KEY_ESCAPE)) == GLFW_PRESS);
+
+}
 
 
 
