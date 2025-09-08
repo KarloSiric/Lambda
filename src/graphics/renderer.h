@@ -12,7 +12,7 @@
 #include <stdbool.h>
 
 
-#define ASPECT_RATIO          (16.0f / 9.0f)
+#define ASPECT_RATIO          ((float)(16.0f / 9.0f))
 #define WIDTH                 ((int) 800)
 #define HEIGHT                ((int) WIDTH * (ASPECT_RATIO))
 

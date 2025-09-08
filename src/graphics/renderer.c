@@ -39,7 +39,7 @@ static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int act
 float vertices[] = {
     -0.5f, -0.5f, 0.0f,  // Bottom left
      0.5f, -0.5f, 0.0f,  // Bottom right  
-     0.0f,  0.5f, 0.0f   // Top center
+     0.0f,  0.5f, 0.0f   // Top center  
 };
 
 
@@ -95,7 +95,7 @@ static GLuint compile_shader(const char *source, GLenum type) {
     if (!success) {
         char shader_info[512];
         glGetShaderInfoLog(shader, 512, NULL, shader_info);
-        fprintf(stderr, "ERROR - Failed to compile shaders!\n");
+        fprintf(stderr, "ERROR - Failed to compile shaders: \n%s\n", shader_info);
         return (0);
     } 
 
@@ -131,8 +131,9 @@ static int load_shaders(void) {
         if (vertex_shader_file) free(vertex_shader_file);
         if (fragment_shader_file) free(fragment_shader_file);
     }
-
+    printf("Compiling vertex shader...\n");
     GLuint vertexShader = compile_shader(vertex_shader_file, GL_VERTEX_SHADER);
+    printf("Compiling fragment shader...\n");
     GLuint fragmentShader = compile_shader(fragment_shader_file, GL_FRAGMENT_SHADER);
 
     free(vertex_shader_file);

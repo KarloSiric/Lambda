@@ -21,8 +21,8 @@ Key structures:
 
 #ifndef STUDIO_H
 #define STUDIO_H
-
 #ifdef __cplusplus
+
 extern "C" {
 #endif
 

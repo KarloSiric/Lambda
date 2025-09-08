@@ -34,8 +34,8 @@ int main(int argc, char const *argv[])
         return (1);
     }
 
-    print_complete_model_analysis(argv[1], main_header, texture_header, main_data, texture_data);
 
+    print_complete_model_analysis(argv[1], main_header, texture_header, main_data, texture_data);
 
     if (init_renderer(WIDTH, HEIGHT, "Half-Life Model Viewer") != 0) {
         printf("Failed to initialize renderer!\n");

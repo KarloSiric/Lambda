@@ -121,7 +121,6 @@ char *generate_texture_filename(const char *model_filename) {
         memmove(dot_position + 1, dot_position, strlen(dot_position) + 1);
         *dot_position = 't';
     }
-
     return texture_filename;
 }
 
