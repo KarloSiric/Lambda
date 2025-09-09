@@ -51,6 +51,7 @@ mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size
     fclose(file);
 
     return MDL_SUCCESS;
+    
 }
 
 mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **header) {
