@@ -16,7 +16,6 @@ mdl_result_t validate_mdl_magic(int magic) {
     } else {
         return MDL_ERROR_INVALID_MAGIC;
     }
-
 }
 
 mdl_result_t validate_mdl_version(int version) {
@@ -25,7 +24,6 @@ mdl_result_t validate_mdl_version(int version) {
     } else {
         return MDL_ERROR_INVALID_VERSION;
     }
-
 }
 
 mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size_t *file_size) {
