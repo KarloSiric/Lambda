@@ -66,6 +66,7 @@ int main(int argc, char const *argv[])
         // Allocate memory for all vertices
         float *all_vertices = malloc(total_vertices * 3 * sizeof(float));
         int vertex_offset = 0;
+        int vertex_offset_for_bodypart[3] = {0}; // Track vertex offsets for each bodypart
         
         // Load vertices from all bodyparts
         for (int bp = 0; bp < main_header->numbodyparts; bp++) {
@@ -77,6 +78,7 @@ int main(int argc, char const *argv[])
                 mstudiomodel_t *model = &models[0]; // Use first model
                 
                 printf("Loading bodypart %d: %d vertices\n", bp, model->numverts);
+                vertex_offset_for_bodypart[bp] = vertex_offset; // Store offset for this bodypart
                 
                 if (model->numverts > 0) {
                     vec3_t *vertices = (vec3_t *)(main_data + model->vertindex);
@@ -92,6 +94,10 @@ int main(int argc, char const *argv[])
                 }
             }
         }
+        
+        // TEMPORARILY: Just render vertices as points to verify they're loaded correctly
+        printf("\nNOTE: Triangle parsing is currently broken - rendering vertices as POINTS only\n");
+        printf("This will show the model shape but not the surfaces\n\n");
         
         setup_model_vertices(all_vertices, total_vertices);
         printf("Complete model loaded with %d total vertices!\n", total_vertices);

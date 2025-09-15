@@ -73,6 +73,7 @@ void setup_model_vertices(float *vertices, int count) {
     // Store the vertex data
     model_vertices = vertices;
     vertex_count = count;
+    index_count = 0;  // No indices - use regular vertex array drawing
     
     printf("Loading %d vertices into OpenGL buffers...\n", count);
     
@@ -312,27 +313,15 @@ void render_loop(void) {
         glBindVertexArray(VAO);
         
         if (vertex_count > 0) {
-            // Draw the model as wireframe triangles to see the structure
+            // TEMPORARY: Draw as points to visualize the model shape
             if (!debug_printed) {
-                if (index_count > 0) {
-                    printf("Rendering %d vertices with %d indices as wireframe triangles\n", vertex_count, index_count);
-                } else {
-                    printf("Rendering %d vertices as wireframe triangles\n", vertex_count);
-                }
+                printf("Rendering %d vertices as POINTS (triangle parsing needs fixing)\n", vertex_count);
                 debug_printed = true;
             }
             
-            // Enable wireframe mode to see the structure
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            
-            if (index_count > 0) {
-                // Draw using indices (better triangle connectivity)
-                glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, 0);
-            } else {
-                // Draw triangles using every 3 consecutive vertices (fallback)
-                int triangle_count = vertex_count / 3;
-                glDrawArrays(GL_TRIANGLES, 0, triangle_count * 3);
-            }
+            // Draw points to see the model shape
+            glPointSize(3.0f);
+            glDrawArrays(GL_POINTS, 0, vertex_count);
         } else {
             // Fallback to triangle if no model loaded
             if (!debug_printed) {

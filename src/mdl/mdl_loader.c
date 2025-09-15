@@ -354,7 +354,7 @@ mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_
 }
 
 // Simple triangle index generation for basic wireframe
-mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, int *index_count) {
+mdl_result_t create_simple_triangle_indices(int vertex_count, unsigned short **indices, int *index_count) {
     if (!indices || !index_count || vertex_count <= 0) {
         return MDL_ERROR_INVALID_PARAMETER;
     }
@@ -366,7 +366,7 @@ mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, i
         return MDL_SUCCESS;
     }
     
-    *indices = malloc(*index_count * sizeof(short));
+    *indices = malloc(*index_count * sizeof(unsigned short));
     if (!*indices) {
         return MDL_ERROR_MEMORY_ALLOCATION;
     }
@@ -393,7 +393,7 @@ void print_simple_triangle_info(mstudiomodel_t *model, int bodypart_index, int m
         return;
     }
     
-    short *simple_indices = NULL;
+    unsigned short *simple_indices = NULL;
     int index_count = 0;
     
     mdl_result_t result = create_simple_triangle_indices(model->numverts, &simple_indices, &index_count);
@@ -436,78 +436,97 @@ mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, s
         return MDL_SUCCESS;
     }
 
+    // Get pointer to triangle commands
     unsigned char *triangle_commands = data + mesh->triindex;
-    short *command_reader = (short *)triangle_commands; 
-
-    int total_triangle_indices = 0;
-    short *current_reader = command_reader;
-
-    while(true) {
-        short vertex_count = *current_reader++;
-
+    short *command_reader = (short *)triangle_commands;
+    
+    // First pass: count total triangles needed
+    int total_triangles = 0;
+    short *reader = command_reader;
+    
+    while (true) {
+        short vertex_count = *reader++;
+        
         if (vertex_count == 0) {
-            break;
+            break; // End of commands
         }
-
+        
         if (vertex_count < 0) {
+            // Triangle fan: N vertices = (N-2) triangles
             vertex_count = -vertex_count;
-
-            /* Reason -> N vertices == (N - 2) triangles
-             * Each triangle needs 3 vertices so (N - 2) * 3 
-            */
-            total_triangle_indices += ((vertex_count - 2) * 3);
+            total_triangles += (vertex_count - 2);
         } else {
-            total_triangle_indices += ((vertex_count - 2) * 3);
+            // Triangle strip: N vertices = (N-2) triangles  
+            total_triangles += (vertex_count - 2);
         }
-
-        current_reader += vertex_count * 4;
+        
+        // Skip past the trivert data (each trivert is 4 shorts)
+        reader += vertex_count * 4;
     }
-
-
-    *indices = malloc(total_triangle_indices * sizeof(short));
+    
+    if (total_triangles <= 0) {
+        *indices = NULL;
+        *index_count = 0;
+        return MDL_SUCCESS;
+    }
+    
+    // Allocate index array (3 indices per triangle)
+    int total_indices = total_triangles * 3;
+    *indices = malloc(total_indices * sizeof(short));
     if (!*indices) {
         fprintf(stderr, "ERROR - Failed to allocate memory for triangle indices!\n");
         return MDL_ERROR_MEMORY_ALLOCATION;
     }
-
-    *index_count = total_triangle_indices;
-
-    current_reader = command_reader;
+    
+    // Second pass: generate actual triangle indices
+    reader = command_reader;
     int output_index = 0;
-
-    while(true) {
-
-        short vertex_count = *command_reader++;
+    
+    while (true) {
+        short vertex_count = *reader++;
+        
         if (vertex_count == 0) {
-            break;
+            break; // End of commands
         }
-
-        mstudiotrivert_t *vertices = (mstudiotrivert_t *)command_reader;
-
+        
+        // Get pointer to trivert array for this command
+        mstudiotrivert_t *triverts = (mstudiotrivert_t *)reader;
+        
         if (vertex_count < 0) {
-            // triangle FAN
-            vertex_count = (-vertex_count);
-            for (int i = 2; i < vertex_count; i++) {
-                (*indices)[output_index++] = vertices[0].vertindex;
-                (*indices)[output_index++] = vertices[i-1].vertindex;
-                (*indices)[output_index++] = vertices[i].vertindex;
+            // TRIANGLE FAN - all triangles share the first vertex
+            vertex_count = -vertex_count;
+            
+            for (int i = 1; i < vertex_count - 1; i++) {
+                (*indices)[output_index++] = triverts[0].vertindex;     // Center vertex
+                (*indices)[output_index++] = triverts[i].vertindex;     // Current vertex
+                (*indices)[output_index++] = triverts[i + 1].vertindex; // Next vertex
             }
         } else {
-            for (int i = 2; i < vertex_count; i++) {
+            // TRIANGLE STRIP - alternating winding order
+            for (int i = 0; i < vertex_count - 2; i++) {
                 if (i % 2 == 0) {
-                    (*indices)[output_index++] = vertices[i-2].vertindex;
-                    (*indices)[output_index++] = vertices[i-1].vertindex;
-                    (*indices)[output_index++] = vertices[i].vertindex;
+                    // Even triangle: normal winding
+                    (*indices)[output_index++] = triverts[i].vertindex;
+                    (*indices)[output_index++] = triverts[i + 1].vertindex;
+                    (*indices)[output_index++] = triverts[i + 2].vertindex;
                 } else {
-                    (*indices)[output_index++] = vertices[i-1].vertindex;
-                    (*indices)[output_index++] = vertices[i-2].vertindex;
-                    (*indices)[output_index++] = vertices[i].vertindex;
+                    // Odd triangle: reversed winding to maintain consistent orientation
+                    (*indices)[output_index++] = triverts[i].vertindex;
+                    (*indices)[output_index++] = triverts[i + 2].vertindex;
+                    (*indices)[output_index++] = triverts[i + 1].vertindex;
                 }
             }
         }
-        command_reader += vertex_count * 4;
+        
+        // Advance past this command's trivert data
+        reader += vertex_count * 4;
     }
-
+    
+    *index_count = total_indices;
+    
+    printf("DEBUG: Parsed %d triangles (%d indices) from mesh with %d expected triangles\n", 
+           total_triangles, total_indices, mesh->numtris);
+    
     return MDL_SUCCESS;
 }
 
@@ -526,7 +545,7 @@ void print_triangle_info(mstudiomesh_t *meshes, mstudiomodel_t *model, unsigned 
         printf("        DEBUG: Model mesh index: 0x%X\n", model->meshindex);
 
 
-        printf("     Mesh %d:\n");
+        printf("     Mesh %d:\n", i);
         printf("       Expected triangles: %d\n", meshes[i].numtris);
         printf("       Triangle commands offset: 0x%X\n", meshes[i].triindex);
 
