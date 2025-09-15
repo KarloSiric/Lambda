@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-08-06 07:37:32
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-09-15 09:38:34
+* @Last Modified time: 2025-09-15 19:51:50
 */
 
 #include "mdl_info.h"
@@ -57,6 +57,7 @@ void print_complete_model_analysis(const char *filename, studiohdr_t *main_heade
             mdl_result_t mesh_result = parse_mesh_data(&models[model_index], main_data, &meshes);
             if (mesh_result == MDL_SUCCESS && meshes) {
                 print_mesh_data(meshes, &models[model_index], models[model_index].nummesh);
+                print_simple_triangle_info(&models[model_index], bodypart_index, model_index);
             } else {
                 printf("   Failed to parse meshes for model: %s\n", models[model_index].name);
             }

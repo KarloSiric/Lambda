@@ -31,7 +31,7 @@ mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstu
 mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences);
 mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes);
 mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_t **vertices);
-mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, short **indices, int *index_count);
+mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, int *index_count);
 
 
 void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count);
@@ -41,4 +41,6 @@ void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data
 void print_bodypart_info(studiohdr_t *header, unsigned char *file_data);
 void print_bone_info(mstudiobone_t *bones, int bone_count); 
 void print_sequence_info(mstudioseqdesc_t *sequences, int sequence_count);
+void print_simple_triangle_info(mstudiomodel_t *model, int bodypart_index, int model_index);
+
 #endif // MDL_LOADER_H

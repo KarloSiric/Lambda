@@ -353,6 +353,73 @@ mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_
     return MDL_SUCCESS;
 }
 
+// Simple triangle index generation for basic wireframe
+mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, int *index_count) {
+    if (!indices || !index_count || vertex_count <= 0) {
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+    
+    // Create triangles from consecutive vertices (not perfect but works)
+    *index_count = (vertex_count / 3) * 3;
+    if (*index_count == 0) {
+        *indices = NULL;
+        return MDL_SUCCESS;
+    }
+    
+    *indices = malloc(*index_count * sizeof(short));
+    if (!*indices) {
+        return MDL_ERROR_MEMORY_ALLOCATION;
+    }
+    
+    for (int i = 0; i < *index_count; i++) {
+        (*indices)[i] = i;
+    }
+    
+    return MDL_SUCCESS;
+}
+
+void print_simple_triangle_info(mstudiomodel_t *model, int bodypart_index, int model_index) {
+    if (!model) {
+        printf("    No model data for triangle testing.\n");
+        return;
+    }
+    
+    printf("    Simple Triangle Index Test:\n");
+    printf("      Model[%d][%d]: %s has %d vertices\n", 
+           bodypart_index, model_index, model->name, model->numverts);
+    
+    if (model->numverts == 0) {
+        printf("      No vertices to create triangles from.\n");
+        return;
+    }
+    
+    short *simple_indices = NULL;
+    int index_count = 0;
+    
+    mdl_result_t result = create_simple_triangle_indices(model->numverts, &simple_indices, &index_count);
+    
+    if (result == MDL_SUCCESS && simple_indices) {
+        printf("      SUCCESS: Created %d triangle indices\n", index_count);
+        printf("      Triangles: %d (from %d vertices)\n", index_count / 3, model->numverts);
+        
+        // Print first few indices
+        if (index_count > 0) {
+            printf("      First indices: ");
+            int print_count = index_count < 12 ? index_count : 12;
+            for (int j = 0; j < print_count; j++) {
+                printf("%d ", simple_indices[j]);
+                if ((j + 1) % 3 == 0) printf("| ");
+            }
+            printf("\n");
+        }
+        
+        free(simple_indices);
+    } else {
+        printf("      FAILED: Error %d creating simple indices\n", result);
+    }
+    printf("\n");
+}
+
 /* TODO(Karlo): Adding the extraction of the mesh connectivity 
                 Need to know how meshes are being connected properly.
 */
@@ -416,16 +483,82 @@ mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, s
         }
 
         mstudiotrivert_t *vertices = (mstudiotrivert_t *)command_reader;
+
+        if (vertex_count < 0) {
+            // triangle FAN
+            vertex_count = (-vertex_count);
+            for (int i = 2; i < vertex_count; i++) {
+                (*indices)[output_index++] = vertices[0].vertindex;
+                (*indices)[output_index++] = vertices[i-1].vertindex;
+                (*indices)[output_index++] = vertices[i].vertindex;
+            }
+        } else {
+            for (int i = 2; i < vertex_count; i++) {
+                if (i % 2 == 0) {
+                    (*indices)[output_index++] = vertices[i-2].vertindex;
+                    (*indices)[output_index++] = vertices[i-1].vertindex;
+                    (*indices)[output_index++] = vertices[i].vertindex;
+                } else {
+                    (*indices)[output_index++] = vertices[i-1].vertindex;
+                    (*indices)[output_index++] = vertices[i-2].vertindex;
+                    (*indices)[output_index++] = vertices[i].vertindex;
+                }
+            }
+        }
+        command_reader += vertex_count * 4;
     }
 
-    
+    return MDL_SUCCESS;
+}
+
+void print_triangle_info(mstudiomesh_t *meshes, mstudiomodel_t *model, unsigned char *data, int mesh_count) {
+    if (!meshes || mesh_count == 0 || !model || !data) {
+        printf("   No triangle data available for testing.\n");
+        return;
+    }
+
+    printf("   Testing Triangle Commands:\n");
+
+    for (int i = 0; i < mesh_count; i++) {
+
+        printf("        DEBUG: Model vertex count: %d\n", model->numverts);
+        printf("        DEBUG: Mesh triindex: 0x%X (decimal: %d)\n", meshes[i].triindex, meshes[i].triindex);
+        printf("        DEBUG: Model mesh index: 0x%X\n", model->meshindex);
 
 
+        printf("     Mesh %d:\n");
+        printf("       Expected triangles: %d\n", meshes[i].numtris);
+        printf("       Triangle commands offset: 0x%X\n", meshes[i].triindex);
 
+        if (meshes[i].numtris == 0) {
+            printf("       No triangles to parse.\n");
+            continue;
+        }
 
+        short *triangle_indices = NULL;
+        int index_count = 0;
 
+        mdl_result_t result = parse_triangle_commands(&meshes[i], data, &triangle_indices, &index_count);
 
+        if (result == MDL_SUCCESS && triangle_indices) {
+            printf("       SUCCESS: Extracted %d indices\n", index_count);
+            printf("       Triangles created: %d (expected %d)\n", index_count / 3 , meshes[i].numtris);
 
-
-
+            if (index_count > 0) {
+                printf("       First indices: ");
+                int print_count = index_count < 12 ? index_count : 12;
+                for (int j = 0; j < print_count; j++) {
+                    printf("%d ", triangle_indices[j]);
+                    if ((j + 1) % 3 == 0) {
+                        printf("| ");
+                    }
+                    printf("\n");
+                }
+            }
+            free(triangle_indices);
+        } else {
+            printf("       FAILED: Error %d parsing triangle commands\n", result);
+        }
+        printf("\n");
+    }
 }

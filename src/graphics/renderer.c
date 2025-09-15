@@ -27,11 +27,13 @@ static bool wireframe_enabled = false;
 
 static unsigned int VBO = 0;
 static unsigned int VAO = 0;
+static unsigned int EBO = 0;  // Element Buffer Object for indices
 static unsigned int shader_program = 0;
 
 // Model data
 static float *model_vertices = NULL;
 static int vertex_count = 0;
+static int index_count = 0;
 static bool debug_printed = false;
 
 static void glfw_error_callback(int error, const char *description) {
@@ -266,6 +268,7 @@ void cleanup_renderer(void) {
 
     if (VAO) glDeleteVertexArrays(1, &VAO);
     if (VBO) glDeleteBuffers(1, &VBO);
+    if (EBO) glDeleteBuffers(1, &EBO);
     if (shader_program) glDeleteProgram(shader_program);
 
     if (window) {
@@ -311,16 +314,25 @@ void render_loop(void) {
         if (vertex_count > 0) {
             // Draw the model as wireframe triangles to see the structure
             if (!debug_printed) {
-                printf("Rendering %d vertices as wireframe triangles\n", vertex_count);
+                if (index_count > 0) {
+                    printf("Rendering %d vertices with %d indices as wireframe triangles\n", vertex_count, index_count);
+                } else {
+                    printf("Rendering %d vertices as wireframe triangles\n", vertex_count);
+                }
                 debug_printed = true;
             }
             
             // Enable wireframe mode to see the structure
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             
-            // Draw triangles using every 3 consecutive vertices
-            int triangle_count = vertex_count / 3;
-            glDrawArrays(GL_TRIANGLES, 0, triangle_count * 3);
+            if (index_count > 0) {
+                // Draw using indices (better triangle connectivity)
+                glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, 0);
+            } else {
+                // Draw triangles using every 3 consecutive vertices (fallback)
+                int triangle_count = vertex_count / 3;
+                glDrawArrays(GL_TRIANGLES, 0, triangle_count * 3);
+            }
         } else {
             // Fallback to triangle if no model loaded
             if (!debug_printed) {
@@ -356,5 +368,35 @@ void render_model(studiohdr_t *header, unsigned char *data) {
     glBindVertexArray(VAO);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void setup_model_vertices_with_indices(float *vertices, int vertex_count_param, unsigned short *indices, int index_count_param) {
+    vertex_count = vertex_count_param;
+    index_count = index_count_param;
+    
+    printf("Loading %d vertices and %d indices into OpenGL buffers...\n", vertex_count, index_count);
+    
+    // Generate and bind VAO
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    
+    // Generate and bind VBO for vertices
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertex_count * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
+    
+    // Generate and bind EBO for indices
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_count * sizeof(unsigned short), indices, GL_STATIC_DRAW);
+    
+    // Set vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    
+    // Unbind
+    glBindVertexArray(0);
+    
+    printf("Model vertices and indices loaded successfully!\n");
 }
 
