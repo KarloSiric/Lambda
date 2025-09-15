@@ -22,7 +22,6 @@ typedef enum
 } mdl_result_t;
 
 
-
 mdl_result_t validate_mdl_magic(int magic);
 mdl_result_t validate_mdl_version(int version);
 mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size_t *file_size);
@@ -32,6 +31,7 @@ mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstu
 mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences);
 mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes);
 mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_t **vertices);
+mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, short **indices, int *index_count);
 
 
 void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count);

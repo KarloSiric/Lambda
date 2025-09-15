@@ -5,6 +5,7 @@
 
 #include "mdl_loader.h"
 #include "../studio.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,8 +51,7 @@ mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size
 
     fclose(file);
 
-    return MDL_SUCCESS;
-    
+    return MDL_SUCCESS; 
 }
 
 mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **header) {
@@ -351,4 +351,81 @@ mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_
     *vertices = (vec3_t *)(data + model->vertindex);
 
     return MDL_SUCCESS;
+}
+
+/* TODO(Karlo): Adding the extraction of the mesh connectivity 
+                Need to know how meshes are being connected properly.
+*/
+
+mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, short **indices, int *index_count) {
+    if (!mesh || !data || !indices || !index_count) {
+        fprintf(stderr, "ERROR - Invalid parameters passed to parse_triangle_commands()!\n");
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+
+    if (mesh->numtris == 0) {
+        *indices = NULL;
+        *index_count = 0;
+        return MDL_SUCCESS;
+    }
+
+    unsigned char *triangle_commands = data + mesh->triindex;
+    short *command_reader = (short *)triangle_commands; 
+
+    int total_triangle_indices = 0;
+    short *current_reader = command_reader;
+
+    while(true) {
+        short vertex_count = *current_reader++;
+
+        if (vertex_count == 0) {
+            break;
+        }
+
+        if (vertex_count < 0) {
+            vertex_count = -vertex_count;
+
+            /* Reason -> N vertices == (N - 2) triangles
+             * Each triangle needs 3 vertices so (N - 2) * 3 
+            */
+            total_triangle_indices += ((vertex_count - 2) * 3);
+        } else {
+            total_triangle_indices += ((vertex_count - 2) * 3);
+        }
+
+        current_reader += vertex_count * 4;
+    }
+
+
+    *indices = malloc(total_triangle_indices * sizeof(short));
+    if (!*indices) {
+        fprintf(stderr, "ERROR - Failed to allocate memory for triangle indices!\n");
+        return MDL_ERROR_MEMORY_ALLOCATION;
+    }
+
+    *index_count = total_triangle_indices;
+
+    current_reader = command_reader;
+    int output_index = 0;
+
+    while(true) {
+
+        short vertex_count = *command_reader++;
+        if (vertex_count == 0) {
+            break;
+        }
+
+        mstudiotrivert_t *vertices = (mstudiotrivert_t *)command_reader;
+    }
+
+    
+
+
+
+
+
+
+
+
+
 }

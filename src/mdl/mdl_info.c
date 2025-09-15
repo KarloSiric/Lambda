@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-08-06 07:37:32
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-08-06 08:37:59
+* @Last Modified time: 2025-09-15 09:38:34
 */
 
 #include "mdl_info.h"
@@ -80,6 +80,4 @@ void print_complete_model_analysis(const char *filename, studiohdr_t *main_heade
 
     printf("Complete model analysis completed!\n");
 }
-
-
 

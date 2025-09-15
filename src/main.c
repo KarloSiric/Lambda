@@ -26,7 +26,6 @@ int main(int argc, char const *argv[])
         return (1);
     }
 
-
     mdl_result_t result = load_model_with_textures(argv[1], &main_header, &texture_header, &main_data, &texture_data);
 
     if (result != MDL_SUCCESS) {
@@ -42,6 +41,60 @@ int main(int argc, char const *argv[])
         free(main_data);
         if (texture_data) free(texture_data);
         return (1);
+    }
+    
+    // Extract vertices from ALL bodyparts and load into OpenGL
+    printf("\nExtracting ALL model parts for rendering...\n");
+    
+    // Count total vertices across all bodyparts
+    int total_vertices = 0;
+    
+    for (int bp = 0; bp < main_header->numbodyparts; bp++) {
+        mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
+        mstudiobodypart_t *bodypart = &bodyparts[bp];
+        
+        if (bodypart->nummodels > 0) {
+            mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodypart->modelindex);
+            mstudiomodel_t *first_model = &models[0]; // Use first model of each bodypart
+            total_vertices += first_model->numverts;
+        }
+    }
+    
+    printf("Total vertices across all bodyparts: %d\n", total_vertices);
+    
+    if (total_vertices > 0) {
+        // Allocate memory for all vertices
+        float *all_vertices = malloc(total_vertices * 3 * sizeof(float));
+        int vertex_offset = 0;
+        
+        // Load vertices from all bodyparts
+        for (int bp = 0; bp < main_header->numbodyparts; bp++) {
+            mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
+            mstudiobodypart_t *bodypart = &bodyparts[bp];
+            
+            if (bodypart->nummodels > 0) {
+                mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodypart->modelindex);
+                mstudiomodel_t *model = &models[0]; // Use first model
+                
+                printf("Loading bodypart %d: %d vertices\n", bp, model->numverts);
+                
+                if (model->numverts > 0) {
+                    vec3_t *vertices = (vec3_t *)(main_data + model->vertindex);
+                    
+                    // Copy vertices with scaling
+                    for (int i = 0; i < model->numverts; i++) {
+                        all_vertices[(vertex_offset + i) * 3 + 0] = vertices[i][0] * 0.02f;
+                        all_vertices[(vertex_offset + i) * 3 + 1] = vertices[i][1] * 0.02f;
+                        all_vertices[(vertex_offset + i) * 3 + 2] = vertices[i][2] * 0.02f;
+                    }
+                    
+                    vertex_offset += model->numverts;
+                }
+            }
+        }
+        
+        setup_model_vertices(all_vertices, total_vertices);
+        printf("Complete model loaded with %d total vertices!\n", total_vertices);
     }
     
     render_loop();

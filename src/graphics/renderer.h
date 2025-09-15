@@ -24,6 +24,7 @@ bool should_close_window(void);
 
 void render_model(studiohdr_t *header, unsigned char *data);
 void set_wireframe_mode(bool enabled);
+void setup_model_vertices(float *vertices, int count);
 
 void clear_screen(void);
 

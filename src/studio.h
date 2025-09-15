@@ -178,8 +178,8 @@ typedef struct
 typedef struct
 {
     int                 numtris;                // Number of triangles
-    int                 triindex;               // Offset to triangle commands
     int                 skinref;                // Material/texture reference
+    int                 triindex;               // Offset to triangle commands
     int                 numnorms;               // Per mesh normals
     int                 normindex;              // Offset to normal vec3_t array
 } mstudiomesh_t;
