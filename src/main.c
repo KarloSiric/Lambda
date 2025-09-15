@@ -10,6 +10,7 @@
 #include "graphics/renderer.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 // Code will go here as we write it together
 
@@ -33,6 +34,13 @@ int main(int argc, char const *argv[])
         return (1);
     }
 
+    // Debug: Check structure sizes to ensure they're correct
+    printf("\n=== STRUCTURE SIZE CHECK ===\n");
+    printf("sizeof(mstudiomesh_t) = %zu (should be 20)\n", sizeof(mstudiomesh_t));
+    printf("sizeof(studiohdr_t) = %zu (should be 244)\n", sizeof(studiohdr_t));
+    printf("sizeof(mstudiotrivert_t) = %zu (should be 8)\n", sizeof(mstudiotrivert_t));
+    printf("\n");
+    
     print_complete_model_analysis(argv[1], main_header, texture_header, main_data, texture_data);
 
     printf("Initializing the renderer...\n");
@@ -83,11 +91,11 @@ int main(int argc, char const *argv[])
                 if (model->numverts > 0) {
                     vec3_t *vertices = (vec3_t *)(main_data + model->vertindex);
                     
-                    // Copy vertices with scaling
+                    // Copy vertices with better scaling and centering
                     for (int i = 0; i < model->numverts; i++) {
-                        all_vertices[(vertex_offset + i) * 3 + 0] = vertices[i][0] * 0.02f;
-                        all_vertices[(vertex_offset + i) * 3 + 1] = vertices[i][1] * 0.02f;
-                        all_vertices[(vertex_offset + i) * 3 + 2] = vertices[i][2] * 0.02f;
+                        all_vertices[(vertex_offset + i) * 3 + 0] = vertices[i][0] * 0.005f;  // X
+                        all_vertices[(vertex_offset + i) * 3 + 1] = vertices[i][1] * 0.005f - 0.2f;  // Y - move up
+                        all_vertices[(vertex_offset + i) * 3 + 2] = vertices[i][2] * 0.005f;  // Z
                     }
                     
                     vertex_offset += model->numverts;
@@ -95,11 +103,11 @@ int main(int argc, char const *argv[])
             }
         }
         
-        // TEMPORARILY: Just render vertices as points to verify they're loaded correctly
-        printf("\nNOTE: Triangle parsing is currently broken - rendering vertices as POINTS only\n");
-        printf("This will show the model shape but not the surfaces\n\n");
+        // First, just try to render vertices as points to ensure they're loading
+        printf("\nRendering vertices as POINTS first to verify they're visible...\n");
         
         setup_model_vertices(all_vertices, total_vertices);
+        
         printf("Complete model loaded with %d total vertices!\n", total_vertices);
     }
     

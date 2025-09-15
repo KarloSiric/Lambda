@@ -77,16 +77,32 @@ void setup_model_vertices(float *vertices, int count) {
     
     printf("Loading %d vertices into OpenGL buffers...\n", count);
     
+    // Debug: Print some vertices to verify they're reasonable
+    printf("Sample vertices:\n");
+    for (int i = 0; i < 5 && i < count; i++) {
+        printf("  Vertex %d: (%.3f, %.3f, %.3f)\n", i, 
+               vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
+    }
+    
+    // Clean up any existing buffers
+    if (VAO) glDeleteVertexArrays(1, &VAO);
+    if (VBO) glDeleteBuffers(1, &VBO);
+    
+    // Generate and bind VAO first
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    
     // Generate and bind vertex buffer
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
     
-    // Setup vertex array object
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    // Setup vertex attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
+    
+    // Unbind
+    glBindVertexArray(0);
     
     printf("Model vertices loaded successfully!\n");
 }
@@ -313,14 +329,18 @@ void render_loop(void) {
         glBindVertexArray(VAO);
         
         if (vertex_count > 0) {
-            // TEMPORARY: Draw as points to visualize the model shape
+            // Draw the model
             if (!debug_printed) {
-                printf("Rendering %d vertices as POINTS (triangle parsing needs fixing)\n", vertex_count);
+                if (index_count > 0) {
+                    printf("Rendering %d vertices with %d indices as triangles\n", vertex_count, index_count);
+                } else {
+                    printf("Rendering %d vertices as points (no triangles)\n", vertex_count);
+                }
                 debug_printed = true;
             }
             
-            // Draw points to see the model shape
-            glPointSize(3.0f);
+            // Always render as points for now to debug
+            glPointSize(10.0f);  // Make points bigger
             glDrawArrays(GL_POINTS, 0, vertex_count);
         } else {
             // Fallback to triangle if no model loaded

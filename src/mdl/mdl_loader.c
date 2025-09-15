@@ -436,8 +436,8 @@ mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, s
         return MDL_SUCCESS;
     }
 
-    // Get pointer to triangle commands
-    unsigned char *triangle_commands = data + mesh->triindex;
+    // Get pointer to triangle commands - triindex is relative to the mesh struct itself!
+    unsigned char *triangle_commands = (unsigned char *)mesh + mesh->triindex;
     short *command_reader = (short *)triangle_commands;
     
     // First pass: count total triangles needed
