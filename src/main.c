@@ -11,6 +11,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __APPLE__
+#define GL_SILENCE_DEPRECATION
+#include <OpenGL/gl3.h>
+#else
+#include <GL/gl3.h>
+#endif
+
 int main(int argc, char const *argv[])
 {    
     studiohdr_t *main_header = NULL;
@@ -38,6 +45,55 @@ int main(int argc, char const *argv[])
         free(main_data);
         if (texture_data) free(texture_data);
         return (1);
+    }
+    
+    // Extract and upload textures to OpenGL (AFTER OpenGL context is created)
+    unsigned int *gl_texture_ids = NULL;
+    if (texture_header && texture_data) {
+        printf("\n=== EXTRACTING AND UPLOADING TEXTURES TO OPENGL ===\n");
+        printf("Found %d textures to extract\n", texture_header->numtextures);
+        
+        // Allocate array for OpenGL texture IDs
+        gl_texture_ids = malloc(texture_header->numtextures * sizeof(unsigned int));
+        glGenTextures(texture_header->numtextures, gl_texture_ids);
+        
+        printf("Generated texture IDs: ");
+        for (int i = 0; i < texture_header->numtextures && i < 5; i++) {
+            printf("%u ", gl_texture_ids[i]);
+        }
+        printf("...\n");
+        
+        // Extract and upload all textures
+        for (int i = 0; i < texture_header->numtextures; i++) {
+            unsigned char *rgb_data = NULL;
+            int tex_width, tex_height;
+            
+            mdl_result_t result = extract_texture_rgb(texture_header, texture_data, 
+                                                      i, &rgb_data, 
+                                                      &tex_width, &tex_height);
+            
+            if (result == MDL_SUCCESS && rgb_data) {
+                // Upload to OpenGL
+                glBindTexture(GL_TEXTURE_2D, gl_texture_ids[i]);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height, 
+                            0, GL_RGB, GL_UNSIGNED_BYTE, rgb_data);
+                
+                // Set texture parameters
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                
+                printf("  Texture %d uploaded to OpenGL (ID: %u)\n", i, gl_texture_ids[i]);
+                
+                free(rgb_data);
+            } else {
+                printf("  Failed to extract texture %d\n", i);
+            }
+        }
+        printf("=================================\n\n");
+    } else {
+        printf("\nNo texture file loaded - running without textures\n\n");
     }
     
     // PROPERLY EXTRACT VERTICES AND TRIANGLES WITH CORRECT CONNECTIVITY
@@ -73,8 +129,9 @@ int main(int argc, char const *argv[])
     printf("Total expected triangles: %d\n", total_triangles);
     
     if (total_vertices > 0 && total_triangles > 0) {
-        // Allocate arrays for all vertices and indices
+        // Allocate arrays for all vertices, indices, AND texture coordinates
         float *all_vertices = malloc(total_vertices * 3 * sizeof(float));
+        float *all_texcoords = malloc(total_vertices * 2 * sizeof(float));  // NEW: UV coordinates
         int max_indices = total_triangles * 3;  // Max possible indices
         unsigned short *all_indices = malloc(max_indices * sizeof(unsigned short));
         
@@ -100,6 +157,13 @@ int main(int argc, char const *argv[])
                     // Transform Half-Life coordinates to OpenGL
                     transform_vertices_to_opengl(hl_vertices, model->numverts, 
                                                &all_vertices[vertex_offset * 3], 0.01f);  // Much smaller scale for scientist model
+                    
+                    // Generate simple texture coordinates (we'll improve this later)
+                    for (int v = 0; v < model->numverts; v++) {
+                        // Simple UV mapping based on vertex position
+                        all_texcoords[(vertex_offset + v) * 2 + 0] = (hl_vertices[v][0] + 50.0f) / 100.0f;  // U
+                        all_texcoords[(vertex_offset + v) * 2 + 1] = (hl_vertices[v][1] + 50.0f) / 100.0f;  // V
+                    }
                     
                     vertex_offset += model->numverts;
                     
@@ -142,9 +206,11 @@ int main(int argc, char const *argv[])
         printf("Loaded %d vertices\n", vertex_offset);
         printf("Loaded %d indices (%d triangles)\n", index_offset, index_offset / 3);
         
-        // Send to OpenGL with proper triangle connectivity
+        // Send to OpenGL with proper triangle connectivity AND texture coordinates
         if (index_offset > 0) {
-            setup_model_vertices_with_indices(all_vertices, vertex_offset, all_indices, index_offset);
+            setup_model_vertices_with_indices_and_texcoords(all_vertices, vertex_offset, 
+                                                           all_indices, index_offset,
+                                                           all_texcoords);
             printf("✅ Model loaded with proper triangle connectivity!\n");
         } else {
             // Fallback if no indices were extracted

@@ -26,7 +26,9 @@ bool should_close_window(void);
 void render_model(studiohdr_t *header, unsigned char *data);
 void set_wireframe_mode(bool enabled);
 void setup_model_vertices(float *vertices, int count);
-void setup_model_vertices_with_indices(float *vertices, int vertex_count, unsigned short *indices, int index_count);
+void setup_model_vertices_with_indices_and_texcoords(float *vertices, int vertex_count, 
+                                                     unsigned short *indices, int index_count,
+                                                     float *texcoords);
 
 void clear_screen(void);
 

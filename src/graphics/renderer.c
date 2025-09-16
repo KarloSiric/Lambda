@@ -382,11 +382,24 @@ void render_loop(void) {
         GLint rotXLocation = glGetUniformLocation(shader_program, "rotation_x");
         GLint rotYLocation = glGetUniformLocation(shader_program, "rotation_y");
         GLint zoomLocation = glGetUniformLocation(shader_program, "zoom");
+        GLint useTexLocation = glGetUniformLocation(shader_program, "useTexture");
         
         glUniform1f(timeLocation, time);
         glUniform1f(rotXLocation, rotation_x);
         glUniform1f(rotYLocation, rotation_y);
         glUniform1f(zoomLocation, zoom);
+        
+        // Enable textures!
+        glUniform1i(useTexLocation, 1);  // Set to 1 to use textures
+        
+        // Tell the shader to use texture unit 0
+        GLint textureLoc = glGetUniformLocation(shader_program, "texture1");
+        glUniform1i(textureLoc, 0);  // Use texture unit 0
+        
+        // Bind texture unit 0 (you can bind different textures later)
+        glActiveTexture(GL_TEXTURE0);
+        // Try different texture IDs - check console for actual IDs
+        glBindTexture(GL_TEXTURE_2D, 1);  // Start with ID 1
         
         // Bind our vertex array and draw the model
         glBindVertexArray(VAO);
@@ -446,7 +459,9 @@ void render_model(studiohdr_t *header, unsigned char *data) {
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void setup_model_vertices_with_indices(float *vertices, int vertex_count_param, unsigned short *indices, int index_count_param) {
+void setup_model_vertices_with_indices_and_texcoords(float *vertices, int vertex_count_param, 
+                                                     unsigned short *indices, int index_count_param,
+                                                     float *texcoords) {
     vertex_count = vertex_count_param;
     index_count = index_count_param;
     
@@ -469,6 +484,19 @@ void setup_model_vertices_with_indices(float *vertices, int vertex_count_param, 
     // Set vertex attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    
+    // Set texture coordinate attribute if provided
+    if (texcoords) {
+        unsigned int texCoordVBO;
+        glGenBuffers(1, &texCoordVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoordVBO);
+        glBufferData(GL_ARRAY_BUFFER, vertex_count * 2 * sizeof(float), texcoords, GL_STATIC_DRAW);
+        
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        
+        printf("Texture coordinates loaded successfully!\n");
+    }
     
     // Unbind
     glBindVertexArray(0);

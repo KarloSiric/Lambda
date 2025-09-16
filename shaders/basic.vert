@@ -1,7 +1,11 @@
 #version 410 core
 
-// Input vertex attribute - position from our vertex buffer
+// Input vertex attributes
 layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoord;
+
+// Output to fragment shader
+out vec2 TexCoord;
 
 // Camera controls from keyboard
 uniform float time;
@@ -10,6 +14,9 @@ uniform float rotation_y;
 uniform float zoom;
 
 void main() {
+    // Pass texture coordinate to fragment shader
+    TexCoord = aTexCoord;
+    
     // Center the model (it might be offset)
     vec3 centered = aPos;
     centered.y -= 0.5; // Adjust vertical centering
