@@ -138,7 +138,7 @@ typedef struct
     int                 nummodels;              // Number of models in this bodypart
     int                 base;                   // Base value
     int                 modelindex;             // Offset to models array
-} mstudiobodypart_t;
+} mstudiobodyparts_t;
 
 // ============================================================================
 // MODELS  
@@ -178,8 +178,8 @@ typedef struct
 typedef struct
 {
     int                 numtris;                // Number of triangles
-    int                 triindex;               // Offset to triangle commands (relative to this struct)
-    int                 skinref;                // Material/texture reference (index, not offset)
+    int                 triindex;               // Offset to triangle commands
+    int                 skinref;                // Material/texture reference
     int                 numnorms;               // Per mesh normals
     int                 normindex;              // Offset to normal vec3_t array
 } mstudiomesh_t;

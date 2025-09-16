@@ -1,6 +1,6 @@
 /*
  * Main application implementation
- * We'll write this together step by step
+ * Properly uses triangle indices for correct model rendering
  */
 
 #include "main.h"
@@ -10,13 +10,9 @@
 #include "graphics/renderer.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
-// Code will go here as we write it together
 
 int main(int argc, char const *argv[])
 {    
-
     studiohdr_t *main_header = NULL;
     studiohdr_t *texture_header = NULL;
     unsigned char *main_data = NULL;
@@ -34,13 +30,6 @@ int main(int argc, char const *argv[])
         return (1);
     }
 
-    // Debug: Check structure sizes to ensure they're correct
-    printf("\n=== STRUCTURE SIZE CHECK ===\n");
-    printf("sizeof(mstudiomesh_t) = %zu (should be 20)\n", sizeof(mstudiomesh_t));
-    printf("sizeof(studiohdr_t) = %zu (should be 244)\n", sizeof(studiohdr_t));
-    printf("sizeof(mstudiotrivert_t) = %zu (should be 8)\n", sizeof(mstudiotrivert_t));
-    printf("\n");
-    
     print_complete_model_analysis(argv[1], main_header, texture_header, main_data, texture_data);
 
     printf("Initializing the renderer...\n");
@@ -51,64 +40,122 @@ int main(int argc, char const *argv[])
         return (1);
     }
     
-    // Extract vertices from ALL bodyparts and load into OpenGL
-    printf("\nExtracting ALL model parts for rendering...\n");
+    // PROPERLY EXTRACT VERTICES AND TRIANGLES WITH CORRECT CONNECTIVITY
+    printf("\n=== EXTRACTING MODEL WITH PROPER TRIANGLE CONNECTIVITY ===\n");
     
-    // Count total vertices across all bodyparts
+    // Count total vertices and triangles across all bodyparts
     int total_vertices = 0;
+    int total_triangles = 0;
     
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(main_data + main_header->bodypartindex);
+    
+    // First pass: count vertices and triangles
     for (int bp = 0; bp < main_header->numbodyparts; bp++) {
-        mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
-        mstudiobodypart_t *bodypart = &bodyparts[bp];
+        mstudiobodyparts_t *bodypart = &bodyparts[bp];
         
         if (bodypart->nummodels > 0) {
             mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodypart->modelindex);
-            mstudiomodel_t *first_model = &models[0]; // Use first model of each bodypart
-            total_vertices += first_model->numverts;
+            mstudiomodel_t *model = &models[0]; // First model of bodypart
+            
+            total_vertices += model->numverts;
+            
+            // Count triangles from all meshes
+            if (model->nummesh > 0) {
+                mstudiomesh_t *meshes = (mstudiomesh_t *)(main_data + model->meshindex);
+                for (int m = 0; m < model->nummesh; m++) {
+                    total_triangles += meshes[m].numtris;
+                }
+            }
         }
     }
     
-    printf("Total vertices across all bodyparts: %d\n", total_vertices);
+    printf("Total vertices: %d\n", total_vertices);
+    printf("Total expected triangles: %d\n", total_triangles);
     
-    if (total_vertices > 0) {
-        // Allocate memory for all vertices
+    if (total_vertices > 0 && total_triangles > 0) {
+        // Allocate arrays for all vertices and indices
         float *all_vertices = malloc(total_vertices * 3 * sizeof(float));
-        int vertex_offset = 0;
-        int vertex_offset_for_bodypart[3] = {0}; // Track vertex offsets for each bodypart
+        int max_indices = total_triangles * 3;  // Max possible indices
+        unsigned short *all_indices = malloc(max_indices * sizeof(unsigned short));
         
-        // Load vertices from all bodyparts
+        int vertex_offset = 0;
+        int index_offset = 0;
+        int current_vertex_base = 0;  // Track base vertex index for each model
+        
+        // Second pass: load vertices and extract triangle indices
         for (int bp = 0; bp < main_header->numbodyparts; bp++) {
-            mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
-            mstudiobodypart_t *bodypart = &bodyparts[bp];
+            mstudiobodyparts_t *bodypart = &bodyparts[bp];
             
             if (bodypart->nummodels > 0) {
                 mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodypart->modelindex);
-                mstudiomodel_t *model = &models[0]; // Use first model
+                mstudiomodel_t *model = &models[0];
                 
-                printf("Loading bodypart %d: %d vertices\n", bp, model->numverts);
-                vertex_offset_for_bodypart[bp] = vertex_offset; // Store offset for this bodypart
+                printf("\nProcessing bodypart %d: %s\n", bp, bodypart->name);
+                printf("  Model has %d vertices, %d meshes\n", model->numverts, model->nummesh);
                 
+                // Load vertices with coordinate transformation
                 if (model->numverts > 0) {
-                    vec3_t *vertices = (vec3_t *)(main_data + model->vertindex);
+                    vec3_t *hl_vertices = (vec3_t *)(main_data + model->vertindex);
                     
-                    // Copy vertices with better scaling and centering
-                    for (int i = 0; i < model->numverts; i++) {
-                        all_vertices[(vertex_offset + i) * 3 + 0] = vertices[i][0] * 0.005f;  // X
-                        all_vertices[(vertex_offset + i) * 3 + 1] = vertices[i][1] * 0.005f - 0.2f;  // Y - move up
-                        all_vertices[(vertex_offset + i) * 3 + 2] = vertices[i][2] * 0.005f;  // Z
-                    }
+                    // Transform Half-Life coordinates to OpenGL
+                    transform_vertices_to_opengl(hl_vertices, model->numverts, 
+                                               &all_vertices[vertex_offset * 3], 0.01f);  // Much smaller scale for scientist model
                     
                     vertex_offset += model->numverts;
+                    
+                    // Process each mesh to extract triangle indices
+                    if (model->nummesh > 0) {
+                        mstudiomesh_t *meshes = (mstudiomesh_t *)(main_data + model->meshindex);
+                        
+                        for (int m = 0; m < model->nummesh; m++) {
+                            printf("  Processing mesh %d: %d triangles expected\n", m, meshes[m].numtris);
+                            
+                            short *mesh_indices = NULL;
+                            int mesh_index_count = 0;
+                            
+                            // Parse triangle commands for this mesh
+                            mdl_result_t parse_result = parse_triangle_commands_fixed(&meshes[m], main_data, 
+                                                                                    &mesh_indices, &mesh_index_count);
+                            
+                            if (parse_result == MDL_SUCCESS && mesh_indices && mesh_index_count > 0) {
+                                printf("    Successfully extracted %d indices (%d triangles)\n", 
+                                       mesh_index_count, mesh_index_count / 3);
+                                
+                                // Copy indices, adjusting for current vertex base
+                                for (int i = 0; i < mesh_index_count && index_offset < max_indices; i++) {
+                                    all_indices[index_offset++] = (unsigned short)(mesh_indices[i] + current_vertex_base);
+                                }
+                                
+                                free(mesh_indices);
+                            } else {
+                                printf("    WARNING: Failed to parse triangle commands for mesh %d\n", m);
+                            }
+                        }
+                    }
+                    
+                    current_vertex_base += model->numverts;  // Update base for next model
                 }
             }
         }
         
-        // First, just try to render vertices as points to ensure they're loading
-        printf("\nRendering vertices as POINTS first to verify they're visible...\n");
+        printf("\n=== LOADING INTO OPENGL ===\n");
+        printf("Loaded %d vertices\n", vertex_offset);
+        printf("Loaded %d indices (%d triangles)\n", index_offset, index_offset / 3);
         
-        setup_model_vertices(all_vertices, total_vertices);
+        // Send to OpenGL with proper triangle connectivity
+        if (index_offset > 0) {
+            setup_model_vertices_with_indices(all_vertices, vertex_offset, all_indices, index_offset);
+            printf("✅ Model loaded with proper triangle connectivity!\n");
+        } else {
+            // Fallback if no indices were extracted
+            printf("⚠️ No triangle indices extracted, using vertex-only mode\n");
+            setup_model_vertices(all_vertices, vertex_offset);
+        }
         
-        printf("Complete model loaded with %d total vertices!\n", total_vertices);
+        free(all_vertices);
+        free(all_indices);
+    } else {
+        printf("ERROR: Model has no geometry to render!\n");
     }
     
     render_loop();
@@ -121,5 +168,6 @@ int main(int argc, char const *argv[])
         free(texture_data);
     }
     
+    printf("\n✅ Program terminated successfully\n");
     return (0);
 }

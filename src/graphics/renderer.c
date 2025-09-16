@@ -9,8 +9,6 @@
 
 #include "renderer.h"
 
-
-
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #else 
@@ -22,7 +20,7 @@
 #include <stdlib.h>
 #include <unistd.h>  // For getcwd
 
-static GLFWwindow *window = NULL;
+GLFWwindow *window = NULL;
 static bool wireframe_enabled = false;
 
 static unsigned int VBO = 0;
@@ -36,6 +34,11 @@ static int vertex_count = 0;
 static int index_count = 0;
 static bool debug_printed = false;
 
+// Camera controls
+static float rotation_x = 0.0f;
+static float rotation_y = 0.0f;
+static float zoom = 0.15f;  // Even more zoomed out for scientist model
+
 static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW ERROR %d: %s\n",
             error, description);
@@ -47,6 +50,37 @@ static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int act
     
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+    
+    // Camera controls
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        switch(key) {
+            case GLFW_KEY_W: rotation_x -= 0.1f; break;  // Tilt up
+            case GLFW_KEY_S: rotation_x += 0.1f; break;  // Tilt down
+            case GLFW_KEY_A: rotation_y -= 0.1f; break;  // Rotate left
+            case GLFW_KEY_D: rotation_y += 0.1f; break;  // Rotate right
+            case GLFW_KEY_Q: zoom *= 1.1f; if(zoom > 2.0f) zoom = 2.0f; break;   // Zoom in with limit
+            case GLFW_KEY_E: zoom *= 0.9f; if(zoom < 0.1f) zoom = 0.1f; break;   // Zoom out with limit
+            case GLFW_KEY_R: // Reset view
+                rotation_x = 0.0f;
+                rotation_y = 0.0f;
+                zoom = 0.15f;  // Reset to default zoom
+                break;
+            case GLFW_KEY_F: // Toggle wireframe
+                wireframe_enabled = !wireframe_enabled;
+                if (wireframe_enabled) {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    printf("Switched to wireframe mode\n");
+                } else {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    printf("Switched to solid mode\n");
+                }
+                break;
+            case GLFW_KEY_P: // Toggle points
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+                printf("Switched to points mode\n");
+                break;
+        }
     }
 }
 
@@ -277,6 +311,16 @@ int init_renderer(int width, int height, const char *title) {
 
     printf("OpenGL Version: %s\n",
             glGetString( GL_VERSION ));
+    
+    printf("\n=== CONTROLS ===\n");
+    printf("W/S: Tilt up/down\n");
+    printf("A/D: Rotate left/right\n");
+    printf("Q/E: Zoom in/out\n");
+    printf("F: Toggle wireframe/solid\n");
+    printf("P: Points mode\n");
+    printf("R: Reset view\n");
+    printf("ESC: Exit\n");
+    printf("================\n\n");
 
     return ( 0 );
 }
@@ -313,35 +357,60 @@ bool should_close_window(void) {
 
 void render_loop(void) {
     
+    // Toggle between wireframe and points with 'W' key
+    static bool show_wireframe = true;
+    static bool last_w_pressed = false;
+    
     while(!should_close_window()) {
 
         clear_screen();
 
+        // Check for 'W' key to toggle wireframe/points
+        bool w_pressed = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
+        if (w_pressed && !last_w_pressed) {
+            show_wireframe = !show_wireframe;
+            printf("Switched to %s mode\n", show_wireframe ? "wireframe" : "points");
+        }
+        last_w_pressed = w_pressed;
+        
         // Use our shader program
         glUseProgram(shader_program);
         
-        // Pass time to shader for rotation
+        // Pass camera controls to shader
         float time = (float)glfwGetTime();
         GLint timeLocation = glGetUniformLocation(shader_program, "time");
+        GLint rotXLocation = glGetUniformLocation(shader_program, "rotation_x");
+        GLint rotYLocation = glGetUniformLocation(shader_program, "rotation_y");
+        GLint zoomLocation = glGetUniformLocation(shader_program, "zoom");
+        
         glUniform1f(timeLocation, time);
+        glUniform1f(rotXLocation, rotation_x);
+        glUniform1f(rotYLocation, rotation_y);
+        glUniform1f(zoomLocation, zoom);
         
         // Bind our vertex array and draw the model
         glBindVertexArray(VAO);
         
         if (vertex_count > 0) {
-            // Draw the model
             if (!debug_printed) {
                 if (index_count > 0) {
-                    printf("Rendering %d vertices with %d indices as triangles\n", vertex_count, index_count);
+                    printf("Rendering %d vertices with %d indices (%d triangles)\n", 
+                           vertex_count, index_count, index_count / 3);
                 } else {
                     printf("Rendering %d vertices as points (no triangles)\n", vertex_count);
                 }
                 debug_printed = true;
             }
             
-            // Always render as points for now to debug
-            glPointSize(10.0f);  // Make points bigger
-            glDrawArrays(GL_POINTS, 0, vertex_count);
+            if (index_count > 0 && show_wireframe) {
+                // Draw triangles using indices
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // Wireframe
+                glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, 0);
+            } else {
+                // Draw as points
+                glPointSize(3.0f);
+                glDrawArrays(GL_POINTS, 0, vertex_count);
+            }
         } else {
             // Fallback to triangle if no model loaded
             if (!debug_printed) {
@@ -352,10 +421,8 @@ void render_loop(void) {
         }
         
         glfwSwapBuffers(window);
-
         glfwPollEvents();
     }
-
 }
 
 void set_wireframe_mode(bool enabled) {

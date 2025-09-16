@@ -1,6 +1,6 @@
 /*
- * MDL loader implementation - CORRECTED VERSION
- * Fixed triangle parsing and structure names based on Valve's format
+ * MDL loader implementation
+ * We'll write this together following Valve's approach
  */
 
 #include "mdl_loader.h"
@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 mdl_result_t validate_mdl_magic(int magic) {
     if (magic == IDSTUDIOHEADER) {
@@ -43,12 +44,13 @@ mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size
     *file_data = malloc(bytes_size * sizeof(unsigned char));
     if (!*file_data) {
         fprintf(stderr, "ERROR - Failed to allocate enough memory for the file data buffer.\n");
-        fclose(file);
         return MDL_ERROR_MEMORY_ALLOCATION;
     }
 
     fread(*file_data, 1, bytes_size, file);
+
     fclose(file);
+
     return MDL_SUCCESS; 
 }
 
@@ -82,12 +84,10 @@ mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **head
 void print_bodypart_info(studiohdr_t *header, unsigned char *file_data) {
     if (header->numbodyparts == 0) {
         printf("  No bodyparts found.\n");
-        return;
     }
 
     printf("\nDetailed Bodypart Information:\n");
-    // FIXED: Use correct structure name
-    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(file_data + header->bodypartindex);
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(file_data + header->bodypartindex);
 
     for (int i = 0; i < header->numbodyparts; i++) {
         printf("   [%d] Bodypart: %s (%d models)\n",
@@ -100,6 +100,7 @@ void print_bodypart_info(studiohdr_t *header, unsigned char *file_data) {
             printf("          Vertices: %d\n", models[j].numverts);
             printf("          Meshes: %d\n", models[j].nummesh);
         }
+
         printf("\n");
     }
 }
@@ -122,9 +123,8 @@ char *generate_texture_filename(const char *model_filename) {
     return texture_filename;
 }
 
-mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_header, 
-                                     studiohdr_t **texture_header, unsigned char **main_data, 
-                                     unsigned char **texture_data) {
+mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_header, studiohdr_t **texture_header, unsigned char **main_data, unsigned char **texture_data) {
+
     size_t main_size;
     mdl_result_t result = read_mdl_file(model_path, main_data, &main_size);
     if (result != MDL_SUCCESS) {
@@ -160,6 +160,7 @@ mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main
 
     free(texture_path);
     return MDL_SUCCESS;
+
 }
 
 void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data) {
@@ -172,6 +173,7 @@ void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data
     printf("  Texture file size: %d bytes\n", texture_header->length);
     printf("  Number of textures: %d\n", texture_header->numtextures);
 
+
     if (texture_header->numtextures > 0) {
         mstudiotexture_t *textures = (mstudiotexture_t *)(texture_data + texture_header->textureindex);
         for (int i = 0; i < texture_header->numtextures; i++) {
@@ -180,6 +182,7 @@ void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data
             printf("      Flags: %d\n", textures[i].flags);
         }
     }
+
 }
 
 mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstudiobone_t **bones) {
@@ -194,10 +197,14 @@ mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstu
     }
 
     *bones = (mstudiobone_t *)(data + header->boneindex);
+
     return MDL_SUCCESS;
 }
 
+
+
 void print_bone_info(mstudiobone_t *bones, int bone_count) {
+
     if (!bones || bone_count == 0) {
         printf("\nBone Information: No bones found\n");
         return;
@@ -226,6 +233,7 @@ void print_bone_info(mstudiobone_t *bones, int bone_count) {
 }
 
 mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences) {
+
     if (!header || !data || !sequences) {
         fprintf(stderr, "ERROR - Invalid parameters passed to parse_animation_sequences()!\n");
         return MDL_ERROR_INVALID_PARAMETER;
@@ -237,6 +245,7 @@ mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data,
     }
 
     *sequences = (mstudioseqdesc_t *)(data + header->seqindex);
+
     return MDL_SUCCESS;
 }
 
@@ -249,6 +258,7 @@ void print_sequence_info(mstudioseqdesc_t *sequences, int sequence_count) {
     printf("\nAnimation Sequences: (%d sequences):\n", sequence_count);
     for (int i = 0; i < sequence_count; i++) {
         printf(" [%d] %s\n", i, sequences[i].label);
+
         printf("    Frames: %d @ %.1f fps\n", 
                 sequences[i].numframes, sequences[i].fps);
         printf("    Activity: %d (weight: %d)\n",
@@ -258,10 +268,12 @@ void print_sequence_info(mstudioseqdesc_t *sequences, int sequence_count) {
 
         if (sequences[i].flags & 0x01) printf(" [LOOPING]");
         if (sequences[i].flags & 0x08) printf(" [ACTIVITY]");
+
         printf("\n");
 
         printf("    Motion: type=%d, bone=%d\n",
                 sequences[i].motiontype, sequences[i].motionbone);
+
         printf("    Bounding box: (%.1f, %.1f, %.1f) to (%.1f, %.1f, %.1f)\n",
             sequences[i].bbmin[0], sequences[i].bbmin[1], sequences[i].bbmin[2],
             sequences[i].bbmax[0], sequences[i].bbmax[1], sequences[i].bbmax[2]);
@@ -270,21 +282,27 @@ void print_sequence_info(mstudioseqdesc_t *sequences, int sequence_count) {
     }
 }
 
+
 void print_model_info(mstudiomodel_t *model, int bodypart_index, int model_index) {
     if (!model) {
-        printf("Model [%d][%d]: NULL\n", bodypart_index, model_index);
+        printf("Model [%d][%d]: NULL\n",
+                bodypart_index, model_index);
         return;
     }
 
-    printf("   Model[%d][%d]: %s\n", bodypart_index, model_index, model->name);
+    printf("   Model[%d][%d]: %s\n",
+            bodypart_index, model_index, model->name);
     printf("     Type: %d\n", model->type);
     printf("        Bounding radius: %.2f\n", model->boundingradius);
     printf("        Vertices: %d\n", model->numverts);
     printf("        Meshes: %d\n", model->nummesh);
     printf("        Normals: %d\n", model->numnorms);
+    
+    // Show mesh and vertex indices for debugging
     printf("        Vertex index: 0x%X\n", model->vertindex);
     printf("        Mesh index: 0x%X\n", model->meshindex);
     printf("\n");
+
 }
 
 mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes) {
@@ -299,11 +317,12 @@ mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudio
     }
 
     *meshes = (mstudiomesh_t *)(data + model->meshindex);
+    
     return MDL_SUCCESS;
 }
 
 void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count) {
-    if (!meshes || mesh_count == 0) {
+ if (!meshes || mesh_count == 0) {
         printf("    No meshes found for model: %s\n", model ? model->name : "Unknown");
         return;
     }
@@ -314,7 +333,6 @@ void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_coun
         printf("        Triangles: %d\n", meshes[i].numtris);
         printf("        Texture ref: %d\n", meshes[i].skinref);
         printf("        Normals: %d\n", meshes[i].numnorms);
-        printf("        Triangle cmd offset: 0x%X\n", meshes[i].triindex);
         printf("\n");    
     } 
 }
@@ -331,101 +349,12 @@ mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_
     }
 
     *vertices = (vec3_t *)(data + model->vertindex);
+
     return MDL_SUCCESS;
 }
 
-// CORRECTED triangle command parsing with proper winding
-mdl_result_t parse_triangle_commands_fixed(mstudiomesh_t *mesh, unsigned char *data, 
-                                          short **indices, int *index_count) {
-    if (!mesh || !data || !indices || !index_count) {
-        return MDL_ERROR_INVALID_PARAMETER;
-    }
-
-    if (mesh->numtris == 0) {
-        *indices = NULL;
-        *index_count = 0;
-        return MDL_SUCCESS;
-    }
-
-    // Go to triangle command data
-    unsigned char *cmd_data = data + mesh->triindex;
-    short *cmd_reader = (short *)cmd_data;
-    
-    // First pass: count total indices needed
-    int total_indices = 0;
-    short *temp_reader = cmd_reader;
-    
-    while (true) {
-        short vertex_count = *temp_reader++;
-        if (vertex_count == 0) break; // End of commands
-        
-        int abs_count = abs(vertex_count);
-        // Each strip/fan with N vertices produces (N-2) triangles
-        total_indices += (abs_count - 2) * 3;
-        
-        // Skip vertex data: each vertex = 4 shorts (vertindex, normindex, s, t)
-        temp_reader += abs_count * 4;
-    }
-
-    if (total_indices == 0) {
-        *indices = NULL;
-        *index_count = 0;
-        return MDL_SUCCESS;
-    }
-
-    // Allocate indices array
-    *indices = malloc(total_indices * sizeof(short));
-    if (!*indices) {
-        return MDL_ERROR_MEMORY_ALLOCATION;
-    }
-
-    // Second pass: generate triangles with correct winding
-    cmd_reader = (short *)cmd_data;
-    int output_idx = 0;
-    
-    while (true) {
-        short vertex_count = *cmd_reader++;
-        if (vertex_count == 0) break;
-        
-        int abs_count = abs(vertex_count);
-        mstudiotrivert_t *vertices = (mstudiotrivert_t *)cmd_reader;
-        
-        if (vertex_count < 0) {
-            // TRIANGLE FAN: center vertex + pairs
-            // Fan: v0 is center, triangles: (v0,v1,v2), (v0,v2,v3), (v0,v3,v4)...
-            for (int i = 2; i < abs_count; i++) {
-                (*indices)[output_idx++] = vertices[0].vertindex;     // Center
-                (*indices)[output_idx++] = vertices[i-1].vertindex;   // Previous
-                (*indices)[output_idx++] = vertices[i].vertindex;     // Current
-            }
-        } else {
-            // TRIANGLE STRIP: alternating winding for correct face orientation
-            for (int i = 2; i < abs_count; i++) {
-                if (i % 2 == 0) {
-                    // Even triangle: normal order
-                    (*indices)[output_idx++] = vertices[i-2].vertindex;
-                    (*indices)[output_idx++] = vertices[i-1].vertindex;
-                    (*indices)[output_idx++] = vertices[i].vertindex;
-                } else {
-                    // Odd triangle: reverse winding for proper face orientation
-                    (*indices)[output_idx++] = vertices[i-1].vertindex;
-                    (*indices)[output_idx++] = vertices[i-2].vertindex;
-                    (*indices)[output_idx++] = vertices[i].vertindex;
-                }
-            }
-        }
-        
-        // Move to next command
-        cmd_reader += abs_count * 4; // 4 shorts per vertex
-    }
-    
-    *index_count = total_indices;
-    printf("Generated %d triangle indices from commands\n", total_indices);
-    return MDL_SUCCESS;
-}
-
-// Simple triangle index generation for basic wireframe (fallback)
-mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, int *index_count) {
+// Simple triangle index generation for basic wireframe
+mdl_result_t create_simple_triangle_indices(int vertex_count, unsigned short **indices, int *index_count) {
     if (!indices || !index_count || vertex_count <= 0) {
         return MDL_ERROR_INVALID_PARAMETER;
     }
@@ -437,7 +366,7 @@ mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, i
         return MDL_SUCCESS;
     }
     
-    *indices = malloc(*index_count * sizeof(short));
+    *indices = malloc(*index_count * sizeof(unsigned short));
     if (!*indices) {
         return MDL_ERROR_MEMORY_ALLOCATION;
     }
@@ -464,7 +393,7 @@ void print_simple_triangle_info(mstudiomodel_t *model, int bodypart_index, int m
         return;
     }
     
-    short *simple_indices = NULL;
+    unsigned short *simple_indices = NULL;
     int index_count = 0;
     
     mdl_result_t result = create_simple_triangle_indices(model->numverts, &simple_indices, &index_count);
@@ -491,62 +420,165 @@ void print_simple_triangle_info(mstudiomodel_t *model, int bodypart_index, int m
     printf("\n");
 }
 
-// Vertex transformation from Half-Life to OpenGL coordinate system
-mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *texture_data,
-                                 int texture_index, unsigned char **rgb_output,
-                                 int *width, int *height) {
-    
-    if (!texture_header || !texture_data || !rgb_output) {
+/* TODO(Karlo): Adding the extraction of the mesh connectivity 
+                Need to know how meshes are being connected properly.
+*/
+
+mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, short **indices, int *index_count) {
+    if (!mesh || !data || !indices || !index_count) {
+        fprintf(stderr, "ERROR - Invalid parameters passed to parse_triangle_commands()!\n");
         return MDL_ERROR_INVALID_PARAMETER;
     }
+
+    if (mesh->numtris == 0) {
+        *indices = NULL;
+        *index_count = 0;
+        return MDL_SUCCESS;
+    }
+
+    // The triindex is relative to the mesh structure itself!
+    unsigned char *triangle_commands = (unsigned char *)mesh + mesh->triindex;
+    int *command_reader = (int *)triangle_commands;  // Commands start with INT
     
-    // Get texture metadata array
-    mstudiotexture_t *textures = (mstudiotexture_t *)(texture_data + texture_header->textureindex);
+    // First pass: count total triangles needed
+    int total_triangles = 0;
+    int *reader = command_reader;
     
-    if (texture_index >= texture_header->numtextures) {
-        return MDL_ERROR_INVALID_PARAMETER;
+    while (true) {
+        int vertex_count = *reader++;  // Read as INT
+        
+        if (vertex_count == 0) {
+            break; // End of commands
+        }
+        
+        if (vertex_count < 0) {
+            // Triangle fan: N vertices = (N-2) triangles
+            vertex_count = -vertex_count;
+            total_triangles += (vertex_count - 2);
+        } else {
+            // Triangle strip: N vertices = (N-2) triangles  
+            total_triangles += (vertex_count - 2);
+        }
+        
+        // Skip past the trivert data (each trivert is 4 shorts = 2 ints)
+        reader += vertex_count * 2;  // 2 ints per vertex (8 bytes)
     }
     
-    mstudiotexture_t *tex = &textures[texture_index];
-    *width = tex->width;
-    *height = tex->height;
+    if (total_triangles <= 0) {
+        *indices = NULL;
+        *index_count = 0;
+        return MDL_SUCCESS;
+    }
     
-    // Get indexed pixel data (each pixel is 1 byte)
-    unsigned char *indexed_pixels = texture_data + texture_header->texturedataindex + tex->index;
-    
-    // Get palette (256 colors * 3 bytes RGB = 768 bytes)
-    unsigned char *palette = indexed_pixels + (tex->width * tex->height);
-    
-    // Allocate RGB output (3 bytes per pixel)
-    int pixel_count = tex->width * tex->height;
-    *rgb_output = malloc(pixel_count * 3);
-    if (!*rgb_output) {
+    // Allocate index array (3 indices per triangle)
+    int total_indices = total_triangles * 3;
+    *indices = malloc(total_indices * sizeof(short));
+    if (!*indices) {
+        fprintf(stderr, "ERROR - Failed to allocate memory for triangle indices!\n");
         return MDL_ERROR_MEMORY_ALLOCATION;
     }
     
-    // Convert indexed to RGB
-    for (int i = 0; i < pixel_count; i++) {
-        unsigned char palette_index = indexed_pixels[i];
+    // Second pass: generate actual triangle indices
+    reader = command_reader;
+    int output_index = 0;
+    
+    while (true) {
+        int vertex_count = *reader++;  // Read as INT
         
-        // Copy RGB values from palette
-        (*rgb_output)[i * 3 + 0] = palette[palette_index * 3 + 0];  // R
-        (*rgb_output)[i * 3 + 1] = palette[palette_index * 3 + 1];  // G
-        (*rgb_output)[i * 3 + 2] = palette[palette_index * 3 + 2];  // B
+        if (vertex_count == 0) {
+            break; // End of commands
+        }
+        
+        // Get pointer to trivert array for this command
+        // The data after the count is still shorts (vertex index, normal index, s, t)
+        short *trivert_data = (short *)reader;
+        
+        if (vertex_count < 0) {
+            // TRIANGLE FAN - all triangles share the first vertex
+            vertex_count = -vertex_count;
+            
+            for (int i = 1; i < vertex_count - 1; i++) {
+                (*indices)[output_index++] = trivert_data[0 * 4];     // Center vertex
+                (*indices)[output_index++] = trivert_data[i * 4];     // Current vertex
+                (*indices)[output_index++] = trivert_data[(i + 1) * 4]; // Next vertex
+            }
+        } else {
+            // TRIANGLE STRIP - alternating winding order
+            for (int i = 0; i < vertex_count - 2; i++) {
+                if (i % 2 == 0) {
+                    // Even triangle: normal winding
+                    (*indices)[output_index++] = trivert_data[i * 4];
+                    (*indices)[output_index++] = trivert_data[(i + 1) * 4];
+                    (*indices)[output_index++] = trivert_data[(i + 2) * 4];
+                } else {
+                    // Odd triangle: reversed winding to maintain consistent orientation
+                    (*indices)[output_index++] = trivert_data[i * 4];
+                    (*indices)[output_index++] = trivert_data[(i + 2) * 4];
+                    (*indices)[output_index++] = trivert_data[(i + 1) * 4];
+                }
+            }
+        }
+        
+        // Advance past this command's trivert data (2 ints per vertex)
+        reader += vertex_count * 2;
     }
     
-    printf("Extracted texture %d: %s (%dx%d)\n", texture_index, tex->name, tex->width, tex->height);
+    *index_count = total_indices;
+    
+    printf("DEBUG: Parsed %d triangles (%d indices) from mesh with %d expected triangles\n", 
+           total_triangles, total_indices, mesh->numtris);
+    
     return MDL_SUCCESS;
 }
 
-void transform_vertices_to_opengl(vec3_t *hl_vertices, int count, float *gl_vertices, float scale) {
-    for (int i = 0; i < count; i++) {
-        // Half-Life stores the model lying on the Y axis
-        // We need to rotate 90 degrees to stand it up
-        // Original: X=side, Y=length (along body), Z=front/back
-        // Target: X=side, Y=up, Z=front/back
-        
-        gl_vertices[i * 3 + 0] = hl_vertices[i][0] * scale;  // X (side to side) stays X
-        gl_vertices[i * 3 + 1] = hl_vertices[i][1] * scale;  // Y becomes height (already correct)
-        gl_vertices[i * 3 + 2] = hl_vertices[i][2] * scale;  // Z (front/back) stays Z
+void print_triangle_info(mstudiomesh_t *meshes, mstudiomodel_t *model, unsigned char *data, int mesh_count) {
+    if (!meshes || mesh_count == 0 || !model || !data) {
+        printf("   No triangle data available for testing.\n");
+        return;
+    }
+
+    printf("   Testing Triangle Commands:\n");
+
+    for (int i = 0; i < mesh_count; i++) {
+
+        printf("        DEBUG: Model vertex count: %d\n", model->numverts);
+        printf("        DEBUG: Mesh triindex: 0x%X (decimal: %d)\n", meshes[i].triindex, meshes[i].triindex);
+        printf("        DEBUG: Model mesh index: 0x%X\n", model->meshindex);
+
+
+        printf("     Mesh %d:\n", i);
+        printf("       Expected triangles: %d\n", meshes[i].numtris);
+        printf("       Triangle commands offset: 0x%X\n", meshes[i].triindex);
+
+        if (meshes[i].numtris == 0) {
+            printf("       No triangles to parse.\n");
+            continue;
+        }
+
+        short *triangle_indices = NULL;
+        int index_count = 0;
+
+        mdl_result_t result = parse_triangle_commands(&meshes[i], data, &triangle_indices, &index_count);
+
+        if (result == MDL_SUCCESS && triangle_indices) {
+            printf("       SUCCESS: Extracted %d indices\n", index_count);
+            printf("       Triangles created: %d (expected %d)\n", index_count / 3 , meshes[i].numtris);
+
+            if (index_count > 0) {
+                printf("       First indices: ");
+                int print_count = index_count < 12 ? index_count : 12;
+                for (int j = 0; j < print_count; j++) {
+                    printf("%d ", triangle_indices[j]);
+                    if ((j + 1) % 3 == 0) {
+                        printf("| ");
+                    }
+                    printf("\n");
+                }
+            }
+            free(triangle_indices);
+        } else {
+            printf("       FAILED: Error %d parsing triangle commands\n", result);
+        }
+        printf("\n");
     }
 }

@@ -11,10 +11,11 @@
 #include "GLFW/glfw3.h"
 #include <stdbool.h>
 
+extern GLFWwindow *window;
 
 #define ASPECT_RATIO          ((float)(16.0f / 9.0f))
 #define WIDTH                 ((int) 800)
-#define HEIGHT                ((int) WIDTH * (ASPECT_RATIO))
+#define HEIGHT                ((int) (800 / ASPECT_RATIO))
 
 int init_renderer(int width, int height, const char *title);
 void cleanup_renderer(void);

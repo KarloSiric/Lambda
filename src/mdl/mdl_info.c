@@ -44,7 +44,7 @@ void print_complete_model_analysis(const char *filename, studiohdr_t *main_heade
     }
 
     printf("\n=== Detailed Model Analysis ===\n");
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(main_data + main_header->bodypartindex);
     for (int bodypart_index = 0; bodypart_index < main_header->numbodyparts; bodypart_index++) {
         printf("bodypart_index: %d: %s (%d models)\n", bodypart_index, bodyparts[bodypart_index].name, bodyparts[bodypart_index].nummodels);
 

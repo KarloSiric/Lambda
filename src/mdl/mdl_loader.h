@@ -1,6 +1,6 @@
 /*
  * MDL file loader using official Valve structures
- * Handles parsing and validation of .mdl files
+ * Handles parsing and validation of .mdl files - CORRECTED VERSION
  */
 
 #ifndef MDL_LOADER_H
@@ -12,6 +12,7 @@
 
 typedef enum
 {
+    
     MDL_SUCCESS = 0,
     MDL_ERROR_FILE_NOT_FOUND,
     MDL_ERROR_INVALID_MAGIC,
@@ -19,22 +20,35 @@ typedef enum
     MDL_ERROR_FILE_TOO_SMALL,
     MDL_ERROR_MEMORY_ALLOCATION,
     MDL_ERROR_INVALID_PARAMETER,
+
 } mdl_result_t;
 
-
+// Core loading functions
 mdl_result_t validate_mdl_magic(int magic);
 mdl_result_t validate_mdl_version(int version);
 mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size_t *file_size);
 mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **header);
 mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_header, studiohdr_t **texture_header, unsigned char **main_data, unsigned char **texture_data);
+
+// Data parsing functions
 mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstudiobone_t **bones);
 mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences);
 mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes);
 mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_t **vertices);
-mdl_result_t create_simple_triangle_indices(int vertex_count, unsigned short **indices, int *index_count);
-mdl_result_t parse_triangle_commands(mstudiomesh_t *mesh, unsigned char *data, short **indices, int *index_count);
 
+// CORRECTED triangle parsing functions
+mdl_result_t parse_triangle_commands_fixed(mstudiomesh_t *mesh, unsigned char *data, short **indices, int *index_count);
+mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, int *index_count);
 
+// Texture extraction
+mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *texture_data,
+                                 int texture_index, unsigned char **rgb_output,
+                                 int *width, int *height);
+
+// Coordinate transformation
+void transform_vertices_to_opengl(vec3_t *hl_vertices, int count, float *gl_vertices, float scale);
+
+// Debug/info functions
 void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count);
 char *generate_texture_filename(const char *model_filename);
 void print_model_info(mstudiomodel_t *model, int bodypart_index, int model_index);
