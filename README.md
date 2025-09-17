@@ -15,6 +15,8 @@ A modern Half-Life 1 model viewer built with official Valve structures and prope
 
 ![Demo](assets/showcase/HL1_ModelViewer_1.gif)
 
+![Demo](assets/showcase/HL1_ModelViewer_2.gif)
+
 ## Project Structure
 ```
 src/
