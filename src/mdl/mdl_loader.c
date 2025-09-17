@@ -334,95 +334,6 @@ mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_
     return MDL_SUCCESS;
 }
 
-// CORRECTED triangle command parsing with proper winding
-mdl_result_t parse_triangle_commands_fixed(mstudiomesh_t *mesh, unsigned char *data, 
-                                          short **indices, int *index_count) {
-    if (!mesh || !data || !indices || !index_count) {
-        return MDL_ERROR_INVALID_PARAMETER;
-    }
-
-    if (mesh->numtris == 0) {
-        *indices = NULL;
-        *index_count = 0;
-        return MDL_SUCCESS;
-    }
-
-    // Go to triangle command data
-    unsigned char *cmd_data = data + mesh->triindex;
-    short *cmd_reader = (short *)cmd_data;
-    
-    // First pass: count total indices needed
-    int total_indices = 0;
-    short *temp_reader = cmd_reader;
-    
-    while (true) {
-        short vertex_count = *temp_reader++;
-        if (vertex_count == 0) break; // End of commands
-        
-        int abs_count = abs(vertex_count);
-        // Each strip/fan with N vertices produces (N-2) triangles
-        total_indices += (abs_count - 2) * 3;
-        
-        // Skip vertex data: each vertex = 4 shorts (vertindex, normindex, s, t)
-        temp_reader += abs_count * 4;
-    }
-
-    if (total_indices == 0) {
-        *indices = NULL;
-        *index_count = 0;
-        return MDL_SUCCESS;
-    }
-
-    // Allocate indices array
-    *indices = malloc(total_indices * sizeof(short));
-    if (!*indices) {
-        return MDL_ERROR_MEMORY_ALLOCATION;
-    }
-
-    // Second pass: generate triangles with correct winding
-    cmd_reader = (short *)cmd_data;
-    int output_idx = 0;
-    
-    while (true) {
-        short vertex_count = *cmd_reader++;
-        if (vertex_count == 0) break;
-        
-        int abs_count = abs(vertex_count);
-        mstudiotrivert_t *vertices = (mstudiotrivert_t *)cmd_reader;
-        
-        if (vertex_count < 0) {
-            // TRIANGLE FAN: center vertex + pairs
-            // Fan: v0 is center, triangles: (v0,v1,v2), (v0,v2,v3), (v0,v3,v4)...
-            for (int i = 2; i < abs_count; i++) {
-                (*indices)[output_idx++] = vertices[0].vertindex;     // Center
-                (*indices)[output_idx++] = vertices[i-1].vertindex;   // Previous
-                (*indices)[output_idx++] = vertices[i].vertindex;     // Current
-            }
-        } else {
-            // TRIANGLE STRIP: alternating winding for correct face orientation
-            for (int i = 2; i < abs_count; i++) {
-                if (i % 2 == 0) {
-                    // Even triangle: normal order
-                    (*indices)[output_idx++] = vertices[i-2].vertindex;
-                    (*indices)[output_idx++] = vertices[i-1].vertindex;
-                    (*indices)[output_idx++] = vertices[i].vertindex;
-                } else {
-                    // Odd triangle: reverse winding for proper face orientation
-                    (*indices)[output_idx++] = vertices[i-1].vertindex;
-                    (*indices)[output_idx++] = vertices[i-2].vertindex;
-                    (*indices)[output_idx++] = vertices[i].vertindex;
-                }
-            }
-        }
-        
-        // Move to next command
-        cmd_reader += abs_count * 4; // 4 shorts per vertex
-    }
-    
-    *index_count = total_indices;
-    printf("Generated %d triangle indices from commands\n", total_indices);
-    return MDL_SUCCESS;
-}
 
 // Simple triangle index generation for basic wireframe (fallback)
 mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, int *index_count) {
@@ -491,7 +402,196 @@ void print_simple_triangle_info(mstudiomodel_t *model, int bodypart_index, int m
     printf("\n");
 }
 
-// Vertex transformation from Half-Life to OpenGL coordinate system
+// Parse triangle commands and extract texture coordinates
+mdl_result_t parse_triangle_commands_fixed(mstudiomesh_t *mesh, unsigned char *data, 
+                                          short **indices, int *index_count,
+                                          float **tex_coords, int *tex_coord_count) {
+    if (!mesh || !data || !indices || !index_count) {
+        fprintf(stderr, "ERROR - Invalid parameters passed to parse_triangle_commands_fixed()!\n");
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+
+    if (mesh->numtris == 0) {
+        *indices = NULL;
+        *index_count = 0;
+        if (tex_coords) *tex_coords = NULL;
+        if (tex_coord_count) *tex_coord_count = 0;
+        return MDL_SUCCESS;
+    }
+
+    // Navigate to triangle command data
+    short *cmd_ptr = (short *)(data + mesh->triindex);
+    
+    // First pass: count indices needed
+    int total_indices = 0;
+    short *current = cmd_ptr;
+    
+    while (true) {
+        short vertex_count = *current++;
+        if (vertex_count == 0) break;
+        
+        int abs_count = (vertex_count < 0) ? -vertex_count : vertex_count;
+        if (vertex_count < 0) {
+            // Triangle fan: (N-2) triangles
+            total_indices += (abs_count - 2) * 3;
+        } else {
+            // Triangle strip: (N-2) triangles  
+            total_indices += (abs_count - 2) * 3;
+        }
+        
+        // Skip over the vertex data (each vertex is 4 shorts: vertindex, normindex, s, t)
+        current += abs_count * 4;
+    }
+    
+    // Allocate memory for indices and texture coordinates
+    *indices = malloc(total_indices * sizeof(short));
+    if (!*indices) {
+        return MDL_ERROR_MEMORY_ALLOCATION;
+    }
+    
+    float *texcoords = NULL;
+    bool debug_uvs = true;
+    if (tex_coords && tex_coord_count) {
+        texcoords = malloc(total_indices * 2 * sizeof(float)); // 2 floats per vertex (u,v)
+        if (!texcoords) {
+            free(*indices);
+            *indices = NULL;
+            return MDL_ERROR_MEMORY_ALLOCATION;
+        }
+        *tex_coords = texcoords;
+        *tex_coord_count = total_indices * 2;
+    }
+    
+    *index_count = total_indices;
+    
+    // Second pass: extract indices and texture coordinates
+    current = cmd_ptr;
+    int output_idx = 0;
+    int tex_idx = 0;
+
+    short min_s;
+    short min_t;
+    short max_t;
+    short max_s;
+    
+    while (true) {
+        short vertex_count = *current++;
+        if (vertex_count == 0) break;
+        
+        mstudiotrivert_t *verts = (mstudiotrivert_t *)current;
+        
+        if (vertex_count < 0) {
+            // Triangle fan
+            vertex_count = -vertex_count;
+            
+            // Track UV range
+            for (int v = 0; v < vertex_count; v++) {
+                if (verts[v].s < min_s) min_s = verts[v].s;
+                if (verts[v].s > max_s) max_s = verts[v].s;
+                if (verts[v].t < min_t) min_t = verts[v].t;
+                if (verts[v].t > max_t) max_t = verts[v].t;
+            }
+            
+            for (int i = 2; i < vertex_count; i++) {
+                // Triangle: 0, i-1, i
+                (*indices)[output_idx++] = verts[0].vertindex;
+                (*indices)[output_idx++] = verts[i-1].vertindex;
+                (*indices)[output_idx++] = verts[i].vertindex;
+                
+                if (texcoords) {
+                    // Convert s,t from shorts to normalized floats
+                    // Half-Life stores texture coords as shorts, we need to normalize them
+                    texcoords[tex_idx++] = verts[0].s / 32768.0f;
+                    texcoords[tex_idx++] = verts[0].t / 32768.0f;
+                    texcoords[tex_idx++] = verts[i-1].s / 32768.0f;
+                    texcoords[tex_idx++] = verts[i-1].t / 32768.0f;
+                    texcoords[tex_idx++] = verts[i].s / 32768.0f;
+                    texcoords[tex_idx++] = verts[i].t / 32768.0f;
+                }
+            }
+        } else {
+            // Triangle strip
+            
+            // Track UV range
+            for (int v = 0; v < vertex_count; v++) {
+                if (verts[v].s < min_s) min_s = verts[v].s;
+                if (verts[v].s > max_s) max_s = verts[v].s;
+                if (verts[v].t < min_t) min_t = verts[v].t;
+                if (verts[v].t > max_t) max_t = verts[v].t;
+            }
+            
+            for (int i = 2; i < vertex_count; i++) {
+                if (i % 2 == 0) {
+                    // Even triangles: i-2, i-1, i
+                    (*indices)[output_idx++] = verts[i-2].vertindex;
+                    (*indices)[output_idx++] = verts[i-1].vertindex;
+                    (*indices)[output_idx++] = verts[i].vertindex;
+                    
+                    if (texcoords) {
+                        texcoords[tex_idx++] = verts[i-2].s / 32768.0f;
+                        texcoords[tex_idx++] = verts[i-2].t / 32768.0f;
+                        texcoords[tex_idx++] = verts[i-1].s / 32768.0f;
+                        texcoords[tex_idx++] = verts[i-1].t / 32768.0f;
+                        texcoords[tex_idx++] = verts[i].s / 32768.0f;
+                        texcoords[tex_idx++] = verts[i].t / 32768.0f;
+                    }
+                } else {
+                    // Odd triangles (reversed winding): i-1, i-2, i
+                    (*indices)[output_idx++] = verts[i-1].vertindex;
+                    (*indices)[output_idx++] = verts[i-2].vertindex;
+                    (*indices)[output_idx++] = verts[i].vertindex;
+                    
+                    if (texcoords) {
+                        texcoords[tex_idx++] = verts[i-1].s / 32768.0f;
+                        texcoords[tex_idx++] = verts[i-1].t / 32768.0f;
+                        texcoords[tex_idx++] = verts[i-2].s / 32768.0f;
+                        texcoords[tex_idx++] = verts[i-2].t / 32768.0f;
+                        texcoords[tex_idx++] = verts[i].s / 32768.0f;
+                        texcoords[tex_idx++] = verts[i].t / 32768.0f;
+                    }
+                }
+            }
+        }
+        
+        current += vertex_count * 4;
+    }
+    
+    // Debug UV range
+    if (texcoords && debug_uvs) {
+        printf("    UV Range Debug: s=[%d to %d], t=[%d to %d]\n", min_s, max_s, min_t, max_t);
+        
+        // Check if these look like actual texture coordinates or pixels
+        if (max_s > 1000 || max_t > 1000) {
+            printf("    WARNING: UVs appear to be in pixel space, not normalized!\n");
+            printf("    Likely texture size: %dx%d\n", max_s, max_t);
+        }
+    }
+    
+    printf("    Parsed %d triangle indices", total_indices);
+    if (texcoords) {
+        printf(" with texture coordinates");
+    }
+    printf("\n");
+    
+    return MDL_SUCCESS;
+}
+
+void transform_vertices_to_opengl(vec3_t *hl_vertices, int count, float *gl_vertices, float scale) {
+    for (int i = 0; i < count; i++) {
+        // Half-Life stores the model lying on the Y axis
+        // We need to rotate 90 degrees to stand it up
+        // Original: X=side, Y=length (along body), Z=front/back
+        // Target: X=side, Y=up, Z=front/back
+        
+        gl_vertices[i * 3 + 0] = hl_vertices[i][0] * scale;  // X (side to side) stays X
+        gl_vertices[i * 3 + 1] = hl_vertices[i][1] * scale;  // Y becomes height (already correct)
+        gl_vertices[i * 3 + 2] = hl_vertices[i][2] * scale;  // Z (front/back) stays Z
+    }
+}
+
+// Extract triangles with proper UV coordinates per vertex
+
+// Extract texture as RGB data from MDL file
 mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *texture_data,
                                  int texture_index, unsigned char **rgb_output,
                                  int *width, int *height) {
@@ -515,6 +615,7 @@ mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *tex
     unsigned char *indexed_pixels = texture_data + texture_header->texturedataindex + tex->index;
     
     // Get palette (256 colors * 3 bytes RGB = 768 bytes)
+    // Palette immediately follows the indexed pixel data
     unsigned char *palette = indexed_pixels + (tex->width * tex->height);
     
     // Allocate RGB output (3 bytes per pixel)
@@ -538,15 +639,166 @@ mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *tex
     return MDL_SUCCESS;
 }
 
-void transform_vertices_to_opengl(vec3_t *hl_vertices, int count, float *gl_vertices, float scale) {
-    for (int i = 0; i < count; i++) {
-        // Half-Life stores the model lying on the Y axis
-        // We need to rotate 90 degrees to stand it up
-        // Original: X=side, Y=length (along body), Z=front/back
-        // Target: X=side, Y=up, Z=front/back
-        
-        gl_vertices[i * 3 + 0] = hl_vertices[i][0] * scale;  // X (side to side) stays X
-        gl_vertices[i * 3 + 1] = hl_vertices[i][1] * scale;  // Y becomes height (already correct)
-        gl_vertices[i * 3 + 2] = hl_vertices[i][2] * scale;  // Z (front/back) stays Z
+mdl_result_t extract_triangles_with_uvs(mstudiomesh_t *mesh, unsigned char *data,
+                                        vec3_t *model_vertices, int model_vertex_count,
+                                        float **out_vertices, float **out_texcoords, 
+                                        int *out_vertex_count) {
+    
+    if (!mesh || !data || !model_vertices || !out_vertices || !out_texcoords || !out_vertex_count) {
+        return MDL_ERROR_INVALID_PARAMETER;
     }
+    
+    if (mesh->numtris == 0) {
+        *out_vertices = NULL;
+        *out_texcoords = NULL;
+        *out_vertex_count = 0;
+        return MDL_SUCCESS;
+    }
+    
+    // Navigate to triangle command data
+    short *cmd_ptr = (short *)(data + mesh->triindex);
+    
+    // First pass: count total vertices needed (3 per triangle)
+    int expected_triangles = mesh->numtris;
+    int total_vertices = expected_triangles * 3;  // Allocate for expected triangles
+    
+    // Allocate output arrays
+    float *vertices = malloc(total_vertices * 3 * sizeof(float));
+    float *texcoords = malloc(total_vertices * 2 * sizeof(float));
+    
+    if (!vertices || !texcoords) {
+        if (vertices) free(vertices);
+        if (texcoords) free(texcoords);
+        return MDL_ERROR_MEMORY_ALLOCATION;
+    }
+    
+    // Second pass: extract triangles
+    short *current = cmd_ptr;
+    int out_idx = 0;
+    
+    while (out_idx < total_vertices) {
+        short vertex_count = *current++;
+        if (vertex_count == 0) break;
+        
+        mstudiotrivert_t *verts = (mstudiotrivert_t *)current;
+        
+        if (vertex_count < 0) {
+            // Triangle fan
+            vertex_count = -vertex_count;
+            for (int i = 2; i < vertex_count; i++) {
+                // Triangle fan: pivot is vertex 0
+                int indices[3] = { verts[0].vertindex, verts[i-1].vertindex, verts[i].vertindex };
+                
+                for (int j = 0; j < 3; j++) {
+                    int vidx = indices[j];
+                    if (vidx >= 0 && vidx < model_vertex_count) {
+                        // Transform from Half-Life to OpenGL coordinate system
+                        // Half-Life uses: X=right, Y=forward, Z=up (right-handed)
+                        // OpenGL uses: X=right, Y=up, Z=backward (right-handed)
+                        // Simple transformation: swap Y and Z
+                        
+                        float hl_x = model_vertices[vidx][0];  // right
+                        float hl_y = model_vertices[vidx][1];  // forward  
+                        float hl_z = model_vertices[vidx][2];  // up
+                        
+                        // Direct mapping:
+                        // HL X (right) -> GL X (right)
+                        // HL Z (up) -> GL Y (up) 
+                        // HL Y (forward) -> GL -Z (backward)
+                        vertices[out_idx * 3 + 0] = hl_x * 0.02f;   // X stays X
+                        vertices[out_idx * 3 + 1] = hl_z * 0.02f;   // Z becomes Y (up)
+                        vertices[out_idx * 3 + 2] = -hl_y * 0.02f;  // -Y becomes Z (backward)
+                    } else {
+                        // Invalid index, use zero
+                        vertices[out_idx * 3 + 0] = 0;
+                        vertices[out_idx * 3 + 1] = 0;
+                        vertices[out_idx * 3 + 2] = 0;
+                    }
+                    
+                    // Copy UV coordinates (s,t are in texture pixel coordinates)
+                    // Map j index to the correct vertex in the fan
+                    int vert_idx;
+                    if (j == 0) vert_idx = 0;        // First vertex (pivot)
+                    else if (j == 1) vert_idx = i-1; // Previous vertex
+                    else vert_idx = i;                // Current vertex
+                    
+                    // UV coords are stored as texture pixel coordinates
+                    // Need to normalize to 0-1 range for OpenGL
+                    // Assuming standard 256x256 texture (most common in Half-Life)
+                    // TODO: Get actual texture dimensions from mesh->skinref
+                    texcoords[out_idx * 2 + 0] = (float)verts[vert_idx].s / 256.0f;
+                    texcoords[out_idx * 2 + 1] = (float)verts[vert_idx].t / 256.0f;
+                    out_idx++;
+                }
+            }
+        } else {
+            // Triangle strip
+            for (int i = 2; i < vertex_count; i++) {
+                int indices[3];
+                int uv_indices[3];  // Track which vertex to use for UVs
+                
+                if (i % 2 == 0) {
+                    // Even triangle - normal winding
+                    indices[0] = verts[i-2].vertindex;
+                    indices[1] = verts[i-1].vertindex;
+                    indices[2] = verts[i].vertindex;
+                    uv_indices[0] = i-2;
+                    uv_indices[1] = i-1;
+                    uv_indices[2] = i;
+                } else {
+                    // Odd triangle - reverse winding for correct orientation
+                    indices[0] = verts[i-1].vertindex;
+                    indices[1] = verts[i-2].vertindex;
+                    indices[2] = verts[i].vertindex;
+                    uv_indices[0] = i-1;
+                    uv_indices[1] = i-2;
+                    uv_indices[2] = i;
+                }
+                
+                for (int j = 0; j < 3; j++) {
+                    int vidx = indices[j];
+                    if (vidx >= 0 && vidx < model_vertex_count) {
+                        // Transform from Half-Life to OpenGL coordinate system
+                        // Half-Life uses: X=right, Y=forward, Z=up (right-handed)
+                        // OpenGL uses: X=right, Y=up, Z=backward (right-handed)
+                        // Simple transformation: swap Y and Z
+                        
+                        float hl_x = model_vertices[vidx][0];  // right
+                        float hl_y = model_vertices[vidx][1];  // forward  
+                        float hl_z = model_vertices[vidx][2];  // up
+                        
+                        // Direct mapping:
+                        // HL X (right) -> GL X (right)
+                        // HL Z (up) -> GL Y (up) 
+                        // HL Y (forward) -> GL -Z (backward)
+                        vertices[out_idx * 3 + 0] = hl_x * 0.02f;   // X stays X
+                        vertices[out_idx * 3 + 1] = hl_z * 0.02f;   // Z becomes Y (up)
+                        vertices[out_idx * 3 + 2] = -hl_y * 0.02f;  // -Y becomes Z (backward)
+                    } else {
+                        vertices[out_idx * 3 + 0] = 0;
+                        vertices[out_idx * 3 + 1] = 0;
+                        vertices[out_idx * 3 + 2] = 0;
+                    }
+                    
+                    // UV coords are stored as texture pixel coordinates
+                    // Need to normalize to 0-1 range for OpenGL
+                    // Assuming standard 256x256 texture (most common in Half-Life)
+                    // TODO: Get actual texture dimensions from mesh->skinref
+                    texcoords[out_idx * 2 + 0] = (float)verts[uv_indices[j]].s / 256.0f;
+                    texcoords[out_idx * 2 + 1] = (float)verts[uv_indices[j]].t / 256.0f;
+                    out_idx++;
+                }
+            }
+        }
+        
+        current += vertex_count * 4;
+    }
+    
+    *out_vertices = vertices;
+    *out_texcoords = texcoords;
+    *out_vertex_count = out_idx;
+    
+    printf("    Extracted %d vertices with UVs\n", out_idx);
+    
+    return MDL_SUCCESS;
 }

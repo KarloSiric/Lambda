@@ -37,8 +37,13 @@ mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudio
 mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_t **vertices);
 
 // CORRECTED triangle parsing functions
-mdl_result_t parse_triangle_commands_fixed(mstudiomesh_t *mesh, unsigned char *data, short **indices, int *index_count);
-mdl_result_t create_simple_triangle_indices(int vertex_count, short **indices, int *index_count);
+mdl_result_t parse_triangle_commands_fixed(mstudiomesh_t *mesh, unsigned char *data, 
+                                          short **indices, int *index_count,
+                                          float **tex_coords, int *tex_coord_count);
+mdl_result_t extract_triangles_with_uvs(mstudiomesh_t *mesh, unsigned char *data,
+                                        vec3_t *model_vertices, int model_vertex_count,
+                                        float **out_vertices, float **out_texcoords, 
+                                        int *out_vertex_count);
 
 // Texture extraction
 mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *texture_data,

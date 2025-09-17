@@ -27,6 +27,7 @@ static unsigned int VBO = 0;
 static unsigned int VAO = 0;
 static unsigned int EBO = 0;  // Element Buffer Object for indices
 static unsigned int shader_program = 0;
+static unsigned int current_texture = 0;  // Currently bound texture
 
 // Model data
 static float *model_vertices = NULL;
@@ -216,8 +217,20 @@ static int load_shaders(void) {
         printf("DEBUG - Current working directory: %s\n", cwd);
     }
     
-    char *vertex_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/basic.vert");
-    char *fragment_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/basic.frag");
+    // Try to load textured shaders first, fall back to basic if not found
+    char *vertex_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/textured.vert");
+    char *fragment_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/textured.frag");
+    
+    if (!vertex_shader_file || !fragment_shader_file) {
+        printf("Textured shaders not found, falling back to basic shaders\n");
+        if (vertex_shader_file) free(vertex_shader_file);
+        if (fragment_shader_file) free(fragment_shader_file);
+        
+        vertex_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/basic.vert");
+        fragment_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/basic.frag");
+    } else {
+        printf("Using textured shaders\n");
+    }
 
     if (!vertex_shader_file || !fragment_shader_file) {
         fprintf(stderr, "ERROR - Failed to load shader files!\n");
@@ -357,21 +370,11 @@ bool should_close_window(void) {
 
 void render_loop(void) {
     
-    // Toggle between wireframe and points with 'W' key
-    static bool show_wireframe = true;
-    static bool last_w_pressed = false;
-    
     while(!should_close_window()) {
 
         clear_screen();
 
-        // Check for 'W' key to toggle wireframe/points
-        bool w_pressed = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
-        if (w_pressed && !last_w_pressed) {
-            show_wireframe = !show_wireframe;
-            printf("Switched to %s mode\n", show_wireframe ? "wireframe" : "points");
-        }
-        last_w_pressed = w_pressed;
+        
         
         // Use our shader program
         glUseProgram(shader_program);
@@ -389,17 +392,20 @@ void render_loop(void) {
         glUniform1f(rotYLocation, rotation_y);
         glUniform1f(zoomLocation, zoom);
         
-        // Enable textures!
-        glUniform1i(useTexLocation, 1);  // Set to 1 to use textures
-        
-        // Tell the shader to use texture unit 0
-        GLint textureLoc = glGetUniformLocation(shader_program, "texture1");
-        glUniform1i(textureLoc, 0);  // Use texture unit 0
-        
-        // Bind texture unit 0 (you can bind different textures later)
-        glActiveTexture(GL_TEXTURE0);
-        // Try different texture IDs - check console for actual IDs
-        glBindTexture(GL_TEXTURE_2D, 1);  // Start with ID 1
+        // Handle textures
+        if (current_texture != 0) {
+            glUniform1i(useTexLocation, 1);  // Enable textures
+            
+            // Tell the shader to use texture unit 0
+            GLint textureLoc = glGetUniformLocation(shader_program, "texture1");
+            glUniform1i(textureLoc, 0);  // Use texture unit 0
+            
+            // Bind the current texture
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, current_texture);
+        } else {
+            glUniform1i(useTexLocation, 0);  // Disable textures
+        }
         
         // Bind our vertex array and draw the model
         glBindVertexArray(VAO);
@@ -415,14 +421,13 @@ void render_loop(void) {
                 debug_printed = true;
             }
             
-            if (index_count > 0 && show_wireframe) {
+            if (index_count > 0) {
                 // Draw triangles using indices
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // Wireframe
+                // Wireframe mode is already set by F key toggle
                 glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, 0);
-            } else {
-                // Draw as points
-                glPointSize(3.0f);
-                glDrawArrays(GL_POINTS, 0, vertex_count);
+            } else if (vertex_count > 0) {
+                // Draw as triangles without indices
+                glDrawArrays(GL_TRIANGLES, 0, vertex_count);
             }
         } else {
             // Fallback to triangle if no model loaded
@@ -446,6 +451,11 @@ void set_wireframe_mode(bool enabled) {
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+}
+
+void set_current_texture(unsigned int texture_id) {
+    current_texture = texture_id;
+    printf("Set current texture to ID: %u\n", texture_id);
 }   
 
 void render_model(studiohdr_t *header, unsigned char *data) {
@@ -458,6 +468,8 @@ void render_model(studiohdr_t *header, unsigned char *data) {
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
+
+// Removed duplicate - already defined above
 
 void setup_model_vertices_with_indices_and_texcoords(float *vertices, int vertex_count_param, 
                                                      unsigned short *indices, int index_count_param,

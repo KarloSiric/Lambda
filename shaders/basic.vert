@@ -17,39 +17,50 @@ void main() {
     // Pass texture coordinate to fragment shader
     TexCoord = aTexCoord;
     
-    // Center the model (it might be offset)
-    vec3 centered = aPos;
-    centered.y -= 0.5; // Adjust vertical centering
+    // The model vertices
+    vec3 pos = aPos;
     
-    // Auto-rotation (slow) + manual rotation from keyboard (Y axis)
-    float angleY = time * 0.2 + rotation_y;
-    float cosY = cos(angleY);
-    float sinY = sin(angleY);
+    // Rotate around Y axis (vertical axis) for standard model viewing
+    float angleY = time * 0.2 + rotation_y * 0.5;
+    mat3 rotY = mat3(
+        cos(angleY), 0.0, sin(angleY),
+        0.0, 1.0, 0.0,
+        -sin(angleY), 0.0, cos(angleY)
+    );
     
-    vec3 rotatedY;
-    rotatedY.x = centered.x * cosY - centered.z * sinY;
-    rotatedY.y = centered.y;
-    rotatedY.z = centered.x * sinY + centered.z * cosY;
+    pos = rotY * pos;
     
-    // Apply manual rotation from keyboard (X axis) 
-    float angleX = rotation_x - 0.2; // Slight default tilt
-    float cosX = cos(angleX);
-    float sinX = sin(angleX);
+    // Apply tilt (X rotation)
+    float angleX = rotation_x * 0.3;
+    mat3 rotX = mat3(
+        1.0, 0.0, 0.0,
+        0.0, cos(angleX), -sin(angleX),
+        0.0, sin(angleX), cos(angleX)
+    );
     
-    vec3 rotatedXY;
-    rotatedXY.x = rotatedY.x;
-    rotatedXY.y = rotatedY.y * cosX - rotatedY.z * sinX;
-    rotatedXY.z = rotatedY.y * sinX + rotatedY.z * cosX;
+    pos = rotX * pos;
     
     // Apply zoom
-    vec3 scaled = rotatedXY * zoom;
+    pos *= zoom * 0.5;
     
-    // Simple perspective
-    float dist = 2.0;
-    vec3 final_pos = scaled;
-    final_pos.z = (final_pos.z - dist) * 0.5;
+    // Move model back from camera for perspective
+    pos.z -= 5.0;
     
-    // Transform vertex position to clip space
-    gl_Position = vec4(final_pos.x, final_pos.y, final_pos.z, 1.0);
-    gl_PointSize = 10.0;
+    // Perspective projection
+    float fov = 45.0 * 3.14159 / 180.0;
+    float near = 0.1;
+    float far = 100.0;
+    float aspect = 1.0;
+    
+    // Simple perspective division
+    float perspective = 1.0 / tan(fov * 0.5);
+    
+    vec4 projected;
+    projected.x = pos.x * perspective / aspect;
+    projected.y = pos.y * perspective;
+    projected.z = (pos.z * (far + near) - 2.0 * far * near) / (pos.z * (far - near));
+    projected.w = -pos.z;  // This is crucial for perspective divide
+    
+    gl_Position = projected;
+    gl_PointSize = 5.0;
 }
