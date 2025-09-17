@@ -11,6 +11,10 @@ A modern Half-Life 1 model viewer built with official Valve structures and prope
 - Camera controls
 - Model information display
 
+## Demo
+
+<video src="assets/showcase/HL1_ModelViewer_1.mp4" controls width="1024"></video>
+
 ## Project Structure
 ```
 src/
