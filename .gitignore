@@ -52,3 +52,6 @@ Thumbs.db
 *.zip
 *.rar
 *.7z
+
+# Textual files
+*.txt
