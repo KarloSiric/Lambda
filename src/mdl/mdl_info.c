@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-08-06 07:37:32
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-09-15 19:51:50
+* @Last Modified time: 2025-09-21 18:40:32
 */
 
 #include "mdl_info.h"
@@ -23,7 +23,7 @@ void print_complete_model_analysis(const char *filename, studiohdr_t *main_heade
 
     print_texture_info(texture_header, texture_data);
 
-    print_bodypart_info(main_header, main_data);
+    print_bodypart_info(main_header, main_data); 
 
     mstudiobone_t *bones = NULL;
     mdl_result_t bone_result = parse_bone_hierarchy(main_header, main_data, &bones);
