@@ -35,6 +35,9 @@ static int vertex_count = 0;
 static int index_count = 0;
 static bool debug_printed = false;
 
+static studiohdr_t *global_header = NULL;
+static unsigned char *global_data = NULL;
+
 // Camera controls
 static float rotation_x = 0.0f;
 static float rotation_y = 0.0f;
@@ -104,43 +107,6 @@ void setup_triangle(void) {
     glEnableVertexAttribArray(0);
 }
 
-void setup_model_vertices(float *vertices, int count) {
-    // Store the vertex data
-    model_vertices = vertices;
-    vertex_count = count;
-    index_count = 0;  // No indices - use regular vertex array drawing
-    
-    printf("Loading %d vertices into OpenGL buffers...\n", count);
-    
-    // Debug: Print some vertices to verify they're reasonable
-    printf("Sample vertices:\n");
-    for (int i = 0; i < 5 && i < count; i++) {
-        printf("  Vertex %d: (%.3f, %.3f, %.3f)\n", i, 
-               vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
-    }
-    
-    // Clean up any existing buffers
-    if (VAO) glDeleteVertexArrays(1, &VAO);
-    if (VBO) glDeleteBuffers(1, &VBO);
-    
-    // Generate and bind VAO first
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    
-    // Generate and bind vertex buffer
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, count * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-    
-    // Setup vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-    
-    // Unbind
-    glBindVertexArray(0);
-    
-    printf("Model vertices loaded successfully!\n");
-}
 
 static char *read_shader_source(const char *filepath) { 
     printf("DEBUG - Trying to load shader from: %s\n", filepath);
@@ -368,79 +334,24 @@ bool should_close_window(void) {
     return glfwWindowShouldClose(window);
 }
 
+// NOTE: Needs to be reimplemented properly missing some things and not working well.
+
 void render_loop(void) {
-    
-    while(!should_close_window()) {
+
+    if (!should_close_window()) {
 
         clear_screen();
 
-        
-        
-        // Use our shader program
-        glUseProgram(shader_program);
-        
-        // Pass camera controls to shader
-        float time = (float)glfwGetTime();
-        GLint timeLocation = glGetUniformLocation(shader_program, "time");
-        GLint rotXLocation = glGetUniformLocation(shader_program, "rotation_x");
-        GLint rotYLocation = glGetUniformLocation(shader_program, "rotation_y");
-        GLint zoomLocation = glGetUniformLocation(shader_program, "zoom");
-        GLint useTexLocation = glGetUniformLocation(shader_program, "useTexture");
-        
-        glUniform1f(timeLocation, time);
-        glUniform1f(rotXLocation, rotation_x);
-        glUniform1f(rotYLocation, rotation_y);
-        glUniform1f(zoomLocation, zoom);
-        
-        // Handle textures
-        if (current_texture != 0) {
-            glUniform1i(useTexLocation, 1);  // Enable textures
-            
-            // Tell the shader to use texture unit 0
-            GLint textureLoc = glGetUniformLocation(shader_program, "texture1");
-            glUniform1i(textureLoc, 0);  // Use texture unit 0
-            
-            // Bind the current texture
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, current_texture);
-        } else {
-            glUniform1i(useTexLocation, 0);  // Disable textures
+        if (global_header && global_data) {
+            render_model(global_header, global_data);
+
         }
-        
-        // Bind our vertex array and draw the model
-        glBindVertexArray(VAO);
-        
-        if (vertex_count > 0) {
-            if (!debug_printed) {
-                if (index_count > 0) {
-                    printf("Rendering %d vertices with %d indices (%d triangles)\n", 
-                           vertex_count, index_count, index_count / 3);
-                } else {
-                    printf("Rendering %d vertices as points (no triangles)\n", vertex_count);
-                }
-                debug_printed = true;
-            }
-            
-            if (index_count > 0) {
-                // Draw triangles using indices
-                // Wireframe mode is already set by F key toggle
-                glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_SHORT, 0);
-            } else if (vertex_count > 0) {
-                // Draw as triangles without indices
-                glDrawArrays(GL_TRIANGLES, 0, vertex_count);
-            }
-        } else {
-            // Fallback to triangle if no model loaded
-            if (!debug_printed) {
-                printf("No model vertices, drawing triangle\n");
-                debug_printed = true;
-            }
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-        }
-        
+
         glfwSwapBuffers(window);
         glfwPollEvents();
+
     }
+ 
 }
 
 void set_wireframe_mode(bool enabled) {
@@ -459,60 +370,60 @@ void set_current_texture(unsigned int texture_id) {
 }   
 
 void render_model(studiohdr_t *header, unsigned char *data) {
-    // TODO(Karlo): Need to implement for the data of the texture and model information
-    // THis needs to be given to the buffers and draw from 
-    (void)header; // Suppress unused parameter warning
-    (void)data;   // Suppress unused parameter warning
-    
-    glBindVertexArray(VAO);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glUseProgram(0);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-100, 100, -100, 100, -100, 100);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glRotatef((float)glfwGetTime() * 50.0f, 0.0f, 1.0f, 0.0f);
+
+    // Get first bodypart and model
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(data + header->bodypartindex);
+    mstudiomodel_t *models = (mstudiomodel_t *)(data + bodyparts[0].modelindex);
+    mstudiomodel_t *model = &models[0];
+
+    vec3_t *vertices = (vec3_t *)(data + model->vertindex);
+
+    mstudiomesh_t *meshes = (mstudiomesh_t *)(data + model->meshindex);
+
+    for (int mesh = 0; mesh < model->nummesh; mesh++) {
+
+        short *triangle_commands = (short *)(data + meshes[mesh].triindex);
+
+        int i;
+        while((i = *(triangle_commands++))) {
+            if (i < 0) {
+                glBegin(GL_TRIANGLE_FAN);
+                i = -i;
+
+            } else {
+                glBegin(GL_TRIANGLE_STRIP);
+
+            }
+
+            for (; i > 0; i--, triangle_commands += 4) {
+                int vertIndex = triangle_commands[0];
+                glVertex3f(vertices[vertIndex][0], vertices[vertIndex][1], vertices[vertIndex][2]);
+            }
+
+            glEnd();
+        }
+    } 
+ 
 }
 
-// Removed duplicate - already defined above
+void set_model_data(studiohdr_t *header, unsigned char *data) {
 
-void setup_model_vertices_with_indices_and_texcoords(float *vertices, int vertex_count_param, 
-                                                     unsigned short *indices, int index_count_param,
-                                                     float *texcoords) {
-    vertex_count = vertex_count_param;
-    index_count = index_count_param;
-    
-    printf("Loading %d vertices and %d indices into OpenGL buffers...\n", vertex_count, index_count);
-    
-    // Generate and bind VAO
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    
-    // Generate and bind VBO for vertices
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertex_count * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-    
-    // Generate and bind EBO for indices
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_count * sizeof(unsigned short), indices, GL_STATIC_DRAW);
-    
-    // Set vertex attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    
-    // Set texture coordinate attribute if provided
-    if (texcoords) {
-        unsigned int texCoordVBO;
-        glGenBuffers(1, &texCoordVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, texCoordVBO);
-        glBufferData(GL_ARRAY_BUFFER, vertex_count * 2 * sizeof(float), texcoords, GL_STATIC_DRAW);
-        
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(1);
-        
-        printf("Texture coordinates loaded successfully!\n");
-    }
-    
-    // Unbind
-    glBindVertexArray(0);
-    
-    printf("Model vertices and indices loaded successfully!\n");
+    global_header = header;
+    global_data = data;
+
+
 }
+
+
 

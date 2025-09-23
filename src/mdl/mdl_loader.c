@@ -87,7 +87,7 @@ void print_bodypart_info(studiohdr_t *header, unsigned char *file_data) {
 
     printf("\nDetailed Bodypart Information:\n");
     // FIXED: Use correct structure name
-    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(file_data + header->bodypartindex);
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(file_data + header->bodypartindex);
 
     for (int i = 0; i < header->numbodyparts; i++) {
         printf("   [%d] Bodypart: %s (%d models)\n",
@@ -117,7 +117,8 @@ char *generate_texture_filename(const char *model_filename) {
 
     if (dot_position) {
         memmove(dot_position + 1, dot_position, strlen(dot_position) + 1);
-        *dot_position = 't';
+        // *dot_position = 't';
+        strcpy(dot_position, "t.mdl");
     }
     return texture_filename;
 }
@@ -461,16 +462,218 @@ mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *tex
 }
 
 
+mdl_result_t extract_triangles_with_uvs(mstudiomesh_t *mesh, unsigned char *main_data, vec3_t *model_vertices, int model_vertex_count, float **out_vertices, float **out_texcoords, int *out_vertex_count)
+{
+
+    if (!mesh || !main_data || !model_vertices || !out_vertices || !out_texcoords || !out_vertex_count) 
+    {
+
+        fprintf(stderr, "ERROR - Invalid parameters error for function 'extract_traingles_with_uvs'");
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+
+    *out_vertices = NULL;
+    *out_texcoords = NULL;
+    *out_vertex_count = 0;
+
+    if (mesh->numtris == 0)
+    {
+        return MDL_SUCCESS;
+    }
+
+    const short *triangle_commands = (const short *)(main_data + mesh->triindex);
+
+    int max_vertices = mesh->numtris * 3;
+
+    float *temp_vertices = malloc(max_vertices * 3 * sizeof(float));
+    float *temp_textcoord = malloc(max_vertices * 2 * sizeof(float));
+
+    if (!temp_vertices || !temp_textcoord) 
+    {
+
+        free(temp_vertices);
+        free(temp_textcoord);
+        return MDL_ERROR_MEMORY_ALLOCATION;
+
+    }   
+
+    int vertex_count = 0;
+    int command;
+    
+    while((command = *triangle_commands++) != 0)
+    {
+
+        int num_verts = abs(command);
+        bool is_fan = (command < 0);
+
+        const mstudiotrivert_t *vertices_data = (const mstudiotrivert_t *)triangle_commands;
+
+        if (is_fan) 
+        {
+
+            /* So it goes like this for TRIANGLE FAN: 0, 1, 2 -> 0, 2, 3 -> 0, 3, 4 
+             * TODO(Karlo): Extracting Triangle Fans
+            */
+
+            for (int i = 2; i < num_verts; i++) 
+            {
+
+                if (vertex_count + 3 <= max_vertices)
+                {
+
+                    int indices[3] = {
+                        vertices_data[0].vertindex,
+                        vertices_data[i-1].vertindex,
+                        vertices_data[i].vertindex
+                    };
+
+                    /* VALIDATION OF INDICES */
+
+                    for (int j = 0; j < 3; j++) 
+                    {
+                        if (indices[j] >= model_vertex_count)
+                        { 
+                            fprintf(stderr, "ERROR - Invalid vertex index %d\n", indices[j]);
+                            free(temp_vertices);
+                            free(temp_textcoord);
+                            return MDL_ERROR_INVALID_PARAMETER;
+                        }
+                    }
+
+                    for (int j = 0; j < 3; j++)
+                    {
+                        float scale_factor = 0.01f;
+                        int temp_vertindex = indices[j];                                                          // Half life system uses y->z
+                        temp_vertices[vertex_count * 3 + 0] = model_vertices[temp_vertindex][0] * scale_factor;   // x
+                        temp_vertices[vertex_count * 3 + 1] = model_vertices[temp_vertindex][1] * scale_factor;   // z
+                        temp_vertices[vertex_count * 3 + 2] = model_vertices[temp_vertindex][2] * scale_factor; // y
+                        vertex_count++;
+                        
+                    }
+
+                    temp_textcoord[(vertex_count - 3) * 2 + 0] = (float)vertices_data[0].s / 256.0f;
+                    temp_textcoord[(vertex_count - 3) * 2 + 1] = (float)vertices_data[0].t / 256.0f;
+                    temp_textcoord[(vertex_count - 2) * 2 + 0] = (float)vertices_data[i - 1].s / 256.0f;
+                    temp_textcoord[(vertex_count - 2) * 2 + 1] = (float)vertices_data[i - 1].t / 256.0f;
+                    temp_textcoord[(vertex_count - 1) * 2 + 0] = (float)vertices_data[i].s / 256.0f;
+                    temp_textcoord[(vertex_count - 1) * 2 + 1] = (float)vertices_data[i].t / 256.0f;
+
+                }
+            }
+
+        } else {
+            // Triangel Stripping: We have two different winding methods to address for this
+            for (int i = 2; i < num_verts; i++) {
+
+                if (vertex_count + 3 <= max_vertices) {
+
+                    int indices[3];
+
+                    if (i % 2 == 0) {
+                    // Even triangle - Normal Winding
+
+                        indices[0] = vertices_data[i - 2].vertindex;
+                        indices[1] = vertices_data[i - 1].vertindex;
+                        indices[2] = vertices_data[i].vertindex;
+                    } else {
+                    // Odd triangle - Reverse Winding
+
+                        indices[0] = vertices_data[i - 1].vertindex;
+                        indices[1] = vertices_data[i - 2].vertindex;
+                        indices[2] = vertices_data[i].vertindex;
+                    }
+
+                    //VALIDATION
+
+                    for (int j = 0; j < 3; j++) {
+                        if (indices[j] >= model_vertex_count) {
+                            fprintf(stderr, "ERROR - Invalid vertex index %d\n", indices[j]);
+                            free(temp_vertices);
+                            free(temp_textcoord);
+                            return MDL_ERROR_INVALID_PARAMETER;
+                        }
+                    }
+
+                    for (int j = 0; j < 3; j++) {
+                        float scale_factor = 0.01f;
+                        int temp_vertindex = indices[j];
+                        temp_vertices[vertex_count * 3 + 0] = model_vertices[temp_vertindex][0] * scale_factor;
+                        temp_vertices[vertex_count * 3 + 1] = model_vertices[temp_vertindex][1] * scale_factor;
+                        temp_vertices[vertex_count * 3 + 2] = model_vertices[temp_vertindex][2] * scale_factor;
+                        vertex_count++;
+                    }
+
+                    if (i % 2 == 0) {
+                        temp_textcoord[(vertex_count - 3) * 2 + 0] = (float)vertices_data[i - 1].s / 256.0f;
+                        temp_textcoord[(vertex_count - 3) * 2 + 1] = (float)vertices_data[i - 1].t / 256.0f;
+                        temp_textcoord[(vertex_count - 2) * 2 + 0] = (float)vertices_data[i - 2].s / 256.0f;
+                        temp_textcoord[(vertex_count - 2) * 2 + 1] = (float)vertices_data[i - 2].t / 256.0f;
+                        temp_textcoord[(vertex_count - 1) * 2 + 0] = (float)vertices_data[i].s / 256.0f;
+                        temp_textcoord[(vertex_count - 1) * 2 + 1] = (float)vertices_data[i].t / 256.0f;
+
+                    } else {
+                        temp_textcoord[(vertex_count - 3) * 2 + 0] = (float)vertices_data[i - 1].s / 256.0f;
+                        temp_textcoord[(vertex_count - 3) * 2 + 1] = (float)vertices_data[i - 1].t / 256.0f;
+                        temp_textcoord[(vertex_count - 2) * 2 + 0] = (float)vertices_data[i - 2].s / 256.0f;
+                        temp_textcoord[(vertex_count - 2) * 2 + 1] = (float)vertices_data[i - 2].t / 256.0f;
+                        temp_textcoord[(vertex_count - 1) * 2 + 0] = (float)vertices_data[i].s / 256.0f;
+                        temp_textcoord[(vertex_count - 1) * 2 + 1] = (float)vertices_data[i].t / 256.0f;
+
+                    }
+                }
+            }
+        }
+
+        // Needed to move the triangle_commands pointer to a new set of verts to read and its data
+        triangle_commands += num_verts * 4;
+    }   
+
+    *out_vertices = malloc(vertex_count * 3 * sizeof(float));
+    *out_texcoords = malloc(vertex_count * 2 * sizeof(float));
+
+    if (!*out_vertices || !*out_texcoords) {
+        free(*out_vertices);
+        free(*out_texcoords);
+        free(temp_vertices);
+        free(temp_textcoord);
+        return MDL_ERROR_MEMORY_ALLOCATION;
+    }
+
+    memcpy(*out_vertices, temp_vertices, vertex_count * 3 * sizeof(float));
+    memcpy(*out_texcoords, temp_textcoord, vertex_count * 2 * sizeof(float));
+
+    *out_vertex_count = vertex_count;
+
+    free(temp_vertices);
+    free(temp_textcoord);
+
+    return MDL_SUCCESS;
+
+}
 
 
+mstudiomodel_t *get_model_by_bodypart(studiohdr_t *header, unsigned char *main_data, int bodygroup_value, int bodypart_index) {
 
+    if (!header || !main_data || bodypart_index >= header->numbodyparts) {
 
+        fprintf(stderr, "ERROR - Invalid parameters: 'get_model_by_bodypart'\n");
+        return NULL;
+    }
 
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + header->bodypartindex);
+    mstudiobodypart_t *bodypart = &bodyparts[bodypart_index]; 
 
+    if (bodypart->nummodels == 0) {
+        fprintf(stderr, "Bodypart(Bodyparts[%d]) - '%s' has no models attached to it, models %d\n", bodypart_index, bodypart->name, bodypart->nummodels);
+        return NULL;
+    }
 
-
-
-
-
-
+    // Algorithm 
+ 
+    int index = bodygroup_value / bodypart->base;
+    index = index % bodypart->nummodels;
+    mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodypart->modelindex);
+    
+    return &models[index];
+}
 

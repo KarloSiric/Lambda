@@ -29,6 +29,7 @@ mdl_result_t validate_mdl_version(int version);
 mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size_t *file_size);
 mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **header);
 mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_header, studiohdr_t **texture_header, unsigned char **main_data, unsigned char **texture_data);
+mstudiomodel_t *get_model_by_bodypart(studiohdr_t *header, unsigned char *data, int bodygroup_value, int bodypart_index);
 
 // Data parsing functions
 mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstudiobone_t **bones);

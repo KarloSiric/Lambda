@@ -26,10 +26,7 @@ bool should_close_window(void);
 void render_model(studiohdr_t *header, unsigned char *data);
 void set_wireframe_mode(bool enabled);
 void set_current_texture(unsigned int texture_id);
-void setup_model_vertices(float *vertices, int count);
-void setup_model_vertices_with_indices_and_texcoords(float *vertices, int vertex_count, 
-                                                     unsigned short *indices, int index_count,
-                                                     float *texcoords);
+void set_model_data(studiohdr_t *header, unsigned char *data);
 
 void clear_screen(void);
 

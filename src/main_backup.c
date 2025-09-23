@@ -103,11 +103,11 @@ int main(int argc, char const *argv[])
     int total_vertices = 0;
     int total_triangles = 0;
     
-    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(main_data + main_header->bodypartindex);
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
     
     // First pass: count vertices and triangles
     for (int bp = 0; bp < main_header->numbodyparts; bp++) {
-        mstudiobodyparts_t *bodypart = &bodyparts[bp];
+        mstudiobodypart_t *bodypart = &bodyparts[bp];
         
         if (bodypart->nummodels > 0) {
             mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodypart->modelindex);
@@ -141,7 +141,7 @@ int main(int argc, char const *argv[])
         
         // Second pass: load vertices and extract triangle indices
         for (int bp = 0; bp < main_header->numbodyparts; bp++) {
-            mstudiobodyparts_t *bodypart = &bodyparts[bp];
+            mstudiobodypart_t *bodypart = &bodyparts[bp];
             
             if (bodypart->nummodels > 0) {
                 mstudiomodel_t *models = (mstudiomodel_t *)(main_data + bodypart->modelindex);
@@ -229,10 +229,10 @@ int main(int argc, char const *argv[])
             setup_model_vertices_with_indices_and_texcoords(all_vertices, vertex_offset, 
                                                            all_indices, index_offset,
                                                            all_texcoords);
-            printf("✅ Model loaded with proper triangle connectivity!\n");
+            printf("Model loaded with proper triangle connectivity!\n");
         } else {
             // Fallback if no indices were extracted
-            printf("⚠️ No triangle indices extracted, using vertex-only mode\n");
+            printf("No triangle indices extracted, using vertex-only mode\n");
             setup_model_vertices(all_vertices, vertex_offset);
         }
         
@@ -252,6 +252,6 @@ int main(int argc, char const *argv[])
         free(texture_data);
     }
     
-    printf("\n✅ Program terminated successfully\n");
+    printf("\nProgram terminated successfully\n");
     return (0);
 }

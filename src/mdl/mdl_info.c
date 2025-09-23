@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-08-06 07:37:32
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-09-21 18:40:32
+* @Last Modified time: 2025-09-22 17:34:46
 */
 
 #include "mdl_info.h"
@@ -44,7 +44,7 @@ void print_complete_model_analysis(const char *filename, studiohdr_t *main_heade
     }
 
     printf("\n=== Detailed Model Analysis ===\n");
-    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(main_data + main_header->bodypartindex);
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + main_header->bodypartindex);
     for (int bodypart_index = 0; bodypart_index < main_header->numbodyparts; bodypart_index++) {
         printf("bodypart_index: %d: %s (%d models)\n", bodypart_index, bodyparts[bodypart_index].name, bodyparts[bodypart_index].nummodels);
 
