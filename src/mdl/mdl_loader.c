@@ -1,7 +1,20 @@
-/*
- * MDL loader implementation - CORRECTED VERSION
- * Fixed triangle parsing and structure names based on Valve's format
+/*======================================================================
+ *  File: mdl_loader.c
+ *  Project: shaders
+ *  Author: karlosiric <email@example.com>
+ *  Created: 2025-09-22 23:59:53
+ *  Last Modified by: karlosiric
+ *  Last Modified: 2025-09-24 14:29:31
+ *----------------------------------------------------------------------
+ *  Description:
+ *      
+ *----------------------------------------------------------------------
+ *  License: 
+ *  Company: 
+ *  Version: 0.1.0
+ *======================================================================
  */
+
 
 #include "mdl_loader.h"
 #include "../studio.h"

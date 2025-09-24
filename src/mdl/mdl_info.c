@@ -1,9 +1,20 @@
-/*
-* @Author: karlosiric
-* @Date:   2025-08-06 07:37:32
-* @Last Modified by:   karlosiric
-* @Last Modified time: 2025-09-22 17:34:46
-*/
+/*======================================================================
+ *  File: mdl_info.c
+ *  Project: shaders
+ *  Author: karlosiric <email@example.com>
+ *  Created: 2025-09-24 14:21:42
+ *  Last Modified by: karlosiric
+ *  Last Modified: 2025-09-24 14:29:26
+ *----------------------------------------------------------------------
+ *  Description:
+ *      
+ *----------------------------------------------------------------------
+ *  License: 
+ *  Company: 
+ *  Version: 0.1.0
+ *======================================================================
+ */
+
 
 #include "mdl_info.h"
 #include "mdl_loader.h"

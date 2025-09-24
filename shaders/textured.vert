@@ -1,44 +1,80 @@
 #version 410 core
 
-// Input vertex attribute - position from our vertex buffer
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aTexCoord;
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;    // REAL normals from MDL
+layout (location = 2) in vec2 texCoord;  // REAL texture coordinates from MDL
 
-// Output to fragment shader
-out vec2 TexCoord;
-
-// Uniforms for camera control
+// Camera uniforms
+uniform float time;
 uniform float rotation_x;
 uniform float rotation_y;
 uniform float zoom;
 
+// Output to fragment shader
+out vec2 fragTexCoord;
+out vec3 worldPos;
+out vec3 worldNormal;  // Pass real normals to fragment shader
+out float depth;
+
 void main() {
-    // Pass texture coordinates to fragment shader
-    TexCoord = aTexCoord;
+    // Apply zoom scaling
+    vec3 scaledPos = position * zoom;
     
-    // Apply transformations
-    vec3 pos = aPos;
+    // Create proper rotation matrices
+    float cx = cos(rotation_x);
+    float sx = sin(rotation_x);
+    float cy = cos(rotation_y);
+    float sy = sin(rotation_y);
     
-    // Rotation around Y axis (horizontal)
-    float cosY = cos(rotation_y);
-    float sinY = sin(rotation_y);
-    vec3 rotatedY;
-    rotatedY.x = pos.x * cosY - pos.z * sinY;
-    rotatedY.y = pos.y;
-    rotatedY.z = pos.x * sinY + pos.z * cosY;
+    // Rotation matrix for Y axis (yaw)
+    mat3 rotY = mat3(
+        cy,  0.0, sy,
+        0.0, 1.0, 0.0,
+        -sy, 0.0, cy
+    );
     
-    // Rotation around X axis (vertical tilt)
-    float cosX = cos(rotation_x);
-    float sinX = sin(rotation_x);
-    vec3 rotatedXY;
-    rotatedXY.x = rotatedY.x;
-    rotatedXY.y = rotatedY.y * cosX - rotatedY.z * sinX;
-    rotatedXY.z = rotatedY.y * sinX + rotatedY.z * cosX;
+    // Rotation matrix for X axis (pitch)  
+    mat3 rotX = mat3(
+        1.0, 0.0, 0.0,
+        0.0, cx,  -sx,
+        0.0, sx,  cx
+    );
     
-    // Apply zoom
-    vec3 scaled = rotatedXY * zoom;
+    // Combined rotation matrix
+    mat3 rotation = rotX * rotY;
     
-    // Final position
-    gl_Position = vec4(scaled, 1.0);
-    gl_PointSize = 10.0;
+    // Apply rotations to position
+    vec3 rotated = rotation * scaledPos;
+    
+    // Apply rotations to normal as well
+    vec3 rotatedNormal = rotation * normal;
+    
+    // Move model away from camera for proper viewing
+    vec3 viewPosition = rotated + vec3(0.0, 0.0, -3.0);
+    
+    // Proper perspective projection matrix
+    float fov = radians(45.0);
+    float aspect = 800.0 / 450.0;
+    float near = 0.1;
+    float far = 100.0;
+    
+    float f = 1.0 / tan(fov * 0.5);
+    
+    mat4 projection = mat4(
+        f/aspect, 0.0,  0.0,                            0.0,
+        0.0,      f,    0.0,                            0.0,
+        0.0,      0.0,  (far+near)/(near-far),        -1.0,
+        0.0,      0.0,  (2.0*far*near)/(near-far),     0.0
+    );
+    
+    // Apply projection
+    vec4 projectedPos = projection * vec4(viewPosition, 1.0);
+    
+    gl_Position = projectedPos;
+    
+    // Pass data to fragment shader
+    fragTexCoord = texCoord;
+    worldPos = rotated;
+    worldNormal = normalize(rotatedNormal);  // Use REAL normals!
+    depth = -viewPosition.z;
 }

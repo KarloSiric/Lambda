@@ -1,7 +1,4 @@
-/*
- * MDL file loader using official Valve structures
- * Handles parsing and validation of .mdl files - CORRECTED VERSION
- */
+
 
 #ifndef MDL_LOADER_H
 #define MDL_LOADER_H

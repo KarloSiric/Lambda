@@ -1,11 +1,7 @@
-/*
- * OpenGL renderer for MDL models
- * Handles vertex buffers, shaders, and drawing
- */
+
 
 #ifndef RENDERER_H
 #define RENDERER_H
-
 
 #include "../studio.h"
 #include "GLFW/glfw3.h"
@@ -29,5 +25,10 @@ void set_current_texture(unsigned int texture_id);
 void set_model_data(studiohdr_t *header, unsigned char *data);
 
 void clear_screen(void);
+
+void InitializeBoneSystem(studiohdr_t *header, unsigned char *data, int bodypart_index);
+void SetUpBones(void);
+void ProcessModelForRendering(void);
+void AddVertexToBuffer(int vertex_index, int normal_index, float u, float v);
 
 #endif // RENDERER_H

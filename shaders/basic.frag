@@ -1,21 +1,12 @@
 #version 410 core
 
-// Input from vertex shader
-in vec2 TexCoord;
-
-// Output color for this fragment/pixel
+in vec2 fragTexCoord;
 out vec4 FragColor;
-
-// Texture sampler
-uniform sampler2D texture1;
-uniform bool useTexture;
+uniform float time;
 
 void main() {
-    if (useTexture) {
-        // Sample the texture
-        FragColor = texture(texture1, TexCoord);
-    } else {
-        // Fallback orange color
-        FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-    }
-}
+    // Orange Half-Life color with some variation
+    vec3 orange = vec3(1.0, 0.6, 0.2);
+    vec3 variation = vec3(0.1 * sin(fragTexCoord.x * 10.0), 0.1 * cos(fragTexCoord.y * 10.0), 0.0);
+    FragColor = vec4(orange + variation, 1.0);
+};
