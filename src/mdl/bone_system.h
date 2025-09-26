@@ -1,0 +1,37 @@
+#ifndef BONESYSTEM_H
+#define BONESYSTEM_H 
+
+
+#include "../studio.h"
+#include <cglm/cglm.h>
+
+
+extern mat4 g_bonetransformations[MAXSTUDIOBONES];
+extern mat4 g_xformverts[MAXSTUDIOVERTS];
+extern mat4 g_xformnorms[MAXSTUDIOVERTS];
+
+
+extern float g_adj[8];
+
+
+void SetUpBones(studiohdr_t *header, unsigned char *data);
+
+
+void TransformVertices(studiohdr_t *header, unsigned char *data,
+                        mstudiomodel_t *model, vec3 *out_vertices);
+
+
+void TransformNormalByBone(const mat4 boneAbs, const vec3 in, vec3 out);
+
+
+void AngleQuaternion(const vec3 angles, versor q);
+
+void QuaternionMatrix(const versor q, mat4 out);
+
+void R_ConcatTransforms(const mat4 parent, const mat4 local, mat4 out);
+
+void VectorTransforms(const vec3 in, const mat4 m, vec3 out);
+
+
+
+#endif

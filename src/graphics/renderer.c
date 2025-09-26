@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-24 14:54:47
+ *  Last Modified: 2025-09-26 15:56:28
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -27,20 +27,35 @@
 #include <GL/gl3.h>
 #endif
 
+
+// Diagnostic function will be added below
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>  // For getcwd
 #include <cglm/cglm.h>
 
+typedef struct {
+    mstudiomodel_t *model;
+    vec3_t *vertices;
+    vec3_t *normals;
+    int vertex_count;
+    int normal_count;
+} current_model_data_t;
+
+static current_model_data_t g_current;
+
+
 GLFWwindow *window = NULL;
 static bool wireframe_enabled = false;
 
+
 static unsigned int VBO = 0;
 static unsigned int VAO = 0;
-static unsigned int EBO = 0;  // Element Buffer Object for indices
+static unsigned int EBO = 0;              // Element Buffer Object for indices
 static unsigned int shader_program = 0;
 static unsigned int current_texture = 0;  // Currently bound texture
+
 
 // For Bone data
 static int m_numbones = 0;
@@ -50,9 +65,12 @@ static vec3 m_pxformverts[MAXSTUDIOVERTS];
 static unsigned char *m_pvertbone;
 static vec3 *m_pstudioverts;
 
+
+
 extern float rotation_x;
 extern float rotation_y;
 extern float zoom;
+
 
 // Model data
 static float *model_vertices = NULL;
@@ -61,23 +79,65 @@ static int index_count = 0;
 static bool debug_printed = false;
 static bool bone_system_initialized = false;
 
+
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
 #define MAX_RENDER_VERTICES 32768
 static float render_vertex_buffer[MAX_RENDER_VERTICES * 8]; // 3 pos + 3 normal + 2 uv
 static int total_render_vertices = 0;
 static bool model_processed = false;
 
+
 static studiohdr_t *global_header = NULL;
 static unsigned char *global_data = NULL;
+
 
 // Camera controls
 float rotation_x = 0.0f;
 float rotation_y = 0.0f;
 float zoom = 0.15f;  // Even more zoomed out for scientist model
 
+
+
+static bool mouse_pressed = false;
+static double last_x = 400, last_y = 225;
+
+
+
+static void glfw_mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (mouse_pressed) {
+        float xoffset = xpos - last_x;
+        float yoffset = ypos - last_y;
+        
+        rotation_y += xoffset * 0.01f;
+        rotation_x -= yoffset * 0.01f;
+    }
+    last_x = xpos;
+    last_y = ypos;
+}
+
+
+
+static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        mouse_pressed = (action == GLFW_PRESS);
+    }
+}
+
+
+
+static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    zoom *= (1.0f + yoffset * 0.1f);
+    if (zoom < 0.01f) zoom = 0.01f;
+    if (zoom > 2.0f) zoom = 2.0f;
+}
+
+
+
 static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW ERROR %d: %s\n", error, description);
 }
+
+
 
 static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     (void)scancode; // Suppress unused parameter warning
@@ -125,192 +185,228 @@ float vertices[] = {
      0.0f,  0.5f, 0.0f   // Top center  
 };
 
-// Add this function to initialize the bone system
-void InitializeBoneSystem(studiohdr_t *header, unsigned char *data, int bodypart_index) {
-    // Get the current model we're rendering
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(data + header->bodypartindex);
-    mstudiomodel_t *models = (mstudiomodel_t *)(data + bodyparts[bodypart_index].modelindex);
-    mstudiomodel_t *model = &models[0];
-    
-    // Set the counts
-    m_numbones = header->numbones;
-    m_numverts = model->numverts;
-    
-    // Set pointers to the actual data
-    m_pstudioverts = (vec3_t *)(data + model->vertindex);           // Original vertices
-    m_pvertbone = (unsigned char *)(data + model->vertinfoindex);   // Vertex-to-bone mapping
-    
-    printf("Bone system initialized: %d bones, %d vertices\n", m_numbones, m_numverts);
-}
 
-// Setting up bones using cglm 
-void SetUpBones() {
-    mstudiobone_t *bones = (mstudiobone_t *)(global_data + global_header->boneindex);
+// DIAGNOSTIC FUNCTION TO UNDERSTAND THE MODEL DATA
+void dump_complete_mdl_structure(void) {
+    if (!global_header || !global_data) return;
     
-    // Create transformation matrices with better test transforms
-    for (int i = 0; i < m_numbones; i++) {
-        // Create identity matrix
-        glm_mat4_identity(m_bonetransform[i]);
-        
-        // Apply subtle variations instead of dramatic transforms
-        float variation = sin(i * 0.3f) * 0.05f;  // Small variation based on bone index
-        vec3 scale = {1.0f + variation, 1.0f + variation, 1.0f + variation};
-        glm_scale(m_bonetransform[i], scale);
-    }
+    printf("\n===============================================\n");
+    printf("COMPLETE MDL STRUCTURE DIAGNOSTIC\n");
+    printf("===============================================\n");
     
-    // Transform all vertices
-    for (int i = 0; i < m_numverts; i++) {
-        int bone_index = m_pvertbone[i];
-        
-        // Ensure bone index is valid
-        if (bone_index >= m_numbones) bone_index = 0;
-        
-        vec4 vertex_homogeneous = {
-            m_pstudioverts[i][0], 
-            m_pstudioverts[i][1], 
-            m_pstudioverts[i][2], 
-            1.0f
-        };
-        
-        vec4 result;
-        glm_mat4_mulv(m_bonetransform[bone_index], vertex_homogeneous, result);
-        
-        m_pxformverts[i][0] = result[0];
-        m_pxformverts[i][1] = result[1];
-        m_pxformverts[i][2] = result[2];
-    }
-}
-
-
-// Updated ProcessModelForRendering to extract normals and UVs
-void ProcessModelForRendering(void) {
-    if (!global_header || !global_data || model_processed) return;
+    // 1. Header info
+    printf("\n1. HEADER INFO:\n");
+    printf("   Model name: %s\n", global_header->name);
+    printf("   File size: %d bytes\n", global_header->length);
+    printf("   Bounding box: (%.2f,%.2f,%.2f) to (%.2f,%.2f,%.2f)\n",
+           global_header->bbmin[0], global_header->bbmin[1], global_header->bbmin[2],
+           global_header->bbmax[0], global_header->bbmax[1], global_header->bbmax[2]);
+    printf("   BBox dimensions: %.2f x %.2f x %.2f\n",
+           global_header->bbmax[0] - global_header->bbmin[0],
+           global_header->bbmax[1] - global_header->bbmin[1],
+           global_header->bbmax[2] - global_header->bbmin[2]);
     
-    printf("Processing model with PROPER normals and UVs...\n");
-    total_render_vertices = 0;
-    
-    // Initialize and setup bones first
-    if (!bone_system_initialized) {
-        InitializeBoneSystem(global_header, global_data, 0);
-        SetUpBones();
-        bone_system_initialized = true;
-    }
-    
+    // 2. Bodyparts
+    printf("\n2. BODYPARTS (%d total):\n", global_header->numbodyparts);
     mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(global_data + global_header->bodypartindex);
     
-    // Process only the first bodypart (main body) to start with
-    for (int bp = 0; bp < 1 && bp < global_header->numbodyparts; bp++) {
-        if (bodyparts[bp].nummodels == 0) continue;
+    for (int bp = 0; bp < global_header->numbodyparts && bp < 2; bp++) {
+        printf("\n   Bodypart %d: '%s'\n", bp, bodyparts[bp].name);
+        printf("      Models: %d\n", bodyparts[bp].nummodels);
         
         mstudiomodel_t *models = (mstudiomodel_t *)(global_data + bodyparts[bp].modelindex);
         mstudiomodel_t *model = &models[0];
+        printf("      Model 0: '%s'\n", model->name);
+        printf("         Vertices: %d at offset 0x%X\n", model->numverts, model->vertindex);
         
-        if (model->numverts == 0 || model->nummesh == 0) continue;
+        // Check actual vertex data
+        vec3_t *verts = (vec3_t *)(global_data + model->vertindex);
         
-        mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
+        // Find min/max of raw vertices
+        float min_x = 10000, max_x = -10000;
+        float min_y = 10000, max_y = -10000;
+        float min_z = 10000, max_z = -10000;
         
-        printf("Processing bodypart %d: %d meshes\n", bp, model->nummesh);
+        for (int v = 0; v < model->numverts; v++) {
+            if (verts[v][0] < min_x) min_x = verts[v][0];
+            if (verts[v][0] > max_x) max_x = verts[v][0];
+            if (verts[v][1] < min_y) min_y = verts[v][1];
+            if (verts[v][1] > max_y) max_y = verts[v][1];
+            if (verts[v][2] < min_z) min_z = verts[v][2];
+            if (verts[v][2] > max_z) max_z = verts[v][2];
+        }
         
-        // Process triangle commands for all meshes  
-        for (int mesh = 0; mesh < model->nummesh && mesh < 5; mesh++) { // Limit to first 5 meshes
-            short *ptricmds = (short *)(global_data + meshes[mesh].triindex);
-            
-            int command;
-            while ((command = *(ptricmds++))) {
-                bool is_fan = (command < 0);
-                int vertex_count = is_fan ? -command : command;
+        printf("         RAW Vertex bounds:\n");
+        printf("            X: %.3f to %.3f (width: %.3f)\n", min_x, max_x, max_x - min_x);
+        printf("            Y: %.3f to %.3f (depth: %.3f)\n", min_y, max_y, max_y - min_y);
+        printf("            Z: %.3f to %.3f (height: %.3f)\n", min_z, max_z, max_z - min_z);
+        
+        // Show first few vertices
+        printf("         First 3 vertices (RAW from file):\n");
+        for (int v = 0; v < 3 && v < model->numverts; v++) {
+            printf("            V%d: (%.6f, %.6f, %.6f)\n", v,
+                   verts[v][0], verts[v][1], verts[v][2]);
+        }
+        
+        // Check hex data
+        unsigned char *as_bytes = (unsigned char *)(global_data + model->vertindex);
+        printf("         First 12 bytes at vertex offset: ");
+        for (int i = 0; i < 12; i++) {
+            printf("%02X ", as_bytes[i]);
+        }
+        printf("\n");
+    }
+    
+    printf("\n===============================================\n");
+}
+
+// Updated ProcessModelForRendering to extract normals and UVs
+void ProcessModelForRendering(void) {
+
+    if (!global_header || !global_data) {
+        fprintf(stderr, "ERROR - Invalid argument pointers value passed!\n");
+        return;
+    }
+
+    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(global_data + global_header->bodypartindex);
+    mstudiomodel_t *models = (mstudiomodel_t *)(global_data + bodyparts->modelindex);
+    mstudiomodel_t *model = &models[0];
+
+    g_current.model = model;
+    g_current.vertices = (vec3_t *)(global_data + model->vertindex);
+    g_current.normals = (vec3_t *)(global_data + model->normindex);
+    g_current.vertex_count = model->numverts;
+    g_current.normal_count = model->numnorms;
+
+    printf("Processing %d meshes, %d vertices\n", model->nummesh, model->numverts);
+
+    mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
+
+    for (int mesh = 0; mesh < model->nummesh; mesh++) {
+
+        short *ptricmds = (short *)(global_data + meshes[mesh].triindex);
+
+        int i;
+        while((i = *(ptricmds++))) {
+            if (i < 0) {
+                // TRIANGLE FAN
+                i = -i;
                 
-                // Safety checks
-                if (vertex_count < 3 || vertex_count > 50) {
-                    ptricmds += vertex_count * 4;
-                    continue;
+                /* 
+                 * We store here the first 2 vertices and process the rest because v0 for triangle FAN
+                 * We keep that as teh center as teh common -> { v0, v1, v2 }, { v0, v3, v4 }, { v0, v5, v6 }
+                 */
+
+                int v0_idx = ptricmds[0];
+                int n0_idx = ptricmds[1];
+                float u0 = ptricmds[2];
+                float v0 = ptricmds[3];
+                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+                int v1_idx = ptricmds[0];
+                int n1_idx = ptricmds[1];
+                float u1 = ptricmds[2];
+                float v1 = ptricmds[3];
+                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+                for (int j = 2; j < i; j++) {
+                    int v2_idx = ptricmds[0];
+                    int n2_idx = ptricmds[1];
+                    float u2 = ptricmds[2];
+                    float v2 = ptricmds[3];
+                    ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+
+                    // Triangle v0, v1, v2
+                    AddVertexToBuffer(v0_idx, n0_idx, u0, v0);
+                    AddVertexToBuffer(v1_idx, n1_idx, u1, v1);
+                    AddVertexToBuffer(v2_idx, n2_idx, u2, v2);
+
+                    v1_idx = v2_idx;
+                    n1_idx = n2_idx;
+                    u1 = u2;
+                    v1 = v2;
                 }
-                
-                // Store vertex data for this primitive
-                struct {
-                    int vertex_idx;
-                    int normal_idx;
-                    float u, v;
-                } temp_data[50];
-                
-                for (int v = 0; v < vertex_count; v++, ptricmds += 4) {
-                    temp_data[v].vertex_idx = ptricmds[0];
-                    temp_data[v].normal_idx = ptricmds[1]; // NORMAL INDEX - this was missing!
-                    temp_data[v].u = ptricmds[2];          // U coordinate
-                    temp_data[v].v = ptricmds[3];          // V coordinate
-                    
-                    // Bounds check
-                    if (temp_data[v].vertex_idx < 0 || temp_data[v].vertex_idx >= m_numverts) {
-                        temp_data[v].vertex_idx = 0;
+            } else {
+                // TRIANGLE STRIP
+
+                // read first vertex
+                int v0_idx = ptricmds[0];
+                int n0_idx = ptricmds[1];
+                float u0 = ptricmds[2];
+                float v0 = ptricmds[3];
+                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+                int v1_idx = ptricmds[0];
+                int n1_idx = ptricmds[1];
+                float u1 = ptricmds[2];
+                float v1 = ptricmds[3];
+                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+                for (int j = 2; j < i; j++) {
+                    int v2_idx = ptricmds[0];
+                    int n2_idx = ptricmds[1];
+                    float u2 = ptricmds[2];
+                    float v2 = ptricmds[3];
+                    ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+                    if ((j - 2) % 2 == 0) {
+                        AddVertexToBuffer(v0_idx, n0_idx, u0, v0);
+                        AddVertexToBuffer(v1_idx, n1_idx, u1, v1);
+                        AddVertexToBuffer(v2_idx, n2_idx, u2, v2);                            
+                    } else {
+                        AddVertexToBuffer(v1_idx, n1_idx, u1, v1);
+                        AddVertexToBuffer(v0_idx, n0_idx, u0, v0);
+                        AddVertexToBuffer(v2_idx, n2_idx, u2, v2);
+
                     }
-                    if (temp_data[v].normal_idx < 0 || temp_data[v].normal_idx >= model->numnorms) {
-                        temp_data[v].normal_idx = 0;
-                    }
-                }
-                
-                // Convert to triangles with proper normal and UV data
-                if (is_fan) {
-                    for (int v = 1; v < vertex_count - 1; v++) {
-                        if (total_render_vertices < MAX_RENDER_VERTICES - 3) {
-                            AddVertexToBuffer(temp_data[0].vertex_idx, temp_data[0].normal_idx, temp_data[0].u, temp_data[0].v);
-                            AddVertexToBuffer(temp_data[v].vertex_idx, temp_data[v].normal_idx, temp_data[v].u, temp_data[v].v);
-                            AddVertexToBuffer(temp_data[v+1].vertex_idx, temp_data[v+1].normal_idx, temp_data[v+1].u, temp_data[v+1].v);
-                        }
-                    }
-                } else {
-                    for (int v = 0; v < vertex_count - 2; v++) {
-                        if (total_render_vertices < MAX_RENDER_VERTICES - 3) {
-                            if (v % 2 == 0) {
-                                AddVertexToBuffer(temp_data[v].vertex_idx, temp_data[v].normal_idx, temp_data[v].u, temp_data[v].v);
-                                AddVertexToBuffer(temp_data[v+1].vertex_idx, temp_data[v+1].normal_idx, temp_data[v+1].u, temp_data[v+1].v);
-                                AddVertexToBuffer(temp_data[v+2].vertex_idx, temp_data[v+2].normal_idx, temp_data[v+2].u, temp_data[v+2].v);
-                            } else {
-                                AddVertexToBuffer(temp_data[v+1].vertex_idx, temp_data[v+1].normal_idx, temp_data[v+1].u, temp_data[v+1].v);
-                                AddVertexToBuffer(temp_data[v].vertex_idx, temp_data[v].normal_idx, temp_data[v].u, temp_data[v].v);
-                                AddVertexToBuffer(temp_data[v+2].vertex_idx, temp_data[v+2].normal_idx, temp_data[v+2].u, temp_data[v+2].v);
-                            }
-                        }
-                    }
-                }
-                
-                if (total_render_vertices > MAX_RENDER_VERTICES - 100) {
-                    printf("Approaching buffer limit, stopping at %d vertices\n", total_render_vertices);
-                    goto processing_complete;
+                    v0_idx = v1_idx; n0_idx = n1_idx; u0 = u1; v0 = v1;
+                    v1_idx = v2_idx; n1_idx = n2_idx; u1 = u2; v1 = v2;                
                 }
             }
         }
     }
+
+    printf("Generated %d vertices (%d triangles)\n", 
+           total_render_vertices, total_render_vertices / 3);
     
-    processing_complete:
-    printf("PROPER processing complete: %d vertices with normals and UVs\n", total_render_vertices);
     model_processed = true;
+
+
 }
 
-// Updated AddVertexToBuffer to include normals and UVs
+
 void AddVertexToBuffer(int vertex_index, int normal_index, float u, float v) {
-    if (total_render_vertices >= MAX_RENDER_VERTICES) return;
+
+if (total_render_vertices >= MAX_RENDER_VERTICES) return;
     
-    // Get pointers to normal data
-    vec3_t *normals = (vec3_t *)(global_data + ((mstudiomodel_t*)(global_data + ((mstudiobodypart_t*)(global_data + global_header->bodypartindex))->modelindex))->normindex);
+    // Bounds check
+    if (vertex_index < 0 || vertex_index >= g_current.vertex_count) {
+        vertex_index = 0;  // Fallback to prevent crash
+    }
+    if (normal_index < 0 || normal_index >= g_current.normal_count) {
+        normal_index = 0;
+    }
     
-    int base_index = total_render_vertices * 8;
+    int base = total_render_vertices * 8;
+    float scale = 0.01f;
     
-    // Position (transformed by bones)
-    render_vertex_buffer[base_index + 0] = m_pxformverts[vertex_index][0] * 0.05f;
-    render_vertex_buffer[base_index + 1] = m_pxformverts[vertex_index][1] * 0.05f;
-    render_vertex_buffer[base_index + 2] = m_pxformverts[vertex_index][2] * 0.05f;
+    // NO TRANSFORMATION - just scale down
+    render_vertex_buffer[base + 0] = g_current.vertices[vertex_index][0] * scale;
+    render_vertex_buffer[base + 1] = g_current.vertices[vertex_index][1] * scale;  
+    render_vertex_buffer[base + 2] = g_current.vertices[vertex_index][2] * scale;
     
-    // Normal (this is KEY for proper lighting)
-    render_vertex_buffer[base_index + 3] = normals[normal_index][0];
-    render_vertex_buffer[base_index + 4] = normals[normal_index][1];
-    render_vertex_buffer[base_index + 5] = normals[normal_index][2];
+    render_vertex_buffer[base + 3] = g_current.normals[normal_index][0];
+    render_vertex_buffer[base + 4] = g_current.normals[normal_index][1];
+    render_vertex_buffer[base + 5] = g_current.normals[normal_index][2];
     
-    // Texture coordinates (normalized)
-    render_vertex_buffer[base_index + 6] = u / 64.0f; // Normalize by typical texture size
-    render_vertex_buffer[base_index + 7] = v / 64.0f;
+    render_vertex_buffer[base + 6] = u / 256.0f;
+    render_vertex_buffer[base + 7] = v / 256.0f;
     
     total_render_vertices++;
 }
+
+
 void setup_triangle(void) {
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -478,9 +574,16 @@ int init_renderer(int width, int height, const char *title) {
     glfwSetKeyCallback(window, glfw_key_callback);
     glfwSetErrorCallback(glfw_error_callback);
 
+    // Add mouse controls
+    glfwSetCursorPosCallback(window, glfw_mouse_callback);
+    glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
+    glfwSetScrollCallback(window, glfw_scroll_callback);
+
+
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, width, height);
-    glEnable(GL_CULL_FACE);
+    // DISABLE CULLING TO SEE IF TRIANGLES ARE BACKWARDS
+    glDisable(GL_CULL_FACE);  // Changed from glEnable
     
     // Enable point size for vertex visualization
     glEnable(GL_PROGRAM_POINT_SIZE);

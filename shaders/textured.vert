@@ -54,7 +54,7 @@ void main() {
     
     // Proper perspective projection matrix
     float fov = radians(45.0);
-    float aspect = 800.0 / 450.0;
+    float aspect = 800.0 / 600.0;  // Standard 4:3 aspect ratio
     float near = 0.1;
     float far = 100.0;
     

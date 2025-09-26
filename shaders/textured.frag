@@ -10,6 +10,11 @@ out vec4 FragColor;
 uniform float time;
 
 void main() {
+ 
+    // DEBUG: Visualize normals as colors
+    vec3 debugColor = abs(normalize(worldNormal));
+    FragColor = vec4(debugColor, 1.0);
+
     // Base Half-Life orange color scheme
     vec3 baseColor = vec3(0.95, 0.55, 0.15);  // Orange
     vec3 darkColor = vec3(0.4, 0.2, 0.05);    // Dark orange/brown for shadows
