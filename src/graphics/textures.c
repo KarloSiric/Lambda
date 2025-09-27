@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 22:57:11
+ *  Last Modified: 2025-09-27 23:20:19
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -15,6 +15,7 @@
  *======================================================================
  */
 
+#include <stddef.h>
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl3.h>
@@ -81,14 +82,72 @@ static bool parse_paletted_block(const unsigned char *text_struct_base,
                                  size_t file_size) 
 {
 
+    /* Writing guards for checking safely everything 
+     * once we load and read the .mdl file 
+     * TODO(karlo): Implement even stronger checking bounds and offsets.
+     */
+
     if (!text_struct_base || !file_start || file_size == 0) return false;
-    
-    
+    if (width <= 0 || height <= 0)                          return false;
 
+    if ((size_t)width > SIZE_MAX / (size_t)height)          return false;
 
+    const ptrdiff_t base_off = text_struct_base - file_start;
+    if (base_off < 0 || (size_t)base_off >= file_size)      return false;
 
+    if (index_offset < 0)                                   return false;
+
+    const size_t pix_rel = (size_t)index_offset;
+    if (pix_rel > file_size - (size_t)base_off)             return false;
+
+    const size_t pix_off = (size_t)base_off + pix_rel;
+    const size_t pixels_len = (size_t)width * (size_t)height;
+    if (pix_off > file_size - (size_t)base_off)             return false;
+
+    const unsigned char *indices = file_start + pix_off;
+
+    // Palette data follows the pixels data
+    const size_t pal_size_off = pix_off + pixels_len;   
+
+    const unsigned char *palette = NULL;
+
+    int pal_sz = 0;
+
+    if (pal_size_off + 2 <= file_size) {
+        uint16_t sz_le = 0;
+        memcpy(&sz_le, file_start + pal_size_off, 2);
+        const int sz = (int)sz_le;
+
+        const size_t pal_bytes_off = pal_size_off + 2;
+        const size_t pal_bytes_len = (size_t)sz * 3;
+
+        if (sz > 0 && sz <= 256 && pal_bytes_len <= file_size - pal_bytes_off) {
+            palette = file_start + pal_bytes_off;
+            pal_sz  = sz;
+        }
+    }
+
+    // Layout B (fallback): no size field, assume 256 entries right after pixels
+    if (!palette) {
+        const size_t need = 256u * 3u;
+        if (need <= file_size - pal_size_off) {
+            palette = file_start + pal_size_off;
+            pal_sz  = 256;
+        } else {
+            return false;
+        }
+    }
+
+    *out_indices  = indices;
+    *out_count    = (int)pixels_len;
+    *out_palette  = palette;
+    *out_pal_size = pal_sz;
+    return true;
 
 }
+
+
+
 
 
 
