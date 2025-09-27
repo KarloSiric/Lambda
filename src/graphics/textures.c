@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 18:28:39
+ *  Last Modified: 2025-09-27 18:50:42
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -52,9 +52,17 @@ bool mdl_pal8_to_rgba(const unsigned char *indices, int w, int h, const unsigned
     if (!indices || !pallette_rgb || !dst || w <= 0 || h <= 0) return false;
 
     if (pallette_size <= 0 || pallette_size > 256) return false;
+    
+    const int px = w * h;
 
-    
-    
+    for (int i = 0; i < px; i++) {
+        const unsigned idx = indices[i];
+        const unsigned p = (idx  < (unsigned)pallette_size) ? idx : 0;
+        const unsigned char *rgb = &pallette_rgb[p * 3];    // because we have pallette_size array but * 3 the amount of bytes
+
+    }        
+          
+
 
     
 
