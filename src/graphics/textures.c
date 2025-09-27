@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 18:50:42
+ *  Last Modified: 2025-09-27 22:52:16
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -14,6 +14,7 @@
  *  Version: 0.1.0
  *======================================================================
  */
+
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl3.h>
@@ -59,14 +60,18 @@ bool mdl_pal8_to_rgba(const unsigned char *indices, int w, int h, const unsigned
         const unsigned idx = indices[i];
         const unsigned p = (idx  < (unsigned)pallette_size) ? idx : 0;
         const unsigned char *rgb = &pallette_rgb[p * 3];    // because we have pallette_size array but * 3 the amount of bytes
-
-    }        
-          
-
-
     
+        dst[i*4 + 0] = rgb[0];
+        dst[i*4 + 1] = rgb[1];
+        dst[i*4 + 2] = rgb[2];
+        dst[i*4 + 3] = 255;                                 // For transparency
+    }        
 
+    return true;
 }
+
+
+
 
 
 
