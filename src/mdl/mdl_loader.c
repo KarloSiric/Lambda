@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 16:45:49
+ *  Last Modified: 2025-09-27 17:00:04
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -19,7 +19,7 @@
 #include "../studio.h"
 #include "../utils/utils.h"
 #include "mdl_loader.h"
-#include "mdl_messages.h"
+#include "../utils/mdl_messages.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
