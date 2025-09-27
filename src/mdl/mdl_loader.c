@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 12:14:15
+ *  Last Modified: 2025-09-27 16:45:49
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -16,28 +16,26 @@
  */
 
 
-#include "mdl_loader.h"
 #include "../studio.h"
+#include "../utils/utils.h"
+#include "mdl_loader.h"
+#include "mdl_messages.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 
-mdl_result_t validate_mdl_magic(int magic) {
-    if (magic == IDSTUDIOHEADER) {
-        return MDL_SUCCESS;
-    } else {
-        return MDL_ERROR_INVALID_MAGIC;
-    }
+mdl_result_t validate_mdl_magic(unsigned magic) {
+    if (magic == IDSTUDIOHEADER) return MDL_SUCCESS;
+    if (magic == IDSEQGRPHEADER)  return MDL_INFO_SEQUENCE_GROUP_FILE;
+    return MDL_ERROR_INVALID_MAGIC;
 }
 
+
 mdl_result_t validate_mdl_version(int version) {
-    if (version == STUDIO_VERSION) {
-        return MDL_SUCCESS;
-    } else {
-        return MDL_ERROR_INVALID_VERSION;
-    }
+    if (version == STUDIO_VERSION) return MDL_SUCCESS;
+    else return MDL_ERROR_INVALID_VERSION; 
 }
 
 mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size_t *file_size) {
@@ -67,28 +65,17 @@ mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size
 }
 
 mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **header) {
-    if (file_data == NULL) {
-        fprintf(stderr, "ERROR - Data passed is NULL, doesn't contain any valid value!\n");
-        return MDL_ERROR_INVALID_PARAMETER;
-    }
+if (!file_data || !header) return MDL_ERROR_INVALID_PARAMETER;
 
-    if (header == NULL) {
-        fprintf(stderr, "ERROR - Header address passed to the function is NULL.\n");
-        return MDL_ERROR_INVALID_PARAMETER;
-    }   
+    *header = (studiohdr_t *)file_data;
 
-    *header = (studiohdr_t *)file_data;       
     mdl_result_t magic = validate_mdl_magic((*header)->id);
     if (magic != MDL_SUCCESS) {
-        fprintf(stderr, "ERROR - Not the correct mdl header ID!\n");
-        return MDL_ERROR_INVALID_MAGIC;
+        return magic; // could be MDL_INFO_SEQUENCE_GROUP_FILE or INVALID_MAGIC
     }
 
     mdl_result_t version = validate_mdl_version((*header)->version);
-    if (version != MDL_SUCCESS) {
-        fprintf(stderr, "ERROR - Not the correct mdl version!\n");
-        return MDL_ERROR_INVALID_VERSION;
-    }
+    if (version != MDL_SUCCESS) return version;
 
     return MDL_SUCCESS;
 }
@@ -140,40 +127,59 @@ char *generate_texture_filename(const char *model_filename) {
 mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_header, 
                                      studiohdr_t **texture_header, unsigned char **main_data, 
                                      unsigned char **texture_data) {
+
     size_t main_size;
-    mdl_result_t result = read_mdl_file(model_path, main_data, &main_size);
-    if (result != MDL_SUCCESS) {
-        return result;
+    mdl_result_t r = read_mdl_file(model_path, main_data, &main_size);
+    if (r != MDL_SUCCESS) {
+        mdl_print_message(r, &(mdl_msg_ctx_t){ .path=model_path });
+        return r;
     }
 
-    result = parse_mdl_header(*main_data, main_header);
-    if (result != MDL_SUCCESS) {
-        free(*main_data);
-        return result;
-    }
-
-    char *texture_path = generate_texture_filename(model_path);
-    if (!texture_path) {
-        free(*main_data);
-        return MDL_ERROR_MEMORY_ALLOCATION;
-    }
-
-    size_t texture_size;
-    mdl_result_t texture_result = read_mdl_file(texture_path, texture_data, &texture_size);
-
-    if (texture_result == MDL_SUCCESS) {
-        texture_result = parse_mdl_header(*texture_data, texture_header);
-        if (texture_result != MDL_SUCCESS) {
-            free(*texture_data);
-            *texture_data = NULL;
-            *texture_header = NULL;
+    r = parse_mdl_header(*main_data, main_header);
+    if (r != MDL_SUCCESS) {
+        if (r == MDL_INFO_SEQUENCE_GROUP_FILE) {
+            char base[1024];
+            bool ok = mdl_derive_base_path(model_path, base, sizeof base);
+            mdl_print_message(r, &(mdl_msg_ctx_t){ .path=model_path, .base_path= ok?base:NULL });
+        } else if (r == MDL_ERROR_INVALID_VERSION) {
+            mdl_print_message(r, &(mdl_msg_ctx_t){ .path=model_path, .version=(int)(*main_header)->version });
+        } else {
+            mdl_print_message(r, &(mdl_msg_ctx_t){ .path=model_path });
         }
-    } else {
-        *texture_data = NULL;
-        *texture_header = NULL;
+        free(*main_data); *main_data=NULL; *main_header=NULL;
+        return r;
     }
 
-    free(texture_path);
+    // If main has no textures, try companion t.mdl
+    if ((*main_header)->numtextures == 0) {
+        char *texture_path = generate_texture_filename(model_path);
+        if (!texture_path) {
+            free(*main_data); *main_data=NULL; *main_header=NULL;
+            return MDL_ERROR_MEMORY_ALLOCATION;
+        }
+
+        size_t tex_size;
+        mdl_result_t tr = read_mdl_file(texture_path, texture_data, &tex_size);
+        if (tr == MDL_SUCCESS) {
+            tr = parse_mdl_header(*texture_data, texture_header);
+            if (tr != MDL_SUCCESS) {
+                mdl_print_message(tr, &(mdl_msg_ctx_t){ .path=texture_path });
+                free(*texture_data); *texture_data=NULL; *texture_header=NULL;
+                // Not fatal; continue without textures
+            }
+        } else {
+            mdl_print_message(MDL_ERROR_MISSING_TEXTURE_FILE, &(mdl_msg_ctx_t){ .path=model_path });
+            *texture_data=NULL; *texture_header=NULL;
+        }
+
+        free(texture_path);
+    } else {
+        *texture_data=NULL; *texture_header=NULL;
+    }
+
+    // Optional: on success, emit a friendly banner (console or GUI string)
+    fprintf(stderr, "SUCCESS: Model loaded completely!\n");
+
     return MDL_SUCCESS;
 }
 

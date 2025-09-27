@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 13:38:46
+ *  Last Modified: 2025-09-27 13:52:32
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -276,117 +276,88 @@ void ProcessModelForRendering(void) {
         return;
     }
 
+    total_render_vertices = 0; // reset each process
+
     mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(global_data + global_header->bodypartindex);
-    mstudiomodel_t *models = (mstudiomodel_t *)(global_data + bodyparts->modelindex);
-    mstudiomodel_t *model = &models[0];
 
-    g_current.model = model;
-    g_current.vertices = (vec3_t *)(global_data + model->vertindex);
-    g_current.normals = (vec3_t *)(global_data + model->normindex);
-    g_current.vertex_count = model->numverts;
-    g_current.normal_count = model->numnorms;
-
+    // Build bones (pose) once before drawing
     SetUpBones(global_header, global_data);
 
+    for (int bp = 0; bp < global_header->numbodyparts; ++bp) {
+        mstudiobodypart_t *bpRec = &bodyparts[bp];
+        mstudiomodel_t *models = (mstudiomodel_t *)(global_data + bpRec->modelindex);
 
-    TransformVertices(global_header, global_data, model, skinned_positions);
-    have_skinned_positions = true;
+        // If you later add bodygroup selection, choose a model index per bodypart.
+        // For now: render *all* models in each bodypart:
+        for (int m = 0; m < bpRec->nummodels; ++m) {
+            mstudiomodel_t *model = &models[m];
+            
+            g_current.model        = model;
+            g_current.vertices     = (vec3_t *)(global_data + model->vertindex);
+            g_current.normals      = (vec3_t *)(global_data + model->normindex);
+            g_current.vertex_count = model->numverts;
+            g_current.normal_count = model->numnorms;
 
+            // Skin this model’s vertices (fills skinned_positions[])
+            TransformVertices(global_header, global_data, model, skinned_positions);
+            have_skinned_positions = true;
 
-    printf("Processing %d meshes, %d vertices\n", model->nummesh, model->numverts);
+            // Emit all meshes for this model
+            mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
 
-    mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
+            for (int mesh = 0; mesh < model->nummesh; ++mesh) {
+                short *ptricmds = (short *)(global_data + meshes[mesh].triindex);
 
-    for (int mesh = 0; mesh < model->nummesh; mesh++) {
+                int i;
+                while ((i = *(ptricmds++))) {
+                    if (i < 0) {
+                        i = -i; // triangle fan
+                        int v0 = ptricmds[0], n0 = ptricmds[1]; float u0 = ptricmds[2], v0t = ptricmds[3];
+                        ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+                        int v1 = ptricmds[0], n1 = ptricmds[1]; float u1 = ptricmds[2], v1t = ptricmds[3];
+                        ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+                        for (int j = 2; j < i; ++j) {
+                            int v2 = ptricmds[0], n2 = ptricmds[1]; float u2 = ptricmds[2], v2t = ptricmds[3];
+                            ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
-        short *ptricmds = (short *)(global_data + meshes[mesh].triindex);
+                            AddVertexToBuffer(v0, n0, u0, v0t);
+                            AddVertexToBuffer(v1, n1, u1, v1t);
+                            AddVertexToBuffer(v2, n2, u2, v2t);
 
-        int i;
-        while((i = *(ptricmds++))) {
-            if (i < 0) {
-                // TRIANGLE FAN
-                i = -i;
-                
-                /* 
-                 * We store here the first 2 vertices and process the rest because v0 for triangle FAN
-                 * We keep that as teh center as teh common -> { v0, v1, v2 }, { v0, v3, v4 }, { v0, v5, v6 }
-                 */
-
-                int v0_idx = ptricmds[0];
-                int n0_idx = ptricmds[1];
-                float u0 = ptricmds[2];
-                float v0 = ptricmds[3];
-                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-
-                int v1_idx = ptricmds[0];
-                int n1_idx = ptricmds[1];
-                float u1 = ptricmds[2];
-                float v1 = ptricmds[3];
-                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-
-                for (int j = 2; j < i; j++) {
-                    int v2_idx = ptricmds[0];
-                    int n2_idx = ptricmds[1];
-                    float u2 = ptricmds[2];
-                    float v2 = ptricmds[3];
-                    ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-
-
-                    // Triangle v0, v1, v2
-                    AddVertexToBuffer(v0_idx, n0_idx, u0, v0);
-                    AddVertexToBuffer(v1_idx, n1_idx, u1, v1);
-                    AddVertexToBuffer(v2_idx, n2_idx, u2, v2);
-
-                    v1_idx = v2_idx;
-                    n1_idx = n2_idx;
-                    u1 = u2;
-                    v1 = v2;
-                }
-            } else {
-                // TRIANGLE STRIP
-
-                // read first vertex
-                int v0_idx = ptricmds[0];
-                int n0_idx = ptricmds[1];
-                float u0 = ptricmds[2];
-                float v0 = ptricmds[3];
-                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-
-                int v1_idx = ptricmds[0];
-                int n1_idx = ptricmds[1];
-                float u1 = ptricmds[2];
-                float v1 = ptricmds[3];
-                ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-
-                for (int j = 2; j < i; j++) {
-                    int v2_idx = ptricmds[0];
-                    int n2_idx = ptricmds[1];
-                    float u2 = ptricmds[2];
-                    float v2 = ptricmds[3];
-                    ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-
-                    if ((j - 2) % 2 == 0) {
-                        AddVertexToBuffer(v0_idx, n0_idx, u0, v0);
-                        AddVertexToBuffer(v1_idx, n1_idx, u1, v1);
-                        AddVertexToBuffer(v2_idx, n2_idx, u2, v2);                            
+                            v1 = v2; n1 = n2; u1 = u2; v1t = v2t;
+                        }
                     } else {
-                        AddVertexToBuffer(v1_idx, n1_idx, u1, v1);
-                        AddVertexToBuffer(v0_idx, n0_idx, u0, v0);
-                        AddVertexToBuffer(v2_idx, n2_idx, u2, v2);
+                        // triangle strip
+                        int v0 = ptricmds[0], n0 = ptricmds[1]; float u0 = ptricmds[2], v0t = ptricmds[3];
+                        ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+                        int v1 = ptricmds[0], n1 = ptricmds[1]; float u1 = ptricmds[2], v1t = ptricmds[3];
+                        ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+                        for (int j = 2; j < i; ++j) {
+                            int v2 = ptricmds[0], n2 = ptricmds[1]; float u2 = ptricmds[2], v2t = ptricmds[3];
+                            ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
+                            if ((j - 2) % 2 == 0) {
+                                AddVertexToBuffer(v0, n0, u0, v0t);
+                                AddVertexToBuffer(v1, n1, u1, v1t);
+                                AddVertexToBuffer(v2, n2, u2, v2t);
+                            } else {
+                                AddVertexToBuffer(v1, n1, u1, v1t);
+                                AddVertexToBuffer(v0, n0, u0, v0t);
+                                AddVertexToBuffer(v2, n2, u2, v2t);
+                            }
+                            v0=v1; n0=n1; u0=u1; v0t=v1t;
+                            v1=v2; n1=n2; u1=u2; v1t=v2t;
+                        }
                     }
-                    v0_idx = v1_idx; n0_idx = n1_idx; u0 = u1; v0 = v1;
-                    v1_idx = v2_idx; n1_idx = n2_idx; u1 = u2; v1 = v2;                
                 }
             }
         }
     }
 
-    printf("Generated %d vertices (%d triangles)\n", 
+    printf("Generated %d vertices (%d triangles)\n",
            total_render_vertices, total_render_vertices / 3);
-    
-    model_processed = true;
 
+    model_processed = true;
 
 }
 

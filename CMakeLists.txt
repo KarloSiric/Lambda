@@ -28,6 +28,7 @@ set(SOURCES
     src/mdl/mdl_loader.c
     src/mdl/mdl_info.c
     src/mdl/bone_system.c
+    src/mdl/mdl_messages.c
     src/graphics/renderer.c
     src/graphics/camera.c
     src/utils/utils.c

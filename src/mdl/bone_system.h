@@ -30,6 +30,3 @@ void VectorTransforms(const vec3 in, const mat4 m, vec3 out);
 
 
 #endif
-
-
-

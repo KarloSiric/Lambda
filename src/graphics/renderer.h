@@ -10,8 +10,8 @@
 extern GLFWwindow *window;
 
 #define ASPECT_RATIO          ((float)(16.0f / 9.0f))
-#define WIDTH                 ((int) 800)
-#define HEIGHT                ((int) (800 / ASPECT_RATIO))
+#define WIDTH                 ((int) 1280)
+#define HEIGHT                ((int) (WIDTH / ASPECT_RATIO))
 
 int init_renderer(int width, int height, const char *title);
 void cleanup_renderer(void);
