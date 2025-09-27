@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-26 15:56:28
+ *  Last Modified: 2025-09-27 13:38:46
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -20,6 +20,7 @@
 #endif
 
 #include "renderer.h"
+#include "../mdl/bone_system.h"
 
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
@@ -43,7 +44,12 @@ typedef struct {
     int normal_count;
 } current_model_data_t;
 
+
 static current_model_data_t g_current;
+
+
+static vec3  skinned_positions[MAXSTUDIOVERTS];
+static bool  have_skinned_positions = false;
 
 
 GLFWwindow *window = NULL;
@@ -91,6 +97,7 @@ static studiohdr_t *global_header = NULL;
 static unsigned char *global_data = NULL;
 
 
+
 // Camera controls
 float rotation_x = 0.0f;
 float rotation_y = 0.0f;
@@ -111,6 +118,7 @@ static void glfw_mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         rotation_y += xoffset * 0.01f;
         rotation_x -= yoffset * 0.01f;
     }
+
     last_x = xpos;
     last_y = ypos;
 }
@@ -278,6 +286,13 @@ void ProcessModelForRendering(void) {
     g_current.vertex_count = model->numverts;
     g_current.normal_count = model->numnorms;
 
+    SetUpBones(global_header, global_data);
+
+
+    TransformVertices(global_header, global_data, model, skinned_positions);
+    have_skinned_positions = true;
+
+
     printf("Processing %d meshes, %d vertices\n", model->nummesh, model->numverts);
 
     mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
@@ -378,31 +393,65 @@ void ProcessModelForRendering(void) {
 
 void AddVertexToBuffer(int vertex_index, int normal_index, float u, float v) {
 
-if (total_render_vertices >= MAX_RENDER_VERTICES) return;
+    if (total_render_vertices >= MAX_RENDER_VERTICES) return;
+        
+    const int base = total_render_vertices * 8;
     
-    // Bounds check
-    if (vertex_index < 0 || vertex_index >= g_current.vertex_count) {
-        vertex_index = 0;  // Fallback to prevent crash
+    // --- Position (use SKINNED if available) ---
+    vec3 P;
+    if (have_skinned_positions) {
+        glm_vec3_copy(skinned_positions[vertex_index], P);
+    } else {
+        // Fallback (shouldn’t be used once bones are wired)
+        glm_vec3_copy(g_current.vertices[vertex_index], P);
     }
-    if (normal_index < 0 || normal_index >= g_current.normal_count) {
-        normal_index = 0;
-    }
-    
-    int base = total_render_vertices * 8;
-    float scale = 0.01f;
-    
-    // NO TRANSFORMATION - just scale down
-    render_vertex_buffer[base + 0] = g_current.vertices[vertex_index][0] * scale;
-    render_vertex_buffer[base + 1] = g_current.vertices[vertex_index][1] * scale;  
-    render_vertex_buffer[base + 2] = g_current.vertices[vertex_index][2] * scale;
-    
-    render_vertex_buffer[base + 3] = g_current.normals[normal_index][0];
-    render_vertex_buffer[base + 4] = g_current.normals[normal_index][1];
-    render_vertex_buffer[base + 5] = g_current.normals[normal_index][2];
-    
+
+    // Downscale to fit (quick fix)
+    const float viewer_scale = 0.1f;   // tweak 0.003..0.03 if needed
+    P[0] *= viewer_scale; P[1] *= viewer_scale; P[2] *= viewer_scale;
+
+    // --- Normal (rotate by THIS vertex’s bone) ---
+    // Fetch the vertex->bone map from the model:
+    unsigned char *v2bone = (unsigned char *)(global_data + g_current.model->vertinfoindex);
+    int bone = v2bone[vertex_index];
+    if (bone < 0 || bone >= global_header->numbones) bone = 0;
+
+    vec3 Nfile = {
+        g_current.normals[normal_index][0],
+        g_current.normals[normal_index][1],
+        g_current.normals[normal_index][2]
+    };
+    vec3 Nrot;
+    TransformNormalByBone(g_bonetransformations[bone], Nfile, Nrot);
+
+    // --- Axis remap (apply AFTER skinning), match your viewer’s coords ---
+    // Keep X, send HL Z -> Y, and HL -Y -> Z (same mapping you had, but do it now)
+    float x  =  P[0];
+    float y  =  P[1];
+    float z  =  P[2];
+    float nx = Nrot[0];
+    float ny = Nrot[1];
+    float nz = Nrot[2];
+
+    float Py =  z;     // Z -> Y
+    float Pz = -y;     // -Y -> Z
+    float Ny =  nz;
+    float Nz = -ny;
+
+    // --- Write position ---
+    render_vertex_buffer[base + 0] = x;
+    render_vertex_buffer[base + 1] = Py;
+    render_vertex_buffer[base + 2] = Pz;
+
+    // --- Write normal ---
+    render_vertex_buffer[base + 3] = nx;
+    render_vertex_buffer[base + 4] = Ny;
+    render_vertex_buffer[base + 5] = Nz;
+
+    // --- UVs (HL1 skins are integer texels; your divide by 256 was fine) ---
     render_vertex_buffer[base + 6] = u / 256.0f;
     render_vertex_buffer[base + 7] = v / 256.0f;
-    
+
     total_render_vertices++;
 }
 
@@ -418,7 +467,7 @@ void setup_triangle(void) {
     glEnableVertexAttribArray(0);
 }
 
-static char *read_shader_source(const char *filepath) { 
+static char *read_shader_source(const char *filepath) {  
     printf("DEBUG - Trying to load shader from: %s\n", filepath);
     FILE *file = fopen(filepath, "r");
     if (!file) {
@@ -445,6 +494,7 @@ static char *read_shader_source(const char *filepath) {
     return buffer;
 }
 
+
 static GLuint compile_shader(const char *source, GLenum type) {
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
@@ -462,6 +512,7 @@ static GLuint compile_shader(const char *source, GLenum type) {
 
     return shader;
 }
+
 
 static GLuint create_shader_program(GLuint vertexShader, GLuint fragmentShader) {
     GLuint program = glCreateProgram();
@@ -705,7 +756,7 @@ void render_model(studiohdr_t *header, unsigned char *data) {
     
     // Texture coordinate attribute (location 2) - NEW!
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(2); 
     
     glDrawArrays(GL_TRIANGLES, 0, total_render_vertices);
 }

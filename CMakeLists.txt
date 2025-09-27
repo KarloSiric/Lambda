@@ -27,6 +27,7 @@ set(SOURCES
     src/main.c
     src/mdl/mdl_loader.c
     src/mdl/mdl_info.c
+    src/mdl/bone_system.c
     src/graphics/renderer.c
     src/graphics/camera.c
     src/utils/utils.c
@@ -56,5 +57,6 @@ install(TARGETS ${PROJECT_NAME}
 add_custom_target(run
     COMMAND ${CMAKE_BINARY_DIR}/bin/${PROJECT_NAME}
     DEPENDS ${PROJECT_NAME}
+    src/mdl/bone_system.c
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )

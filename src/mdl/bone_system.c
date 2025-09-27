@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-26 12:16:24
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-26 18:29:24
+ *  Last Modified: 2025-09-27 13:10:26
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -17,12 +17,11 @@
 
 
 #include "bone_system.h"
+#include <stdio.h>
 #include <string.h>
 
 
-
 mat4 g_bonetransformations[MAXSTUDIOBONES];
-
 
 
 static inline void Mat4Copy(mat4 src, mat4 dst) {
@@ -80,6 +79,49 @@ void TransformNormalByBone(const vec4 *boneAbs, const float *in, float *out) {
 
 }
 
+void SetUpBones(studiohdr_t *header, unsigned char *data) {
 
+    mstudiobone_t *bones = (mstudiobone_t *)(data + header->boneindex);
+
+    for (int i = 0; i < header->numbones; i++) {
+        vec3 position = { bones[i].value[0], bones[i].value[1], bones[i].value[2]};
+        vec3 euler_rot = { bones[i].value[3], bones[i].value[4], bones[i].value[5]};
+
+        versor q;
+        mat4 R;
+        AngleQuaternion(euler_rot, q);
+        QuaternionMatrix(q, R);
+
+        mat4 local;
+        glm_mat4_copy(R, local);
+
+        local[3][0] = position[0];
+        local[3][1] = position[1];
+        local[3][2] = position[2];
+
+        if (bones[i].parent >= 0) {
+            R_ConcatTransforms(g_bonetransformations[bones[i].parent], local, g_bonetransformations[i]);
+
+        } else {
+            Mat4Copy(local, g_bonetransformations[i]);
+        }
+    }
+}
+
+
+void TransformVertices(studiohdr_t *header, unsigned char *data, mstudiomodel_t *model, vec3 *out_vertices) {
+
+    vec3 *vertices = (vec3 *)(data + model->vertindex);
+
+    unsigned char *v2bone = (unsigned char *)(data + model->vertinfoindex);
+
+    for (int i = 0; i < model->numverts; i++) {
+        int bone = v2bone[i];
+        if (bone < 0 || bone >= header->numbones) {
+            bone = 0;
+        }
+        VectorTransforms(vertices[i], g_bonetransformations[bone], out_vertices[i]);
+    }
+}
 
 

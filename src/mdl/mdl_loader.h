@@ -1,5 +1,3 @@
-
-
 #ifndef MDL_LOADER_H
 #define MDL_LOADER_H
 
@@ -19,6 +17,7 @@ typedef enum
     MDL_ERROR_INVALID_PARAMETER,
 
 } mdl_result_t;
+
 
 // Core loading functions
 mdl_result_t validate_mdl_magic(int magic);

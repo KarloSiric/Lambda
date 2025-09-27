@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-26 13:00:25
+ *  Last Modified: 2025-09-27 12:14:15
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 mdl_result_t validate_mdl_magic(int magic) {
     if (magic == IDSTUDIOHEADER) {
