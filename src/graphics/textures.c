@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 22:52:16
+ *  Last Modified: 2025-09-27 22:57:11
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -71,7 +71,24 @@ bool mdl_pal8_to_rgba(const unsigned char *indices, int w, int h, const unsigned
 }
 
 
+static bool parse_paletted_block(const unsigned char *text_struct_base,
+                                 int width, int height, int index_offset,
+                                 const unsigned char **out_indices,
+                                 int *out_count,
+                                 const unsigned char **out_palette,
+                                 int *out_pal_size,
+                                 const unsigned char *file_start,
+                                 size_t file_size) 
+{
 
+    if (!text_struct_base || !file_start || file_size == 0) return false;
+    
+    
+
+
+
+
+}
 
 
 

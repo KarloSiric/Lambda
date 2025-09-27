@@ -38,9 +38,4 @@ bool mdl_pal8_to_rgba(const unsigned char *indices, int w, int h, const unsigned
 
 
 
-
-
-
-
-
 #endif
