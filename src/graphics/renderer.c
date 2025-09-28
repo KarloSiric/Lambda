@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 12:56:43
+ *  Last Modified: 2025-09-28 13:05:02
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -467,8 +467,7 @@ void AddVertexToBuffer(int vertex_index, int normal_index,
                        float s, float t, float invW, float invH)
 {
 
-    (void)invW; (void)invH; // not used with 256.0 convention
-    
+
     if (total_render_vertices >= MAX_RENDER_VERTICES)
         return;
 
@@ -530,13 +529,9 @@ void AddVertexToBuffer(int vertex_index, int normal_index,
     // --- UVs ---
     // GoldSrc tri-cmd S,T are in a fixed space (commonly 0..256).
     // Normalize by 256.0, not by the texture's pixel size.
-    float u = s / 256.0f;
-    float v = 1.0f - (t / 256.0f);  // flip V so origin matches GL sampling
-
-    // Optional clamp to be safe
-    if (u < 0.0f) u = 0.0f; else if (u > 1.0f) u = 1.0f;
-    if (v < 0.0f) v = 0.0f; else if (v > 1.0f) v = 1.0f;
-
+    // --- UVs (MDL S,T are in texels) ---
+    float u = s * invW;
+    float v = 1.0f - (t * invH);   // flip V because we didn't flip the uploaded image
     render_vertex_buffer[base + 6] = u;
     render_vertex_buffer[base + 7] = v;
 
@@ -898,25 +893,6 @@ void render_model(studiohdr_t *header, unsigned char *data)
         glUniform3fv(uLight, 1, (const float *)lightPos);
     if (uViewP != -1)
         glUniform3fv(uViewP, 1, (const float *)camPos);
-
-    /* bind *some* texture (for now just use tex 0 if present) */
-    if (g_textures.count > 0 && g_textures.textures[0].gl_id)
-    {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, g_textures.textures[0].gl_id);
-        GLint uTex = glGetUniformLocation(shader_program, "tex"); // name must be "tex"
-        if (uTex != -1)
-            glUniform1i(uTex, 0);
-    }
-    else if (current_texture)
-    {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, current_texture);
-        GLint uTex = glGetUniformLocation(shader_program, "tex");
-        if (uTex != -1)
-            glUniform1i(uTex, 0);
-    }
-
     // Upload vertex data (positions, normals, uvs)
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -939,17 +915,9 @@ void render_model(studiohdr_t *header, unsigned char *data)
         glUniform1i(uTex, 0);
 
     // draw each subrange with its texture
-    for (int r = 0; r < g_num_ranges; ++r)
-    {
-        if (g_ranges[r].tex)
-        {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, g_ranges[r].tex);
-        }
-        else
-        {
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
+    for (int r = 0; r < g_num_ranges; ++r) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, g_ranges[r].tex);
         glDrawArrays(GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count);
     }
 }
