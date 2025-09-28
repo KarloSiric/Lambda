@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-26 22:49:17
+ *  Last Modified: 2025-09-28 12:07:25
  *----------------------------------------------------------------------
  *  Description:
  *  
@@ -67,7 +67,7 @@ int main(int argc, char const *argv[])
     }
 
     // ONLY THESE TWO LINES - NO COMPLEX PROCESSING:
-    set_model_data(main_header, main_data);
+    set_model_data(main_header, main_data, texture_header, texture_data);
     render_loop();
 
     cleanup_renderer();

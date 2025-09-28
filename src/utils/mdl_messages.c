@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 15:08:00
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 16:57:27
+ *  Last Modified: 2025-09-28 12:29:20
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -50,6 +50,8 @@ static const char* k_result_names[MDL_RESULT_COUNT] = {
 
     [MDL_ERROR_SEQGROUP_NOT_FOUND]     = "SEQGROUP_NOT_FOUND",
     [MDL_ERROR_ANIM_BLOCK_BROKEN]      = "ANIM_BLOCK_BROKEN",
+
+    [MDL_ERROR_NO_TEXTURES_IN_FILE]    = "NO_TEXTURES",
 
     [MDL_ERROR_NOT_IMPLEMENTED]        = "NOT_IMPLEMENTED",
 };
@@ -106,6 +108,9 @@ static const char* k_result_defaults[MDL_RESULT_COUNT] = {
         "Sequence group file not found for this sequence.",
     [MDL_ERROR_ANIM_BLOCK_BROKEN] =
         "Animation block is malformed.",
+
+    [MDL_ERROR_NO_TEXTURES_IN_FILE] =
+        "No textures were found in the given file.",
 
     [MDL_ERROR_NOT_IMPLEMENTED] =
         "Feature recognized but not implemented."

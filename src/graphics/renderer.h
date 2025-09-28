@@ -22,11 +22,11 @@ bool should_close_window(void);
 void render_model(studiohdr_t *header, unsigned char *data);
 void set_wireframe_mode(bool enabled);
 void set_current_texture(unsigned int texture_id);
-void set_model_data(studiohdr_t *header, unsigned char *data);
+void set_model_data(studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data);
 
 void clear_screen(void);
 
 void ProcessModelForRendering(void);
-void AddVertexToBuffer(int vertex_index, int normal_index, float u, float v);
+void AddVertexToBuffer(int vertex_index, int normal_index, float s, float t, float invW, float invH);
 
 #endif // RENDERER_H

@@ -53,7 +53,7 @@ typedef enum {
     MDL_ERROR_NO_TEXTURES_IN_FILE,
 
     // Additional features
-    MDL_ADD_MORE_ERROR_CODES_HERE,
+    MDL_ERROR_NOT_IMPLEMENTED,
 
 
     // keep last

@@ -30,6 +30,7 @@ set(SOURCES
     src/mdl/bone_system.c
     src/graphics/renderer.c
     src/graphics/camera.c
+    src/graphics/textures.c
     src/utils/utils.c
     src/utils/mdl_messages.c
 )

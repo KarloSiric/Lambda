@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 11:53:54
+ *  Last Modified: 2025-09-28 12:53:32
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -222,14 +222,17 @@ mdl_result_t mdl_load_textures(const studiohdr_t *header,
         GLuint tex = 0;
         glGenTextures(1, &tex);
         glBindTexture(GL_TEXTURE_2D, tex);
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0,
                      GL_RGBA, GL_UNSIGNED_BYTE, rgba);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        free(rgba);
+        glBindTexture(GL_TEXTURE_2D, 0); 
+       free(rgba);
 
         items[i].gl_id  = tex;
         items[i].width  = w;

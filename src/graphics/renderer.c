@@ -4,13 +4,13 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 13:52:32
+ *  Last Modified: 2025-09-28 12:56:43
  *----------------------------------------------------------------------
  *  Description:
- *      
+ *
  *----------------------------------------------------------------------
- *  License: 
- *  Company: 
+ *  License:
+ *  Company:
  *  Version: 0.1.0
  *======================================================================
  */
@@ -20,101 +20,104 @@
 #endif
 
 #include "renderer.h"
+#include "../graphics/textures.h"
 #include "../mdl/bone_system.h"
 
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
-#else 
+#else
 #include <GL/gl3.h>
 #endif
 
-
 // Diagnostic function will be added below
 #include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>  // For getcwd
-#include <cglm/cglm.h>
+#include <unistd.h> // For getcwd
+#define MAX_DRAW_RANGES 4096
 
-typedef struct {
+typedef struct
+{
     mstudiomodel_t *model;
-    vec3_t *vertices;
-    vec3_t *normals;
-    int vertex_count;
-    int normal_count;
+    vec3_t         *vertices;
+    vec3_t         *normals;
+    int             vertex_count;
+    int             normal_count;
 } current_model_data_t;
 
+typedef struct
+{
+    GLuint tex;   // GL texture to bind
+    int    first; // first vertex in the big VBO
+    int    count; // how many vertices to draw
+} DrawRange;
+
+static DrawRange g_ranges[MAX_DRAW_RANGES];
+static int       g_num_ranges = 0;
 
 static current_model_data_t g_current;
 
+static vec3 skinned_positions[MAXSTUDIOVERTS];
+static bool have_skinned_positions = false;
 
-static vec3  skinned_positions[MAXSTUDIOVERTS];
-static bool  have_skinned_positions = false;
-
-
-GLFWwindow *window = NULL;
+GLFWwindow *window            = NULL;
 static bool wireframe_enabled = false;
 
-
-static unsigned int VBO = 0;
-static unsigned int VAO = 0;
-static unsigned int EBO = 0;              // Element Buffer Object for indices
-static unsigned int shader_program = 0;
-static unsigned int current_texture = 0;  // Currently bound texture
-
+static unsigned int VBO             = 0;
+static unsigned int VAO             = 0;
+static unsigned int EBO             = 0; // Element Buffer Object for indices
+static unsigned int shader_program  = 0;
+static unsigned int current_texture = 0; // Currently bound texture
 
 // For Bone data
-static int m_numbones = 0;
-static int m_numverts = 0;
-static mat4 m_bonetransform[MAXSTUDIOBONES];
-static vec3 m_pxformverts[MAXSTUDIOVERTS];
+static int            m_numbones = 0;
+static int            m_numverts = 0;
+static mat4           m_bonetransform[MAXSTUDIOBONES];
+static vec3           m_pxformverts[MAXSTUDIOVERTS];
 static unsigned char *m_pvertbone;
-static vec3 *m_pstudioverts;
-
-
+static vec3          *m_pstudioverts;
 
 extern float rotation_x;
 extern float rotation_y;
 extern float zoom;
 
-
 // Model data
-static float *model_vertices = NULL;
-static int vertex_count = 0;
-static int index_count = 0;
-static bool debug_printed = false;
-static bool bone_system_initialized = false;
-
+static float *model_vertices          = NULL;
+static int    vertex_count            = 0;
+static int    index_count             = 0;
+static bool   debug_printed           = false;
+static bool   bone_system_initialized = false;
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
 #define MAX_RENDER_VERTICES 32768
 static float render_vertex_buffer[MAX_RENDER_VERTICES * 8]; // 3 pos + 3 normal + 2 uv
-static int total_render_vertices = 0;
-static bool model_processed = false;
+static int   total_render_vertices = 0;
+static bool  model_processed       = false;
 
+static studiohdr_t   *global_header = NULL;
+static unsigned char *global_data   = NULL;
 
-static studiohdr_t *global_header = NULL;
-static unsigned char *global_data = NULL;
+static studiohdr_t   *global_tex_header = NULL;
+static unsigned char *global_tex_data   = NULL;
 
-
+static mdl_texture_set_t g_textures = {NULL, 0};
 
 // Camera controls
 float rotation_x = 0.0f;
 float rotation_y = 0.0f;
-float zoom = 0.15f;  // Even more zoomed out for scientist model
+float zoom       = 0.15f; // Even more zoomed out for scientist model
 
-
-
-static bool mouse_pressed = false;
+static bool   mouse_pressed = false;
 static double last_x = 400, last_y = 225;
 
-
-
-static void glfw_mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (mouse_pressed) {
+static void glfw_mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    if (mouse_pressed)
+    {
         float xoffset = xpos - last_x;
         float yoffset = ypos - last_y;
-        
+
         rotation_y += xoffset * 0.01f;
         rotation_x -= yoffset * 0.01f;
     }
@@ -123,85 +126,107 @@ static void glfw_mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     last_y = ypos;
 }
 
-
-
-static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+static void glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    {
         mouse_pressed = (action == GLFW_PRESS);
     }
 }
 
-
-
-static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+static void glfw_scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
     zoom *= (1.0f + yoffset * 0.1f);
-    if (zoom < 0.01f) zoom = 0.01f;
-    if (zoom > 2.0f) zoom = 2.0f;
+    if (zoom < 0.01f)
+        zoom = 0.01f;
+    if (zoom > 2.0f)
+        zoom = 2.0f;
 }
 
-
-
-static void glfw_error_callback(int error, const char *description) {
+static void glfw_error_callback(int error, const char *description)
+{
     fprintf(stderr, "GLFW ERROR %d: %s\n", error, description);
 }
 
-
-
-static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
     (void)scancode; // Suppress unused parameter warning
     (void)mods;     // Suppress unused parameter warning
-    
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
-    
+
     // Camera controls
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        switch(key) {
-            case GLFW_KEY_W: rotation_x -= 0.1f; break;  // Tilt up
-            case GLFW_KEY_S: rotation_x += 0.1f; break;  // Tilt down
-            case GLFW_KEY_A: rotation_y -= 0.1f; break;  // Rotate left
-            case GLFW_KEY_D: rotation_y += 0.1f; break;  // Rotate right
-            case GLFW_KEY_Q: zoom *= 1.1f; if(zoom > 2.0f) zoom = 2.0f; break;   // Zoom in with limit
-            case GLFW_KEY_E: zoom *= 0.9f; if(zoom < 0.1f) zoom = 0.1f; break;   // Zoom out with limit
-            case GLFW_KEY_R: // Reset view
-                rotation_x = 0.0f;
-                rotation_y = 0.0f;
-                zoom = 0.15f;  // Reset to default zoom
-                break;
-            case GLFW_KEY_F: // Toggle wireframe
-                wireframe_enabled = !wireframe_enabled;
-                if (wireframe_enabled) {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                    printf("Switched to wireframe mode\n");
-                } else {
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                    printf("Switched to solid mode\n");
-                }
-                break;
-            case GLFW_KEY_P: // Toggle points
-                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-                printf("Switched to points mode\n");
-                break;
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+    {
+        switch (key)
+        {
+        case GLFW_KEY_W:
+            rotation_x -= 0.1f;
+            break; // Tilt up
+        case GLFW_KEY_S:
+            rotation_x += 0.1f;
+            break; // Tilt down
+        case GLFW_KEY_A:
+            rotation_y -= 0.1f;
+            break; // Rotate left
+        case GLFW_KEY_D:
+            rotation_y += 0.1f;
+            break; // Rotate right
+        case GLFW_KEY_Q:
+            zoom *= 1.1f;
+            if (zoom > 2.0f)
+                zoom = 2.0f;
+            break; // Zoom in with limit
+        case GLFW_KEY_E:
+            zoom *= 0.9f;
+            if (zoom < 0.1f)
+                zoom = 0.1f;
+            break;       // Zoom out with limit
+        case GLFW_KEY_R: // Reset view
+            rotation_x = 0.0f;
+            rotation_y = 0.0f;
+            zoom       = 0.15f; // Reset to default zoom
+            break;
+        case GLFW_KEY_F: // Toggle wireframe
+            wireframe_enabled = !wireframe_enabled;
+            if (wireframe_enabled)
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                printf("Switched to wireframe mode\n");
+            }
+            else
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                printf("Switched to solid mode\n");
+            }
+            break;
+        case GLFW_KEY_P: // Toggle points
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            printf("Switched to points mode\n");
+            break;
         }
     }
 }
 
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f,  // Bottom left
-     0.5f, -0.5f, 0.0f,  // Bottom right  
-     0.0f,  0.5f, 0.0f   // Top center  
+    -0.5f, -0.5f, 0.0f, // Bottom left
+    0.5f, -0.5f, 0.0f,  // Bottom right
+    0.0f, 0.5f, 0.0f    // Top center
 };
 
-
 // DIAGNOSTIC FUNCTION TO UNDERSTAND THE MODEL DATA
-void dump_complete_mdl_structure(void) {
-    if (!global_header || !global_data) return;
-    
+void dump_complete_mdl_structure(void)
+{
+    if (!global_header || !global_data)
+        return;
+
     printf("\n===============================================\n");
     printf("COMPLETE MDL STRUCTURE DIAGNOSTIC\n");
     printf("===============================================\n");
-    
+
     // 1. Header info
     printf("\n1. HEADER INFO:\n");
     printf("   Model name: %s\n", global_header->name);
@@ -213,85 +238,99 @@ void dump_complete_mdl_structure(void) {
            global_header->bbmax[0] - global_header->bbmin[0],
            global_header->bbmax[1] - global_header->bbmin[1],
            global_header->bbmax[2] - global_header->bbmin[2]);
-    
+
     // 2. Bodyparts
     printf("\n2. BODYPARTS (%d total):\n", global_header->numbodyparts);
     mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(global_data + global_header->bodypartindex);
-    
-    for (int bp = 0; bp < global_header->numbodyparts && bp < 2; bp++) {
+
+    for (int bp = 0; bp < global_header->numbodyparts && bp < 2; bp++)
+    {
         printf("\n   Bodypart %d: '%s'\n", bp, bodyparts[bp].name);
         printf("      Models: %d\n", bodyparts[bp].nummodels);
-        
+
         mstudiomodel_t *models = (mstudiomodel_t *)(global_data + bodyparts[bp].modelindex);
-        mstudiomodel_t *model = &models[0];
+        mstudiomodel_t *model  = &models[0];
         printf("      Model 0: '%s'\n", model->name);
         printf("         Vertices: %d at offset 0x%X\n", model->numverts, model->vertindex);
-        
+
         // Check actual vertex data
         vec3_t *verts = (vec3_t *)(global_data + model->vertindex);
-        
+
         // Find min/max of raw vertices
         float min_x = 10000, max_x = -10000;
         float min_y = 10000, max_y = -10000;
         float min_z = 10000, max_z = -10000;
-        
-        for (int v = 0; v < model->numverts; v++) {
-            if (verts[v][0] < min_x) min_x = verts[v][0];
-            if (verts[v][0] > max_x) max_x = verts[v][0];
-            if (verts[v][1] < min_y) min_y = verts[v][1];
-            if (verts[v][1] > max_y) max_y = verts[v][1];
-            if (verts[v][2] < min_z) min_z = verts[v][2];
-            if (verts[v][2] > max_z) max_z = verts[v][2];
+
+        for (int v = 0; v < model->numverts; v++)
+        {
+            if (verts[v][0] < min_x)
+                min_x = verts[v][0];
+            if (verts[v][0] > max_x)
+                max_x = verts[v][0];
+            if (verts[v][1] < min_y)
+                min_y = verts[v][1];
+            if (verts[v][1] > max_y)
+                max_y = verts[v][1];
+            if (verts[v][2] < min_z)
+                min_z = verts[v][2];
+            if (verts[v][2] > max_z)
+                max_z = verts[v][2];
         }
-        
+
         printf("         RAW Vertex bounds:\n");
         printf("            X: %.3f to %.3f (width: %.3f)\n", min_x, max_x, max_x - min_x);
         printf("            Y: %.3f to %.3f (depth: %.3f)\n", min_y, max_y, max_y - min_y);
         printf("            Z: %.3f to %.3f (height: %.3f)\n", min_z, max_z, max_z - min_z);
-        
+
         // Show first few vertices
         printf("         First 3 vertices (RAW from file):\n");
-        for (int v = 0; v < 3 && v < model->numverts; v++) {
+        for (int v = 0; v < 3 && v < model->numverts; v++)
+        {
             printf("            V%d: (%.6f, %.6f, %.6f)\n", v,
                    verts[v][0], verts[v][1], verts[v][2]);
         }
-        
+
         // Check hex data
         unsigned char *as_bytes = (unsigned char *)(global_data + model->vertindex);
         printf("         First 12 bytes at vertex offset: ");
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 12; i++)
+        {
             printf("%02X ", as_bytes[i]);
         }
         printf("\n");
     }
-    
+
     printf("\n===============================================\n");
 }
 
 // Updated ProcessModelForRendering to extract normals and UVs
-void ProcessModelForRendering(void) {
-
-    if (!global_header || !global_data) {
+void ProcessModelForRendering(void)
+{
+    if (!global_header || !global_data)
+    {
         fprintf(stderr, "ERROR - Invalid argument pointers value passed!\n");
         return;
     }
 
-    total_render_vertices = 0; // reset each process
+    total_render_vertices = 0;
+    g_num_ranges          = 0;
 
     mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(global_data + global_header->bodypartindex);
 
     // Build bones (pose) once before drawing
     SetUpBones(global_header, global_data);
 
-    for (int bp = 0; bp < global_header->numbodyparts; ++bp) {
-        mstudiobodypart_t *bpRec = &bodyparts[bp];
-        mstudiomodel_t *models = (mstudiomodel_t *)(global_data + bpRec->modelindex);
+    for (int bp = 0; bp < global_header->numbodyparts; ++bp)
+    {
+        mstudiobodypart_t *bpRec  = &bodyparts[bp];
+        mstudiomodel_t    *models = (mstudiomodel_t *)(global_data + bpRec->modelindex);
 
         // If you later add bodygroup selection, choose a model index per bodypart.
         // For now: render *all* models in each bodypart:
-        for (int m = 0; m < bpRec->nummodels; ++m) {
+        for (int m = 0; m < bpRec->nummodels; ++m)
+        {
             mstudiomodel_t *model = &models[m];
-            
+
             g_current.model        = model;
             g_current.vertices     = (vec3_t *)(global_data + model->vertindex);
             g_current.normals      = (vec3_t *)(global_data + model->normindex);
@@ -305,129 +344,208 @@ void ProcessModelForRendering(void) {
             // Emit all meshes for this model
             mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
 
-            for (int mesh = 0; mesh < model->nummesh; ++mesh) {
+            // For skin table
+            const short *skin_table  = (const short *)(global_data + global_header->skinindex);
+            const int    numskinref  = global_header->numskinref;
+            const int    skin_family = 0; // TODO: allow choosing family later
+
+            for (int mesh = 0; mesh < model->nummesh; ++mesh)
+            {
+                mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
+
+                // Resolve texture index via skin table
+                int tex_index = meshes[mesh].skinref;
+                if (skin_table && numskinref > 0 && tex_index >= 0 && tex_index < numskinref)
+                {
+                    tex_index = skin_table[skin_family * numskinref + tex_index];
+                }
+
+                // Get GL texture + real size for this mesh
+                GLuint gl_tex = 0;
+                int    texW = 1, texH = 1;
+                if (tex_index >= 0 && tex_index < g_textures.count)
+                {
+                    gl_tex = g_textures.textures[tex_index].gl_id;
+                    texW   = (g_textures.textures[tex_index].width > 0) ? g_textures.textures[tex_index].width : 1;
+                    texH   = (g_textures.textures[tex_index].height > 0) ? g_textures.textures[tex_index].height : 1;
+                }
+                const float invW = 1.0f / (float)texW;
+                const float invH = 1.0f / (float)texH;
+
+                // Triangle commands for this mesh
                 short *ptricmds = (short *)(global_data + meshes[mesh].triindex);
 
+                // Start of this mesh’s subrange in the big VBO
+                const int start_first = total_render_vertices;
+
                 int i;
-                while ((i = *(ptricmds++))) {
-                    if (i < 0) {
-                        i = -i; // triangle fan
-                        int v0 = ptricmds[0], n0 = ptricmds[1]; float u0 = ptricmds[2], v0t = ptricmds[3];
+                while ((i = *(ptricmds++)))
+                {
+                    if (i < 0)
+                    {
+                        // triangle fan
+                        i        = -i;
+                        int   v0 = ptricmds[0], n0 = ptricmds[1];
+                        float u0 = ptricmds[2], t0 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        int v1 = ptricmds[0], n1 = ptricmds[1]; float u1 = ptricmds[2], v1t = ptricmds[3];
+                        int   v1 = ptricmds[0], n1 = ptricmds[1];
+                        float u1 = ptricmds[2], t1 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        for (int j = 2; j < i; ++j) {
-                            int v2 = ptricmds[0], n2 = ptricmds[1]; float u2 = ptricmds[2], v2t = ptricmds[3];
+                        for (int j = 2; j < i; ++j)
+                        {
+                            int   v2 = ptricmds[0], n2 = ptricmds[1];
+                            float u2 = ptricmds[2], t2 = ptricmds[3];
                             ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
-                            AddVertexToBuffer(v0, n0, u0, v0t);
-                            AddVertexToBuffer(v1, n1, u1, v1t);
-                            AddVertexToBuffer(v2, n2, u2, v2t);
+                            AddVertexToBuffer(v0, n0, u0, t0, invW, invH);
+                            AddVertexToBuffer(v1, n1, u1, t1, invW, invH);
+                            AddVertexToBuffer(v2, n2, u2, t2, invW, invH);
 
-                            v1 = v2; n1 = n2; u1 = u2; v1t = v2t;
+                            v1 = v2;
+                            n1 = n2;
+                            u1 = u2;
+                            t1 = t2;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         // triangle strip
-                        int v0 = ptricmds[0], n0 = ptricmds[1]; float u0 = ptricmds[2], v0t = ptricmds[3];
+                        int   v0 = ptricmds[0], n0 = ptricmds[1];
+                        float u0 = ptricmds[2], t0 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        int v1 = ptricmds[0], n1 = ptricmds[1]; float u1 = ptricmds[2], v1t = ptricmds[3];
+                        int   v1 = ptricmds[0], n1 = ptricmds[1];
+                        float u1 = ptricmds[2], t1 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        for (int j = 2; j < i; ++j) {
-                            int v2 = ptricmds[0], n2 = ptricmds[1]; float u2 = ptricmds[2], v2t = ptricmds[3];
+                        for (int j = 2; j < i; ++j)
+                        {
+                            int   v2 = ptricmds[0], n2 = ptricmds[1];
+                            float u2 = ptricmds[2], t2 = ptricmds[3];
                             ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
-                            if ((j - 2) % 2 == 0) {
-                                AddVertexToBuffer(v0, n0, u0, v0t);
-                                AddVertexToBuffer(v1, n1, u1, v1t);
-                                AddVertexToBuffer(v2, n2, u2, v2t);
-                            } else {
-                                AddVertexToBuffer(v1, n1, u1, v1t);
-                                AddVertexToBuffer(v0, n0, u0, v0t);
-                                AddVertexToBuffer(v2, n2, u2, v2t);
+                            if ((j - 2) % 2 == 0)
+                            {
+                                AddVertexToBuffer(v0, n0, u0, t0, invW, invH);
+                                AddVertexToBuffer(v1, n1, u1, t1, invW, invH);
+                                AddVertexToBuffer(v2, n2, u2, t2, invW, invH);
                             }
-                            v0=v1; n0=n1; u0=u1; v0t=v1t;
-                            v1=v2; n1=n2; u1=u2; v1t=v2t;
+                            else
+                            {
+                                AddVertexToBuffer(v1, n1, u1, t1, invW, invH);
+                                AddVertexToBuffer(v0, n0, u0, t0, invW, invH);
+                                AddVertexToBuffer(v2, n2, u2, t2, invW, invH);
+                            }
+                            v0 = v1;
+                            n0 = n1;
+                            u0 = u1;
+                            t0 = t1;
+                            v1 = v2;
+                            n1 = n2;
+                            u1 = u2;
+                            t1 = t2;
                         }
                     }
                 }
+
+                // Record a draw-call subrange for THIS mesh
+                if (g_num_ranges < MAX_DRAW_RANGES)
+                {
+                    g_ranges[g_num_ranges].tex   = gl_tex;
+                    g_ranges[g_num_ranges].first = start_first;
+                    g_ranges[g_num_ranges].count = total_render_vertices - start_first;
+                    g_num_ranges++;
+                }
             }
+            printf("Generated %d vertices (%d triangles)\n",
+                   total_render_vertices, total_render_vertices / 3);
+
+            model_processed = true;
         }
     }
-
-    printf("Generated %d vertices (%d triangles)\n",
-           total_render_vertices, total_render_vertices / 3);
-
-    model_processed = true;
-
 }
 
+void AddVertexToBuffer(int vertex_index, int normal_index,
+                       float s, float t, float invW, float invH)
+{
 
-void AddVertexToBuffer(int vertex_index, int normal_index, float u, float v) {
-
-    if (total_render_vertices >= MAX_RENDER_VERTICES) return;
-        
-    const int base = total_render_vertices * 8;
+    (void)invW; (void)invH; // not used with 256.0 convention
     
-    // --- Position (use SKINNED if available) ---
+    if (total_render_vertices >= MAX_RENDER_VERTICES)
+        return;
+
+    const int base = total_render_vertices * 8;
+
+    // --- Position (skinned) ---
     vec3 P;
-    if (have_skinned_positions) {
+    if (have_skinned_positions)
+    {
         glm_vec3_copy(skinned_positions[vertex_index], P);
-    } else {
-        // Fallback (shouldn’t be used once bones are wired)
+    }
+    else
+    {
         glm_vec3_copy(g_current.vertices[vertex_index], P);
     }
 
-    // Downscale to fit (quick fix)
-    const float viewer_scale = 0.1f;   // tweak 0.003..0.03 if needed
-    P[0] *= viewer_scale; P[1] *= viewer_scale; P[2] *= viewer_scale;
+    // Quick viewer scale
+    const float viewer_scale = 0.1f;
+    P[0] *= viewer_scale;
+    P[1] *= viewer_scale;
+    P[2] *= viewer_scale;
 
-    // --- Normal (rotate by THIS vertex’s bone) ---
-    // Fetch the vertex->bone map from the model:
+    // --- Normal (skinned) ---
     unsigned char *v2bone = (unsigned char *)(global_data + g_current.model->vertinfoindex);
-    int bone = v2bone[vertex_index];
-    if (bone < 0 || bone >= global_header->numbones) bone = 0;
+    int            bone   = v2bone[vertex_index];
+    if (bone < 0 || bone >= global_header->numbones)
+        bone = 0;
 
     vec3 Nfile = {
         g_current.normals[normal_index][0],
         g_current.normals[normal_index][1],
-        g_current.normals[normal_index][2]
-    };
+        g_current.normals[normal_index][2]};
     vec3 Nrot;
     TransformNormalByBone(g_bonetransformations[bone], Nfile, Nrot);
 
-    // --- Axis remap (apply AFTER skinning), match your viewer’s coords ---
-    // Keep X, send HL Z -> Y, and HL -Y -> Z (same mapping you had, but do it now)
-    float x  =  P[0];
-    float y  =  P[1];
-    float z  =  P[2];
+    // Axis remap
+    float x  = P[0];
+    float y  = P[1];
+    float z  = P[2];
     float nx = Nrot[0];
     float ny = Nrot[1];
     float nz = Nrot[2];
 
-    float Py =  z;     // Z -> Y
-    float Pz = -y;     // -Y -> Z
-    float Ny =  nz;
+    float Py = z;  // Z -> Y
+    float Pz = -y; // -Y -> Z
+    float Ny = nz;
     float Nz = -ny;
 
-    // --- Write position ---
+    // Position
     render_vertex_buffer[base + 0] = x;
     render_vertex_buffer[base + 1] = Py;
     render_vertex_buffer[base + 2] = Pz;
 
-    // --- Write normal ---
+    // Normal
     render_vertex_buffer[base + 3] = nx;
     render_vertex_buffer[base + 4] = Ny;
     render_vertex_buffer[base + 5] = Nz;
 
-    // --- UVs (HL1 skins are integer texels; your divide by 256 was fine) ---
-    render_vertex_buffer[base + 6] = u / 256.0f;
-    render_vertex_buffer[base + 7] = v / 256.0f;
+    // --- UVs ---
+    // GoldSrc tri-cmd S,T are in a fixed space (commonly 0..256).
+    // Normalize by 256.0, not by the texture's pixel size.
+    float u = s / 256.0f;
+    float v = 1.0f - (t / 256.0f);  // flip V so origin matches GL sampling
+
+    // Optional clamp to be safe
+    if (u < 0.0f) u = 0.0f; else if (u > 1.0f) u = 1.0f;
+    if (v < 0.0f) v = 0.0f; else if (v > 1.0f) v = 1.0f;
+
+    render_vertex_buffer[base + 6] = u;
+    render_vertex_buffer[base + 7] = v;
+
 
     total_render_vertices++;
 }
 
-
-void setup_triangle(void) {
+void setup_triangle(void)
+{
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -438,10 +556,12 @@ void setup_triangle(void) {
     glEnableVertexAttribArray(0);
 }
 
-static char *read_shader_source(const char *filepath) {  
+static char *read_shader_source(const char *filepath)
+{
     printf("DEBUG - Trying to load shader from: %s\n", filepath);
     FILE *file = fopen(filepath, "r");
-    if (!file) {
+    if (!file)
+    {
         fprintf(stderr, "ERROR - Failed to open the shader file: '%s' \n", filepath);
         return NULL;
     }
@@ -452,21 +572,22 @@ static char *read_shader_source(const char *filepath) {
 
     char *buffer = malloc((length + 1) * sizeof(char));
 
-    if (!buffer) {
+    if (!buffer)
+    {
         fprintf(stderr, "ERROR - Failed to allocate memory for shader file buffer!\n");
         fclose(file);
         return NULL;
     }
 
     fread(buffer, 1, length, file);
-    buffer[length] = '\0';  // Null terminate
+    buffer[length] = '\0'; // Null terminate
     fclose(file);
 
     return buffer;
 }
 
-
-static GLuint compile_shader(const char *source, GLenum type) {
+static GLuint compile_shader(const char *source, GLenum type)
+{
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
@@ -474,26 +595,28 @@ static GLuint compile_shader(const char *source, GLenum type) {
     GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
-    if (!success) {
+    if (!success)
+    {
         char shader_info[512];
         glGetShaderInfoLog(shader, 512, NULL, shader_info);
         fprintf(stderr, "ERROR - Failed to compile shaders: \n%s\n", shader_info);
         return (0);
-    } 
+    }
 
     return shader;
 }
 
-
-static GLuint create_shader_program(GLuint vertexShader, GLuint fragmentShader) {
+static GLuint create_shader_program(GLuint vertexShader, GLuint fragmentShader)
+{
     GLuint program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
     glLinkProgram(program);
 
     GLint success;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);  // Use glGetProgramiv for program
-    if (!success) {
+    glGetProgramiv(program, GL_LINK_STATUS, &success); // Use glGetProgramiv for program
+    if (!success)
+    {
         char infoLog[512];
         glGetProgramInfoLog(program, 512, NULL, infoLog);
         fprintf(stderr, "ERROR - Failed to link shaders to the program!\n%s\n", infoLog);
@@ -506,32 +629,42 @@ static GLuint create_shader_program(GLuint vertexShader, GLuint fragmentShader) 
     return program;
 }
 
-static int load_shaders(void) {
+static int load_shaders(void)
+{
     // Debug: Print current working directory
     char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+    {
         printf("DEBUG - Current working directory: %s\n", cwd);
     }
-    
+
     // Try to load textured shaders first, fall back to basic if not found
-    char *vertex_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/textured.vert");
+    char *vertex_shader_file   = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/textured.vert");
     char *fragment_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/textured.frag");
-    
-    if (!vertex_shader_file || !fragment_shader_file) {
+
+    if (!vertex_shader_file || !fragment_shader_file)
+    {
         printf("Textured shaders not found, falling back to basic shaders\n");
-        if (vertex_shader_file) free(vertex_shader_file);
-        if (fragment_shader_file) free(fragment_shader_file);
-        
-        vertex_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/basic.vert");
+        if (vertex_shader_file)
+            free(vertex_shader_file);
+        if (fragment_shader_file)
+            free(fragment_shader_file);
+
+        vertex_shader_file   = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/basic.vert");
         fragment_shader_file = read_shader_source("/Users/karlosiric/Documents/SublimeText Programming/C_Projects/ModelViewer/shaders/basic.frag");
-    } else {
+    }
+    else
+    {
         printf("Using textured shaders\n");
     }
 
-    if (!vertex_shader_file || !fragment_shader_file) {
+    if (!vertex_shader_file || !fragment_shader_file)
+    {
         fprintf(stderr, "ERROR - Failed to load shader files!\n");
-        if (vertex_shader_file) free(vertex_shader_file);
-        if (fragment_shader_file) free(fragment_shader_file);
+        if (vertex_shader_file)
+            free(vertex_shader_file);
+        if (fragment_shader_file)
+            free(fragment_shader_file);
         return (-1);
     }
     printf("Compiling vertex shader...\n");
@@ -542,13 +675,15 @@ static int load_shaders(void) {
     free(vertex_shader_file);
     free(fragment_shader_file);
 
-    if (vertexShader == 0 || fragmentShader == 0) {
+    if (vertexShader == 0 || fragmentShader == 0)
+    {
         return (-1);
     }
 
     shader_program = create_shader_program(vertexShader, fragmentShader);
 
-    if (shader_program == 0) {
+    if (shader_program == 0)
+    {
         fprintf(stderr, "ERROR - Failed to create properly a shader program!\n");
         return (-1);
     }
@@ -559,34 +694,37 @@ static int load_shaders(void) {
     return (0);
 }
 
-int init_renderer(int width, int height, const char *title) {  
-    if (!glfwInit()) {
+int init_renderer(int width, int height, const char *title)
+{
+    if (!glfwInit())
+    {
         fprintf(stderr, "ERROR - Failed to initialize the GLFW, glfw_init() FAILED!\n");
         return (-1);
     }
 
-    #ifdef __APPLE__
-        /* MacOS M chips specific */
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #elif _WIN32
-        /* Windows: Can go up to the latest version supported by drivers */
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    #else
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    #endif
+#ifdef __APPLE__
+    /* MacOS M chips specific */
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#elif _WIN32
+    /* Windows: Can go up to the latest version supported by drivers */
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#else
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#endif
 
     GLFWmonitor *primary = glfwGetPrimaryMonitor();
     (void)primary; // We get this for future use but don't use it yet
     window = glfwCreateWindow(width, height, title, NULL, NULL);
 
-    if (!window) {
+    if (!window)
+    {
         glfwTerminate();
         return (-1);
     }
@@ -601,25 +739,25 @@ int init_renderer(int width, int height, const char *title) {
     glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
     glfwSetScrollCallback(window, glfw_scroll_callback);
 
-
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, width, height);
     // DISABLE CULLING TO SEE IF TRIANGLES ARE BACKWARDS
-    glDisable(GL_CULL_FACE);  // Changed from glEnable
-    
+    glDisable(GL_CULL_FACE); // Changed from glEnable
+
     // Enable point size for vertex visualization
     glEnable(GL_PROGRAM_POINT_SIZE);
-    glPointSize(5.0f);  // Make points bigger
+    glPointSize(5.0f); // Make points bigger
 
     setup_triangle();
 
-    if (load_shaders() != 0) {
+    if (load_shaders() != 0)
+    {
         fprintf(stderr, "ERROR - Failed to load shaders!\n");
         return (-1);
     }
 
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-    
+
     printf("\n=== CONTROLS ===\n");
     printf("W/S: Tilt up/down\n");
     printf("A/D: Rotate left/right\n");
@@ -633,13 +771,19 @@ int init_renderer(int width, int height, const char *title) {
     return (0);
 }
 
-void cleanup_renderer(void) {
-    if (VAO) glDeleteVertexArrays(1, &VAO);
-    if (VBO) glDeleteBuffers(1, &VBO);
-    if (EBO) glDeleteBuffers(1, &EBO);
-    if (shader_program) glDeleteProgram(shader_program);
+void cleanup_renderer(void)
+{
+    if (VAO)
+        glDeleteVertexArrays(1, &VAO);
+    if (VBO)
+        glDeleteBuffers(1, &VBO);
+    if (EBO)
+        glDeleteBuffers(1, &EBO);
+    if (shader_program)
+        glDeleteProgram(shader_program);
 
-    if (window) {
+    if (window)
+    {
         glfwDestroyWindow(window);
         printf("Shutting down Window ...\n");
     }
@@ -649,22 +793,27 @@ void cleanup_renderer(void) {
     return;
 }
 
-void clear_screen(void) {
+void clear_screen(void)
+{
     glClearColor(0.1f, 0.2f, 0.45f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
-bool should_close_window(void) {
+bool should_close_window(void)
+{
     return glfwWindowShouldClose(window);
 }
 
-void render_loop(void) {
+void render_loop(void)
+{
     printf("Starting render loop...\n");
-    
-    while (!should_close_window()) {
+
+    while (!should_close_window())
+    {
         clear_screen();
 
-        if (global_header && global_data) {
+        if (global_header && global_data)
+        {
             render_model(global_header, global_data);
         }
 
@@ -673,74 +822,176 @@ void render_loop(void) {
     }
 }
 
-void set_wireframe_mode(bool enabled) {
-    wireframe_enabled = enabled;  // Now it's used
+void set_wireframe_mode(bool enabled)
+{
+    wireframe_enabled = enabled; // Now it's used
 
-    if (wireframe_enabled) {
+    if (wireframe_enabled)
+    {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    } else {
+    }
+    else
+    {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
 
-void set_current_texture(unsigned int texture_id) {
+void set_current_texture(unsigned int texture_id)
+{
     current_texture = texture_id;
     printf("Set current texture to ID: %u\n", texture_id);
-}   
-
-// Updated render_model to use the new vertex format
-void render_model(studiohdr_t *header, unsigned char *data) {
-    (void)header; (void)data;
-    
-    if (!model_processed) {
-        ProcessModelForRendering();
-    }
-    
-    if (total_render_vertices == 0) return;
-    
-    glUseProgram(shader_program);
-    
-    // Pass uniforms
-    GLint timeLocation = glGetUniformLocation(shader_program, "time");
-    GLint rotXLocation = glGetUniformLocation(shader_program, "rotation_x");
-    GLint rotYLocation = glGetUniformLocation(shader_program, "rotation_y");
-    GLint zoomLocation = glGetUniformLocation(shader_program, "zoom");
-    
-    if (timeLocation != -1) glUniform1f(timeLocation, (float)glfwGetTime());
-    if (rotXLocation != -1) glUniform1f(rotXLocation, rotation_x);
-    if (rotYLocation != -1) glUniform1f(rotYLocation, rotation_y);
-    if (zoomLocation != -1) glUniform1f(zoomLocation, zoom);
-    
-    // Upload vertex data with normals and UVs
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, total_render_vertices * 8 * sizeof(float), 
-                 render_vertex_buffer, GL_STATIC_DRAW);
-    
-    // Position attribute (location 0)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    
-    // Normal attribute (location 1) - NEW!
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    
-    // Texture coordinate attribute (location 2) - NEW!
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2); 
-    
-    glDrawArrays(GL_TRIANGLES, 0, total_render_vertices);
 }
 
+// Updated render_model to use the new vertex format
+void render_model(studiohdr_t *header, unsigned char *data)
+{
+    (void)header;
+    (void)data;
 
-void set_model_data(studiohdr_t *header, unsigned char *data) {
-    global_header = header;
-    global_data = data;
-    
-    // Reset processing flags so model gets processed next render
-    model_processed = false;
+    if (!model_processed)
+    {
+        ProcessModelForRendering();
+    }
+    if (total_render_vertices == 0)
+        return;
+
+    glUseProgram(shader_program);
+
+    /* --- Build matrices (cglm) --- */
+    int fbw, fbh;
+    glfwGetFramebufferSize(window, &fbw, &fbh);
+    float aspect = (fbh > 0) ? (float)fbw / (float)fbh : 1.0f;
+
+    mat4 M;
+    glm_mat4_identity(M);
+    /* viewer rotations (Y then X) */
+    glm_rotate(M, rotation_y, (vec3){0.0f, 1.0f, 0.0f});
+    glm_rotate(M, rotation_x, (vec3){1.0f, 0.0f, 0.0f});
+
+    /* simple camera */
+    float camDist = 6.0f / (zoom > 0.001f ? zoom : 0.001f);
+    vec3  camPos  = {0.0f, 0.0f, camDist};
+    vec3  target  = {0.0f, 0.0f, 0.0f};
+    vec3  up      = {0.0f, 1.0f, 0.0f};
+
+    mat4 V;
+    glm_lookat(camPos, target, up, V);
+    mat4 P;
+    glm_perspective(glm_rad(50.0f), aspect, 0.01f, 1000.0f, P);
+
+    /* upload required uniforms (names MUST match your shaders) */
+    GLint uModel = glGetUniformLocation(shader_program, "model");
+    GLint uView  = glGetUniformLocation(shader_program, "view");
+    GLint uProj  = glGetUniformLocation(shader_program, "projection");
+    if (uModel != -1)
+        glUniformMatrix4fv(uModel, 1, GL_FALSE, (const float *)M);
+    if (uView != -1)
+        glUniformMatrix4fv(uView, 1, GL_FALSE, (const float *)V);
+    if (uProj != -1)
+        glUniformMatrix4fv(uProj, 1, GL_FALSE, (const float *)P);
+
+    /* light + camera uniforms */
+    vec3  lightPos = {3.0f, 5.0f, 4.0f};
+    GLint uLight   = glGetUniformLocation(shader_program, "lightPos");
+    GLint uViewP   = glGetUniformLocation(shader_program, "viewPos");
+    if (uLight != -1)
+        glUniform3fv(uLight, 1, (const float *)lightPos);
+    if (uViewP != -1)
+        glUniform3fv(uViewP, 1, (const float *)camPos);
+
+    /* bind *some* texture (for now just use tex 0 if present) */
+    if (g_textures.count > 0 && g_textures.textures[0].gl_id)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, g_textures.textures[0].gl_id);
+        GLint uTex = glGetUniformLocation(shader_program, "tex"); // name must be "tex"
+        if (uTex != -1)
+            glUniform1i(uTex, 0);
+    }
+    else if (current_texture)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, current_texture);
+        GLint uTex = glGetUniformLocation(shader_program, "tex");
+        if (uTex != -1)
+            glUniform1i(uTex, 0);
+    }
+
+    // Upload vertex data (positions, normals, uvs)
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 (GLsizeiptr)(total_render_vertices * 8 * sizeof(float)),
+                 render_vertex_buffer,
+                 GL_STATIC_DRAW);
+
+    // vertex attribs: pos(0), normal(1), uv(2)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(0));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    // bind sampler to unit 0 (once)
+    GLint uTex = glGetUniformLocation(shader_program, "tex");
+    if (uTex != -1)
+        glUniform1i(uTex, 0);
+
+    // draw each subrange with its texture
+    for (int r = 0; r < g_num_ranges; ++r)
+    {
+        if (g_ranges[r].tex)
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, g_ranges[r].tex);
+        }
+        else
+        {
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        glDrawArrays(GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count);
+    }
+}
+
+void set_model_data(studiohdr_t *header, unsigned char *data,
+                    studiohdr_t *tex_header, unsigned char *tex_data)
+{
+    global_header     = header;
+    global_data       = data;
+    global_tex_header = tex_header; // may be NULL
+    global_tex_data   = tex_data;   // may be NULL
+
+    model_processed         = false;
     bone_system_initialized = false;
-    total_render_vertices = 0;
-    
+    total_render_vertices   = 0;
+
+    // Free old textures
+    if (g_textures.textures)
+    {
+        mdl_free_texture(&g_textures);
+    }
+
+    // Pick which header to use (embedded or T.mdl)
+    const studiohdr_t *texHdr = mdl_pick_texture_header(header, tex_header);
+    if (texHdr)
+    {
+        mdl_result_t texRes = mdl_load_textures(texHdr,
+                                                (texHdr == header) ? data : tex_data,
+                                                &g_textures);
+        if (texRes == MDL_SUCCESS)
+        {
+            printf("Loaded %d textures\n", g_textures.count);
+        }
+        else
+        {
+            printf("Failed to load textures, error code: %d\n", texRes);
+        }
+    }
+    else
+    {
+        printf("No textures found for this model.\n");
+    }
+
     printf("Model data set, will be processed on next render\n");
 }

@@ -5,8 +5,8 @@
 #pragma once
 #include <stdbool.h>
 #include <stddef.h>
-#include <../studio.h>
-#include <../utils/mdl_messages.h>
+#include "../studio.h"
+#include "../utils/mdl_messages.h"
 
 typedef struct {
     unsigned int gl_id;          // 0 meaning it is not created 
