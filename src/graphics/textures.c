@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 23:20:19
+ *  Last Modified: 2025-09-28 11:53:54
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -15,6 +15,7 @@
  *======================================================================
  */
 
+#include <OpenGL/gl.h>
 #include <stddef.h>
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
@@ -147,8 +148,122 @@ static bool parse_paletted_block(const unsigned char *text_struct_base,
 }
 
 
+mdl_result_t mdl_load_textures(const studiohdr_t *header, 
+                               const unsigned char *file_data, 
+                               mdl_texture_set_t *out_set)
+{
+
+    if (!out_set) {
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+
+    out_set->textures = NULL;
+    out_set->count = 0;
+
+    if (!header || !file_data) {
+        return MDL_ERROR_MISSING_TEXTURE_FILE;
+    } 
+    if (header->numtextures <= 0)        {
+        return MDL_ERROR_NO_TEXTURES_IN_FILE;
+    } 
+
+    const size_t file_size = (size_t)header->length;
+    const size_t text_arr_off = (size_t)header->textureindex;
+
+    if (text_arr_off >= file_size) {
+        return MDL_ERROR_FILE_TOO_SMALL;
+    }
+
+    const mstudiotexture_t *textures = (const mstudiotexture_t *)(file_data + text_arr_off);
+
+    const int n_textures = header->numtextures;
+
+    mdl_gl_texture_t *items = (mdl_gl_texture_t *)calloc((size_t)n_textures, sizeof(*items));
+
+    if (!items) {
+        return MDL_ERROR_MEMORY_ALLOCATION;     
+    }                           
+
+    for (int i = 0; i < n_textures; i++) {
+
+        const mstudiotexture_t *T = &textures[i];
+        const unsigned char *indices = NULL;
+        const unsigned char *palette = NULL;
+
+        int count = 0, pal_size = 0;
+
+        const unsigned char *text_struct_base = (const unsigned char *)T;
+
+        const bool ok = parse_paletted_block(text_struct_base, T->width, T->height, 
+                                            T->index, &indices, &count, &palette, 
+                                            &pal_size, file_data, file_size);
+
+        if (!ok) {
+
+            items[i].gl_id = 0;
+            items[i].width = items[i].height = 0;
+            items[i].name[0] = '\0';
+            continue;
+        }
+
+        const int w = T->width, h = T->height;
+        unsigned char* rgba = (unsigned char*)malloc((size_t)w * (size_t)h * 4u);
+        if (!rgba) { free(items); return MDL_ERROR_MEMORY_ALLOCATION; }
+
+        if (!mdl_pal8_to_rgba(indices, w, h, palette, pal_size, rgba)) {
+            free(rgba);
+            items[i].gl_id = 0;
+            items[i].width = items[i].height = 0;
+            items[i].name[0] = '\0';
+            continue;
+        }
+
+        // Upload to GL
+        GLuint tex = 0;
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        free(rgba);
+
+        items[i].gl_id  = tex;
+        items[i].width  = w;
+        items[i].height = h;
+        strncpy(items[i].name, T->name, sizeof(items[i].name)-1);
+        items[i].name[sizeof(items[i].name)-1] = '\0';
+    }
+
+    out_set->textures = items;
+    out_set->count = n_textures;
+    return MDL_SUCCESS;
+
+}
 
 
+
+void mdl_free_texture(mdl_texture_set_t *set) {
+
+    if (!set || !set->textures) {
+        return;
+    }
+
+    for (int i = 0; i < set->count; i++) {
+        if (set->textures[i].gl_id) {
+            GLuint id = set->textures[i].gl_id;
+            glDeleteTextures(1, &id);
+        }
+    }
+
+    free(set->textures);
+    set->textures = NULL;
+    set->count = 0;
+
+}
 
 
 

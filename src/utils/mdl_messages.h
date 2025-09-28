@@ -50,8 +50,11 @@ typedef enum {
     MDL_ERROR_SEQGROUP_NOT_FOUND,   // seqdesc points to NN but file missing
     MDL_ERROR_ANIM_BLOCK_BROKEN,
 
-    // feature gate
-    MDL_ERROR_NOT_IMPLEMENTED,
+    MDL_ERROR_NO_TEXTURES_IN_FILE,
+
+    // Additional features
+    MDL_ADD_MORE_ERROR_CODES_HERE,
+
 
     // keep last
     MDL_RESULT_COUNT
