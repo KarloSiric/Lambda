@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 13:05:02
+ *  Last Modified: 2025-09-28 14:33:02
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -57,6 +57,9 @@ static DrawRange g_ranges[MAX_DRAW_RANGES];
 static int       g_num_ranges = 0;
 
 static current_model_data_t g_current;
+
+static GLuint g_white_tex = 0;
+
 
 static vec3 skinned_positions[MAXSTUDIOVERTS];
 static bool have_skinned_positions = false;
@@ -351,7 +354,6 @@ void ProcessModelForRendering(void)
 
             for (int mesh = 0; mesh < model->nummesh; ++mesh)
             {
-                mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
 
                 // Resolve texture index via skin table
                 int tex_index = meshes[mesh].skinref;
@@ -369,8 +371,16 @@ void ProcessModelForRendering(void)
                     texW   = (g_textures.textures[tex_index].width > 0) ? g_textures.textures[tex_index].width : 1;
                     texH   = (g_textures.textures[tex_index].height > 0) ? g_textures.textures[tex_index].height : 1;
                 }
-                const float invW = 1.0f / (float)texW;
-                const float invH = 1.0f / (float)texH;
+                // Fallback for debugging
+                if (!gl_tex && g_white_tex) {
+                    gl_tex = g_white_tex;
+                    texW = 2; // white texture is 2x2
+                    texH = 2;
+                }
+                // FOR DEBUGGING
+                printf("mesh %d: skinref %d -> tex %d  GL=%u  %dx%d\n",
+                mesh, meshes[mesh].skinref, tex_index,
+                (unsigned)gl_tex, texW, texH);
 
                 // Triangle commands for this mesh
                 short *ptricmds = (short *)(global_data + meshes[mesh].triindex);
@@ -385,21 +395,21 @@ void ProcessModelForRendering(void)
                     {
                         // triangle fan
                         i        = -i;
-                        int   v0 = ptricmds[0], n0 = ptricmds[1];
-                        float u0 = ptricmds[2], t0 = ptricmds[3];
+                        short   v0 = ptricmds[0], n0 = ptricmds[1];
+                        short u0 = ptricmds[2], t0 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        int   v1 = ptricmds[0], n1 = ptricmds[1];
-                        float u1 = ptricmds[2], t1 = ptricmds[3];
+                        short   v1 = ptricmds[0], n1 = ptricmds[1];
+                        short u1 = ptricmds[2], t1 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
                         for (int j = 2; j < i; ++j)
                         {
-                            int   v2 = ptricmds[0], n2 = ptricmds[1];
-                            float u2 = ptricmds[2], t2 = ptricmds[3];
+                            short   v2 = ptricmds[0], n2 = ptricmds[1];
+                            short u2 = ptricmds[2], t2 = ptricmds[3];
                             ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
-                            AddVertexToBuffer(v0, n0, u0, t0, invW, invH);
-                            AddVertexToBuffer(v1, n1, u1, t1, invW, invH);
-                            AddVertexToBuffer(v2, n2, u2, t2, invW, invH);
+                            AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
+                            AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
+                            AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
 
                             v1 = v2;
                             n1 = n2;
@@ -410,29 +420,29 @@ void ProcessModelForRendering(void)
                     else
                     {
                         // triangle strip
-                        int   v0 = ptricmds[0], n0 = ptricmds[1];
-                        float u0 = ptricmds[2], t0 = ptricmds[3];
+                        short   v0 = ptricmds[0], n0 = ptricmds[1];
+                        short u0 = ptricmds[2], t0 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        int   v1 = ptricmds[0], n1 = ptricmds[1];
-                        float u1 = ptricmds[2], t1 = ptricmds[3];
+                        short   v1 = ptricmds[0], n1 = ptricmds[1];
+                        short u1 = ptricmds[2], t1 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
                         for (int j = 2; j < i; ++j)
                         {
-                            int   v2 = ptricmds[0], n2 = ptricmds[1];
-                            float u2 = ptricmds[2], t2 = ptricmds[3];
+                            short   v2 = ptricmds[0], n2 = ptricmds[1];
+                            short u2 = ptricmds[2], t2 = ptricmds[3];
                             ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
                             if ((j - 2) % 2 == 0)
                             {
-                                AddVertexToBuffer(v0, n0, u0, t0, invW, invH);
-                                AddVertexToBuffer(v1, n1, u1, t1, invW, invH);
-                                AddVertexToBuffer(v2, n2, u2, t2, invW, invH);
+                                AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
+                                AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
+                                AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
                             }
                             else
                             {
-                                AddVertexToBuffer(v1, n1, u1, t1, invW, invH);
-                                AddVertexToBuffer(v0, n0, u0, t0, invW, invH);
-                                AddVertexToBuffer(v2, n2, u2, t2, invW, invH);
+                                AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
+                                AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
+                                AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
                             }
                             v0 = v1;
                             n0 = n1;
@@ -464,79 +474,80 @@ void ProcessModelForRendering(void)
 }
 
 void AddVertexToBuffer(int vertex_index, int normal_index,
-                       float s, float t, float invW, float invH)
+                       short s, short t, float texW, float texH)
 {
 
 
-    if (total_render_vertices >= MAX_RENDER_VERTICES)
-        return;
+if (total_render_vertices >= MAX_RENDER_VERTICES) return;
 
     const int base = total_render_vertices * 8;
 
-    // --- Position (skinned) ---
+    /* ----- POSITION (your skinning path) ----- */
     vec3 P;
-    if (have_skinned_positions)
-    {
+    if (have_skinned_positions) {
         glm_vec3_copy(skinned_positions[vertex_index], P);
-    }
-    else
-    {
+    } else {
         glm_vec3_copy(g_current.vertices[vertex_index], P);
     }
 
-    // Quick viewer scale
     const float viewer_scale = 0.1f;
     P[0] *= viewer_scale;
     P[1] *= viewer_scale;
     P[2] *= viewer_scale;
 
-    // --- Normal (skinned) ---
+    /* ----- NORMAL (your bone transform) ----- */
     unsigned char *v2bone = (unsigned char *)(global_data + g_current.model->vertinfoindex);
-    int            bone   = v2bone[vertex_index];
-    if (bone < 0 || bone >= global_header->numbones)
-        bone = 0;
+    int bone = v2bone ? v2bone[vertex_index] : 0;
+    if (bone < 0 || bone >= global_header->numbones) bone = 0;
 
     vec3 Nfile = {
         g_current.normals[normal_index][0],
         g_current.normals[normal_index][1],
-        g_current.normals[normal_index][2]};
+        g_current.normals[normal_index][2]
+    };
     vec3 Nrot;
     TransformNormalByBone(g_bonetransformations[bone], Nfile, Nrot);
 
-    // Axis remap
-    float x  = P[0];
-    float y  = P[1];
-    float z  = P[2];
-    float nx = Nrot[0];
-    float ny = Nrot[1];
-    float nz = Nrot[2];
+    /* ----- AXIS REMAP (unchanged) ----- */
+    float x  =  P[0];
+    float y  =  P[1];
+    float z  =  P[2];
+    float nx =  Nrot[0];
+    float ny =  Nrot[1];
+    float nz =  Nrot[2];
 
-    float Py = z;  // Z -> Y
-    float Pz = -y; // -Y -> Z
-    float Ny = nz;
+    float Py =  z;      // Z -> Y
+    float Pz = -y;      // -Y -> Z
+    float Ny =  nz;
     float Nz = -ny;
 
-    // Position
+    /* write position */
     render_vertex_buffer[base + 0] = x;
     render_vertex_buffer[base + 1] = Py;
     render_vertex_buffer[base + 2] = Pz;
 
-    // Normal
+    /* write normal */
     render_vertex_buffer[base + 3] = nx;
     render_vertex_buffer[base + 4] = Ny;
     render_vertex_buffer[base + 5] = Nz;
 
-    // --- UVs ---
-    // GoldSrc tri-cmd S,T are in a fixed space (commonly 0..256).
-    // Normalize by 256.0, not by the texture's pixel size.
-    // --- UVs (MDL S,T are in texels) ---
-    float u = s * invW;
-    float v = 1.0f - (t * invH);   // flip V because we didn't flip the uploaded image
+    /* ----- UVs: USE invW/invH PER TEXTURE (this is the fix) ----- */
+    // s,t come from the tri-cmds as 16-bit texel coords for THIS mesh’s texture.
+    // Convert to [0,1], sample at texel centers (+0.5), flip V for GL.
+    
+
+    float u = (float)s / (float)texW;  // NOT (s + 0.5) * invW
+    float v = (float)t / (float)texH;
+
+    v = 1.0f - v;  // Still flip V for OpenGL
+
+    // IMPORTANT: don't clamp; seams can legitimately wrap slightly.
+
     render_vertex_buffer[base + 6] = u;
     render_vertex_buffer[base + 7] = v;
 
-
     total_render_vertices++;
+
 }
 
 void setup_triangle(void)
@@ -751,6 +762,24 @@ int init_renderer(int width, int height, const char *title)
         return (-1);
     }
 
+    // Fallback 2x2 white texture so meshes always draw
+    glGenTextures(1, &g_white_tex);
+    glBindTexture(GL_TEXTURE_2D, g_white_tex);
+    unsigned char white[] = {
+        255,255,255,255, 255,255,255,255,
+        255,255,255,255, 255,255,255,255
+    }; 
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, white);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    printf("White fallback texture created with GL ID: %u\n", g_white_tex);
+
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
     printf("\n=== CONTROLS ===\n");
@@ -910,15 +939,15 @@ void render_model(studiohdr_t *header, unsigned char *data)
     glEnableVertexAttribArray(2);
 
     // bind sampler to unit 0 (once)
+    // bind sampler (once before loop)
     GLint uTex = glGetUniformLocation(shader_program, "tex");
-    if (uTex != -1)
-        glUniform1i(uTex, 0);
+    if (uTex != -1) glUniform1i(uTex, 0);
 
-    // draw each subrange with its texture
     for (int r = 0; r < g_num_ranges; ++r) {
+        GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, g_ranges[r].tex);
-        glDrawArrays(GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count);
+        glBindTexture(GL_TEXTURE_2D, tex_to_bind);
+        glDrawArrays(GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count);   
     }
 }
 
