@@ -1,29 +1,21 @@
-#version 330 core
-in vec3 fragNormal;
-in vec3 fragPosition;
-in vec2 fragTexCoord;
-
-out vec4 FragColor;
+// textured.frag
+#version 410 core
+in vec3 vNormal;
+in vec3 vWorldPos;
+in vec2 vUV;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform sampler2D tex;
 
+out vec4 FragColor;
+
 void main() {
-    vec3 N = normalize(fragNormal);
-    vec3 L = normalize(lightPos - fragPosition);
-    vec3 V = normalize(viewPos - fragPosition);
-    vec3 R = reflect(-L, N);
-
-    float diff = max(dot(N, L), 0.0);
-    float spec = pow(max(dot(R, V), 0.0), 32.0);
-
-    vec3 ambient  = 0.20 * vec3(1.0);
-    vec3 diffuse  = diff * vec3(1.0);
-    vec3 specular = spec * vec3(1.0);
-
-    vec4 texColor = texture(tex, fragTexCoord);
-    vec3 lighting = ambient + diffuse + specular;
-
-    FragColor = vec4(lighting, 1.0) * texColor;
+  vec3 N = normalize(vNormal);
+  vec3 L = normalize(lightPos - vWorldPos);
+  float diff = max(dot(N, L), 0.0);
+  vec3 base = texture(tex, vUV).rgb;
+  // simple lambert + a little ambient
+  vec3 color = base * (0.2 + 0.8 * diff);
+  FragColor = vec4(color, 1.0);
 }

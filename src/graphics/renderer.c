@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 14:33:02
+ *  Last Modified: 2025-09-28 16:18:29
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -388,6 +388,10 @@ void ProcessModelForRendering(void)
                 // Start of this mesh’s subrange in the big VBO
                 const int start_first = total_render_vertices;
 
+                int s_min =  32767, s_max = -32768;
+                int t_min =  32767, t_max = -32768;
+                int dbg_count = 0;
+
                 int i;
                 while ((i = *(ptricmds++)))
                 {
@@ -401,6 +405,12 @@ void ProcessModelForRendering(void)
                         short   v1 = ptricmds[0], n1 = ptricmds[1];
                         short u1 = ptricmds[2], t1 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+                        // Inside both fan/strip loops, right after you read u*, t*:
+                        s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
+                        t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
+                        if (dbg_count++ < 8) {
+                            printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+                        }
                         for (int j = 2; j < i; ++j)
                         {
                             short   v2 = ptricmds[0], n2 = ptricmds[1];
@@ -410,6 +420,13 @@ void ProcessModelForRendering(void)
                             AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
                             AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
                             AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
+
+                            // Inside both fan/strip loops, right after you read u*, t*:
+                            s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
+                            t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
+                            if (dbg_count++ < 8) {
+                                printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+                            }
 
                             v1 = v2;
                             n1 = n2;
@@ -426,6 +443,14 @@ void ProcessModelForRendering(void)
                         short   v1 = ptricmds[0], n1 = ptricmds[1];
                         short u1 = ptricmds[2], t1 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+                        // Inside both fan/strip loops, right after you read u*, t*:
+                        s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
+                        t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
+                        if (dbg_count++ < 8) {
+                            printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+                        }
+
                         for (int j = 2; j < i; ++j)
                         {
                             short   v2 = ptricmds[0], n2 = ptricmds[1];
@@ -437,12 +462,29 @@ void ProcessModelForRendering(void)
                                 AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
                                 AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
                                 AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
+
+
+                                // Inside both fan/strip loops, right after you read u*, t*:
+                                s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
+                                t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
+                                if (dbg_count++ < 8) {
+                                    printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+                                }
+
                             }
                             else
                             {
                                 AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
                                 AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
                                 AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
+
+                                // Inside both fan/strip loops, right after you read u*, t*:
+                                s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
+                                t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
+                                if (dbg_count++ < 8) {
+                                    printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+                                }
+                                
                             }
                             v0 = v1;
                             n0 = n1;

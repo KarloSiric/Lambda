@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 14:12:25
+ *  Last Modified: 2025-09-28 15:02:14
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -62,9 +62,9 @@ bool mdl_pal8_to_rgba(const unsigned char *indices, int w, int h,
         const unsigned       p   = (idx < (unsigned)palette_size) ? idx : 0;
         const unsigned char *rgb = &palette_rgb[p * 3];
 
-        dst[i * 4 + 0] = rgb[0];
+        dst[i * 4 + 0] = rgb[2];
         dst[i * 4 + 1] = rgb[1];
-        dst[i * 4 + 2] = rgb[2];
+        dst[i * 4 + 2] = rgb[0];
         dst[i * 4 + 3] = (idx == 255) ? 0 : 255; // MDL uses 255 as transparent
     }
 
@@ -254,8 +254,8 @@ mdl_result_t mdl_load_textures(const studiohdr_t   *header,
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0,
                      GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
