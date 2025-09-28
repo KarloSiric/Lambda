@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 15:02:14
+ *  Last Modified: 2025-09-28 16:56:09
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -120,7 +120,7 @@ static bool parse_paletted_block(const unsigned char *text_struct_base,
                 *out_palette  = file_start + pal_bytes_off;
                 *out_pal_size = (int)cnt32;
                 // In parse_paletted_block, when palette is found:
-                printf("Found palette: %d colors at offset %ld\n", *out_pal_size, 
+                printf("Found palette: %d colors at offset %ld\n", *out_pal_size,
                        (long)(*out_palette - file_start));
                 return true;
             }
@@ -143,7 +143,7 @@ static bool parse_paletted_block(const unsigned char *text_struct_base,
                 *out_palette  = file_start + pal_bytes_off;
                 *out_pal_size = (int)cnt16;
                 // In parse_paletted_block, when palette is found:
-                printf("Found palette: %d colors at offset %ld\n", *out_pal_size, 
+                printf("Found palette: %d colors at offset %ld\n", *out_pal_size,
                        (long)(*out_palette - file_start));
                 return true;
             }
@@ -158,7 +158,7 @@ static bool parse_paletted_block(const unsigned char *text_struct_base,
         *out_palette  = file_start + after_pixels;
         *out_pal_size = 256;
         // In parse_paletted_block, when palette is found:
-        printf("Found palette: %d colors at offset %ld\n", *out_pal_size, 
+        printf("Found palette: %d colors at offset %ld\n", *out_pal_size,
                (long)(*out_palette - file_start));
         return true;
     }
@@ -254,18 +254,20 @@ mdl_result_t mdl_load_textures(const studiohdr_t   *header,
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+
+        
         // After glGenTextures and glTexImage2D:
-        printf("Texture %d (%s): Generated GL ID = %u (w=%d h=%d)\n", 
+        printf("Texture %d (%s): Generated GL ID = %u (w=%d h=%d)\n",
                i, T->name, tex, w, h);
 
         // Check for OpenGL errors
         GLenum err = glGetError();
-        if (err != GL_NO_ERROR) {
+        if (err != GL_NO_ERROR)
+        {
             printf("  OpenGL Error: 0x%x\n", err);
         }
 

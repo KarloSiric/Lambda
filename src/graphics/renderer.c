@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 16:18:29
+ *  Last Modified: 2025-09-28 19:15:29
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -59,7 +59,6 @@ static int       g_num_ranges = 0;
 static current_model_data_t g_current;
 
 static GLuint g_white_tex = 0;
-
 
 static vec3 skinned_positions[MAXSTUDIOVERTS];
 static bool have_skinned_positions = false;
@@ -328,8 +327,7 @@ void ProcessModelForRendering(void)
         mstudiobodypart_t *bpRec  = &bodyparts[bp];
         mstudiomodel_t    *models = (mstudiomodel_t *)(global_data + bpRec->modelindex);
 
-        // If you later add bodygroup selection, choose a model index per bodypart.
-        // For now: render *all* models in each bodypart:
+        // Render all models in each bodypart for now
         for (int m = 0; m < bpRec->nummodels; ++m)
         {
             mstudiomodel_t *model = &models[m];
@@ -344,16 +342,19 @@ void ProcessModelForRendering(void)
             TransformVertices(global_header, global_data, model, skinned_positions);
             have_skinned_positions = true;
 
-            // Emit all meshes for this model
+            // All meshes for this model
             mstudiomesh_t *meshes = (mstudiomesh_t *)(global_data + model->meshindex);
 
-            // For skin table
+            // Skin table
             const short *skin_table  = (const short *)(global_data + global_header->skinindex);
             const int    numskinref  = global_header->numskinref;
-            const int    skin_family = 0; // TODO: allow choosing family later
+            const int    skin_family = 0;
 
             for (int mesh = 0; mesh < model->nummesh; ++mesh)
             {
+                const int norm_base = meshes[mesh].normindex;
+                const int v_count   = g_current.vertex_count;
+                const int n_count   = g_current.normal_count;
 
                 // Resolve texture index via skin table
                 int tex_index = meshes[mesh].skinref;
@@ -362,30 +363,27 @@ void ProcessModelForRendering(void)
                     tex_index = skin_table[skin_family * numskinref + tex_index];
                 }
 
-                // Get GL texture + real size for this mesh
+                // GL texture + size
                 GLuint gl_tex = 0;
                 int    texW = 1, texH = 1;
                 if (tex_index >= 0 && tex_index < g_textures.count)
                 {
                     gl_tex = g_textures.textures[tex_index].gl_id;
-                    texW   = (g_textures.textures[tex_index].width > 0) ? g_textures.textures[tex_index].width : 1;
+                    texW   = (g_textures.textures[tex_index].width  > 0) ? g_textures.textures[tex_index].width  : 1;
                     texH   = (g_textures.textures[tex_index].height > 0) ? g_textures.textures[tex_index].height : 1;
                 }
-                // Fallback for debugging
-                if (!gl_tex && g_white_tex) {
+                if (!gl_tex && g_white_tex)
+                {
                     gl_tex = g_white_tex;
-                    texW = 2; // white texture is 2x2
-                    texH = 2;
+                    texW   = 2;
+                    texH   = 2;
                 }
-                // FOR DEBUGGING
-                printf("mesh %d: skinref %d -> tex %d  GL=%u  %dx%d\n",
-                mesh, meshes[mesh].skinref, tex_index,
-                (unsigned)gl_tex, texW, texH);
 
-                // Triangle commands for this mesh
+                printf("mesh %d: skinref %d -> tex %d  GL=%u  %dx%d\n",
+                       mesh, meshes[mesh].skinref, tex_index, (unsigned)gl_tex, texW, texH);
+
                 short *ptricmds = (short *)(global_data + meshes[mesh].triindex);
 
-                // Start of this mesh’s subrange in the big VBO
                 const int start_first = total_render_vertices;
 
                 int s_min =  32767, s_max = -32768;
@@ -397,108 +395,142 @@ void ProcessModelForRendering(void)
                 {
                     if (i < 0)
                     {
-                        // triangle fan
-                        i        = -i;
-                        short   v0 = ptricmds[0], n0 = ptricmds[1];
-                        short u0 = ptricmds[2], t0 = ptricmds[3];
+                        // -------- triangle fan --------
+                        i = -i;
+
+                        // read first 2 vertices
+                        short v0 = ptricmds[0];
+                        short n0 = ptricmds[1];
+                        short s0 = ptricmds[2];
+                        short t0 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        short   v1 = ptricmds[0], n1 = ptricmds[1];
-                        short u1 = ptricmds[2], t1 = ptricmds[3];
+
+                        short v1 = ptricmds[0];
+                        short n1 = ptricmds[1];
+                        short s1 = ptricmds[2];
+                        short t1 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        // Inside both fan/strip loops, right after you read u*, t*:
-                        s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
-                        t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
-                        if (dbg_count++ < 8) {
-                            printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
-                        }
+
+                        // >>> FIX: apply ON-SEAM rule and clear high bit on normal index
+                        if (n0 & 0x8000) { s0 = (short)(s0 + texW / 2); }
+                        n0 &= 0x7FFF;
+                        if (n1 & 0x8000) { s1 = (short)(s1 + texW / 2); }
+                        n1 &= 0x7FFF;
+
+                        // norm indices are relative to this mesh's block
+                        n0 = (short)(n0 + norm_base);
+                        n1 = (short)(n1 + norm_base);
+
                         for (int j = 2; j < i; ++j)
                         {
-                            short   v2 = ptricmds[0], n2 = ptricmds[1];
-                            short u2 = ptricmds[2], t2 = ptricmds[3];
+                            short v2 = ptricmds[0];
+                            short n2 = ptricmds[1];
+                            short s2 = ptricmds[2];
+                            short t2 = ptricmds[3];
                             ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
-                            AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
-                            AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
-                            AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
+                            // >>> FIX: apply ON-SEAM rule and clear high bit
+                            if (n2 & 0x8000) { s2 = (short)(s2 + texW / 2); }
+                            n2 &= 0x7FFF;
 
-                            // Inside both fan/strip loops, right after you read u*, t*:
-                            s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
+                            // update min/max + quick sample print
+                            if (dbg_count++ < 8) printf("  s=%d t=%d  (tex %dx%d)\n", s0, t0, texW, texH);
+                            s_min = (s0 < s_min) ? s0 : s_min; s_max = (s0 > s_max) ? s0 : s_max;
                             t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
-                            if (dbg_count++ < 8) {
-                                printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+
+                            // normals block offset
+                            n2 = (short)(n2 + norm_base);
+
+                            // bounds guards
+                            if (v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count &&
+                                v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count &&
+                                v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count)
+                            {
+                                AddVertexToBuffer(v0, n0, s0, t0, (float)texW, (float)texH);
+                                AddVertexToBuffer(v1, n1, s1, t1, (float)texW, (float)texH);
+                                AddVertexToBuffer(v2, n2, s2, t2, (float)texW, (float)texH);
                             }
 
-                            v1 = v2;
-                            n1 = n2;
-                            u1 = u2;
-                            t1 = t2;
+                            // roll forward
+                            v1 = v2; n1 = n2; s1 = s2; t1 = t2;
                         }
                     }
                     else
                     {
-                        // triangle strip
-                        short   v0 = ptricmds[0], n0 = ptricmds[1];
-                        short u0 = ptricmds[2], t0 = ptricmds[3];
-                        ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
-                        short   v1 = ptricmds[0], n1 = ptricmds[1];
-                        short u1 = ptricmds[2], t1 = ptricmds[3];
+                        // -------- triangle strip --------
+
+                        // read first 2 vertices
+                        short v0 = ptricmds[0];
+                        short n0 = ptricmds[1];
+                        short s0 = ptricmds[2];
+                        short t0 = ptricmds[3];
                         ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
-                        // Inside both fan/strip loops, right after you read u*, t*:
-                        s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
-                        t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
-                        if (dbg_count++ < 8) {
-                            printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
-                        }
+                        short v1 = ptricmds[0];
+                        short n1 = ptricmds[1];
+                        short s1 = ptricmds[2];
+                        short t1 = ptricmds[3];
+                        ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+                        // >>> FIX: seam + clear high bit
+                        if (n0 & 0x8000) { s0 = (short)(s0 + texW / 2); }
+                        n0 &= 0x7FFF;
+                        if (n1 & 0x8000) { s1 = (short)(s1 + texW / 2); }
+                        n1 &= 0x7FFF;
+
+                        n0 = (short)(n0 + norm_base);
+                        n1 = (short)(n1 + norm_base);
 
                         for (int j = 2; j < i; ++j)
                         {
-                            short   v2 = ptricmds[0], n2 = ptricmds[1];
-                            short u2 = ptricmds[2], t2 = ptricmds[3];
+                            short v2 = ptricmds[0];
+                            short n2 = ptricmds[1];
+                            short s2 = ptricmds[2];
+                            short t2 = ptricmds[3];
                             ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
 
+                            // >>> FIX: seam + clear high bit
+                            if (n2 & 0x8000) { s2 = (short)(s2 + texW / 2); }
+                            n2 &= 0x7FFF;
+
+                            if (dbg_count++ < 8) printf("  s=%d t=%d  (tex %dx%d)\n", s0, t0, texW, texH);
+                            s_min = (s0 < s_min) ? s0 : s_min; s_max = (s0 > s_max) ? s0 : s_max;
+                            t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
+
+                            n2 = (short)(n2 + norm_base);
+
+                            // two-triangle parity
                             if ((j - 2) % 2 == 0)
                             {
-                                AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
-                                AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
-                                AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
-
-
-                                // Inside both fan/strip loops, right after you read u*, t*:
-                                s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
-                                t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
-                                if (dbg_count++ < 8) {
-                                    printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+                                if (v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count &&
+                                    v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count &&
+                                    v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count)
+                                {
+                                    AddVertexToBuffer(v0, n0, s0, t0, (float)texW, (float)texH);
+                                    AddVertexToBuffer(v1, n1, s1, t1, (float)texW, (float)texH);
+                                    AddVertexToBuffer(v2, n2, s2, t2, (float)texW, (float)texH);
                                 }
-
                             }
                             else
                             {
-                                AddVertexToBuffer(v1, n1, u1, t1, texW, texH);
-                                AddVertexToBuffer(v0, n0, u0, t0, texW, texH);
-                                AddVertexToBuffer(v2, n2, u2, t2, texW, texH);
-
-                                // Inside both fan/strip loops, right after you read u*, t*:
-                                s_min = (u0 < s_min) ? u0 : s_min; s_max = (u0 > s_max) ? u0 : s_max;
-                                t_min = (t0 < t_min) ? t0 : t_min; t_max = (t0 > t_max) ? t0 : t_max;
-                                if (dbg_count++ < 8) {
-                                    printf("  s=%d t=%d  (tex %dx%d)\n", u0, t0, texW, texH);
+                                if (v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count &&
+                                    v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count &&
+                                    v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count)
+                                {
+                                    AddVertexToBuffer(v1, n1, s1, t1, (float)texW, (float)texH);
+                                    AddVertexToBuffer(v0, n0, s0, t0, (float)texW, (float)texH);
+                                    AddVertexToBuffer(v2, n2, s2, t2, (float)texW, (float)texH);
                                 }
-                                
                             }
-                            v0 = v1;
-                            n0 = n1;
-                            u0 = u1;
-                            t0 = t1;
-                            v1 = v2;
-                            n1 = n2;
-                            u1 = u2;
-                            t1 = t2;
+
+                            // roll forward
+                            v0 = v1; n0 = n1; s0 = s1; t0 = t1;
+                            v1 = v2; n1 = n2; s1 = s2; t1 = t2;
                         }
                     }
                 }
 
-                // Record a draw-call subrange for THIS mesh
+                // One draw range for this mesh
                 if (g_num_ranges < MAX_DRAW_RANGES)
                 {
                     g_ranges[g_num_ranges].tex   = gl_tex;
@@ -507,6 +539,7 @@ void ProcessModelForRendering(void)
                     g_num_ranges++;
                 }
             }
+
             printf("Generated %d vertices (%d triangles)\n",
                    total_render_vertices, total_render_vertices / 3);
 
@@ -515,20 +548,23 @@ void ProcessModelForRendering(void)
     }
 }
 
+
 void AddVertexToBuffer(int vertex_index, int normal_index,
                        short s, short t, float texW, float texH)
 {
-
-
-if (total_render_vertices >= MAX_RENDER_VERTICES) return;
+    if (total_render_vertices >= MAX_RENDER_VERTICES)
+        return;
 
     const int base = total_render_vertices * 8;
 
     /* ----- POSITION (your skinning path) ----- */
     vec3 P;
-    if (have_skinned_positions) {
+    if (have_skinned_positions)
+    {
         glm_vec3_copy(skinned_positions[vertex_index], P);
-    } else {
+    }
+    else
+    {
         glm_vec3_copy(g_current.vertices[vertex_index], P);
     }
 
@@ -539,28 +575,28 @@ if (total_render_vertices >= MAX_RENDER_VERTICES) return;
 
     /* ----- NORMAL (your bone transform) ----- */
     unsigned char *v2bone = (unsigned char *)(global_data + g_current.model->vertinfoindex);
-    int bone = v2bone ? v2bone[vertex_index] : 0;
-    if (bone < 0 || bone >= global_header->numbones) bone = 0;
+    int            bone   = v2bone ? v2bone[vertex_index] : 0;
+    if (bone < 0 || bone >= global_header->numbones)
+        bone = 0;
 
     vec3 Nfile = {
         g_current.normals[normal_index][0],
         g_current.normals[normal_index][1],
-        g_current.normals[normal_index][2]
-    };
+        g_current.normals[normal_index][2]};
     vec3 Nrot;
     TransformNormalByBone(g_bonetransformations[bone], Nfile, Nrot);
 
     /* ----- AXIS REMAP (unchanged) ----- */
-    float x  =  P[0];
-    float y  =  P[1];
-    float z  =  P[2];
-    float nx =  Nrot[0];
-    float ny =  Nrot[1];
-    float nz =  Nrot[2];
+    float x  = P[0];
+    float y  = P[1];
+    float z  = P[2];
+    float nx = Nrot[0];
+    float ny = Nrot[1];
+    float nz = Nrot[2];
 
-    float Py =  z;      // Z -> Y
-    float Pz = -y;      // -Y -> Z
-    float Ny =  nz;
+    float Py = z;  // Z -> Y
+    float Pz = -y; // -Y -> Z
+    float Ny = nz;
     float Nz = -ny;
 
     /* write position */
@@ -576,19 +612,20 @@ if (total_render_vertices >= MAX_RENDER_VERTICES) return;
     /* ----- UVs: USE invW/invH PER TEXTURE (this is the fix) ----- */
     // s,t come from the tri-cmds as 16-bit texel coords for THIS mesh’s texture.
     // Convert to [0,1], sample at texel centers (+0.5), flip V for GL.
-    
 
-    float u = (float)s / (float)texW;  // NOT (s + 0.5) * invW
-    float v = (float)t / (float)texH;
+    /* s,t are 16-bit *texel* coords for THIS texture */
+    float u = ((float)s + 0.5f) / (float)texW;
+    float v = ((float)t + 0.5f) / (float)texH;
+    v = 1.0f - v;
 
-    v = 1.0f - v;  // Still flip V for OpenGL
-
-    // IMPORTANT: don't clamp; seams can legitimately wrap slightly.
+    /* Optional safety clamp */
+    if (u < 0.0f) u = 0.0f; else if (u > 1.0f) u = 1.0f;
+    if (v < 0.0f) v = 0.0f; else if (v > 1.0f) v = 1.0f;
 
     render_vertex_buffer[base + 6] = u;
-    render_vertex_buffer[base + 7] = v;
+    render_vertex_buffer[base + 7] = v; 
 
-    total_render_vertices++;
+   total_render_vertices++;
 
 }
 
@@ -808,9 +845,8 @@ int init_renderer(int width, int height, const char *title)
     glGenTextures(1, &g_white_tex);
     glBindTexture(GL_TEXTURE_2D, g_white_tex);
     unsigned char white[] = {
-        255,255,255,255, 255,255,255,255,
-        255,255,255,255, 255,255,255,255
-    }; 
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255};
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -983,13 +1019,15 @@ void render_model(studiohdr_t *header, unsigned char *data)
     // bind sampler to unit 0 (once)
     // bind sampler (once before loop)
     GLint uTex = glGetUniformLocation(shader_program, "tex");
-    if (uTex != -1) glUniform1i(uTex, 0);
+    if (uTex != -1)
+        glUniform1i(uTex, 0);
 
-    for (int r = 0; r < g_num_ranges; ++r) {
+    for (int r = 0; r < g_num_ranges; ++r)
+    {
         GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex_to_bind);
-        glDrawArrays(GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count);   
+        glDrawArrays(GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count);
     }
 }
 

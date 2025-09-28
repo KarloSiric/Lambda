@@ -4,19 +4,18 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 12:07:25
+ *  Last Modified: 2025-09-28 16:30:04
  *----------------------------------------------------------------------
  *  Description:
- *  
+ *
  *  Main entry point of the application itself
- *      
+ *
  *----------------------------------------------------------------------
- *  License: 
- *  Company: 
+ *  License:
+ *  Company:
  *  Version: 0.1.0
  *======================================================================
- */ 
-
+ */
 
 #include "main.h"
 #include "graphics/renderer.h"
