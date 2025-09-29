@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 15:08:00
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 12:29:20
+ *  Last Modified: 2025-09-29 17:26:13
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -19,7 +19,6 @@
 #include "mdl_messages.h"
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 
 static const char* k_result_names[MDL_RESULT_COUNT] = {
     [MDL_SUCCESS]                      = "SUCCESS",
