@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 16:56:09
+ *  Last Modified: 2025-09-29 16:30:16
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -46,6 +46,7 @@ const studiohdr_t *mdl_pick_texture_header(const studiohdr_t *main_header,
     return NULL;
 }
 
+// --- REPLACE YOUR mdl_pal8_to_rgba WITH THIS ---
 bool mdl_pal8_to_rgba(const unsigned char *indices, int w, int h,
                       const unsigned char *palette_rgb, size_t palette_size,
                       unsigned char *dst)
@@ -56,21 +57,23 @@ bool mdl_pal8_to_rgba(const unsigned char *indices, int w, int h,
         return false;
 
     const int px = w * h;
+
+    // MDL palettes are effectively RGB (R,G,B). Do NOT swap unless you verify otherwise.
     for (int i = 0; i < px; ++i)
     {
-        const unsigned       idx = indices[i];
-        const unsigned       p   = (idx < (unsigned)palette_size) ? idx : 0;
-        const unsigned char *rgb = &palette_rgb[p * 3];
+        const unsigned idx  = indices[i];
+        const unsigned p    = (idx < (unsigned)palette_size) ? idx : 0;
+        const unsigned base = p * 3;
 
-        dst[i * 4 + 0] = rgb[2];
-        dst[i * 4 + 1] = rgb[1];
-        dst[i * 4 + 2] = rgb[0];
-        dst[i * 4 + 3] = (idx == 255) ? 0 : 255; // MDL uses 255 as transparent
+        dst[i * 4 + 0] = palette_rgb[base + 0];  // R
+        dst[i * 4 + 1] = palette_rgb[base + 1];  // G
+        dst[i * 4 + 2] = palette_rgb[base + 2];  // B
+        dst[i * 4 + 3] = (idx == 255) ? 0 : 255; // 255 is transparent in many GoldSrc MDLs
     }
-
     return true;
 }
 
+// --- REPLACE your parse_paletted_block WITH THIS STRICT VERSION ---
 static bool parse_paletted_block(const unsigned char *text_struct_base,
                                  int width, int height, int index_offset,
                                  const unsigned char **out_indices,
@@ -80,16 +83,8 @@ static bool parse_paletted_block(const unsigned char *text_struct_base,
                                  const unsigned char  *file_start,
                                  size_t                file_size)
 {
-    /* Writing guards for checking safely everything
-     * once we load and read the .mdl file
-     * TODO(karlo): Implement even stronger checking bounds and offsets.
-     */
-
-    if (!text_struct_base || !file_start || file_size == 0)
-        return false;
-    if (width <= 0 || height <= 0)
-        return false;
-    if (index_offset < 0)
+    if (!text_struct_base || !file_start || !out_indices || !out_palette ||
+        !out_count || !out_pal_size || width <= 0 || height <= 0 || index_offset < 0)
         return false;
 
     const ptrdiff_t base_off = text_struct_base - file_start;
@@ -98,72 +93,37 @@ static bool parse_paletted_block(const unsigned char *text_struct_base,
 
     const size_t pix_off   = (size_t)base_off + (size_t)index_offset;
     const size_t pixels_sz = (size_t)width * (size_t)height;
+
     if (pix_off > file_size || pixels_sz > file_size - pix_off)
         return false;
 
-    const unsigned char *indices      = file_start + pix_off;
-    const size_t         after_pixels = pix_off + pixels_sz;
+    const size_t after_pixels = pix_off + pixels_sz;
 
-    // Try: 4-byte LE count, then palette (count*3)
-    if (after_pixels + 4 <= file_size)
-    {
-        uint32_t cnt32 = 0;
-        memcpy(&cnt32, file_start + after_pixels, 4);
-        if (cnt32 > 0 && cnt32 <= 256)
-        {
-            const size_t pal_bytes_off = after_pixels + 4;
-            const size_t pal_bytes_len = (size_t)cnt32 * 3u;
-            if (pal_bytes_off <= file_size && pal_bytes_len <= file_size - pal_bytes_off)
-            {
-                *out_indices  = indices;
-                *out_count    = (int)pixels_sz;
-                *out_palette  = file_start + pal_bytes_off;
-                *out_pal_size = (int)cnt32;
-                // In parse_paletted_block, when palette is found:
-                printf("Found palette: %d colors at offset %ld\n", *out_pal_size,
-                       (long)(*out_palette - file_start));
-                return true;
-            }
-        }
-    }
+    // MDL format: uint16 palette size (little endian), then palette (pal_size * 3) bytes.
+    if (after_pixels + 2 > file_size)
+        return false;
 
-    // Try: 2-byte LE count, then palette (count*3)
-    if (after_pixels + 2 <= file_size)
-    {
-        uint16_t cnt16 = 0;
-        memcpy(&cnt16, file_start + after_pixels, 2);
-        if (cnt16 > 0 && cnt16 <= 256)
-        {
-            const size_t pal_bytes_off = after_pixels + 2;
-            const size_t pal_bytes_len = (size_t)cnt16 * 3u;
-            if (pal_bytes_off <= file_size && pal_bytes_len <= file_size - pal_bytes_off)
-            {
-                *out_indices  = indices;
-                *out_count    = (int)pixels_sz;
-                *out_palette  = file_start + pal_bytes_off;
-                *out_pal_size = (int)cnt16;
-                // In parse_paletted_block, when palette is found:
-                printf("Found palette: %d colors at offset %ld\n", *out_pal_size,
-                       (long)(*out_palette - file_start));
-                return true;
-            }
-        }
-    }
+    uint16_t pal_count_le = 0;
+    memcpy(&pal_count_le, file_start + after_pixels, 2);
 
-    // Fallback: assume 256 entries immediately after pixels
-    if (after_pixels + 256u * 3u <= file_size)
-    {
-        *out_indices  = indices;
-        *out_count    = (int)pixels_sz;
-        *out_palette  = file_start + after_pixels;
-        *out_pal_size = 256;
-        // In parse_paletted_block, when palette is found:
-        printf("Found palette: %d colors at offset %ld\n", *out_pal_size,
-               (long)(*out_palette - file_start));
-        return true;
-    }
+    if (pal_count_le == 0 || pal_count_le > 256)
+        return false;
 
-    return false;
+    const size_t pal_bytes_off = after_pixels + 2;
+    const size_t pal_bytes_len = (size_t)pal_count_le * 3u;
+
+    if (pal_bytes_off > file_size || pal_bytes_len > file_size - pal_bytes_off)
+        return false;
+
+    *out_indices  = file_start + pix_off;
+    *out_count    = (int)pixels_sz;
+    *out_palette  = file_start + pal_bytes_off;
+    *out_pal_size = (int)pal_count_le;
+
+    // Debug prints so you can see exactly what is used
+    printf("Found palette: %d colors at offset %ld (strict 16-bit count)\n",
+           *out_pal_size, (long)(*out_palette - file_start));
+    return true;
 }
 
 mdl_result_t mdl_load_textures(const studiohdr_t   *header,
@@ -259,7 +219,6 @@ mdl_result_t mdl_load_textures(const studiohdr_t   *header,
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
-        
         // After glGenTextures and glTexImage2D:
         printf("Texture %d (%s): Generated GL ID = %u (w=%d h=%d)\n",
                i, T->name, tex, w, h);

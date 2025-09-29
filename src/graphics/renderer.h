@@ -7,11 +7,11 @@
 
 extern GLFWwindow *window;
 
-#define ASPECT_RATIO          ((float)(16.0f / 9.0f))
-#define WIDTH                 ((int) 1280)
-#define HEIGHT                ((int) (WIDTH / ASPECT_RATIO))
+#define ASPECT_RATIO ((float)(16.0f / 9.0f))
+#define WIDTH ((int)1400)
+#define HEIGHT ((int)(WIDTH / ASPECT_RATIO))
 
-int init_renderer(int width, int height, const char *title);
+int  init_renderer(int width, int height, const char *title);
 void cleanup_renderer(void);
 
 void render_loop(void);
@@ -25,6 +25,6 @@ void set_model_data(studiohdr_t *header, unsigned char *data, studiohdr_t *tex_h
 void clear_screen(void);
 
 void ProcessModelForRendering(void);
-void AddVertexToBuffer(int vertex_index, int normal_index, short s, short t, float texW, float texH);
+void AddVertexToBuffer(int vIndex, int nIndex, short s, short t, float texW, float texH);
 
 #endif // RENDERER_H

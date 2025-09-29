@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 16:30:04
+ *  Last Modified: 2025-09-28 21:21:49
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -31,6 +31,8 @@
 #else
 #include <GL/gl3.h>
 #endif
+
+
 
 int main(int argc, char const *argv[])
 {

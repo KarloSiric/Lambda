@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-28 19:15:29
+ *  Last Modified: 2025-09-29 16:36:20
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -625,7 +625,7 @@ void AddVertexToBuffer(int vertex_index, int normal_index,
     render_vertex_buffer[base + 6] = u;
     render_vertex_buffer[base + 7] = v; 
 
-   total_render_vertices++;
+    total_render_vertices++;
 
 }
 
@@ -1072,3 +1072,4 @@ void set_model_data(studiohdr_t *header, unsigned char *data,
 
     printf("Model data set, will be processed on next render\n");
 }
+
