@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-27 17:00:04
+ *  Last Modified: 2025-09-29 18:24:03
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -88,7 +88,7 @@ void print_bodypart_info(studiohdr_t *header, unsigned char *file_data) {
 
     printf("\nDetailed Bodypart Information:\n");
     // FIXED: Use correct structure name
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(file_data + header->bodypartindex);
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(file_data + header->bodypartindex);
 
     for (int i = 0; i < header->numbodyparts; i++) {
         printf("   [%d] Bodypart: %s (%d models)\n",
@@ -680,8 +680,8 @@ mstudiomodel_t *get_model_by_bodypart(studiohdr_t *header, unsigned char *main_d
         return NULL;
     }
 
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(main_data + header->bodypartindex);
-    mstudiobodypart_t *bodypart = &bodyparts[bodypart_index]; 
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(main_data + header->bodypartindex);
+    mstudiobodyparts_t *bodypart = &bodyparts[bodypart_index]; 
 
     if (bodypart->nummodels == 0) {
         fprintf(stderr, "Bodypart(Bodyparts[%d]) - '%s' has no models attached to it, models %d\n", bodypart_index, bodypart->name, bodypart->nummodels);

@@ -138,7 +138,7 @@ typedef struct
     int                 nummodels;              // Number of models in this bodypart
     int                 base;                   // Base value
     int                 modelindex;             // Offset to models array
-} mstudiobodypart_t;
+} mstudiobodyparts_t;
 
 // ============================================================================
 // MODELS  

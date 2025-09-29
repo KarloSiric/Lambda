@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-mdl_result_t validate_mdl_magic(int magic) {
+mdl_result_t validate_mdl_magic(unsigned magic) {
     if (magic == IDSTUDIOHEADER) {
         return MDL_SUCCESS;
     } else {
@@ -87,7 +87,7 @@ void print_bodypart_info(studiohdr_t *header, unsigned char *file_data) {
     }
 
     printf("\nDetailed Bodypart Information:\n");
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(file_data + header->bodypartindex);
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(file_data + header->bodypartindex);
 
     for (int i = 0; i < header->numbodyparts; i++) {
         printf("   [%d] Bodypart: %s (%d models)\n",
@@ -197,6 +197,16 @@ mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstu
     }
 
     *bones = (mstudiobone_t *)(data + header->boneindex);
+
+    /*
+     *  Some short summary:
+     *  
+     *  **bones -> ptr1 -> ptr2 -> some memory address right
+     *  *bones -> ptr2 and what is that pointing to right
+     *  **bones -> dereferencing twice you get the values at taht ptr2 location
+     *  bones -> ptr1 and what is it pointing to it is pointing to ptr2 so we get a memory address of another pointer
+     * 
+     */
 
     return MDL_SUCCESS;
 }
