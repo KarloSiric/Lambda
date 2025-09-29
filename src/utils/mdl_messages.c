@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 15:08:00
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-29 17:26:13
+ *  Last Modified: 2025-09-29 17:38:51
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -146,6 +146,7 @@ size_t mdl_format_message(char* out, size_t cap, mdl_result_t r, const mdl_msg_c
                     "INFO [%s]: '%s' is a sequence-group MDL (animations only). "
                     "Open the base model instead: %s",
                     name, path, base);
+
             }
             return (size_t)snprintf(out, cap,
                 "INFO [%s]: '%s' is a sequence-group MDL (animations only). "
