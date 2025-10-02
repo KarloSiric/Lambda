@@ -212,7 +212,6 @@ mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstu
 }
 
 
-
 void print_bone_info(mstudiobone_t *bones, int bone_count) {
 
     if (!bones || bone_count == 0) {
