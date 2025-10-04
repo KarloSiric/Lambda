@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-04 21:51:32
+ *  Last Modified: 2025-10-04 22:33:52
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -370,8 +370,12 @@ void ProcessModelForRendering(void)
                 if (tex_index >= 0 && tex_index < g_textures.count)
                 {
                     gl_tex = g_textures.textures[tex_index].gl_id;
-                    texW   = (g_textures.textures[tex_index].width  > 0) ? g_textures.textures[tex_index].width  : 1;
-                    texH   = (g_textures.textures[tex_index].height > 0) ? g_textures.textures[tex_index].height : 1;
+                    texW = g_textures.textures[tex_index].width;
+                    texH = g_textures.textures[tex_index].height;
+
+                    if (texW <= 0) texW = 1;
+                    if (texH <= 0) texH = 1;
+
                 }
                 if (!gl_tex && g_white_tex)
                 {
@@ -617,7 +621,19 @@ void AddVertexToBuffer(int vertex_index, int normal_index,
     /* s,t are 16-bit *texel* coords for THIS texture */
     float u = ((float)s + 0.5f) / (float)texW;
     float v = ((float)t + 0.5f) / (float)texH;
-    v = 1.0f - v;
+
+    // Debug UV mapping for specific textures
+    if (total_render_vertices < 50) { // Only print first few to avoid spam
+        printf("Vertex %d: tex dims %fx%f, s=%d t=%d -> u=%.3f v=%.3f", 
+               total_render_vertices, texW, texH, s, t, u, v);
+    }
+
+
+    // v = 1.0f - v;
+
+    if (total_render_vertices < 50) {
+        printf(" -> v_flipped=%.3f\n", v);
+    }
 
     /* Optional safety clamp */
     if (u < 0.0f) u = 0.0f; else if (u > 1.0f) u = 1.0f;

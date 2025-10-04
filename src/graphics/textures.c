@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-04 22:10:42
+ *  Last Modified: 2025-10-04 22:29:00
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -133,45 +133,54 @@ static void debug_texture_data(const studiohdr_t *header, const unsigned char *f
 {
     printf("\n=== TEXTURE DEBUG INFO ===\n");
     printf("header->textureindex = 0x%X\n", header->textureindex);
-    printf("header->texturedataindex = 0x%X\n", header->texturedataindex); 
+    printf("header->texturedataindex = 0x%X\n", header->texturedataindex);
     printf("header->numtextures = %d\n", header->numtextures);
-    printf("sizeof(mstudiotexture_t) = %lu\n", sizeof(mstudiotexture_t));
     
     const mstudiotexture_t *textures = (const mstudiotexture_t *)(file_data + header->textureindex);
     
-    // Print first texture info
     if (header->numtextures > 0) {
         printf("\nFirst texture:\n");
         printf("  name: %s\n", textures[0].name);
         printf("  width x height: %d x %d\n", textures[0].width, textures[0].height);
-        printf("  index (offset): 0x%X\n", textures[0].index);
+        printf("  index: 0x%X\n", textures[0].index);
         
-        // Calculate expected data location
-        size_t expected_data_start;
-        if (header->texturedataindex != 0) {
-            expected_data_start = header->texturedataindex;
-        } else {
-            expected_data_start = header->textureindex + (header->numtextures * sizeof(mstudiotexture_t));
-        }
-        printf("\nExpected texture data start: 0x%lX\n", expected_data_start);
+        // The actual texture data location
+        const unsigned char *tex_data = file_data + textures[0].index;
+        int pixel_count = textures[0].width * textures[0].height;
         
-        // Try to read palette size at expected location
-        const unsigned char *test_data = file_data + expected_data_start + textures[0].index;
-        const unsigned char *pal_ptr = test_data + (textures[0].width * textures[0].height);
-        uint16_t test_pal_size;
-        memcpy(&test_pal_size, pal_ptr, 2);
-        printf("Palette size at expected location: %u\n", test_pal_size);
-        
-        // Show some hex dump
-        printf("\nHex dump at palette location:\n");
-        for (int i = 0; i < 32; i++) {
-            printf("%02X ", pal_ptr[i]);
-            if ((i + 1) % 16 == 0) printf("\n");
+        printf("\nFirst 16 bytes of pixel indices:\n");
+        for (int i = 0; i < 16 && i < pixel_count; i++) {
+            printf("%02X ", tex_data[i]);
         }
         printf("\n");
+        
+        // The palette should be right after the pixel data
+        const unsigned char *after_pixels = tex_data + pixel_count;
+        
+        printf("\nBytes immediately after pixel data (should be palette size as uint16):\n");
+        for (int i = 0; i < 16; i++) {
+            printf("%02X ", after_pixels[i]);
+        }
+        printf("\n");
+        
+        // Read palette size
+        uint16_t pal_size;
+        memcpy(&pal_size, after_pixels, 2);
+        printf("\nPalette size (uint16): %u (0x%04X)\n", pal_size, pal_size);
+        
+        // Show beginning of palette data (should be RGB values)
+        if (pal_size > 0 && pal_size <= 256) {
+            printf("\nFirst few palette entries (RGB):\n");
+            const unsigned char *palette = after_pixels + 2;
+            for (int i = 0; i < 5 && i < pal_size; i++) {
+                printf("  [%d]: R=%3d G=%3d B=%3d\n", i,
+                       palette[i*3], palette[i*3+1], palette[i*3+2]);
+            }
+        }
     }
     printf("=========================\n\n");
 }
+
 
 
 // MODIFIED
@@ -179,23 +188,19 @@ mdl_result_t mdl_load_textures(const studiohdr_t   *header,
                                const unsigned char *file_data,
                                mdl_texture_set_t   *out_set)
 {
-
     debug_texture_data(header, file_data);
 
-    if (!out_set)
-    {
+    if (!out_set) {
         return MDL_ERROR_INVALID_PARAMETER;
     }
 
     out_set->textures = NULL;
     out_set->count    = 0;
 
-    if (!header || !file_data)
-    {
+    if (!header || !file_data) {
         return MDL_ERROR_MISSING_TEXTURE_FILE;
     }
-    if (header->numtextures <= 0)
-    {
+    if (header->numtextures <= 0) {
         return MDL_ERROR_NO_TEXTURES_IN_FILE;
     }
 
@@ -203,83 +208,69 @@ mdl_result_t mdl_load_textures(const studiohdr_t   *header,
     const int n_textures = header->numtextures;
 
     mdl_gl_texture_t *items = (mdl_gl_texture_t *)calloc((size_t)n_textures, sizeof(*items));
-    if (!items)
-    {
+    if (!items) {
         return MDL_ERROR_MEMORY_ALLOCATION;
     }
 
-    // CRITICAL FIX: Calculate where texture data actually starts
-    const unsigned char *texture_data_base;
-    
-    if (header->texturedataindex != 0) {
-        // Normal case: data is in a separate section
-        texture_data_base = file_data + header->texturedataindex;
-    } else {
-        // T.mdl case: data starts after all texture headers
-        // Calculate: header->textureindex + (numtextures * sizeof(mstudiotexture_t))
-        size_t texture_headers_size = n_textures * sizeof(mstudiotexture_t);
-        texture_data_base = file_data + header->textureindex + texture_headers_size;
-        printf("T.mdl detected: texture data starts at offset 0x%lX\n", 
-               (unsigned long)(texture_data_base - file_data));
-    }
-
-    for (int i = 0; i < n_textures; i++)
-    {
+    for (int i = 0; i < n_textures; i++) {
         const mstudiotexture_t *T = &textures[i];
         
-        // T->index is an offset from texture_data_base
-        const unsigned char *indices = texture_data_base + T->index;
+        // T->index is an absolute offset from file start
+        const unsigned char *indices = file_data + T->index;
         
         // Calculate pixel data size
         const int pixel_count = T->width * T->height;
         
-        // Palette immediately follows pixel data
+        // CRITICAL FIX: Check if there's a palette size or assume 256 colors
         const unsigned char *palette_ptr = indices + pixel_count;
         
-        // Read palette size (16-bit little endian)
-        uint16_t pal_size = 0;
-        memcpy(&pal_size, palette_ptr, 2);
+        // Try to read as uint16
+        uint16_t test_pal_size = 0;
+        memcpy(&test_pal_size, palette_ptr, 2);
         
-        // Palette RGB data starts after the size
-        const unsigned char *palette = palette_ptr + 2;
+        uint16_t pal_size;
+        const unsigned char *palette;
         
-        // Validate palette size
-        if (pal_size == 0 || pal_size > 256) {
-            printf("ERROR: Texture %d (%s) has invalid palette size %d\n", 
-                   i, T->name, pal_size);
-            items[i].gl_id = 0;
-            items[i].width = 0;
-            items[i].height = 0;
-            items[i].name[0] = '\0';
-            continue;
+        // If the "size" looks invalid (> 256), assume no size field and 256 colors
+        if (test_pal_size > 256) {
+            // No palette size field - assume 256 colors, palette starts immediately
+            pal_size = 256;
+            palette = palette_ptr;
+            printf("Texture %d: No palette size field detected, assuming 256 colors\n", i);
+        } else if (test_pal_size == 0) {
+            // Some textures might have 0 to indicate 256 colors
+            pal_size = 256;
+            palette = palette_ptr + 2;
+            printf("Texture %d: Palette size is 0, assuming 256 colors\n", i);
+        } else {
+            // Normal case with valid palette size
+            pal_size = test_pal_size;
+            palette = palette_ptr + 2;
+            printf("Texture %d: Found palette size %d\n", i, pal_size);
         }
         
-        printf("Loading texture %d: %s (%dx%d), palette has %d colors\n", 
+        printf("Loading texture %d: %s (%dx%d), using %d color palette\n", 
                i, T->name, T->width, T->height, pal_size);
         
         // Allocate RGBA buffer
         unsigned char *rgba = (unsigned char *)malloc((size_t)pixel_count * 4u);
-        if (!rgba)
-        {
+        if (!rgba) {
             free(items);
             return MDL_ERROR_MEMORY_ALLOCATION;
         }
         
         // Convert palette indices to RGBA
-        for (int j = 0; j < pixel_count; j++)
-        {
+        for (int j = 0; j < pixel_count; j++) {
             unsigned char idx = indices[j];
             
             // Handle transparency - index 255 is transparent in Half-Life
-            if (idx == 255)
-            {
+            if (idx == 255) {
                 rgba[j * 4 + 0] = 0;    // R
                 rgba[j * 4 + 1] = 0;    // G
                 rgba[j * 4 + 2] = 0;    // B
                 rgba[j * 4 + 3] = 0;    // A (transparent)
             }
-            else
-            {
+            else {
                 // Clamp index to palette size
                 if (idx >= pal_size)
                     idx = 0;
@@ -311,17 +302,23 @@ mdl_result_t mdl_load_textures(const studiohdr_t   *header,
         
         // Check for OpenGL errors
         GLenum err = glGetError();
-        if (err != GL_NO_ERROR)
-        {
+        if (err != GL_NO_ERROR) {
             printf("  WARNING: OpenGL Error 0x%x after creating texture %s\n", err, T->name);
         }
-        else
-        {
+        else {
             printf("  Successfully created GL texture ID %u for %s\n", tex, T->name);
         }
         
         // Unbind texture
         glBindTexture(GL_TEXTURE_2D, 0);
+
+        printf("  Texture %d (%s): GL ID %u, dimensions %dx%d\n", 
+       i, T->name, tex, T->width, T->height);
+
+        // Special debug for face textures
+        if (strstr(T->name, "Face") != NULL || strstr(T->name, "face") != NULL) {
+            printf("  >>> FACE TEXTURE DETECTED: %s at %dx%d\n", T->name, T->width, T->height);
+        }
         
         // Free temporary RGBA buffer
         free(rgba);
