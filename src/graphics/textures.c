@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-04 22:29:00
+ *  Last Modified: 2025-10-04 22:58:13
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -307,8 +307,7 @@ mdl_result_t mdl_load_textures(const studiohdr_t   *header,
         }
         else {
             printf("  Successfully created GL texture ID %u for %s\n", tex, T->name);
-        }
-        
+        } 
         // Unbind texture
         glBindTexture(GL_TEXTURE_2D, 0);
 
