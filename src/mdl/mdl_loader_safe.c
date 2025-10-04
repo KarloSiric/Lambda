@@ -199,7 +199,7 @@ mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstu
     *bones = (mstudiobone_t *)(data + header->boneindex);
 
     /*
-     *  Some short summary:
+     *  Some short 
      *  
      *  **bones -> ptr1 -> ptr2 -> some memory address right
      *  *bones -> ptr2 and what is that pointing to right

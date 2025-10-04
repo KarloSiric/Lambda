@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-29 16:36:20
+ *  Last Modified: 2025-10-04 21:51:32
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -119,6 +119,7 @@ static void glfw_mouse_callback(GLFWwindow *window, double xpos, double ypos)
     {
         float xoffset = xpos - last_x;
         float yoffset = ypos - last_y;
+        
 
         rotation_y += xoffset * 0.01f;
         rotation_x -= yoffset * 0.01f;
@@ -243,7 +244,7 @@ void dump_complete_mdl_structure(void)
 
     // 2. Bodyparts
     printf("\n2. BODYPARTS (%d total):\n", global_header->numbodyparts);
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(global_data + global_header->bodypartindex);
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(global_data + global_header->bodypartindex);
 
     for (int bp = 0; bp < global_header->numbodyparts && bp < 2; bp++)
     {
@@ -317,14 +318,14 @@ void ProcessModelForRendering(void)
     total_render_vertices = 0;
     g_num_ranges          = 0;
 
-    mstudiobodypart_t *bodyparts = (mstudiobodypart_t *)(global_data + global_header->bodypartindex);
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(global_data + global_header->bodypartindex);
 
     // Build bones (pose) once before drawing
     SetUpBones(global_header, global_data);
 
     for (int bp = 0; bp < global_header->numbodyparts; ++bp)
     {
-        mstudiobodypart_t *bpRec  = &bodyparts[bp];
+        mstudiobodyparts_t *bpRec  = &bodyparts[bp];
         mstudiomodel_t    *models = (mstudiomodel_t *)(global_data + bpRec->modelindex);
 
         // Render all models in each bodypart for now

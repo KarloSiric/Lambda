@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-29 18:22:32
+ *  Last Modified: 2025-10-03 13:54:11
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -16,6 +16,8 @@
  *  Version: 0.1.0
  *======================================================================
  */
+
+
 
 #include "main.h"
 #include "graphics/renderer.h"
