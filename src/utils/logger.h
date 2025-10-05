@@ -39,7 +39,7 @@ typedef enum {
 
 } t_log_level;
 
-typedef struct log_options {
+typedef struct log_options { 
     const char *file_path;        // path to log file (NULL = no file)
     size_t      max_bytes;        // rotate when file exceeds this (0 = no rotate)
     int         max_files;        // number of rotated files to keep
@@ -73,8 +73,7 @@ void logger_hexdump(
     const char *label );
 uint64_t logger_now_ms( void );
 
-#define LOG_AT( LVL, CAT, FMT, ... )              ...
-#define LOG_TRACEF( CAT, FMT, ... )               ...
+// #define LOG_TRACEF( CAT, FMT, ... )               ...
 #define LOG_HEXDUMP( LVL, CAT, DATA, LEN, LABEL ) ...
 #define LOG_CHECK( COND, CAT, FMT, ... )          ...
 #define LOG_TIME_BLOCK( LABEL, CAT )                                                                                   \
@@ -83,4 +82,50 @@ uint64_t logger_now_ms( void );
 
 
 
-}
+// ======= MACROS ======= // 
+
+
+#if LOG_ENABLE
+
+bool logger_should_log(int level, const char *category);
+
+#ifndef LOG_CAT_DEFAULT
+#define LOG_CAT_DEFAULT "app"
+#endif
+
+#if defined(_MSC_VER)
+  #define LOG_VA_COMMA(...) , __VA_ARGS__
+#else
+  #define LOG_VA_COMMA(...) , ##__VA_ARGS__
+#endif
+
+
+#define LOG_AT(LVL, CAT, FMT, ... ) \
+    do { \
+        if (logger_should_log((LVL), (CAT))) \
+            logger_log((LVL), (CAT), __FILE__, __LINE__, __func__, \
+                (FMT), LOG_VA_COMMA(__VA_ARGS__)); \
+    } while (0)
+    
+#define LOG_TRACEF(CAT, FMT, ...) LOG_AT(LOG_TRACE, (CAT), (FMT), __VA_ARGS__)
+#define LOG_DEBUGF(CAT, FMT, ...) LOG_AT(LOG_DEBUG, (CAT), (FMT), __VA_ARGS__)
+#define LOG_INFOF( CAT, FMT, ...) LOG_AT(LOG_INFO,  (CAT), (FMT), __VA_ARGS__)
+#define LOG_WARNF( CAT, FMT, ...) LOG_AT(LOG_WARN,  (CAT), (FMT), __VA_ARGS__)
+#define LOG_ERRORF(CAT, FMT, ...) LOG_AT(LOG_ERROR, (CAT), (FMT), __VA_ARGS__)
+#define LOG_FATALF(CAT, FMT, ...) LOG_AT(LOG_FATAL, (CAT), (FMT), __VA_ARGS__)
+
+#else // LOG_ENABLE == 0
+#define LOG_AT(...) ((void)0)
+#define LOG_TRACEF(...) ((void)0)
+#define LOG_DEBUGF(...) ((void)0)
+#define LOG_INFOF(...)  ((void)0)
+#define LOG_WARNF(...)  ((void)0)
+#define LOG_ERRORF(...) ((void)0)
+#define LOG_FATALF(...) ((void)0)
+#endif // LOG_ENABLE   
+
+
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
