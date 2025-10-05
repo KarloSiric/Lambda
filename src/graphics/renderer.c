@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 19:01:06
+ *  Last Modified: 2025-10-05 19:51:55
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -20,6 +20,7 @@
 #endif
 
 #include "renderer.h"
+
 #include "../graphics/textures.h"
 #include "../mdl/bodypart_manager.h"
 #include "../mdl/bone_system.h"
@@ -35,7 +36,7 @@
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> // For getcwd
+#include <unistd.h>                        // For getcwd
 #define MAX_DRAW_RANGES 4096
 
 typedef struct
@@ -49,9 +50,9 @@ typedef struct
 
 typedef struct
 {
-    GLuint tex;   // GL texture to bind
-    int    first; // first vertex in the big VBO
-    int    count; // how many vertices to draw
+    GLuint tex;                          // GL texture to bind
+    int    first;                        // first vertex in the big VBO
+    int    count;                        // how many vertices to draw
 } DrawRange;
 
 static DrawRange g_ranges[MAX_DRAW_RANGES];
@@ -69,9 +70,9 @@ static bool wireframe_enabled = false;
 
 static unsigned int VBO             = 0;
 static unsigned int VAO             = 0;
-static unsigned int EBO             = 0; // Element Buffer Object for indices
+static unsigned int EBO             = 0;                        // Element Buffer Object for indices
 static unsigned int shader_program  = 0;
-static unsigned int current_texture = 0; // Currently bound texture
+static unsigned int current_texture = 0;                        // Currently bound texture
 
 // For Bone data
 static int            m_numbones = 0;
@@ -94,7 +95,7 @@ static bool   bone_system_initialized = false;
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
 #define MAX_RENDER_VERTICES 32768
-static float render_vertex_buffer[MAX_RENDER_VERTICES * 8]; // 3 pos + 3 normal + 2 uv
+static float render_vertex_buffer[MAX_RENDER_VERTICES * 8];                        // 3 pos + 3 normal + 2 uv
 static int   total_render_vertices = 0;
 static bool  model_processed       = false;
 
@@ -109,7 +110,7 @@ static mdl_texture_set_t g_textures = { NULL, 0 };
 // Camera controls
 float rotation_x = 0.0f;
 float rotation_y = 0.0f;
-float zoom       = 0.15f; // Even more zoomed out for scientist model
+float zoom       = 0.15f;                        // Even more zoomed out for scientist model
 
 static bool   mouse_pressed = false;
 static double last_x = 400, last_y = 225;
@@ -148,8 +149,8 @@ static void glfw_error_callback( int error, const char *description ) {
 }
 
 static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int action, int mods ) {
-    ( void ) scancode; // Suppress unused parameter warning
-    ( void ) mods;     // Suppress unused parameter warning
+    ( void ) scancode;                        // Suppress unused parameter warning
+    ( void ) mods;                            // Suppress unused parameter warning
 
     if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS )
     {
@@ -163,32 +164,32 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
         {
         case GLFW_KEY_W:
             rotation_x -= 0.1f;
-            break; // Tilt up
+            break;                        // Tilt up
         case GLFW_KEY_S:
             rotation_x += 0.1f;
-            break; // Tilt down
+            break;                        // Tilt down
         case GLFW_KEY_A:
             rotation_y -= 0.1f;
-            break; // Rotate left
+            break;                        // Rotate left
         case GLFW_KEY_D:
             rotation_y += 0.1f;
-            break; // Rotate right
+            break;                        // Rotate right
         case GLFW_KEY_Q:
             zoom *= 1.1f;
             if ( zoom > 2.0f )
                 zoom = 2.0f;
-            break; // Zoom in with limit
+            break;                        // Zoom in with limit
         case GLFW_KEY_E:
             zoom *= 0.9f;
             if ( zoom < 0.1f )
                 zoom = 0.1f;
-            break;       // Zoom out with limit
-        case GLFW_KEY_R: // Reset view
+            break;                              // Zoom out with limit
+        case GLFW_KEY_R:                        // Reset view
             rotation_x = 0.0f;
             rotation_y = 0.0f;
-            zoom       = 0.15f; // Reset to default zoom
+            zoom       = 0.15f;                        // Reset to default zoom
             break;
-        case GLFW_KEY_F: // Toggle wireframe
+        case GLFW_KEY_F:                        // Toggle wireframe
             wireframe_enabled = !wireframe_enabled;
             if ( wireframe_enabled )
             {
@@ -201,7 +202,7 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
                 printf( "Switched to solid mode\n" );
             }
             break;
-        case GLFW_KEY_P: // Toggle points
+        case GLFW_KEY_P:                        // Toggle points
             glPolygonMode( GL_FRONT_AND_BACK, GL_POINT );
             printf( "Switched to points mode\n" );
             break;
@@ -210,9 +211,13 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
 }
 
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f, // Bottom left
-    0.5f, -0.5f, 0.0f,  // Bottom right
-    0.0f, 0.5f, 0.0f    // Top center
+    -0.5f, -0.5f, 0.0f,                        // Bottom left
+    0.5f,
+    -0.5f,
+    0.0f,                        // Bottom right
+    0.0f,
+    0.5f,
+    0.0f                        // Top center
 };
 
 // DIAGNOSTIC FUNCTION TO UNDERSTAND THE MODEL DATA
@@ -228,13 +233,8 @@ void dump_complete_mdl_structure( void ) {
     printf( "\n1. HEADER INFO:\n" );
     printf( "   Model name: %s\n", global_header->name );
     printf( "   File size: %d bytes\n", global_header->length );
-    printf( "   Bounding box: (%.2f,%.2f,%.2f) to (%.2f,%.2f,%.2f)\n",
-            global_header->bbmin[0], global_header->bbmin[1], global_header->bbmin[2],
-            global_header->bbmax[0], global_header->bbmax[1], global_header->bbmax[2] );
-    printf( "   BBox dimensions: %.2f x %.2f x %.2f\n",
-            global_header->bbmax[0] - global_header->bbmin[0],
-            global_header->bbmax[1] - global_header->bbmin[1],
-            global_header->bbmax[2] - global_header->bbmin[2] );
+    printf( "   Bounding box: (%.2f,%.2f,%.2f) to (%.2f,%.2f,%.2f)\n", global_header->bbmin[0], global_header->bbmin[1], global_header->bbmin[2], global_header->bbmax[0], global_header->bbmax[1], global_header->bbmax[2] );
+    printf( "   BBox dimensions: %.2f x %.2f x %.2f\n", global_header->bbmax[0] - global_header->bbmin[0], global_header->bbmax[1] - global_header->bbmin[1], global_header->bbmax[2] - global_header->bbmin[2] );
 
     // 2. Bodyparts
     printf( "\n2. BODYPARTS (%d total):\n", global_header->numbodyparts );
@@ -283,8 +283,7 @@ void dump_complete_mdl_structure( void ) {
         printf( "         First 3 vertices (RAW from file):\n" );
         for ( int v = 0; v < 3 && v < model->numverts; v++ )
         {
-            printf( "            V%d: (%.6f, %.6f, %.6f)\n", v,
-                    verts[v][0], verts[v][1], verts[v][2] );
+            printf( "            V%d: (%.6f, %.6f, %.6f)\n", v, verts[v][0], verts[v][1], verts[v][2] );
         }
 
         // Check hex data
@@ -328,15 +327,14 @@ void ProcessModelForRendering( void ) {
         // Safety check
         if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels )
         {
-            selected_model_index = 0; // Fallback to first model
+            selected_model_index = 0;                        // Fallback to first model
         }
 
         // Get ONLY the selected model (not all of them!)
         mstudiomodel_t *model = &models[selected_model_index];
 
         // Debug output
-        printf( "Bodypart %d '%s': Using model %d/%d '%s'\n",
-                bp, bpRec->name, selected_model_index, bpRec->nummodels, model->name );
+        printf( "Bodypart %d '%s': Using model %d/%d '%s'\n", bp, bpRec->name, selected_model_index, bpRec->nummodels, model->name );
 
         g_current.model        = model;
         g_current.vertices     = ( vec3_t * ) ( global_data + model->vertindex );
@@ -390,8 +388,7 @@ void ProcessModelForRendering( void ) {
                 texH   = 2;
             }
 
-            printf( "  mesh %d: skinref %d -> tex %d  GL=%u  %dx%d\n",
-                    mesh, meshes[mesh].skinref, tex_index, ( unsigned ) gl_tex, texW, texH );
+            printf( "  mesh %d: skinref %d -> tex %d  GL=%u  %dx%d\n", mesh, meshes[mesh].skinref, tex_index, ( unsigned ) gl_tex, texW, texH );
 
             short *ptricmds = ( short * ) ( global_data + meshes[mesh].triindex );
 
@@ -465,9 +462,7 @@ void ProcessModelForRendering( void ) {
                         n2 = ( short ) ( n2 + norm_base );
 
                         // bounds guards
-                        if ( v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count &&
-                             v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count &&
-                             v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count )
+                        if ( v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count && v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count && v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count )
                         {
                             AddVertexToBuffer( v0, n0, s0, t0, ( float ) texW, ( float ) texH );
                             AddVertexToBuffer( v1, n1, s1, t1, ( float ) texW, ( float ) texH );
@@ -540,9 +535,7 @@ void ProcessModelForRendering( void ) {
                         // two-triangle parity
                         if ( ( j - 2 ) % 2 == 0 )
                         {
-                            if ( v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count &&
-                                 v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count &&
-                                 v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count )
+                            if ( v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count && v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count && v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count )
                             {
                                 AddVertexToBuffer( v0, n0, s0, t0, ( float ) texW, ( float ) texH );
                                 AddVertexToBuffer( v1, n1, s1, t1, ( float ) texW, ( float ) texH );
@@ -551,9 +544,7 @@ void ProcessModelForRendering( void ) {
                         }
                         else
                         {
-                            if ( v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count &&
-                                 v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count &&
-                                 v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count )
+                            if ( v0 >= 0 && v0 < v_count && n0 >= 0 && n0 < n_count && v1 >= 0 && v1 < v_count && n1 >= 0 && n1 < n_count && v2 >= 0 && v2 < v_count && n2 >= 0 && n2 < n_count )
                             {
                                 AddVertexToBuffer( v1, n1, s1, t1, ( float ) texW, ( float ) texH );
                                 AddVertexToBuffer( v0, n0, s0, t0, ( float ) texW, ( float ) texH );
@@ -585,14 +576,12 @@ void ProcessModelForRendering( void ) {
         }
     }
 
-    printf( "Generated %d vertices (%d triangles) for bodygroup %d\n",
-            total_render_vertices, total_render_vertices / 3, bodypart_get_bodygroup( ) );
+    printf( "Generated %d vertices (%d triangles) for bodygroup %d\n", total_render_vertices, total_render_vertices / 3, bodypart_get_bodygroup( ) );
 
     model_processed = true;
 }
 
-void AddVertexToBuffer( int vertex_index, int normal_index,
-                        short s, short t, float texW, float texH ) {
+void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, float texW, float texH ) {
     if ( total_render_vertices >= MAX_RENDER_VERTICES )
         return;
 
@@ -635,8 +624,8 @@ void AddVertexToBuffer( int vertex_index, int normal_index,
     float ny = Nrot[1];
     float nz = Nrot[2];
 
-    float Py = z;  // Z -> Y
-    float Pz = -y; // -Y -> Z
+    float Py = z;                         // Z -> Y
+    float Pz = -y;                        // -Y -> Z
     float Ny = nz;
     float Nz = -ny;
 
@@ -660,9 +649,8 @@ void AddVertexToBuffer( int vertex_index, int normal_index,
 
     // Debug UV mapping for specific textures
     if ( total_render_vertices < 50 )
-    { // Only print first few to avoid spam
-        printf( "Vertex %d: tex dims %fx%f, s=%d t=%d -> u=%.3f v=%.3f",
-                total_render_vertices, texW, texH, s, t, u, v );
+    {                        // Only print first few to avoid spam
+        printf( "Vertex %d: tex dims %fx%f, s=%d t=%d -> u=%.3f v=%.3f", total_render_vertices, texW, texH, s, t, u, v );
     }
 
     // v = 1.0f - v;
@@ -722,7 +710,7 @@ static char *read_shader_source( const char *filepath ) {
     }
 
     fread( buffer, 1, length, file );
-    buffer[length] = '\0'; // Null terminate
+    buffer[length] = '\0';                        // Null terminate
     fclose( file );
 
     return buffer;
@@ -754,7 +742,7 @@ static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader 
     glLinkProgram( program );
 
     GLint success;
-    glGetProgramiv( program, GL_LINK_STATUS, &success ); // Use glGetProgramiv for program
+    glGetProgramiv( program, GL_LINK_STATUS, &success );                        // Use glGetProgramiv for program
     if ( !success )
     {
         char infoLog[512];
@@ -858,7 +846,7 @@ int init_renderer( int width, int height, const char *title ) {
 #endif
 
     GLFWmonitor *primary = glfwGetPrimaryMonitor( );
-    ( void ) primary; // We get this for future use but don't use it yet
+    ( void ) primary;                        // We get this for future use but don't use it yet
     window = glfwCreateWindow( width, height, title, NULL, NULL );
 
     if ( !window )
@@ -880,11 +868,11 @@ int init_renderer( int width, int height, const char *title ) {
     glEnable( GL_DEPTH_TEST );
     glViewport( 0, 0, width, height );
     // DISABLE CULLING TO SEE IF TRIANGLES ARE BACKWARDS
-    glDisable( GL_CULL_FACE ); // Changed from glEnable
+    glDisable( GL_CULL_FACE );                        // Changed from glEnable
 
     // Enable point size for vertex visualization
     glEnable( GL_PROGRAM_POINT_SIZE );
-    glPointSize( 5.0f ); // Make points bigger
+    glPointSize( 5.0f );                        // Make points bigger
 
     setup_triangle( );
 
@@ -898,8 +886,7 @@ int init_renderer( int width, int height, const char *title ) {
     glGenTextures( 1, &g_white_tex );
     glBindTexture( GL_TEXTURE_2D, g_white_tex );
     unsigned char white[] = {
-        255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255 };
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
 
     glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -974,7 +961,7 @@ void render_loop( void ) {
 }
 
 void set_wireframe_mode( bool enabled ) {
-    wireframe_enabled = enabled; // Now it's used
+    wireframe_enabled = enabled;                        // Now it's used
 
     if ( wireframe_enabled )
     {
@@ -1015,7 +1002,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
     /* viewer rotations (Y then X) */
     glm_rotate( M, rotation_y, ( vec3 ) { 0.0f, 1.0f, 0.0f } );
     glm_rotate( M, rotation_x, ( vec3 ) { 1.0f, 0.0f, 0.0f } );
-
+    
     /* simple camera */
     float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
     vec3  camPos  = { 0.0f, 0.0f, camDist };
@@ -1049,10 +1036,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
     // Upload vertex data (positions, normals, uvs)
     glBindVertexArray( VAO );
     glBindBuffer( GL_ARRAY_BUFFER, VBO );
-    glBufferData( GL_ARRAY_BUFFER,
-                  ( GLsizeiptr ) ( total_render_vertices * 8 * sizeof( float ) ),
-                  render_vertex_buffer,
-                  GL_STATIC_DRAW );
+    glBufferData( GL_ARRAY_BUFFER, ( GLsizeiptr ) ( total_render_vertices * 8 * sizeof( float ) ), render_vertex_buffer, GL_STATIC_DRAW );
 
     // vertex attribs: pos(0), normal(1), uv(2)
     glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), ( void * ) ( 0 ) );
@@ -1077,12 +1061,11 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
     }
 }
 
-void set_model_data( studiohdr_t *header, unsigned char *data,
-                     studiohdr_t *tex_header, unsigned char *tex_data ) {
+void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data ) {
     global_header     = header;
     global_data       = data;
-    global_tex_header = tex_header; // may be NULL
-    global_tex_data   = tex_data;   // may be NULL
+    global_tex_header = tex_header;                        // may be NULL
+    global_tex_data   = tex_data;                          // may be NULL
 
     model_processed         = false;
     bone_system_initialized = false;
@@ -1098,9 +1081,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data,
     const studiohdr_t *texHdr = mdl_pick_texture_header( header, tex_header );
     if ( texHdr )
     {
-        mdl_result_t texRes = mdl_load_textures( texHdr,
-                                                 ( texHdr == header ) ? data : tex_data,
-                                                 &g_textures );
+        mdl_result_t texRes = mdl_load_textures( texHdr, ( texHdr == header ) ? data : tex_data, &g_textures );
         if ( texRes == MDL_SUCCESS )
         {
             printf( "Loaded %d textures\n", g_textures.count );
