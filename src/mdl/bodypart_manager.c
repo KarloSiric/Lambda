@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-04 23:09:25
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 19:01:03
+ *  Last Modified: 2025-10-05 20:20:32
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -16,6 +16,7 @@
  */
 
 #include "bodypart_manager.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +31,7 @@ static char debug_string[1024];
 
 void bodypart_init( void ) {
     memset( &g_bodypart_state, 0, sizeof( g_bodypart_state ) );
-    g_bodypart_state.debug_mode = true; // Enable debug by default for testing
+    g_bodypart_state.debug_mode = true;    // Enable debug by default for testing
     g_header                    = NULL;
     g_data                      = NULL;
 }
@@ -57,8 +58,12 @@ void bodypart_set_model( studiohdr_t *header, unsigned char *data ) {
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( data + header->bodypartindex );
     for ( int i = 0; i < header->numbodyparts; i++ )
     {
-        printf( "  Bodypart %d: '%s' (%d models, base=%d)\n",
-                i, bodyparts[i].name, bodyparts[i].nummodels, bodyparts[i].base );
+        printf(
+            "  Bodypart %d: '%s' (%d models, base=%d)\n",
+            i,
+            bodyparts[i].name,
+            bodyparts[i].nummodels,
+            bodyparts[i].base );
 
         // List all model variations
         mstudiomodel_t *models = ( mstudiomodel_t * ) ( data + bodyparts[i].modelindex );
@@ -127,20 +132,20 @@ void bodypart_next_submodel( void ) {
     mstudiobodyparts_t *bp        = &bodyparts[g_bodypart_state.current_bodypart];
 
     if ( bp->nummodels <= 1 )
-        return; // No variations to cycle through
+        return;    // No variations to cycle through
 
     // Get current model index for this bodypart
     int current = bodypart_get_model_index( g_bodypart_state.current_bodypart );
     int next    = ( current + 1 ) % bp->nummodels;
 
     // Calculate new bodygroup value
-    g_bodypart_state.bodygroup                                           = ( g_bodypart_state.bodygroup - ( current * bp->base ) ) + ( next * bp->base );
+    g_bodypart_state.bodygroup = ( g_bodypart_state.bodygroup - ( current * bp->base ) ) + ( next * bp->base );
     g_bodypart_state.submodel_indices[g_bodypart_state.current_bodypart] = next;
 
     // Print what we switched to
     mstudiomodel_t *models = ( mstudiomodel_t * ) ( g_data + bp->modelindex );
-    printf( "Bodypart %d '%s' -> Model %d '%s'\n",
-            g_bodypart_state.current_bodypart, bp->name, next, models[next].name );
+    printf(
+        "Bodypart %d '%s' -> Model %d '%s'\n", g_bodypart_state.current_bodypart, bp->name, next, models[next].name );
 }
 
 void bodypart_prev_submodel( void ) {
@@ -158,12 +163,12 @@ void bodypart_prev_submodel( void ) {
     int current = bodypart_get_model_index( g_bodypart_state.current_bodypart );
     int prev    = ( current - 1 + bp->nummodels ) % bp->nummodels;
 
-    g_bodypart_state.bodygroup                                           = ( g_bodypart_state.bodygroup - ( current * bp->base ) ) + ( prev * bp->base );
+    g_bodypart_state.bodygroup = ( g_bodypart_state.bodygroup - ( current * bp->base ) ) + ( prev * bp->base );
     g_bodypart_state.submodel_indices[g_bodypart_state.current_bodypart] = prev;
 
     mstudiomodel_t *models = ( mstudiomodel_t * ) ( g_data + bp->modelindex );
-    printf( "Bodypart %d '%s' -> Model %d '%s'\n",
-            g_bodypart_state.current_bodypart, bp->name, prev, models[prev].name );
+    printf(
+        "Bodypart %d '%s' -> Model %d '%s'\n", g_bodypart_state.current_bodypart, bp->name, prev, models[prev].name );
 }
 
 void bodypart_select_next( void ) {
@@ -173,21 +178,24 @@ void bodypart_select_next( void ) {
     g_bodypart_state.current_bodypart = ( g_bodypart_state.current_bodypart + 1 ) % g_header->numbodyparts;
 
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( g_data + g_header->bodypartindex );
-    printf( "Selected bodypart %d: '%s'\n",
-            g_bodypart_state.current_bodypart,
-            bodyparts[g_bodypart_state.current_bodypart].name );
+    printf(
+        "Selected bodypart %d: '%s'\n",
+        g_bodypart_state.current_bodypart,
+        bodyparts[g_bodypart_state.current_bodypart].name );
 }
 
 void bodypart_select_prev( void ) {
     if ( !g_header || !g_data )
         return;
 
-    g_bodypart_state.current_bodypart = ( g_bodypart_state.current_bodypart - 1 + g_header->numbodyparts ) % g_header->numbodyparts;
+    g_bodypart_state.current_bodypart
+        = ( g_bodypart_state.current_bodypart - 1 + g_header->numbodyparts ) % g_header->numbodyparts;
 
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( g_data + g_header->bodypartindex );
-    printf( "Selected bodypart %d: '%s'\n",
-            g_bodypart_state.current_bodypart,
-            bodyparts[g_bodypart_state.current_bodypart].name );
+    printf(
+        "Selected bodypart %d: '%s'\n",
+        g_bodypart_state.current_bodypart,
+        bodyparts[g_bodypart_state.current_bodypart].name );
 }
 
 void bodypart_reset_all( void ) {
@@ -217,10 +225,14 @@ void bodypart_print_info( void ) {
         mstudiomodel_t *models    = ( mstudiomodel_t * ) ( g_data + bodyparts[i].modelindex );
 
         const char *marker = ( i == g_bodypart_state.current_bodypart ) ? " <--" : "";
-        printf( "  [%d] %s: Model %d/%d - '%s'%s\n",
-                i, bodyparts[i].name,
-                model_idx + 1, bodyparts[i].nummodels,
-                models[model_idx].name, marker );
+        printf(
+            "  [%d] %s: Model %d/%d - '%s'%s\n",
+            i,
+            bodyparts[i].name,
+            model_idx + 1,
+            bodyparts[i].nummodels,
+            models[model_idx].name,
+            marker );
     }
     printf( "======================================\n\n" );
 }
@@ -234,16 +246,19 @@ const char *bodypart_get_debug_string( void ) {
 
     mstudiobodyparts_t *bodyparts     = ( mstudiobodyparts_t * ) ( g_data + g_header->bodypartindex );
     int                 current_model = bodypart_get_model_index( g_bodypart_state.current_bodypart );
-    mstudiomodel_t     *models        = ( mstudiomodel_t * ) ( g_data + bodyparts[g_bodypart_state.current_bodypart].modelindex );
+    mstudiomodel_t *models = ( mstudiomodel_t * ) ( g_data + bodyparts[g_bodypart_state.current_bodypart].modelindex );
 
-    sprintf( debug_string,
-             "Bodygroup: %d | Part %d/%d: %s | Model %d/%d: %s\n"
-             "Keys: [/] = Select Part, -/+ = Change Model, 0 = Reset",
-             g_bodypart_state.bodygroup,
-             g_bodypart_state.current_bodypart + 1, g_header->numbodyparts,
-             bodyparts[g_bodypart_state.current_bodypart].name,
-             current_model + 1, bodyparts[g_bodypart_state.current_bodypart].nummodels,
-             models[current_model].name );
+    sprintf(
+        debug_string,
+        "Bodygroup: %d | Part %d/%d: %s | Model %d/%d: %s\n"
+        "Keys: [/] = Select Part, -/+ = Change Model, 0 = Reset",
+        g_bodypart_state.bodygroup,
+        g_bodypart_state.current_bodypart + 1,
+        g_header->numbodyparts,
+        bodyparts[g_bodypart_state.current_bodypart].name,
+        current_model + 1,
+        bodyparts[g_bodypart_state.current_bodypart].nummodels,
+        models[current_model].name );
 
     return debug_string;
 }

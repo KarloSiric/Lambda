@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 19:04:36
+ *  Last Modified: 2025-10-05 20:16:44
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -77,7 +77,7 @@ mdl_result_t parse_mdl_header( const unsigned char *file_data, studiohdr_t **hea
     mdl_result_t magic = validate_mdl_magic( ( *header )->id );
     if ( magic != MDL_SUCCESS )
     {
-        return magic; // could be MDL_INFO_SEQUENCE_GROUP_FILE or INVALID_MAGIC
+        return magic;    // could be MDL_INFO_SEQUENCE_GROUP_FILE or INVALID_MAGIC
     }
 
     mdl_result_t version = validate_mdl_version( ( *header )->version );
@@ -100,10 +100,7 @@ void print_bodypart_info( studiohdr_t *header, unsigned char *file_data ) {
 
     for ( int i = 0; i < header->numbodyparts; i++ )
     {
-        printf( "   [%d] Bodypart: %s (%d models)\n",
-                i,
-                bodyparts[i].name,
-                bodyparts[i].nummodels );
+        printf( "   [%d] Bodypart: %s (%d models)\n", i, bodyparts[i].name, bodyparts[i].nummodels );
 
         mstudiomodel_t *models = ( mstudiomodel_t * ) ( file_data + bodyparts[i].modelindex );
 
@@ -138,7 +135,12 @@ char *generate_texture_filename( const char *model_filename ) {
     return texture_filename;
 }
 
-mdl_result_t load_model_with_textures( const char *model_path, studiohdr_t **main_header, studiohdr_t **texture_header, unsigned char **main_data, unsigned char **texture_data ) {
+mdl_result_t load_model_with_textures(
+    const char     *model_path,
+    studiohdr_t   **main_header,
+    studiohdr_t   **texture_header,
+    unsigned char **main_data,
+    unsigned char **texture_data ) {
     size_t       main_size;
     mdl_result_t r = read_mdl_file( model_path, main_data, &main_size );
     if ( r != MDL_SUCCESS )
@@ -158,7 +160,8 @@ mdl_result_t load_model_with_textures( const char *model_path, studiohdr_t **mai
         }
         else if ( r == MDL_ERROR_INVALID_VERSION )
         {
-            mdl_print_message( r, &( mdl_msg_ctx_t ) { .path = model_path, .version = ( int ) ( *main_header )->version } );
+            mdl_print_message(
+                r, &( mdl_msg_ctx_t ) { .path = model_path, .version = ( int ) ( *main_header )->version } );
         }
         else
         {
@@ -278,22 +281,10 @@ void print_bone_info( mstudiobone_t *bones, int bone_count ) {
             printf( "     Parent: [%d] %s\n", bones[i].parent, bones[bones[i].parent].name );
         }
 
-        printf( "     Position: (%.2f, %.2f, %.2f)\n",
-                bones[i].value[0],
-                bones[i].value[1],
-                bones[i].value[2] );
-        printf( "      Rotation: (%.2f, %.2f, %.2f)\n",
-                bones[i].value[3],
-                bones[i].value[4],
-                bones[i].value[5] );
-        printf( "     Scale: (%.2f, %.2f, %.2f)\n",
-                bones[i].scale[0],
-                bones[i].scale[1],
-                bones[i].scale[2] );
-        printf( "      Rot Scale: (%.2f, %.2f, %.2f)\n",
-                bones[i].scale[3],
-                bones[i].scale[4],
-                bones[i].scale[5] );
+        printf( "     Position: (%.2f, %.2f, %.2f)\n", bones[i].value[0], bones[i].value[1], bones[i].value[2] );
+        printf( "      Rotation: (%.2f, %.2f, %.2f)\n", bones[i].value[3], bones[i].value[4], bones[i].value[5] );
+        printf( "     Scale: (%.2f, %.2f, %.2f)\n", bones[i].scale[0], bones[i].scale[1], bones[i].scale[2] );
+        printf( "      Rot Scale: (%.2f, %.2f, %.2f)\n", bones[i].scale[3], bones[i].scale[4], bones[i].scale[5] );
         printf( "\n" );
     }
 }
@@ -326,12 +317,8 @@ void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count ) {
     for ( int i = 0; i < sequence_count; i++ )
     {
         printf( " [%d] %s\n", i, sequences[i].label );
-        printf( "    Frames: %d @ %.1f fps\n",
-                sequences[i].numframes,
-                sequences[i].fps );
-        printf( "    Activity: %d (weight: %d)\n",
-                sequences[i].activity,
-                sequences[i].actweight );
+        printf( "    Frames: %d @ %.1f fps\n", sequences[i].numframes, sequences[i].fps );
+        printf( "    Activity: %d (weight: %d)\n", sequences[i].activity, sequences[i].actweight );
         printf( "    Events: %d\n", sequences[i].numevents );
         printf( "    Flags: 0x%x", sequences[i].flags );
 
@@ -341,16 +328,15 @@ void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count ) {
             printf( " [ACTIVITY]" );
         printf( "\n" );
 
-        printf( "    Motion: type=%d, bone=%d\n",
-                sequences[i].motiontype,
-                sequences[i].motionbone );
-        printf( "    Bounding box: (%.1f, %.1f, %.1f) to (%.1f, %.1f, %.1f)\n",
-                sequences[i].bbmin[0],
-                sequences[i].bbmin[1],
-                sequences[i].bbmin[2],
-                sequences[i].bbmax[0],
-                sequences[i].bbmax[1],
-                sequences[i].bbmax[2] );
+        printf( "    Motion: type=%d, bone=%d\n", sequences[i].motiontype, sequences[i].motionbone );
+        printf(
+            "    Bounding box: (%.1f, %.1f, %.1f) to (%.1f, %.1f, %.1f)\n",
+            sequences[i].bbmin[0],
+            sequences[i].bbmin[1],
+            sequences[i].bbmin[2],
+            sequences[i].bbmax[0],
+            sequences[i].bbmax[1],
+            sequences[i].bbmax[2] );
         printf( "    Blends: %d\n", sequences[i].numblends );
         printf( "\n" );
     }
@@ -464,11 +450,7 @@ void print_simple_triangle_info( mstudiomodel_t *model, int bodypart_index, int 
     }
 
     printf( "    Simple Triangle Index Test:\n" );
-    printf( "      Model[%d][%d]: %s has %d vertices\n",
-            bodypart_index,
-            model_index,
-            model->name,
-            model->numverts );
+    printf( "      Model[%d][%d]: %s has %d vertices\n", bodypart_index, model_index, model->name, model->numverts );
 
     if ( model->numverts == 0 )
     {
@@ -511,7 +493,13 @@ void print_simple_triangle_info( mstudiomodel_t *model, int bodypart_index, int 
 
 // TODO(Karlo): Reimplementing extract texture rgb
 
-mdl_result_t extract_texture_rgb( studiohdr_t *texture_header, unsigned char *texture_data, int texture_index, unsigned char **rgb_output, int *width, int *height ) {
+mdl_result_t extract_texture_rgb(
+    studiohdr_t    *texture_header,
+    unsigned char  *texture_data,
+    int             texture_index,
+    unsigned char **rgb_output,
+    int            *width,
+    int            *height ) {
     if ( !texture_header || !texture_data || !rgb_output || !width || !height )
     {
         return MDL_ERROR_INVALID_PARAMETER;
@@ -562,7 +550,14 @@ mdl_result_t extract_texture_rgb( studiohdr_t *texture_header, unsigned char *te
     return MDL_SUCCESS;
 }
 
-mdl_result_t extract_triangles_with_uvs( mstudiomesh_t *mesh, unsigned char *main_data, vec3_t *model_vertices, int model_vertex_count, float **out_vertices, float **out_texcoords, int *out_vertex_count ) {
+mdl_result_t extract_triangles_with_uvs(
+    mstudiomesh_t *mesh,
+    unsigned char *main_data,
+    vec3_t        *model_vertices,
+    int            model_vertex_count,
+    float        **out_vertices,
+    float        **out_texcoords,
+    int           *out_vertex_count ) {
     if ( !mesh || !main_data || !model_vertices || !out_vertices || !out_texcoords || !out_vertex_count )
     {
         fprintf( stderr, "ERROR - Invalid parameters error for function 'extract_traingles_with_uvs'" );
@@ -612,10 +607,8 @@ mdl_result_t extract_triangles_with_uvs( mstudiomesh_t *mesh, unsigned char *mai
             {
                 if ( vertex_count + 3 <= max_vertices )
                 {
-                    int indices[3] = {
-                            vertices_data[0].vertindex,
-                            vertices_data[i - 1].vertindex,
-                            vertices_data[i].vertindex };
+                    int indices[3]
+                        = { vertices_data[0].vertindex, vertices_data[i - 1].vertindex, vertices_data[i].vertindex };
 
                     /* VALIDATION OF INDICES */
 
@@ -633,10 +626,10 @@ mdl_result_t extract_triangles_with_uvs( mstudiomesh_t *mesh, unsigned char *mai
                     for ( int j = 0; j < 3; j++ )
                     {
                         float scale_factor                  = 0.01f;
-                        int   temp_vertindex                = indices[j];                                       // Half life system uses y->z
-                        temp_vertices[vertex_count * 3 + 0] = model_vertices[temp_vertindex][0] * scale_factor; // x
-                        temp_vertices[vertex_count * 3 + 1] = model_vertices[temp_vertindex][1] * scale_factor; // z
-                        temp_vertices[vertex_count * 3 + 2] = model_vertices[temp_vertindex][2] * scale_factor; // y
+                        int   temp_vertindex                = indices[j];    // Half life system uses y->z
+                        temp_vertices[vertex_count * 3 + 0] = model_vertices[temp_vertindex][0] * scale_factor;    // x
+                        temp_vertices[vertex_count * 3 + 1] = model_vertices[temp_vertindex][1] * scale_factor;    // z
+                        temp_vertices[vertex_count * 3 + 2] = model_vertices[temp_vertindex][2] * scale_factor;    // y
                         vertex_count++;
                     }
 
@@ -747,7 +740,8 @@ mdl_result_t extract_triangles_with_uvs( mstudiomesh_t *mesh, unsigned char *mai
     return MDL_SUCCESS;
 }
 
-mstudiomodel_t *get_model_by_bodypart( studiohdr_t *header, unsigned char *main_data, int bodygroup_value, int bodypart_index ) {
+mstudiomodel_t *
+get_model_by_bodypart( studiohdr_t *header, unsigned char *main_data, int bodygroup_value, int bodypart_index ) {
     if ( !header || !main_data || bodypart_index >= header->numbodyparts )
     {
         fprintf( stderr, "ERROR - Invalid parameters: 'get_model_by_bodypart'\n" );
@@ -759,7 +753,12 @@ mstudiomodel_t *get_model_by_bodypart( studiohdr_t *header, unsigned char *main_
 
     if ( bodypart->nummodels == 0 )
     {
-        fprintf( stderr, "Bodypart(Bodyparts[%d]) - '%s' has no models attached to it, models %d\n", bodypart_index, bodypart->name, bodypart->nummodels );
+        fprintf(
+            stderr,
+            "Bodypart(Bodyparts[%d]) - '%s' has no models attached to it, models %d\n",
+            bodypart_index,
+            bodypart->name,
+            bodypart->nummodels );
         return NULL;
     }
 
