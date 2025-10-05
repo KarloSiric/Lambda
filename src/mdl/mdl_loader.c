@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-29 18:24:03
+ *  Last Modified: 2025-10-04 23:45:24
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -34,7 +34,7 @@ mdl_result_t validate_mdl_magic(unsigned magic) {
 
 
 mdl_result_t validate_mdl_version(int version) {
-    if (version == STUDIO_VERSION) return MDL_SUCCESS;
+    if (version == STUDIO_VERSION || version == STUDIO_VERSION_2) return MDL_SUCCESS;
     else return MDL_ERROR_INVALID_VERSION; 
 }
 

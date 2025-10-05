@@ -34,6 +34,7 @@ extern "C" {
 
 // Format identification
 #define STUDIO_VERSION      10
+#define STUDIO_VERSION_2    9
 #define IDSTUDIOHEADER      (('T'<<24)+('S'<<16)+('D'<<8)+'I')  // "IDST" 
 #define IDSEQGRPHEADER      (('Q'<<24)+('S'<<16)+('D'<<8)+'I')  // "IDSQ"
 
