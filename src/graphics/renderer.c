@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 21:57:24
+ *  Last Modified: 2025-10-06 14:33:09
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -88,7 +88,7 @@ extern float zoom;
 static float *model_vertices          = NULL;
 static int    vertex_count            = 0;
 static int    index_count             = 0;
-static bool   debug_printed           = false;
+static bool   debug_printfed           = false;
 static bool   bone_system_initialized = false;
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
@@ -481,7 +481,7 @@ void ProcessModelForRendering( void )
                         }
                         n2 &= 0x7FFF;
 
-                        // update min/max + quick sample print
+                        // update min/max + quick sample printf
                         if ( dbg_count++ < 8 )
                             printf( "    s=%d t=%d  (tex %dx%d)\n", s0, t0, texW, texH );
                         s_min = ( s0 < s_min ) ? s0 : s_min;
@@ -686,7 +686,7 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 
     // Debug UV mapping for specific textures
     if ( total_render_vertices < 50 )
-    {    // Only print first few to avoid spam
+    {    // Only printf first few to avoid spam
         printf(
             "Vertex %d: tex dims %fx%f, s=%d t=%d -> u=%.3f v=%.3f", total_render_vertices, texW, texH, s, t, u, v );
     }
@@ -802,7 +802,7 @@ static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader 
 
 static int load_shaders( void )
 {
-    // Debug: Print current working directory
+    // Debug: printf current working directory
     char cwd[1024];
     if ( getcwd( cwd, sizeof( cwd ) ) != NULL )
     {

@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 19:01:25
+ *  Last Modified: 2025-10-06 14:33:09
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -18,10 +18,12 @@
  */
 
 #include "main.h"
+
 #include "graphics/renderer.h"
 #include "mdl/mdl_info.h"
 #include "mdl/mdl_loader.h"
 #include "studio.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
