@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:21:42
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 23:39:59
+ *  Last Modified: 2025-10-06 14:45:24
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -26,7 +26,8 @@ void print_complete_model_analysis(
     studiohdr_t   *main_header,
     studiohdr_t   *texture_header,
     unsigned char *main_data,
-    unsigned char *texture_data ) {
+    unsigned char *texture_data )
+{
     printf( "Testing complete model + texure loading %s\n", filename );
     printf( "SUCCESS: Model loaded completely!\n\n" );
 

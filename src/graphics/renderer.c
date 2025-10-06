@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-06 14:33:09
+ *  Last Modified: 2025-10-06 17:18:35
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -88,7 +88,7 @@ extern float zoom;
 static float *model_vertices          = NULL;
 static int    vertex_count            = 0;
 static int    index_count             = 0;
-static bool   debug_printfed           = false;
+static bool   debug_printfed          = false;
 static bool   bone_system_initialized = false;
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
@@ -217,9 +217,11 @@ float vertices[] = {
     -0.5f,
     -0.5f,
     0.0f,    // Bottom left
+
     0.5f,
     -0.5f,
     0.0f,    // Bottom right
+
     0.0f,
     0.5f,
     0.0f    // Top center

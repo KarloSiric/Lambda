@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 19:11:59
+ *  Last Modified: 2025-10-06 18:46:12
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -31,13 +31,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-static inline const mstudiotexture_t *texture_array( const studiohdr_t *header,
-        const unsigned char                                            *data ) {
+static inline const mstudiotexture_t *texture_array( const studiohdr_t *header, const unsigned char *data )
+{
     return ( const mstudiotexture_t * ) ( data + header->textureindex );
 }
 
-const studiohdr_t *mdl_pick_texture_header( const studiohdr_t *main_header,
-        const studiohdr_t                                     *text_header ) {
+const studiohdr_t *mdl_pick_texture_header( const studiohdr_t *main_header, const studiohdr_t *text_header )
+{
     if ( main_header && main_header->numtextures > 0 )
         return main_header;
     if ( text_header && text_header->numtextures > 0 )
@@ -46,7 +46,14 @@ const studiohdr_t *mdl_pick_texture_header( const studiohdr_t *main_header,
 }
 
 // --- REPLACE YOUR mdl_pal8_to_rgba WITH THIS ---
-bool mdl_pal8_to_rgba( const unsigned char *indices, int w, int h, const unsigned char *palette_rgb, size_t palette_size, unsigned char *dst ) {
+bool mdl_pal8_to_rgba(
+    const unsigned char *indices,
+    int                  w,
+    int                  h,
+    const unsigned char *palette_rgb,
+    size_t               palette_size,
+    unsigned char       *dst )
+{
     if ( !indices || !palette_rgb || !dst || w <= 0 || h <= 0 )
         return false;
     if ( palette_size == 0 || palette_size > 256 )
@@ -61,26 +68,29 @@ bool mdl_pal8_to_rgba( const unsigned char *indices, int w, int h, const unsigne
         const unsigned p    = ( idx < ( unsigned ) palette_size ) ? idx : 0;
         const unsigned base = p * 3;
 
-        dst[i * 4 + 0] = palette_rgb[base + 0];                               // R
-        dst[i * 4 + 1] = palette_rgb[base + 1];                               // G
-        dst[i * 4 + 2] = palette_rgb[base + 2];                               // B
-        dst[i * 4 + 3] = ( idx == 255 ) ? 0 : 255;                            // 255 is transparent in many GoldSrc MDLs
+        dst[i * 4 + 0] = palette_rgb[base + 0];       // R
+        dst[i * 4 + 1] = palette_rgb[base + 1];       // G
+        dst[i * 4 + 2] = palette_rgb[base + 2];       // B
+        dst[i * 4 + 3] = ( idx == 255 ) ? 0 : 255;    // 255 is transparent in many GoldSrc MDLs
     }
     return true;
 }
 
 // --- REPLACE your parse_paletted_block WITH THIS STRICT VERSION ---
-static bool parse_paletted_block( const unsigned char *text_struct_base,
-        int                                            width,
-        int                                            height,
-        int                                            index_offset,
-        const unsigned char                          **out_indices,
-        int                                           *out_count,
-        const unsigned char                          **out_palette,
-        int                                           *out_pal_size,
-        const unsigned char                           *file_start,
-        size_t                                         file_size ) {
-    if ( !text_struct_base || !file_start || !out_indices || !out_palette || !out_count || !out_pal_size || width <= 0 || height <= 0 || index_offset < 0 )
+static bool parse_paletted_block(
+    const unsigned char  *text_struct_base,
+    int                   width,
+    int                   height,
+    int                   index_offset,
+    const unsigned char **out_indices,
+    int                  *out_count,
+    const unsigned char **out_palette,
+    int                  *out_pal_size,
+    const unsigned char  *file_start,
+    size_t                file_size )
+{
+    if ( !text_struct_base || !file_start || !out_indices || !out_palette || !out_count || !out_pal_size || width <= 0
+         || height <= 0 || index_offset < 0 )
         return false;
 
     const ptrdiff_t base_off = text_struct_base - file_start;
@@ -117,14 +127,16 @@ static bool parse_paletted_block( const unsigned char *text_struct_base,
     *out_pal_size = ( int ) pal_count_le;
 
     // Debug prints so you can see exactly what is used
-    printf( "Found palette: %d colors at offset %ld (strict 16-bit count)\n",
-            *out_pal_size,
-            ( long ) ( *out_palette - file_start ) );
+    printf(
+        "Found palette: %d colors at offset %ld (strict 16-bit count)\n",
+        *out_pal_size,
+        ( long ) ( *out_palette - file_start ) );
     return true;
 }
 
 // ADDING FOR DEBUGGING FUNCTION
-static void debug_texture_data( const studiohdr_t *header, const unsigned char *file_data ) {
+static void debug_texture_data( const studiohdr_t *header, const unsigned char *file_data )
+{
     printf( "\n=== TEXTURE DEBUG INFO ===\n" );
     printf( "header->textureindex = 0x%X\n", header->textureindex );
     printf( "header->texturedataindex = 0x%X\n", header->texturedataindex );
@@ -179,9 +191,8 @@ static void debug_texture_data( const studiohdr_t *header, const unsigned char *
     printf( "=========================\n\n" );
 }
 
-mdl_result_t mdl_load_textures( const studiohdr_t *header,
-        const unsigned char                       *file_data,
-        mdl_texture_set_t                         *out_set ) {
+mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *file_data, mdl_texture_set_t *out_set )
+{
     debug_texture_data( header, file_data );
 
     if ( !out_set )
@@ -253,12 +264,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header,
             printf( "Texture %d: Found palette size %d\n", i, pal_size );
         }
 
-        printf( "Loading texture %d: %s (%dx%d), using %d color palette\n",
-                i,
-                T->name,
-                T->width,
-                T->height,
-                pal_size );
+        printf( "Loading texture %d: %s (%dx%d), using %d color palette\n", i, T->name, T->width, T->height, pal_size );
 
         // Allocate RGBA buffer
         unsigned char *rgba = ( unsigned char * ) malloc( ( size_t ) pixel_count * 4u );
@@ -276,10 +282,10 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header,
             // Handle transparency - index 255 is transparent in Half-Life
             if ( idx == 255 )
             {
-                rgba[j * 4 + 0] = 0;                            // R
-                rgba[j * 4 + 1] = 0;                            // G
-                rgba[j * 4 + 2] = 0;                            // B
-                rgba[j * 4 + 3] = 0;                            // A (transparent)
+                rgba[j * 4 + 0] = 0;    // R
+                rgba[j * 4 + 1] = 0;    // G
+                rgba[j * 4 + 2] = 0;    // B
+                rgba[j * 4 + 3] = 0;    // A (transparent)
             }
             else
             {
@@ -287,10 +293,10 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header,
                 if ( idx >= pal_size )
                     idx = 0;
 
-                rgba[j * 4 + 0] = palette[idx * 3 + 0];                            // R
-                rgba[j * 4 + 1] = palette[idx * 3 + 1];                            // G
-                rgba[j * 4 + 2] = palette[idx * 3 + 2];                            // B
-                rgba[j * 4 + 3] = 255;                                             // A (opaque)
+                rgba[j * 4 + 0] = palette[idx * 3 + 0];    // R
+                rgba[j * 4 + 1] = palette[idx * 3 + 1];    // G
+                rgba[j * 4 + 2] = palette[idx * 3 + 2];    // B
+                rgba[j * 4 + 3] = 255;                     // A (opaque)
             }
         }
 
@@ -324,12 +330,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header,
         // Unbind texture
         glBindTexture( GL_TEXTURE_2D, 0 );
 
-        printf( "  Texture %d (%s): GL ID %u, dimensions %dx%d\n",
-                i,
-                T->name,
-                tex,
-                T->width,
-                T->height );
+        printf( "  Texture %d (%s): GL ID %u, dimensions %dx%d\n", i, T->name, tex, T->width, T->height );
 
         // Special debug for face textures
         if ( strstr( T->name, "Face" ) != NULL || strstr( T->name, "face" ) != NULL )
@@ -355,7 +356,8 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header,
     return MDL_SUCCESS;
 }
 
-void mdl_free_texture( mdl_texture_set_t *set ) {
+void mdl_free_texture( mdl_texture_set_t *set )
+{
     if ( !set || !set->textures )
     {
         return;

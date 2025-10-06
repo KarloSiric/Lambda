@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-05 20:16:44
+ *  Last Modified: 2025-10-06 14:34:27
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -26,7 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-mdl_result_t validate_mdl_magic( unsigned magic ) {
+mdl_result_t validate_mdl_magic( unsigned magic )
+{
     if ( magic == IDSTUDIOHEADER )
         return MDL_SUCCESS;
     if ( magic == IDSEQGRPHEADER )
@@ -34,14 +35,16 @@ mdl_result_t validate_mdl_magic( unsigned magic ) {
     return MDL_ERROR_INVALID_MAGIC;
 }
 
-mdl_result_t validate_mdl_version( int version ) {
+mdl_result_t validate_mdl_version( int version )
+{
     if ( version == STUDIO_VERSION || version == STUDIO_VERSION_2 )
         return MDL_SUCCESS;
     else
         return MDL_ERROR_INVALID_VERSION;
 }
 
-mdl_result_t read_mdl_file( const char *filename, unsigned char **file_data, size_t *file_size ) {
+mdl_result_t read_mdl_file( const char *filename, unsigned char **file_data, size_t *file_size )
+{
     FILE *file = fopen( filename, "rb" );
     if ( !file )
     {
@@ -68,7 +71,8 @@ mdl_result_t read_mdl_file( const char *filename, unsigned char **file_data, siz
     return MDL_SUCCESS;
 }
 
-mdl_result_t parse_mdl_header( const unsigned char *file_data, studiohdr_t **header ) {
+mdl_result_t parse_mdl_header( const unsigned char *file_data, studiohdr_t **header )
+{
     if ( !file_data || !header )
         return MDL_ERROR_INVALID_PARAMETER;
 
@@ -87,7 +91,8 @@ mdl_result_t parse_mdl_header( const unsigned char *file_data, studiohdr_t **hea
     return MDL_SUCCESS;
 }
 
-void print_bodypart_info( studiohdr_t *header, unsigned char *file_data ) {
+void print_bodypart_info( studiohdr_t *header, unsigned char *file_data )
+{
     if ( header->numbodyparts == 0 )
     {
         printf( "  No bodyparts found.\n" );
@@ -114,7 +119,8 @@ void print_bodypart_info( studiohdr_t *header, unsigned char *file_data ) {
     }
 }
 
-char *generate_texture_filename( const char *model_filename ) {
+char *generate_texture_filename( const char *model_filename )
+{
     size_t original_filename_length = strlen( model_filename );
     char  *texture_filename         = malloc( original_filename_length + 2 );
     if ( !texture_filename )
@@ -140,7 +146,8 @@ mdl_result_t load_model_with_textures(
     studiohdr_t   **main_header,
     studiohdr_t   **texture_header,
     unsigned char **main_data,
-    unsigned char **texture_data ) {
+    unsigned char **texture_data )
+{
     size_t       main_size;
     mdl_result_t r = read_mdl_file( model_path, main_data, &main_size );
     if ( r != MDL_SUCCESS )
@@ -220,7 +227,8 @@ mdl_result_t load_model_with_textures(
     return MDL_SUCCESS;
 }
 
-void print_texture_info( studiohdr_t *texture_header, unsigned char *texture_data ) {
+void print_texture_info( studiohdr_t *texture_header, unsigned char *texture_data )
+{
     if ( !texture_data || !texture_header )
     {
         printf( "\nTexture Information: No texture file found.\n" );
@@ -243,7 +251,8 @@ void print_texture_info( studiohdr_t *texture_header, unsigned char *texture_dat
     }
 }
 
-mdl_result_t parse_bone_hierarchy( studiohdr_t *header, unsigned char *data, mstudiobone_t **bones ) {
+mdl_result_t parse_bone_hierarchy( studiohdr_t *header, unsigned char *data, mstudiobone_t **bones )
+{
     if ( !header || !data || !bones )
     {
         fprintf( stderr, "ERROR - Invalid parameters passed to the function call!\n" );
@@ -260,7 +269,8 @@ mdl_result_t parse_bone_hierarchy( studiohdr_t *header, unsigned char *data, mst
     return MDL_SUCCESS;
 }
 
-void print_bone_info( mstudiobone_t *bones, int bone_count ) {
+void print_bone_info( mstudiobone_t *bones, int bone_count )
+{
     if ( !bones || bone_count == 0 )
     {
         printf( "\nBone Information: No bones found\n" );
@@ -289,7 +299,8 @@ void print_bone_info( mstudiobone_t *bones, int bone_count ) {
     }
 }
 
-mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences ) {
+mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences )
+{
     if ( !header || !data || !sequences )
     {
         fprintf( stderr, "ERROR - Invalid parameters passed to parse_animation_sequences()!\n" );
@@ -306,7 +317,8 @@ mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data
     return MDL_SUCCESS;
 }
 
-void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count ) {
+void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count )
+{
     if ( !sequences || sequence_count == 0 )
     {
         printf( "\nAnimation Sequences: No sequence found\n" );
@@ -342,7 +354,8 @@ void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count ) {
     }
 }
 
-void print_model_info( mstudiomodel_t *model, int bodypart_index, int model_index ) {
+void print_model_info( mstudiomodel_t *model, int bodypart_index, int model_index )
+{
     if ( !model )
     {
         printf( "Model [%d][%d]: NULL\n", bodypart_index, model_index );
@@ -360,7 +373,8 @@ void print_model_info( mstudiomodel_t *model, int bodypart_index, int model_inde
     printf( "\n" );
 }
 
-mdl_result_t parse_mesh_data( mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes ) {
+mdl_result_t parse_mesh_data( mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes )
+{
     if ( !model || !data || !meshes )
     {
         fprintf( stderr, "ERROR - Invalid parameters passed to parse_mesh_data()!\n" );
@@ -377,7 +391,8 @@ mdl_result_t parse_mesh_data( mstudiomodel_t *model, unsigned char *data, mstudi
     return MDL_SUCCESS;
 }
 
-void print_mesh_data( mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count ) {
+void print_mesh_data( mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count )
+{
     if ( !meshes || mesh_count == 0 )
     {
         printf( "    No meshes found for model: %s\n", model ? model->name : "Unknown" );
@@ -396,7 +411,8 @@ void print_mesh_data( mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_cou
     }
 }
 
-mdl_result_t parse_vertex_data( mstudiomodel_t *model, unsigned char *data, vec3_t **vertices ) {
+mdl_result_t parse_vertex_data( mstudiomodel_t *model, unsigned char *data, vec3_t **vertices )
+{
     if ( !model || !data || !vertices )
     {
         fprintf( stderr, "ERROR - Invalid parameters passed to parse_vertex_data()!\n" );
@@ -414,7 +430,8 @@ mdl_result_t parse_vertex_data( mstudiomodel_t *model, unsigned char *data, vec3
 }
 
 // Simple triangle index generation for basic wireframe (fallback)
-mdl_result_t create_simple_triangle_indices( int vertex_count, short **indices, int *index_count ) {
+mdl_result_t create_simple_triangle_indices( int vertex_count, short **indices, int *index_count )
+{
     if ( !indices || !index_count || vertex_count <= 0 )
     {
         return MDL_ERROR_INVALID_PARAMETER;
@@ -442,7 +459,8 @@ mdl_result_t create_simple_triangle_indices( int vertex_count, short **indices, 
     return MDL_SUCCESS;
 }
 
-void print_simple_triangle_info( mstudiomodel_t *model, int bodypart_index, int model_index ) {
+void print_simple_triangle_info( mstudiomodel_t *model, int bodypart_index, int model_index )
+{
     if ( !model )
     {
         printf( "    No model data for triangle testing.\n" );
@@ -499,7 +517,8 @@ mdl_result_t extract_texture_rgb(
     int             texture_index,
     unsigned char **rgb_output,
     int            *width,
-    int            *height ) {
+    int            *height )
+{
     if ( !texture_header || !texture_data || !rgb_output || !width || !height )
     {
         return MDL_ERROR_INVALID_PARAMETER;
@@ -557,7 +576,8 @@ mdl_result_t extract_triangles_with_uvs(
     int            model_vertex_count,
     float        **out_vertices,
     float        **out_texcoords,
-    int           *out_vertex_count ) {
+    int           *out_vertex_count )
+{
     if ( !mesh || !main_data || !model_vertices || !out_vertices || !out_texcoords || !out_vertex_count )
     {
         fprintf( stderr, "ERROR - Invalid parameters error for function 'extract_traingles_with_uvs'" );
@@ -741,7 +761,8 @@ mdl_result_t extract_triangles_with_uvs(
 }
 
 mstudiomodel_t *
-get_model_by_bodypart( studiohdr_t *header, unsigned char *main_data, int bodygroup_value, int bodypart_index ) {
+get_model_by_bodypart( studiohdr_t *header, unsigned char *main_data, int bodygroup_value, int bodypart_index )
+{
     if ( !header || !main_data || bodypart_index >= header->numbodyparts )
     {
         fprintf( stderr, "ERROR - Invalid parameters: 'get_model_by_bodypart'\n" );
