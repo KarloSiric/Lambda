@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 11:32:27
+ *  Last Modified: 2025-10-07 13:42:34
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -228,11 +228,13 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
     for ( int i = 0; i < n_textures; i++ )
     {
         const mstudiotexture_t *T = &textures[i];
-        
-        printf("Texture[%d] '%s': flags =0x%04X", i, T->name, T->flags);
-        if (T->flags & STUDIO_NF_CHROME) printf(" [CHROME]");
-        if (T->flags & STUDIO_NF_MASKED) printf(" [MASKED]");
-        printf("\n");
+
+        printf( "Texture[%d] '%s': flags =0x%04X", i, T->name, T->flags );
+        if ( T->flags & STUDIO_NF_CHROME )
+            printf( " [CHROME]" );
+        if ( T->flags & STUDIO_NF_MASKED )
+            printf( " [MASKED]" );
+        printf( "\n" );
 
         // T->index is an absolute offset from file start
         const unsigned char *indices = file_data + T->index;
@@ -249,7 +251,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
 
         uint16_t             pal_size;
         const unsigned char *palette;
-    
+
         // If the "size" looks invalid (> 256), assume no size field and 256 colors
         if ( test_pal_size > 256 )
         {
@@ -289,7 +291,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         // differently so it is not quite RGB, most of them are RGB but some are 
         // as it seems quite obvious when I was testing models not quite right so 
         // we need to add that as well.
-        */ 
+        */
         for ( int j = 0; j < pixel_count; j++ )
         {
             unsigned char idx = indices[j];

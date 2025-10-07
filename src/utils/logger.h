@@ -75,13 +75,10 @@ void logger_hexdump(
 uint64_t logger_now_ms( void );
 
 // #define LOG_TRACEF( CAT, FMT, ... )               ...
-#define LOG_HEXDUMP( LVL, CAT, DATA, LEN, LABEL ) ...
-#define LOG_CHECK( COND, CAT, FMT, ... )          ...
-#define LOG_TIME_BLOCK( LABEL, CAT )                                                                                   \
-    for ( uint64_t _t0 = ... )                                                                                         \
-    ...
 
 // ======= MACROS ======= //
+
+// ===== Macros =====
 
 #if LOG_ENABLE
 
@@ -91,19 +88,18 @@ bool logger_should_log( int level, const char *category );
 #define LOG_CAT_DEFAULT "app"
 #endif
 
+// variadic-comma helper: on non-MSVC, drop the comma if there are no args
 #if defined( _MSC_VER )
 #define LOG_VA_COMMA( ... ) , __VA_ARGS__
 #else
 #define LOG_VA_COMMA( ... ) , ##__VA_ARGS__
 #endif
 
+// base macro: send everything with auto file/line/func
 #define LOG_AT( LVL, CAT, FMT, ... )                                                                                   \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if ( logger_should_log( ( LVL ), ( CAT ) ) )                                                                   \
-            logger_log( ( LVL ), ( CAT ), __FILE__, __LINE__, __func__, ( FMT ), LOG_VA_COMMA( __VA_ARGS__ ) );        \
-    } while ( 0 )
+    logger_log( ( LVL ), ( CAT ), __FILE__, __LINE__, __func__, ( FMT ) LOG_VA_COMMA( __VA_ARGS__ ) )
 
+// convenience per-level macros
 #define LOG_TRACEF( CAT, FMT, ... ) LOG_AT( LOG_TRACE, ( CAT ), ( FMT ), __VA_ARGS__ )
 #define LOG_DEBUGF( CAT, FMT, ... ) LOG_AT( LOG_DEBUG, ( CAT ), ( FMT ), __VA_ARGS__ )
 #define LOG_INFOF( CAT, FMT, ... )  LOG_AT( LOG_INFO, ( CAT ), ( FMT ), __VA_ARGS__ )
@@ -111,16 +107,46 @@ bool logger_should_log( int level, const char *category );
 #define LOG_ERRORF( CAT, FMT, ... ) LOG_AT( LOG_ERROR, ( CAT ), ( FMT ), __VA_ARGS__ )
 #define LOG_FATALF( CAT, FMT, ... ) LOG_AT( LOG_FATAL, ( CAT ), ( FMT ), __VA_ARGS__ )
 
-#else    // LOG_ENABLE == 0
-#define LOG_AT( ... )     ( ( void ) 0 )
-#define LOG_TRACEF( ... ) ( ( void ) 0 )
-#define LOG_DEBUGF( ... ) ( ( void ) 0 )
-#define LOG_INFOF( ... )  ( ( void ) 0 )
-#define LOG_WARNF( ... )  ( ( void ) 0 )
-#define LOG_ERRORF( ... ) ( ( void ) 0 )
-#define LOG_FATALF( ... ) ( ( void ) 0 )
-#endif    // LOG_ENABLE
+// hexdump helper (already implemented in .c)
+#define LOG_HEXDUMP( LVL, CAT, DATA, LEN, LABEL )                                                                      \
+    logger_hexdump( ( LVL ), ( CAT ), __FILE__, __LINE__, __func__, ( DATA ), ( LEN ), ( LABEL ) )
 
+// assert-like check: if (COND) ok; else log and optionally abort in debug
+#ifndef LOG_ABORT_ON_CHECK_FAIL
+#define LOG_ABORT_ON_CHECK_FAIL 0
+#endif
+
+#define LOG_CHECK( COND, CAT, FMT, ... )                                                                               \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if ( !( COND ) )                                                                                               \
+        {                                                                                                              \
+            LOG_ERRORF( ( CAT ), "CHECK FAILED: %s | " FMT, #COND, __VA_ARGS__ );                                      \
+            if ( LOG_ABORT_ON_CHECK_FAIL )                                                                             \
+                abort( );                                                                                              \
+        }                                                                                                              \
+    } while ( 0 )
+
+// timing a block: logs "<LABEL>: Xms" at INFO after the block runs
+#define LOG_TIME_BLOCK( LABEL, CAT )                                                                                   \
+    for ( uint64_t _t0 = logger_now_ms( ), _once = 1; _once;                                                           \
+          LOG_INFOF( ( CAT ), "%s: %llums", ( LABEL ), ( unsigned long long ) ( logger_now_ms( ) - _t0 ) ),            \
+                   _once = 0 )
+
+#else    // LOG_ENABLE == 0  → compile out everything
+
+#define LOG_AT( ... )         ( ( void ) 0 )
+#define LOG_TRACEF( ... )     ( ( void ) 0 )
+#define LOG_DEBUGF( ... )     ( ( void ) 0 )
+#define LOG_INFOF( ... )      ( ( void ) 0 )
+#define LOG_WARNF( ... )      ( ( void ) 0 )
+#define LOG_ERRORF( ... )     ( ( void ) 0 )
+#define LOG_FATALF( ... )     ( ( void ) 0 )
+#define LOG_HEXDUMP( ... )    ( ( void ) 0 )
+#define LOG_CHECK( ... )      ( ( void ) 0 )
+#define LOG_TIME_BLOCK( ... ) for ( int _x = 0; !_x; _x = 1 )
+
+#endif    // LOG_ENABLE
 #ifdef __cplusplus
 }    // extern "C"
 #endif

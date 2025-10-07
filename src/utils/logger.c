@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-05 22:01:03
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 13:37:03
+ *  Last Modified: 2025-10-07 16:50:28
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -59,6 +59,29 @@ static struct {
     int console_tty;    // for terminal
     int vt_enabled;     //  enabling ANSI colors for the terminal
 } G;
+
+static void wall_time_iso8601( char *buf, size_t n )
+{
+#ifdef _WIN32
+    struct timespec ts;
+    timespec_get( &ts, TIME_UTC );
+    time_t    sec = ts.tv_sec;
+    struct tm tmv;
+    localtime_s( &tmv, &sec );
+#else
+    struct timespec ts;
+    clock_gettime( CLOCK_REALTIME, &ts );
+    time_t    sec = ts.tv_sec;
+    struct tm tmv;
+    localtime_r( &sec, &tmv );
+
+#endif
+
+    strftime( buf, n, "%Y-%m-%dT%H:%M:%S", &tmv );
+
+    size_t len = strlen( buf );
+    snprintf( buf + len, n - len, ".%03d", ( int ) ( ts.tv_nsec / 1000000 ) );
+}
 
 static void lock_( void )
 {
@@ -175,6 +198,98 @@ static void write_file( const char *s, size_t n )
     fwrite( s, 1, n, G.fp );
     fflush( G.fp );
     G.bytes += n;
+}
+
+static const char *LEVEL_NAME[] = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL" };
+
+void logger_logv(
+    int level, const char *category, const char *file, int line, const char *func, const char *fmt, va_list ap )
+{
+    if ( !logger_should_log( level, category ) )
+    {
+        return;
+    }
+
+    if ( level < LOG_TRACE )
+        level = LOG_TRACE;
+    if ( level > LOG_FATAL )
+        level = LOG_FATAL;
+    const char *cat      = ( category && category[0] ) ? category : LOG_CAT_DEFAULT;
+    const char *src_file = file ? file : "?";
+    const char *src_func = func ? func : "?";
+    if ( !fmt )
+        fmt = "";    // avoid null format
+
+    char msg[2048];
+    vsnprintf( msg, sizeof( msg ), fmt, ap );
+
+    char ts[64];
+
+    wall_time_iso8601( ts, sizeof( ts ) );
+
+    // Final assembly
+    char linebuf[2300];
+    int  n = snprintf(
+        linebuf,
+        sizeof( linebuf ),
+        "%s [%s] %s | %s:%d (%s) | %s\n",
+        ts,
+        LEVEL_NAME[level],
+        cat,
+        src_file,
+        line,
+        src_func,
+        msg );
+
+    if ( n < 0 )
+    {
+        return;
+    }
+
+    size_t len = ( size_t ) n;
+    if ( len >= sizeof( linebuf ) )
+    {
+        len = sizeof( linebuf ) - 1;
+    }
+
+    lock_( );
+    write_console( linebuf, len, level );
+    write_file( linebuf, len );
+    unlock_( );
+}
+
+void logger_log( int level, const char *category, const char *file, int line, const char *func, const char *fmt, ... )
+{
+    va_list ap;
+    va_start( ap, fmt );
+    logger_logv( level, category, file, line, func, fmt, ap );
+    va_end( ap );
+}
+
+
+
+void logger_hexdump(int level, const char *category, const char *file, int line, const char *func, const void *data, size_t len, const char *label) {
+    
+    if (!logger_should_log(level, category) || !data || len == 0) {
+        return;
+    }
+    
+    const unsigned char *p = (const unsigned char *)data;
+    char row[512];
+    
+    for (size_t i = 0; i < len; i+=16) { 
+        
+        size_t r = (len - i < 16) ? (len - i) : 16;
+        
+        int n = snprintf(row, sizeof(row), "%s +0x%04zx  ",
+                        label ? label : "hexdump", i);
+                   
+    }
+    
+    
+        
+    
+    
 }
 
 
