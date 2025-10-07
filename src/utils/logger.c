@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-05 22:01:03
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 12:18:17
+ *  Last Modified: 2025-10-07 13:23:41
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -19,6 +19,7 @@
 
 #include <math.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -81,5 +82,81 @@ static int is_tty_terminal( void )
 {
     return isatty( fileno( stdout ) );
 }
+
+uint64_t logger_now_ms( void )
+{
+#ifdef _WIN32
+    LARGE_INTEGER f, t;
+    QueryPerformanceFrequency( &f );
+    QueryPerformanceCounter( &t );
+    return ( uint64_t ) ( ( 1000.0 * t.QuadPart ) / f.QuadPart );
+#else
+    struct timespec ts;
+    clock_gettime( CLOCK_MONOTONIC, &ts );
+    return ( uint64_t ) ts.tv_sec * 1000ULL + ( uint64_t ) ts.tv_nsec / 1000000ULL;
+#endif
+}
+
+/**
+ * @brief      Finding category that we want, since we can
+ *             store up to 64 categories unique and we want
+ *             to find each one we need.
+ *
+ * @param[in]  name  cat_find
+ *
+ * @return     { integer as in the category array index or -1 }
+ */
+static int cat_find( const char *name )
+{
+    for ( int i = 0; i < LOG_MAX_CATEGORIES; i++ )
+    {
+        if ( G.cats[i].in_use && strcmp( G.cats[i].name, name ) == 0 )
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static int cat_alloc( const char *name )
+{
+    for ( int i = 0; i < LOG_MAX_CATEGORIES; i++ )
+    {
+        if ( !G.cats[i].in_use )
+        {
+            strncpy( G.cats[i].name, name, sizeof( G.cats[i].name ) - 1 );
+            G.cats[i].name[sizeof( G.cats[i].name ) - 1] = '\0';
+            G.cats[i].level                              = G.default_level;    //  start with default level
+            G.cats[i].in_use                             = 1;
+        }
+    }
+
+    return -1;
+}
+
+int logger_get_global_level( )
+{ 
+    return G.default_level; 
+}
+
+
+void logger_set_global_level(int level) {
+    G.default_level = level;
+    return;
+}
+
+
+static void write_console(const char *s, size_t n, int level) {
+    
+    if (level < G.opt.console_level) {
+        return;
+    }
+    
+    fwrite(s, 1, n, stdout);
+    fflush(stdout); 
+}
+
+
+
 
 

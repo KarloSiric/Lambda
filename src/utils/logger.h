@@ -71,6 +71,7 @@ void logger_hexdump(
     const void *data,
     size_t      len,
     const char *label );
+
 uint64_t logger_now_ms( void );
 
 // #define LOG_TRACEF( CAT, FMT, ... )               ...
