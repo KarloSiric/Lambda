@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-05 22:01:03
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 16:50:28
+ *  Last Modified: 2025-10-07 23:15:30
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -60,6 +60,147 @@ static struct {
     int vt_enabled;     //  enabling ANSI colors for the terminal
 } G;
 
+static int is_tty_terminal( void )
+{
+    return isatty( fileno( stdout ) );
+}
+
+
+static void lock_( void )
+{
+#ifdef _WIN32
+    EnterCriticalSection( &G.mtx );
+#else
+    pthread_mutex_lock( &G.mtx );
+#endif
+}
+
+static void unlock_( void )
+{
+#ifdef _WIN32
+    LeaveCriticalSection( &G.mtx );
+#else
+    pthread_mutex_unlock( &G.mtx );
+#endif
+}
+
+
+int logger_init( const t_log_options *opt )
+{
+    memset( &G, 0, sizeof( G ) );
+
+    if ( opt )
+    {
+        G.opt = *opt;
+    }
+
+    G.default_level = LOG_DEFAULT_LEVEL;
+
+#ifdef _WIN32
+    InitializeCriticalSession( &G.mtx, NULL );
+#else
+    pthread_mutex_init( &G.mtx, NULL );
+#endif
+
+    G.console_tty = is_tty_terminal( );
+
+    return 0;
+}
+
+
+void logger_shutdown(void) {
+    lock_();
+    if (G.fp) {
+        fclose(G.fp);
+        G.fp = NULL;
+    }
+    
+    unlock_();
+    
+    #ifdef _WIN32
+        DeleteCriticalSession(&G.mtx); 
+    #else
+        pthread_mutex_destroy(&G.mtx); 
+    #endif         
+}
+
+
+
+static int cat_find( const char *name )
+{
+    for ( int i = 0; i < LOG_MAX_CATEGORIES; i++ )
+    {
+        if ( G.cats[i].in_use && strcmp( G.cats[i].name, name ) == 0 )
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+
+static int cat_alloc( const char *name )
+{
+    for ( int i = 0; i < LOG_MAX_CATEGORIES; i++ )
+    {
+        if ( !G.cats[i].in_use )
+        {
+            strncpy( G.cats[i].name, name, sizeof( G.cats[i].name ) - 1 );
+            G.cats[i].name[sizeof( G.cats[i].name ) - 1] = '\0';
+            G.cats[i].level                              = G.default_level;    //  start with default level
+            G.cats[i].in_use                             = 1;
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+int logger_set_category_level(const char *category, int level) {
+    
+    if (!category) {
+        return -1;
+    }
+    
+    lock_();
+    int i = cat_find(category);
+    if (i < 0) {
+        i = cat_alloc(category);
+    }
+    
+    if (i >= 0) {
+       G.cats[i].level = level;           
+    }
+    
+    unlock_();
+    
+    return (i >= 0) ? 0 : -2;  
+}
+
+
+int logger_get_category_level(const char *category, int *out_level) {
+    
+    if (!category || !out_level) {
+        return -1;
+    }
+    
+    int i = cat_find(category);
+    if (i >= 0) {
+        *out_level = G.cats[i].level;
+        return 0;
+    } 
+    
+    // not found so we cannot get the category at all
+    return -2; 
+    
+}
+
+
+
+
+
 static void wall_time_iso8601( char *buf, size_t n )
 {
 #ifdef _WIN32
@@ -83,28 +224,6 @@ static void wall_time_iso8601( char *buf, size_t n )
     snprintf( buf + len, n - len, ".%03d", ( int ) ( ts.tv_nsec / 1000000 ) );
 }
 
-static void lock_( void )
-{
-#ifdef _WIN32
-    EnterCriticalSection( &G.mtx );
-#else
-    pthread_mutex_lock( &G.mtx );
-#endif
-}
-
-static void unlock_( void )
-{
-#ifdef _WIN32
-    LeaveCriticalSection( &G.mtx );
-#else
-    pthread_mutex_unlock( &G.mtx );
-#endif
-}
-
-static int is_tty_terminal( void )
-{
-    return isatty( fileno( stdout ) );
-}
 
 uint64_t logger_now_ms( void )
 {
@@ -120,42 +239,7 @@ uint64_t logger_now_ms( void )
 #endif
 }
 
-/**
- * @brief      Finding category that we want, since we can
- *             store up to 64 categories unique and we want
- *             to find each one we need.
- *
- * @param[in]  name  cat_find
- *
- * @return     { integer as in the category array index or -1 }
- */
-static int cat_find( const char *name )
-{
-    for ( int i = 0; i < LOG_MAX_CATEGORIES; i++ )
-    {
-        if ( G.cats[i].in_use && strcmp( G.cats[i].name, name ) == 0 )
-        {
-            return i;
-        }
-    }
-    return -1;
-}
 
-static int cat_alloc( const char *name )
-{
-    for ( int i = 0; i < LOG_MAX_CATEGORIES; i++ )
-    {
-        if ( !G.cats[i].in_use )
-        {
-            strncpy( G.cats[i].name, name, sizeof( G.cats[i].name ) - 1 );
-            G.cats[i].name[sizeof( G.cats[i].name ) - 1] = '\0';
-            G.cats[i].level                              = G.default_level;    //  start with default level
-            G.cats[i].in_use                             = 1;
-        }
-    }
-
-    return -1;
-}
 
 int logger_get_global_level( )
 {
@@ -266,31 +350,51 @@ void logger_log( int level, const char *category, const char *file, int line, co
     va_end( ap );
 }
 
-
-
-void logger_hexdump(int level, const char *category, const char *file, int line, const char *func, const void *data, size_t len, const char *label) {
-    
-    if (!logger_should_log(level, category) || !data || len == 0) {
+void logger_hexdump(
+    int         level,
+    const char *category,
+    const char *file,
+    int         line,
+    const char *func,
+    const void *data,
+    size_t      len,
+    const char *label )
+{
+    if ( !logger_should_log( level, category ) || !data || len == 0 )
+    {
         return;
     }
-    
-    const unsigned char *p = (const unsigned char *)data;
+
+    const unsigned char *p = ( const unsigned char * ) data;
+
     char row[512];
-    
-    for (size_t i = 0; i < len; i+=16) { 
-        
-        size_t r = (len - i < 16) ? (len - i) : 16;
-        
-        int n = snprintf(row, sizeof(row), "%s +0x%04zx  ",
-                        label ? label : "hexdump", i);
-                   
+
+    for ( size_t i = 0; i < len; i += 16 )
+    {
+        size_t r = ( len - i < 16 ) ? ( len - i ) : 16;
+
+        int n = snprintf( row, sizeof( row ), "%s +0x%04zx  ", label ? label : "hexdump", i );
+
+        for ( size_t j = 0; j < 16; j++ )
+        {
+            if ( j < r )
+            {
+                n += snprintf( row + n, sizeof( row - n ), "%02X ", p[i + j] );
+            }
+            else
+            {
+                n += snprintf( row + n, sizeof( row - n ), "      " );
+            }
+        }
+
+        n += snprintf( row, sizeof( row - n ), "  " );
+        for ( size_t j = 0; j < r && n + 2 < ( int ) sizeof( row ); ++j )
+        {
+            unsigned char c = p[i + j];
+            row[n++]        = *( ( c >= 32 && c < 127 ) ? ( char ) c : "." );
+        }
+        row[n] = '\0';
+
+        logger_log( level, category, file, line, func, "%s", row );
     }
-    
-    
-        
-    
-    
 }
-
-
-
