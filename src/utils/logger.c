@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-05 22:01:03
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 13:23:41
+ *  Last Modified: 2025-10-07 13:37:03
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -29,7 +29,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <io.h>
 #include <windows.h>
-#define isatty_isatty
+#define isatty _isatty
 #define fileno _fileno
 #else
 #include <pthread.h>
@@ -135,28 +135,47 @@ static int cat_alloc( const char *name )
 }
 
 int logger_get_global_level( )
-{ 
-    return G.default_level; 
+{
+    return G.default_level;
 }
 
-
-void logger_set_global_level(int level) {
+void logger_set_global_level( int level )
+{
     G.default_level = level;
     return;
 }
 
-
-static void write_console(const char *s, size_t n, int level) {
-    
-    if (level < G.opt.console_level) {
+static void write_console( const char *s, size_t n, int level )
+{
+    if ( level < G.opt.console_level )
+    {
         return;
     }
-    
-    fwrite(s, 1, n, stdout);
-    fflush(stdout); 
+
+    fwrite( s, 1, n, stdout );
+    fflush( stdout );
 }
 
+static void write_file( const char *s, size_t n )
+{
+    if ( !G.opt.file_path || !G.opt.file_path[0] )
+    {
+        return;
+    }
 
+    if ( !G.fp )
+    {
+        G.fp = fopen( G.opt.file_path, "ab" );    // appending, binary
+        if ( !G.fp )
+        {
+            return;
+        }
+    }
+
+    fwrite( s, 1, n, G.fp );
+    fflush( G.fp );
+    G.bytes += n;
+}
 
 
 
