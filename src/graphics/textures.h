@@ -13,6 +13,7 @@ typedef struct {
     int width;
     int height;
     char name[64];
+    int flags;
 } mdl_gl_texture_t;
 
 

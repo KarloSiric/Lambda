@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-06 17:18:35
+ *  Last Modified: 2025-10-07 11:25:54
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -217,11 +217,11 @@ float vertices[] = {
     -0.5f,
     -0.5f,
     0.0f,    // Bottom left
-
+    
     0.5f,
     -0.5f,
     0.0f,    // Bottom right
-
+    
     0.0f,
     0.5f,
     0.0f    // Top center

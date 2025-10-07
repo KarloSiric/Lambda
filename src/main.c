@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-06 14:33:09
+ *  Last Modified: 2025-10-06 20:48:40
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -34,7 +34,8 @@
 #include <GL/gl3.h>
 #endif
 
-int main( int argc, char const *argv[] ) {
+int main( int argc, char const *argv[] )
+{
     studiohdr_t   *main_header    = NULL;
     studiohdr_t   *texture_header = NULL;
     unsigned char *main_data      = NULL;

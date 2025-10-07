@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-06 18:46:12
+ *  Last Modified: 2025-10-07 11:32:27
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -61,7 +61,8 @@ bool mdl_pal8_to_rgba(
 
     const int px = w * h;
 
-    // MDL palettes are effectively RGB (R,G,B). Do NOT swap unless you verify otherwise.
+    // MDL palettes are effectively RGB (R,G,B). Do NOT swap unless you verify
+    // otherwise.
     for ( int i = 0; i < px; ++i )
     {
         const unsigned idx  = indices[i];
@@ -105,7 +106,8 @@ static bool parse_paletted_block(
 
     const size_t after_pixels = pix_off + pixels_sz;
 
-    // MDL format: uint16 palette size (little endian), then palette (pal_size * 3) bytes.
+    // MDL format: uint16 palette size (little endian), then palette (pal_size *
+    // 3) bytes.
     if ( after_pixels + 2 > file_size )
         return false;
 
@@ -165,7 +167,9 @@ static void debug_texture_data( const studiohdr_t *header, const unsigned char *
         // The palette should be right after the pixel data
         const unsigned char *after_pixels = tex_data + pixel_count;
 
-        printf( "\nBytes immediately after pixel data (should be palette size as uint16):\n" );
+        printf(
+            "\nBytes immediately after pixel data (should be palette size as "
+            "uint16):\n" );
         for ( int i = 0; i < 16; i++ )
         {
             printf( "%02X ", after_pixels[i] );
@@ -224,6 +228,11 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
     for ( int i = 0; i < n_textures; i++ )
     {
         const mstudiotexture_t *T = &textures[i];
+        
+        printf("Texture[%d] '%s': flags =0x%04X", i, T->name, T->flags);
+        if (T->flags & STUDIO_NF_CHROME) printf(" [CHROME]");
+        if (T->flags & STUDIO_NF_MASKED) printf(" [MASKED]");
+        printf("\n");
 
         // T->index is an absolute offset from file start
         const unsigned char *indices = file_data + T->index;
@@ -240,7 +249,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
 
         uint16_t             pal_size;
         const unsigned char *palette;
-
+    
         // If the "size" looks invalid (> 256), assume no size field and 256 colors
         if ( test_pal_size > 256 )
         {
@@ -273,8 +282,14 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
             free( items );
             return MDL_ERROR_MEMORY_ALLOCATION;
         }
-
+        /*
         // Convert palette indices to RGBA
+        // Need to modify this to detect if it is RGBA or BGR or something else
+        // RIght now issue is happening because some models maybe store things
+        // differently so it is not quite RGB, most of them are RGB but some are 
+        // as it seems quite obvious when I was testing models not quite right so 
+        // we need to add that as well.
+        */ 
         for ( int j = 0; j < pixel_count; j++ )
         {
             unsigned char idx = indices[j];
