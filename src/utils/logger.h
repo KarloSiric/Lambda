@@ -59,6 +59,9 @@ int  logger_get_global_level( void );
 int logger_set_category_level( const char *category, int level );
 int logger_get_category_level( const char *category, int *out_level );
 
+void logger_set_console_level( int level );
+int logger_is_tty( void );
+
 void logger_logv(
     int level, const char *category, const char *file, int line, const char *func, const char *fmt, va_list ap );
 void logger_log( int level, const char *category, const char *file, int line, const char *func, const char *fmt, ... );

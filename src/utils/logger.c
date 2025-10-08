@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-05 22:01:03
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 00:04:52
+ *  Last Modified: 2025-10-08 16:33:44
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -191,6 +191,16 @@ int logger_get_category_level( const char *category, int *out_level )
 
     // not found so we cannot get the category at all
     return -2;
+}
+
+void logger_set_console_level( int level )
+{
+    G.opt.console_level = level;
+}
+
+int logger_is_tty( void )
+{
+    return G.console_tty;
 }
 
 bool logger_should_log( int message_level, const char *category )

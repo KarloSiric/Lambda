@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 11:13:49
+ *  Last Modified: 2025-10-08 16:38:37
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -48,14 +48,14 @@ int main( int argc, char const *argv[] )
     logger_init( &log_options );
     logger_set_global_level( LOG_INFO );
     logger_set_category_level( "renderer", LOG_DEBUG );
-    logger_set_category_level("mdl", LOG_DEBUG);
-    logger_set_category_level("textures", LOG_DEBUG);
+    logger_set_category_level( "mdl", LOG_DEBUG );
+    logger_set_category_level( "textures", LOG_DEBUG );
 
     // Here we can set specific categories that we want to override specifically
     logger_set_category_level( "renderer", LOG_DEBUG );
 
     LOG_INFOF( "app", "Logger Initialized" );
-    LOG_INFOF( "app", "Application started, PID: %d\n", getpid( ) );
+    LOG_INFOF( "app", "Application started: PID %d\n", getpid( ) );
 
     studiohdr_t   *main_header    = NULL;
     studiohdr_t   *texture_header = NULL;
@@ -68,8 +68,8 @@ int main( int argc, char const *argv[] )
         logger_shutdown( );
         return ( 1 );
     }
-    
-    LOG_TIME_BLOCK("load_model_with_texturs", "mdl");
+
+    LOG_TIME_BLOCK( "load_model_with_texturs", "mdl" );
     mdl_result_t result = load_model_with_textures( argv[1], &main_header, &texture_header, &main_data, &texture_data );
 
     if ( result != MDL_SUCCESS )
@@ -79,12 +79,12 @@ int main( int argc, char const *argv[] )
     }
 
     print_complete_model_analysis( argv[1], main_header, texture_header, main_data, texture_data );
-    
-    LOG_INFOF("renederer", "Initializing renderer ...");
-    
+
+    LOG_INFOF( "renederer", "Initializing renderer ..." );
+
     if ( init_renderer( WIDTH, HEIGHT, "Half-Life Model Viewer" ) != 0 )
     {
-        LOG_ERRORF("renderer","Failed to initialize renderer!");
+        LOG_ERRORF( "renderer", "Failed to initialize renderer!" );
         free( main_data );
         if ( texture_data )
             free( texture_data );
@@ -103,8 +103,9 @@ int main( int argc, char const *argv[] )
     {
         free( texture_data );
     }
-    
-    LOG_INFOF("app","Shutting down");
-    logger_shutdown();
+
+    LOG_INFOF( "app", "Shutting down" );
+    LOG_INFOF( "app", "Application PID: %d killed!\n", getpid( ) );
+    logger_shutdown( );
     return ( 0 );
 }
