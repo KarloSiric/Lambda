@@ -34,6 +34,7 @@ set(SOURCES
     src/graphics/textures.c
     src/utils/utils.c
     src/utils/mdl_messages.c
+    src/utils/logger.c
 )
 
 # Create executable

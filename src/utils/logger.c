@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-05 22:01:03
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 23:15:30
+ *  Last Modified: 2025-10-08 00:04:52
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -40,7 +40,6 @@ typedef struct category_level {
     char name[48];
     int  level;
     int  in_use;
-
 } t_category_level;
 
 // need to ensure one thread only writes to our .log file
@@ -65,7 +64,6 @@ static int is_tty_terminal( void )
     return isatty( fileno( stdout ) );
 }
 
-
 static void lock_( void )
 {
 #ifdef _WIN32
@@ -84,7 +82,6 @@ static void unlock_( void )
 #endif
 }
 
-
 int logger_init( const t_log_options *opt )
 {
     memset( &G, 0, sizeof( G ) );
@@ -97,7 +94,7 @@ int logger_init( const t_log_options *opt )
     G.default_level = LOG_DEFAULT_LEVEL;
 
 #ifdef _WIN32
-    InitializeCriticalSession( &G.mtx, NULL );
+    InitializeCriticalSection( &G.mtx );
 #else
     pthread_mutex_init( &G.mtx, NULL );
 #endif
@@ -107,24 +104,23 @@ int logger_init( const t_log_options *opt )
     return 0;
 }
 
-
-void logger_shutdown(void) {
-    lock_();
-    if (G.fp) {
-        fclose(G.fp);
+void logger_shutdown( void )
+{
+    lock_( );
+    if ( G.fp )
+    {
+        fclose( G.fp );
         G.fp = NULL;
     }
-    
-    unlock_();
-    
-    #ifdef _WIN32
-        DeleteCriticalSession(&G.mtx); 
-    #else
-        pthread_mutex_destroy(&G.mtx); 
-    #endif         
+
+    unlock_( );
+
+#ifdef _WIN32
+    DeleteCriticalSection( &G.mtx );
+#else
+    pthread_mutex_destroy( &G.mtx );
+#endif
 }
-
-
 
 static int cat_find( const char *name )
 {
@@ -137,8 +133,6 @@ static int cat_find( const char *name )
     }
     return -1;
 }
-
-
 
 static int cat_alloc( const char *name )
 {
@@ -157,49 +151,59 @@ static int cat_alloc( const char *name )
     return -1;
 }
 
-
-int logger_set_category_level(const char *category, int level) {
-    
-    if (!category) {
+int logger_set_category_level( const char *category, int level )
+{
+    if ( !category )
+    {
         return -1;
     }
-    
-    lock_();
-    int i = cat_find(category);
-    if (i < 0) {
-        i = cat_alloc(category);
+
+    lock_( );
+    int i = cat_find( category );
+    if ( i < 0 )
+    {
+        i = cat_alloc( category );
     }
-    
-    if (i >= 0) {
-       G.cats[i].level = level;           
+
+    if ( i >= 0 )
+    {
+        G.cats[i].level = level;
     }
-    
-    unlock_();
-    
-    return (i >= 0) ? 0 : -2;  
+
+    unlock_( );
+
+    return ( i >= 0 ) ? 0 : -2;
 }
 
-
-int logger_get_category_level(const char *category, int *out_level) {
-    
-    if (!category || !out_level) {
+int logger_get_category_level( const char *category, int *out_level )
+{
+    if ( !category || !out_level )
+    {
         return -1;
     }
-    
-    int i = cat_find(category);
-    if (i >= 0) {
+
+    int i = cat_find( category );
+    if ( i >= 0 )
+    {
         *out_level = G.cats[i].level;
         return 0;
-    } 
-    
+    }
+
     // not found so we cannot get the category at all
-    return -2; 
-    
+    return -2;
 }
 
+bool logger_should_log( int message_level, const char *category )
+{
+    int min_level = G.default_level;
+    int cat_level;
+    if ( category && logger_get_category_level( category, &cat_level ) == 0 )
+    {
+        min_level = cat_level;
+    }
 
-
-
+    return message_level >= min_level;
+}
 
 static void wall_time_iso8601( char *buf, size_t n )
 {
@@ -224,7 +228,6 @@ static void wall_time_iso8601( char *buf, size_t n )
     snprintf( buf + len, n - len, ".%03d", ( int ) ( ts.tv_nsec / 1000000 ) );
 }
 
-
 uint64_t logger_now_ms( void )
 {
 #ifdef _WIN32
@@ -238,8 +241,6 @@ uint64_t logger_now_ms( void )
     return ( uint64_t ) ts.tv_sec * 1000ULL + ( uint64_t ) ts.tv_nsec / 1000000ULL;
 #endif
 }
-
-
 
 int logger_get_global_level( )
 {
@@ -379,21 +380,26 @@ void logger_hexdump(
         {
             if ( j < r )
             {
-                n += snprintf( row + n, sizeof( row - n ), "%02X ", p[i + j] );
+                n += snprintf( row + n, sizeof( row ) - n , "%02X ", p[i + j] );
             }
             else
             {
-                n += snprintf( row + n, sizeof( row - n ), "      " );
+                n += snprintf( row + n, sizeof( row ) - n , "      " );
             }
         }
 
-        n += snprintf( row, sizeof( row - n ), "  " );
+        n += snprintf( row, sizeof( row ) - n , "  " );
         for ( size_t j = 0; j < r && n + 2 < ( int ) sizeof( row ); ++j )
         {
             unsigned char c = p[i + j];
             row[n++]        = *( ( c >= 32 && c < 127 ) ? ( char ) c : "." );
         }
-        row[n] = '\0';
+        
+        if ((size_t)n < sizeof(row)) {
+            row[n] = '\0';
+        } else {
+            row[sizeof(row) - 1] = '\0';
+        }
 
         logger_log( level, category, file, line, func, "%s", row );
     }

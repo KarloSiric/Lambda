@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-06 20:48:40
+ *  Last Modified: 2025-10-08 00:17:11
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -23,6 +23,7 @@
 #include "mdl/mdl_info.h"
 #include "mdl/mdl_loader.h"
 #include "studio.h"
+#include "utils/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,8 +35,24 @@
 #include <GL/gl3.h>
 #endif
 
+t_log_options log_options
+    = { .file_path     = "../logs/viewer.log",
+        .max_bytes     = 0,
+        .max_files     = 0,
+        .use_colors    = true,
+        .json_lines    = false,
+        .console_level = LOG_TRACE };
+        
 int main( int argc, char const *argv[] )
 {
+    
+    logger_init(&log_options);
+    logger_set_global_level(LOG_INFO);
+    
+    // Here we can set specific categories that we want to override specifically
+    logger_set_category_level("renderer", LOG_DEBUG);
+    
+    LOG_INFOF("app", "Logger Initialized");
     studiohdr_t   *main_header    = NULL;
     studiohdr_t   *texture_header = NULL;
     unsigned char *main_data      = NULL;
