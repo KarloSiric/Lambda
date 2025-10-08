@@ -15,6 +15,4 @@
 #define LOG_CAT_SHADERS  "shaders"     // shader loading, defines, uniforms
 #define LOG_CAT_UI       "ui"          // future: Qt/SDL UI
 
-
-
 #endif
