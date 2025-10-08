@@ -1,10 +1,10 @@
-/*======================================================================
+/*======================================================================;
  *  File: main.c
  *  Project: shaders
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 00:17:11
+ *  Last Modified: 2025-10-08 10:10:06
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -53,6 +53,7 @@ int main( int argc, char const *argv[] )
     logger_set_category_level("renderer", LOG_DEBUG);
     
     LOG_INFOF("app", "Logger Initialized");
+    LOG_INFOF("app", "Application started, PID: %d\n", getpid());
     studiohdr_t   *main_header    = NULL;
     studiohdr_t   *texture_header = NULL;
     unsigned char *main_data      = NULL;
@@ -60,7 +61,7 @@ int main( int argc, char const *argv[] )
 
     if ( argc != 2 )
     {
-        printf( "Usage: %s <model.mdl>\n", argv[0] );
+        LOG_INFOF("app", "Usage: %s <model.mdl>", argv[0]);
         return ( 1 );
     }
 
@@ -68,7 +69,7 @@ int main( int argc, char const *argv[] )
 
     if ( result != MDL_SUCCESS )
     {
-        printf( "Failed to load model! Error code: %d\n", result );
+        LOG_ERRORF("mdl", "Failed to load model! Error code: %d\n", result);
         return ( 1 );
     }
 
