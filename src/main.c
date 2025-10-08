@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 16:38:37
+ *  Last Modified: 2025-10-08 16:59:01
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -50,8 +50,6 @@ int main( int argc, char const *argv[] )
     logger_set_category_level( "renderer", LOG_DEBUG );
     logger_set_category_level( "mdl", LOG_DEBUG );
     logger_set_category_level( "textures", LOG_DEBUG );
-
-    // Here we can set specific categories that we want to override specifically
     logger_set_category_level( "renderer", LOG_DEBUG );
 
     LOG_INFOF( "app", "Logger Initialized" );

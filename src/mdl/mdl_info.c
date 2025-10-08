@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:21:42
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-06 14:45:24
+ *  Last Modified: 2025-10-08 18:43:58
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -28,90 +28,109 @@ void print_complete_model_analysis(
     unsigned char *main_data,
     unsigned char *texture_data )
 {
-    printf( "Testing complete model + texure loading %s\n", filename );
-    printf( "SUCCESS: Model loaded completely!\n\n" );
+    /* Pretty rulers */
+    static const char *RULER   = "──────────────────────────────────────────────────────────────────────────────";
+    static const char *RULER_THIN = "────────────────────────────────────────";
 
-    printf( "=== MAIN MODEL INFO ===\n" );
-    printf( "  Name: %s\n", main_header->name );
-    printf( "  File Size: %d bytes\n", main_header->length );
-    printf( "  Bones: %d\n", main_header->numbones );
-    printf( "  Bodyparts: %d\n", main_header->numbodyparts );
-    printf( "  Sequences: %d\n", main_header->numseq );
+    printf("\n%s\n", RULER);
+    printf(" Half-Life MDL Analysis Report\n");
+    printf(" File: %s\n", filename);
+    printf("%s\n\n", RULER);
 
-    print_texture_info( texture_header, texture_data );
+    /* Quick status */
+    printf("STATUS: %-10s  %s\n\n", "SUCCESS", "Model loaded completely");
 
-    print_bodypart_info( main_header, main_data );
+    /* --- Main header summary ------------------------------------------------- */
+    printf("MAIN MODEL INFO\n");
+    printf("%s\n", RULER_THIN);
+    printf("  %-14s %s\n",  "Name:",       main_header->name);
+    printf("  %-14s %d bytes\n", "File Size:",   main_header->length);
+    printf("  %-14s %d\n",  "Bones:",      main_header->numbones);
+    printf("  %-14s %d\n",  "Bodyparts:",  main_header->numbodyparts);
+    printf("  %-14s %d\n",  "Sequences:",  main_header->numseq);
+    printf("\n");
 
-    mstudiobone_t *bones       = NULL;
-    mdl_result_t   bone_result = parse_bone_hierarchy( main_header, main_data, &bones );
+    /* --- Textures (delegated) ------------------------------------------------ */
+    print_texture_info(texture_header, texture_data);
+    printf("\n");
 
-    if ( bone_result == MDL_SUCCESS && bones )
-    {
-        print_bone_info( bones, main_header->numbones );
+    /* --- Bodyparts summary (delegated) -------------------------------------- */
+    print_bodypart_info(main_header, main_data);
+    printf("\n");
+
+    /* --- Bones --------------------------------------------------------------- */
+    mstudiobone_t *bones = NULL;
+    mdl_result_t bone_result = parse_bone_hierarchy(main_header, main_data, &bones);
+    if (bone_result == MDL_SUCCESS && bones) {
+        printf("BONE HIERARCHY (%d bones)\n", main_header->numbones);
+        printf("%s\n", RULER_THIN);
+        print_bone_info(bones, main_header->numbones);
+        printf("\n");
+    } else {
+        fprintf(stderr, "ERROR: Failed to parse bone hierarchy (code %d)\n\n", bone_result);
     }
-    else
-    {
-        printf( "\nFailed to parse bone hierarchy (ERROR: %d)\n", bone_result );
+
+    /* --- Sequences ----------------------------------------------------------- */
+    mstudioseqdesc_t *sequences = NULL;
+    mdl_result_t sequence_result = parse_animation_sequences(main_header, main_data, &sequences);
+    if (sequence_result == MDL_SUCCESS && sequences) {
+        printf("ANIMATION SEQUENCES (%d sequences)\n", main_header->numseq);
+        printf("%s\n", RULER_THIN);
+        print_sequence_info(sequences, main_header->numseq);
+        printf("\n");
+    } else {
+        fprintf(stderr, "ERROR: Failed to parse animations (code %d)\n\n", sequence_result);
     }
 
-    mstudioseqdesc_t *sequences       = NULL;
-    mdl_result_t      sequence_result = parse_animation_sequences( main_header, main_data, &sequences );
-    if ( sequence_result == MDL_SUCCESS && sequences )
-    {
-        print_sequence_info( sequences, main_header->numseq );
-    }
-    else
-    {
-        fprintf( stderr, "Failed to parse animations!\n" );
-    }
+    /* --- Deep dive per bodypart/model/mesh ---------------------------------- */
+    printf("DETAILED MODEL ANALYSIS\n");
+    printf("%s\n", RULER);
 
-    printf( "\n=== Detailed Model Analysis ===\n" );
-    mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( main_data + main_header->bodypartindex );
-    for ( int bodypart_index = 0; bodypart_index < main_header->numbodyparts; bodypart_index++ )
-    {
-        printf(
-            "bodypart_index: %d: %s (%d models)\n",
-            bodypart_index,
-            bodyparts[bodypart_index].name,
-            bodyparts[bodypart_index].nummodels );
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(main_data + main_header->bodypartindex);
 
-        mstudiomodel_t *models = ( mstudiomodel_t * ) ( main_data + bodyparts[bodypart_index].modelindex );
+    for (int bp = 0; bp < main_header->numbodyparts; ++bp) {
+        const mstudiobodyparts_t *B = &bodyparts[bp];
+        printf("\n[Bodypart %d] %-20s  (models: %d)\n", bp, B->name, B->nummodels);
+        printf("%s\n", RULER_THIN);
 
-        for ( int model_index = 0; model_index < bodyparts[bodypart_index].nummodels; model_index++ )
-        {
-            print_model_info( &models[model_index], bodypart_index, model_index );
+        mstudiomodel_t *models = (mstudiomodel_t *)(main_data + B->modelindex);
 
-            mstudiomesh_t *meshes      = NULL;
-            mdl_result_t   mesh_result = parse_mesh_data( &models[model_index], main_data, &meshes );
-            if ( mesh_result == MDL_SUCCESS && meshes )
-            {
-                print_mesh_data( meshes, &models[model_index], models[model_index].nummesh );
-                print_simple_triangle_info( &models[model_index], bodypart_index, model_index );
+        for (int mi = 0; mi < B->nummodels; ++mi) {
+            mstudiomodel_t *M = &models[mi];
+
+            /* High-level model info (delegated) */
+            print_model_info(M, bp, mi);
+
+            /* Meshes (parse + print) */
+            mstudiomesh_t *meshes = NULL;
+            mdl_result_t mesh_result = parse_mesh_data(M, main_data, &meshes);
+            if (mesh_result == MDL_SUCCESS && meshes) {
+                print_mesh_data(meshes, M, M->nummesh);
+                print_simple_triangle_info(M, bp, mi);
+            } else {
+                printf("  %-12s %s\n", "Meshes:", "FAILED to parse");
+                printf("    Model: %s\n", M->name[0] ? M->name : "(unnamed)");
             }
-            else
-            {
-                printf( "   Failed to parse meshes for model: %s\n", models[model_index].name );
-            }
 
+            /* Vertex peek (first / last) */
             vec3_t *vertices = NULL;
-            if ( parse_vertex_data( &models[model_index], main_data, &vertices ) == MDL_SUCCESS )
-            {
-                if ( vertices && models[model_index].numverts > 0 )
-                {
-                    printf( "  Vertices:\n" );
-                    printf( "    First: (%.2f, %.2f, %.2f)\n", vertices[0][0], vertices[0][1], vertices[0][2] );
+            if (parse_vertex_data(M, main_data, &vertices) == MDL_SUCCESS) {
+                if (vertices && M->numverts > 0) {
+                    printf("  %-12s\n", "Vertices:");
+                    printf("    First: (%.2f, %.2f, %.2f)\n",
+                           vertices[0][0], vertices[0][1], vertices[0][2]);
                 }
-                if ( models[model_index].numverts > 1 )
-                {
-                    printf(
-                        "    Last: (%.2f, %.2f, %.2f)\n",
-                        vertices[models[model_index].numverts - 1][0],
-                        vertices[models[model_index].numverts - 1][1],
-                        vertices[models[model_index].numverts - 1][2] );
+                if (M->numverts > 1) {
+                    printf("    Last:  (%.2f, %.2f, %.2f)\n",
+                           vertices[M->numverts - 1][0],
+                           vertices[M->numverts - 1][1],
+                           vertices[M->numverts - 1][2]);
                 }
             }
         }
     }
 
-    printf( "Complete model analysis completed!\n" );
+    printf("\n%s\n", RULER);
+    printf(" Complete model analysis completed\n");
+    printf("%s\n\n", RULER);
 }

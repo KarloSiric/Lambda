@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-05 22:01:03
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 16:33:44
+ *  Last Modified: 2025-10-08 16:40:25
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -100,6 +100,10 @@ int logger_init( const t_log_options *opt )
 #endif
 
     G.console_tty = is_tty_terminal( );
+    
+    if (G.console_tty && G.opt.console_level <= 0) {
+        G.opt.console_level = G.default_level;
+    }
 
     return 0;
 }
