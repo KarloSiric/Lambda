@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,7 +47,7 @@ typedef struct log_options {
     bool        use_colors;       // colored console output
     bool        json_lines;       // write each record as a JSON line
     int         console_level;    // minimum level printed to console
-
+    
 } t_log_options;
 
 int  logger_init( const t_log_options *opt );
@@ -73,8 +74,6 @@ void logger_hexdump(
     const char *label );
 
 uint64_t logger_now_ms( void );
-
-// #define LOG_TRACEF( CAT, FMT, ... )               ...
 
 // ======= MACROS ======= //
 

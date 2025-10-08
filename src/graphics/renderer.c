@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 11:25:54
+ *  Last Modified: 2025-10-08 16:28:18
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -24,6 +24,7 @@
 #include "../graphics/textures.h"
 #include "../mdl/bodypart_manager.h"
 #include "../mdl/bone_system.h"
+#include "../utils/logger.h"
 
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>

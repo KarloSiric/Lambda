@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:25:37
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 10:10:06
+ *  Last Modified: 2025-10-08 11:13:49
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -42,18 +42,21 @@ t_log_options log_options
         .use_colors    = true,
         .json_lines    = false,
         .console_level = LOG_TRACE };
-        
+
 int main( int argc, char const *argv[] )
 {
-    
-    logger_init(&log_options);
-    logger_set_global_level(LOG_INFO);
-    
+    logger_init( &log_options );
+    logger_set_global_level( LOG_INFO );
+    logger_set_category_level( "renderer", LOG_DEBUG );
+    logger_set_category_level("mdl", LOG_DEBUG);
+    logger_set_category_level("textures", LOG_DEBUG);
+
     // Here we can set specific categories that we want to override specifically
-    logger_set_category_level("renderer", LOG_DEBUG);
-    
-    LOG_INFOF("app", "Logger Initialized");
-    LOG_INFOF("app", "Application started, PID: %d\n", getpid());
+    logger_set_category_level( "renderer", LOG_DEBUG );
+
+    LOG_INFOF( "app", "Logger Initialized" );
+    LOG_INFOF( "app", "Application started, PID: %d\n", getpid( ) );
+
     studiohdr_t   *main_header    = NULL;
     studiohdr_t   *texture_header = NULL;
     unsigned char *main_data      = NULL;
@@ -61,24 +64,27 @@ int main( int argc, char const *argv[] )
 
     if ( argc != 2 )
     {
-        LOG_INFOF("app", "Usage: %s <model.mdl>", argv[0]);
+        LOG_INFOF( "app", "Usage: %s <model.mdl>", argv[0] );
+        logger_shutdown( );
         return ( 1 );
     }
-
+    
+    LOG_TIME_BLOCK("load_model_with_texturs", "mdl");
     mdl_result_t result = load_model_with_textures( argv[1], &main_header, &texture_header, &main_data, &texture_data );
 
     if ( result != MDL_SUCCESS )
     {
-        LOG_ERRORF("mdl", "Failed to load model! Error code: %d\n", result);
+        LOG_ERRORF( "mdl", "Failed to load model! Error code: %d\n", result );
         return ( 1 );
     }
 
     print_complete_model_analysis( argv[1], main_header, texture_header, main_data, texture_data );
-
-    printf( "Initializing the renderer...\n" );
+    
+    LOG_INFOF("renederer", "Initializing renderer ...");
+    
     if ( init_renderer( WIDTH, HEIGHT, "Half-Life Model Viewer" ) != 0 )
     {
-        printf( "Failed to initialize renderer!\n" );
+        LOG_ERRORF("renderer","Failed to initialize renderer!");
         free( main_data );
         if ( texture_data )
             free( texture_data );
@@ -97,6 +103,8 @@ int main( int argc, char const *argv[] )
     {
         free( texture_data );
     }
-
+    
+    LOG_INFOF("app","Shutting down");
+    logger_shutdown();
     return ( 0 );
 }
