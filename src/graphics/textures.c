@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-10 00:03:29
+ *  Last Modified: 2025-10-10 00:13:21
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -220,53 +220,23 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         const mstudiotexture_t *T = &textures[i];
 
         printf( "Texture[%d] '%s': flags =0x%04X", i, T->name, T->flags );
-        if ( T->flags & STUDIO_NF_CHROME )
-            printf( " [CHROME]" );
-        if ( T->flags & STUDIO_NF_MASKED )
-            printf( " [MASKED]" );
-        printf( "\n" );
-
+        printf( "Texture[%d] '%s': flags=0x%04X", i, T->name, T->flags );
+        if ( T->flags & STUDIO_NF_FLATSHADE ) printf( " [FLATSHADE]" );
+        if ( T->flags & STUDIO_NF_CHROME )    printf( " [CHROME]" );
+        if ( T->flags & STUDIO_NF_FULLBRIGHT ) printf( " [FULLBRIGHT]" );
+        if ( T->flags & STUDIO_NF_NOMIPS )    printf( " [NOMIPS]" );
+        if ( T->flags & STUDIO_NF_ALPHA )     printf( " [ALPHA]" );
+        if ( T->flags & STUDIO_NF_ADDITIVE )  printf( " [ADDITIVE]" );
+        if ( T->flags & STUDIO_NF_MASKED )    printf( " [MASKED]" );
+        printf( "\n" ); 
+        
+         
         // T->index is an absolute offset from file start
         const unsigned char *indices = file_data + T->index;
 
         // Calculate pixel data size
         const int pixel_count = T->width * T->height;
 
-        // CRITICAL FIX: Check if there's a palette size or assume 256 colors
-        // REMOVING FOR NOW and adding newly found logic
-        /*
-        const unsigned char *palette_ptr = indices + pixel_count;
-
-        // Try to read as uint16
-        uint16_t test_pal_size = 0;
-        memcpy( &test_pal_size, palette_ptr, 2 );
-
-        uint16_t             pal_size;
-        const unsigned char *palette;
-
-        // If the "size" looks invalid (> 256), assume no size field and 256 colors
-        if ( test_pal_size > 256 )
-        {
-            // No palette size field - assume 256 colors, palette starts immediately
-            pal_size = 256;
-            palette  = palette_ptr;
-            printf( "Texture %d: No palette size field detected, assuming 256 colors\n", i );
-        }
-        else if ( test_pal_size == 0 )
-        {
-            // Some textures might have 0 to indicate 256 colors
-            pal_size = 256;
-            palette  = palette_ptr + 2;
-            printf( "Texture %d: Palette size is 0, assuming 256 colors\n", i );
-        }
-        else
-        {
-            // Normal case with valid palette size
-            pal_size = test_pal_size;
-            palette  = palette_ptr + 2;
-            printf( "Texture %d: Found palette size %d\n", i, pal_size );
-        }
-        */
 
         const unsigned char *palette  = indices + pixel_count;
         const int            pal_size = 256;
@@ -359,21 +329,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         items[i].height = T->height;
         items[i].flags = T->flags;
         strncpy( items[i].name, T->name, sizeof( items[i].name ) - 1 );
-        items[i].name[sizeof( items[i].name ) - 1] = '\0';
-        
-        printf( "Texture[%d] '%s': flags=0x%04X", i, T->name, T->flags );        
-        
-        // Print which flags are set
-        if ( T->flags & STUDIO_NF_FLATSHADE ) printf( " [FLATSHADE]" );
-        if ( T->flags & STUDIO_NF_CHROME )    printf( " [CHROME]" );
-        if ( T->flags & STUDIO_NF_FULLBRIGHT ) printf( " [FULLBRIGHT]" );
-        if ( T->flags & STUDIO_NF_NOMIPS )    printf( " [NOMIPS]" );
-        if ( T->flags & STUDIO_NF_ALPHA )     printf( " [ALPHA]" );
-        if ( T->flags & STUDIO_NF_ADDITIVE )  printf( " [ADDITIVE]" );
-        if ( T->flags & STUDIO_NF_MASKED )    printf( " [MASKED]" );
-        printf( "\n" );
-        
-        
+        items[i].name[sizeof( items[i].name ) - 1] = '\0'; 
     }
 
     out_set->textures = items;
