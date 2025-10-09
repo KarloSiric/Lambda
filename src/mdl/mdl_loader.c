@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-09 22:58:55
+ *  Last Modified: 2025-10-09 23:11:51
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -245,12 +245,12 @@ void print_texture_info( studiohdr_t *texture_header, unsigned char *texture_dat
         for ( int i = 0; i < texture_header->numtextures; i++ )
         {
             int struct_textures_location = texture_header->textureindex + ( i * sizeof( mstudiotexture_t ) );
-            printf( "  TextureStruct[%d] Offset 0x%08X\n",i,  struct_textures_location );
+            printf( "  TextureStruct[%d] Offset 0x%08X\n", i, struct_textures_location );
             printf( "  [%d] Name: %s\n", i, textures[i].name );
             printf( "      Width %d, Height %d\n", textures[i].width, textures[i].height );
             printf( "      Flags: %d\n", textures[i].flags );
             printf( "      Index Offset: %d (HEX 0x%08X)\n", textures[i].index, textures[i].index );
-            printf( " \n ");
+            printf( " \n " );
         }
     }
 }
@@ -302,6 +302,7 @@ void print_bone_info( mstudiobone_t *bones, int bone_count )
         printf( "\n" );
     }
 }
+
 
 mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences )
 {
@@ -357,6 +358,7 @@ void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count )
         printf( "\n" );
     }
 }
+
 
 void print_model_info( mstudiomodel_t *model, int bodypart_index, int model_index )
 {

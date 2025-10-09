@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-10-08 17:41:20
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-09 20:30:29
+ *  Last Modified: 2025-10-09 23:02:35
  *----------------------------------------------------------------------
  *  Description:
  *      
@@ -147,6 +147,3 @@ void print_studio_header_file( const char *title, const studiohdr_t *header )
 
     printf( "%s\n", RULER );
 }
-
-
-
