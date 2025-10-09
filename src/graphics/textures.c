@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 13:25:04
+ *  Last Modified: 2025-10-09 23:53:52
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -143,53 +143,43 @@ static void debug_texture_data( const studiohdr_t *header, const unsigned char *
     printf( "header->textureindex = 0x%X\n", header->textureindex );
     printf( "header->texturedataindex = 0x%X\n", header->texturedataindex );
     printf( "header->numtextures = %d\n", header->numtextures );
-
+    
     const mstudiotexture_t *textures = ( const mstudiotexture_t * ) ( file_data + header->textureindex );
-
+    
     if ( header->numtextures > 0 )
     {
         printf( "\nFirst texture:\n" );
         printf( "  name: %s\n", textures[0].name );
+        printf( "  flags: 0x%04X\n", textures[0].flags );
         printf( "  width x height: %d x %d\n", textures[0].width, textures[0].height );
         printf( "  index: 0x%X\n", textures[0].index );
-
+        
         // The actual texture data location
         const unsigned char *tex_data    = file_data + textures[0].index;
         int                  pixel_count = textures[0].width * textures[0].height;
-
+        
         printf( "\nFirst 16 bytes of pixel indices:\n" );
         for ( int i = 0; i < 16 && i < pixel_count; i++ )
         {
             printf( "%02X ", tex_data[i] );
         }
         printf( "\n" );
-
-        // The palette should be right after the pixel data
-        const unsigned char *after_pixels = tex_data + pixel_count;
-
-        printf(
-            "\nBytes immediately after pixel data (should be palette size as "
-            "uint16):\n" );
+        
+        // CORRECT: Palette starts IMMEDIATELY after pixel data (no size field!)
+        const unsigned char *palette = tex_data + pixel_count;
+        
+        printf( "\nFirst 16 bytes of palette (RGB data, no size field):\n" );
         for ( int i = 0; i < 16; i++ )
         {
-            printf( "%02X ", after_pixels[i] );
+            printf( "%02X ", palette[i] );
         }
         printf( "\n" );
-
-        // Read palette size
-        uint16_t pal_size;
-        memcpy( &pal_size, after_pixels, 2 );
-        printf( "\nPalette size (uint16): %u (0x%04X)\n", pal_size, pal_size );
-
-        // Show beginning of palette data (should be RGB values)
-        if ( pal_size > 0 && pal_size <= 256 )
+        
+        // Show beginning of palette data (always 256 colors)
+        printf( "\nFirst 5 palette entries (always 256 colors total):\n" );
+        for ( int i = 0; i < 5; i++ )
         {
-            printf( "\nFirst few palette entries (RGB):\n" );
-            const unsigned char *palette = after_pixels + 2;
-            for ( int i = 0; i < 5 && i < pal_size; i++ )
-            {
-                printf( "  [%d]: R=%3d G=%3d B=%3d\n", i, palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2] );
-            }
+            printf( "  [%d]: R=%3d G=%3d B=%3d\n", i, palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2] );
         }
     }
     printf( "=========================\n\n" );
@@ -243,6 +233,8 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         const int pixel_count = T->width * T->height;
 
         // CRITICAL FIX: Check if there's a palette size or assume 256 colors
+        // REMOVING FOR NOW and adding newly found logic
+        /*
         const unsigned char *palette_ptr = indices + pixel_count;
 
         // Try to read as uint16
@@ -274,7 +266,10 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
             palette  = palette_ptr + 2;
             printf( "Texture %d: Found palette size %d\n", i, pal_size );
         }
+        */
 
+        const unsigned char *palette  = indices + pixel_count;
+        const int            pal_size = 256;
         printf( "Loading texture %d: %s (%dx%d), using %d color palette\n", i, T->name, T->width, T->height, pal_size );
 
         // Allocate RGBA buffer
