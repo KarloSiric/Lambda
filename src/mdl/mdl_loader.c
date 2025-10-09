@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-22 23:59:53
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-07 16:07:47
+ *  Last Modified: 2025-10-09 22:58:55
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -237,16 +237,20 @@ void print_texture_info( studiohdr_t *texture_header, unsigned char *texture_dat
 
     printf( "\nTexture Information:\n" );
     printf( "  Texture file size: %d bytes\n", texture_header->length );
-    printf( "  Number of textures: %d\n", texture_header->numtextures );
+    printf( "  Number of textures: %d\n\n\n", texture_header->numtextures );
 
     if ( texture_header->numtextures > 0 )
     {
         mstudiotexture_t *textures = ( mstudiotexture_t * ) ( texture_data + texture_header->textureindex );
         for ( int i = 0; i < texture_header->numtextures; i++ )
         {
+            int struct_textures_location = texture_header->textureindex + ( i * sizeof( mstudiotexture_t ) );
+            printf( "  TextureStruct[%d] Offset 0x%08X\n",i,  struct_textures_location );
             printf( "  [%d] Name: %s\n", i, textures[i].name );
             printf( "      Width %d, Height %d\n", textures[i].width, textures[i].height );
             printf( "      Flags: %d\n", textures[i].flags );
+            printf( "      Index Offset: %d (HEX 0x%08X)\n", textures[i].index, textures[i].index );
+            printf( " \n ");
         }
     }
 }
@@ -791,5 +795,3 @@ get_model_by_bodypart( studiohdr_t *header, unsigned char *main_data, int bodygr
 
     return &models[index];
 }
-
-

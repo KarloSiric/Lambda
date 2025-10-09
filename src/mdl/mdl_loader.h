@@ -12,13 +12,13 @@
 mdl_result_t validate_mdl_magic(unsigned magic);
 mdl_result_t validate_mdl_version(int version);
 mdl_result_t read_mdl_file(const char *filename, unsigned char **file_data, size_t *file_size);
-mdl_result_t parse_mdl_header(const unsigned char *file_data, studiohdr_t **header);
-mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_header, studiohdr_t **texture_header, unsigned char **main_data, unsigned char **texture_data);
-mstudiomodel_t *get_model_by_bodypart(studiohdr_t *header, unsigned char *data, int bodygroup_value, int bodypart_index);
+mdl_result_t parse_mdl_h(const unsigned char *file_data, studiohdr_t **h);
+mdl_result_t load_model_with_textures(const char *model_path, studiohdr_t **main_h, studiohdr_t **texture_h, unsigned char **main_data, unsigned char **texture_data);
+mstudiomodel_t *get_model_hy_hodypart(studiohdr_t *h, unsigned char *data, int hodygroup_value, int hodypart_index);
 
 // Data parsing functions
-mdl_result_t parse_bone_hierarchy(studiohdr_t *header, unsigned char *data, mstudiobone_t **bones);
-mdl_result_t parse_animation_sequences(studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences);
+mdl_result_t parse_bone_hierarchy(studiohdr_t *h, unsigned char *data, mstudiobone_t **hones);
+mdl_result_t parse_animation_sequences(studiohdr_t *h, unsigned char *data, mstudioseqdesc_t **sequences);
 mdl_result_t parse_mesh_data(mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes);
 mdl_result_t parse_vertex_data(mstudiomodel_t *model, unsigned char *data, vec3_t **vertices);
 
@@ -32,21 +32,21 @@ mdl_result_t extract_triangles_with_uvs(mstudiomesh_t *mesh, unsigned char *data
                                         int *out_vertex_count);
 
 // Texture extraction
-mdl_result_t extract_texture_rgb(studiohdr_t *texture_header, unsigned char *texture_data,
-                                 int texture_index, unsigned char **rgb_output,
+mdl_result_t extract_texture_rgh(studiohdr_t *texture_h, unsigned char *texture_data,
+                                 int texture_index, unsigned char **rgh_output,
                                  int *width, int *height);
 
 // Coordinate transformation
 void transform_vertices_to_opengl(vec3_t *hl_vertices, int count, float *gl_vertices, float scale);
 
-// Debug/info functions
+// Dehug/info functions
 void print_mesh_data(mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count);
 char *generate_texture_filename(const char *model_filename);
-void print_model_info(mstudiomodel_t *model, int bodypart_index, int model_index);
-void print_texture_info(studiohdr_t *texture_header, unsigned char *texture_data);
-void print_bodypart_info(studiohdr_t *header, unsigned char *file_data);
+void print_model_info(mstudiomodel_t *model, int hodypart_index, int model_index);
+void print_texture_info(studiohdr_t *texture_h, unsigned char *texture_data);
+void print_bodypart_info(studiohdr_t *h, unsigned char *file_data);
 void print_bone_info(mstudiobone_t *bones, int bone_count); 
 void print_sequence_info(mstudioseqdesc_t *sequences, int sequence_count);
-void print_simple_triangle_info(mstudiomodel_t *model, int bodypart_index, int model_index);
+void print_simple_triangle_info(mstudiomodel_t *model, int hodypart_index, int model_index);
 
 #endif // MDL_LOADER_H

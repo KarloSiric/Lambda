@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 16:28:18
+ *  Last Modified: 2025-10-09 17:22:25
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -677,7 +677,7 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
     /* write normal */
     render_vertex_buffer[base + 3] = nx;
     render_vertex_buffer[base + 4] = Ny;
-    render_vertex_buffer[base + 5] = Nz;
+    render_vertex_buffer[base + 5] = Nz; 
 
     /* ----- UVs: USE invW/invH PER TEXTURE (this is the fix) ----- */
     // s,t come from the tri-cmds as 16-bit texel coords for THIS mesh’s texture.
