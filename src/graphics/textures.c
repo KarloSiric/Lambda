@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-27 14:30:32
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-09 23:53:52
+ *  Last Modified: 2025-10-10 00:03:29
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -357,8 +357,23 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         items[i].gl_id  = tex;
         items[i].width  = T->width;
         items[i].height = T->height;
+        items[i].flags = T->flags;
         strncpy( items[i].name, T->name, sizeof( items[i].name ) - 1 );
         items[i].name[sizeof( items[i].name ) - 1] = '\0';
+        
+        printf( "Texture[%d] '%s': flags=0x%04X", i, T->name, T->flags );        
+        
+        // Print which flags are set
+        if ( T->flags & STUDIO_NF_FLATSHADE ) printf( " [FLATSHADE]" );
+        if ( T->flags & STUDIO_NF_CHROME )    printf( " [CHROME]" );
+        if ( T->flags & STUDIO_NF_FULLBRIGHT ) printf( " [FULLBRIGHT]" );
+        if ( T->flags & STUDIO_NF_NOMIPS )    printf( " [NOMIPS]" );
+        if ( T->flags & STUDIO_NF_ALPHA )     printf( " [ALPHA]" );
+        if ( T->flags & STUDIO_NF_ADDITIVE )  printf( " [ADDITIVE]" );
+        if ( T->flags & STUDIO_NF_MASKED )    printf( " [MASKED]" );
+        printf( "\n" );
+        
+        
     }
 
     out_set->textures = items;

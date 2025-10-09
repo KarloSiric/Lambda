@@ -4,7 +4,7 @@
  *  Author: karlosiric <email@example.com>
  *  Created: 2025-09-24 14:22:30
  *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-09 17:22:25
+ *  Last Modified: 2025-10-09 23:57:52
  *----------------------------------------------------------------------
  *  Description:
  *
@@ -24,7 +24,6 @@
 #include "../graphics/textures.h"
 #include "../mdl/bodypart_manager.h"
 #include "../mdl/bone_system.h"
-#include "../utils/logger.h"
 
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
@@ -218,11 +217,11 @@ float vertices[] = {
     -0.5f,
     -0.5f,
     0.0f,    // Bottom left
-    
+
     0.5f,
     -0.5f,
     0.0f,    // Bottom right
-    
+
     0.0f,
     0.5f,
     0.0f    // Top center
@@ -677,7 +676,7 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
     /* write normal */
     render_vertex_buffer[base + 3] = nx;
     render_vertex_buffer[base + 4] = Ny;
-    render_vertex_buffer[base + 5] = Nz; 
+    render_vertex_buffer[base + 5] = Nz;
 
     /* ----- UVs: USE invW/invH PER TEXTURE (this is the fix) ----- */
     // s,t come from the tri-cmds as 16-bit texel coords for THIS mesh’s texture.
