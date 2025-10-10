@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 13:51:58
+   Last Modified: 2025-10-10 15:06:45
    ---------------------------------------------------------------------
    Description:
        
@@ -49,7 +49,7 @@ mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, st
     state->current_sequence = sequence_index;
     state->current_frame    = 0.0f;
     state->frame_time       = 0.0f;
-    state->is_looping       = ( seq->flags & 0x01 ) ? 1 : 0;
+    state->is_looping       = ( seq->flags & 0x01 );
 
     printf(
         "Set animation to sequence %d: '%s' (%d frames @ %.1f fps)\n",
@@ -61,17 +61,29 @@ mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, st
     return MDL_SUCCESS;
 }
 
-
-void mdl_animation_update(mdl_animation_state_t *state, float delta_time, studiohdr_t *header, unsigned char *data) {
-     
-     // safety checking
-     if (!state || !header || !data) {
+void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studiohdr_t *header, unsigned char *data )
+{
+    // safety checking
+    if ( !state || !header || !data )
+    {
         return;
-     }
-     
-     
-     
+    }
+    
+    mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)(data + header->seqindex);
+    mstudioseqdesc_t *seq = &sequences[state->current_sequence];
+    
+    // still animation because it has no frames whatsoever so
+    if (seq->numframes <= 1) {
+        return;
+    }
+    
+    float frames_per_second = seq->fps;
+    
+    state->frame_time =
+
+    
+    
+    
     
 }
-
 

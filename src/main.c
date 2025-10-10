@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 16:59:01
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 11:41:19
+   Last Modified: 2025-10-10 14:50:21
    ---------------------------------------------------------------------
    Description:
        
@@ -106,3 +106,6 @@ int main( int argc, char const *argv[] )
     logger_shutdown( );
     return ( 0 );
 }
+
+
+
