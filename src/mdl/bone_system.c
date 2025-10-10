@@ -1,19 +1,20 @@
 /*======================================================================
- *  File: bone_system.c
- *  Project: shaders
- *  Author: karlosiric <email@example.com>
- *  Created: 2025-09-26 12:16:24
- *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 11:11:35
- *----------------------------------------------------------------------
- *  Description:
- *
- *----------------------------------------------------------------------
- *  License:
- *  Company:
- *  Version: 0.1.0
- *======================================================================
- */
+   File: bone_system.c
+   Project: shaders
+   Author: karlosiric <email@example.com>
+   Created: 2025-10-08 11:11:35
+   Last Modified by: karlosiric
+   Last Modified: 2025-10-10 12:02:33
+   ---------------------------------------------------------------------
+   Description:
+       
+   ---------------------------------------------------------------------
+   License: 
+   Company: 
+   Version: 0.1.0
+ ======================================================================
+                                                                       */
+
 
 #include "bone_system.h"
 
@@ -97,7 +98,7 @@ void SetUpBones( studiohdr_t *header, unsigned char *data )
         }
         else
         {
-	    Mat4Copy( local, g_bonetransformations[i] );
+            Mat4Copy( local, g_bonetransformations[i] );
         }
     }
 }
