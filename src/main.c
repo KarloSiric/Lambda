@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 16:59:01
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 14:50:21
+   Last Modified: 2025-10-10 16:52:33
    ---------------------------------------------------------------------
    Description:
        
@@ -14,7 +14,6 @@
    Version: 0.1.0
  ======================================================================
                                                                        */
-
 
 #include "main.h"
 
@@ -75,7 +74,7 @@ int main( int argc, char const *argv[] )
         return ( 1 );
     }
 
-    print_complete_model_analysis( argv[1], main_header, texture_header, main_data, texture_data );
+    print_complete_model_analysis( stdout, argv[1], main_header, texture_header, main_data, texture_data );
 
     LOG_INFOF( "renederer", "Initializing renderer ..." );
 
@@ -106,6 +105,3 @@ int main( int argc, char const *argv[] )
     logger_shutdown( );
     return ( 0 );
 }
-
-
-

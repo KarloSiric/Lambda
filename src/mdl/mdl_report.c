@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:02:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 10:34:06
+   Last Modified: 2025-10-10 16:25:12
    ---------------------------------------------------------------------
    Description:
        
@@ -36,8 +36,8 @@
 #define CLOSE  close
 #endif
 
-static const char *RULER      = "──────────────────────────────────────────────────────────────────────────────";
-static const char *RULER_THIN = "────────────────────────────────────────";
+static const char *RULER      = "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────";
+static const char *RULER_THIN = "────────────────────────────────────────────────────────────────────────────────";
 
 // This function already prints things for the
 void print_complete_model_analysis(

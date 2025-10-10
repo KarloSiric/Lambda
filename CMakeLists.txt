@@ -29,12 +29,14 @@ set(SOURCES
     src/mdl/mdl_info.c
     src/mdl/bone_system.c
     src/mdl/bodypart_manager.c
+    src/mdl/mdl_animations.c
     src/graphics/renderer.c
     src/graphics/camera.c
     src/graphics/textures.c
     src/utils/utils.c
     src/utils/mdl_messages.c
     src/utils/logger.c
+    
 )
 
 # Create executable
