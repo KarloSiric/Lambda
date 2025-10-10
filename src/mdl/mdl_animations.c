@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 20:29:37
+   Last Modified: 2025-10-10 22:51:01
    ---------------------------------------------------------------------
    Description:
        
@@ -28,6 +28,30 @@ void mdl_animation_init( mdl_animation_state_t *state )
     state->current_frame    = 0.0f;
     state->is_looping       = false;
 }
+
+void build_bone_matrix(vec3_t position, vec3_t rotation, float matrix[3][3]) {
+    
+    // 1. Calculate the cosine and sine for each rotation axis
+    
+    float cx = cosf(rotation[0]);
+    float sx = sinf(rotation[0]);
+    
+    float cy = cosf(rotation[1]);
+    float sy = sinf(rotation[1]);
+    
+    float cz = cosf(rotation[2]);
+    float sz = sinf(rotation[2]);
+    
+    
+}
+
+
+
+
+
+
+
+
 
 mdl_result_t
 mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, studiohdr_t *header, unsigned char *data )
@@ -85,7 +109,7 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
      * So lets say we ahve 60 frames per second and that means the delta time 
      * is 1/60 -> 0.0167 s so that means each frame takes that amount of time to render, and 
      * that means we effectively can show 59 different frames in under a second for that one given animation.
-     * 
+     *  
      * That also means that if something has animations rnning at lets say @ 22 fps, meaning
      * its delta time is around 1/22 ~ 0.045 s meaning there is a smaller range taht can be shown.
      * That means each 0.045 another frame is being shown instead of every 0.0167 so it doesnt look
@@ -156,25 +180,24 @@ mdl_result_t mdl_animation_calculate_bones(
             if ( bone_anim->offset[channel] != 0 )
             {
                 // ANIMATED
-                
-                
-                
-                
-                
-                
-                
-                
-                    
-                
-                
-                
-                
-                
-                
-                
-                
-                
+                float value
+                    = calc_bone_anim_value( data, seq, bone_anim, channel, state->current_frame, bone->scale[channel] );
+
+                if ( channel < 3 )
+                {
+                    position[channel] += value;
+                }
+                else
+                {
+                    rotation[channel - 3] += value;
+                }
             }
         }
     }
+
+    // now here we need to build the proper bone matrix from the rotation and position
+    build_bone_matrix(...);    
+    
+
+    return MDL_SUCCESS;
 }
