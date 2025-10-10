@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 22:51:01
+   Last Modified: 2025-10-10 23:09:16
    ---------------------------------------------------------------------
    Description:
        
@@ -42,7 +42,23 @@ void build_bone_matrix(vec3_t position, vec3_t rotation, float matrix[3][3]) {
     float cz = cosf(rotation[2]);
     float sz = sinf(rotation[2]);
     
+    // 2. Building the rotational matrix using Euler's angle formula
+    matrix[0][0] = cy * cz;
+    matrix[0][1] = cy * sz;
+    matrix[0][2] = -sy;
     
+    matrix[1][0] = sx * sy * cz - cx * sz;
+    matrix[1][1] = sx * sy * sz - cx * cz;
+    matrix[1][2] = sx * sy;
+    
+    matrix[2][0] = cx * sy * cz + sx * sz;
+    matrix[2][1] = cx * sy * sz - sx * cz;
+    matrix[2][2] = cx * cy;
+    
+    // 3. Adding translation 
+    matrix[0][3] = position[0]; 
+    matrix[1][3] = position[1]; 
+    matrix[2][3] = position[2];  
 }
 
 
