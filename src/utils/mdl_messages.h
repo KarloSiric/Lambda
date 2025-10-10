@@ -83,6 +83,4 @@ size_t mdl_format_message(char* out, size_t cap, mdl_result_t r, const mdl_msg_c
 void mdl_print_message(mdl_result_t r, const mdl_msg_ctx_t* ctx);
 
 
-
-
 #endif

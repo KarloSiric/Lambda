@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 19:02:50
+   Last Modified: 2025-10-10 20:29:37
    ---------------------------------------------------------------------
    Description:
        
@@ -118,25 +118,63 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
     return;
 }
 
-
-mdl_result_t mdl_animation_calculate_bones(mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, float (*bone_matrices)[3][4]) {
-    
-    if (!state || !header || !bone_matrices) {
+mdl_result_t mdl_animation_calculate_bones(
+    mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, float ( *bone_matrices )[3][4] )
+{
+    if ( !state || !header || !bone_matrices )
+    {
         return MDL_ERROR_INVALID_PARAMETER;
     }
-    
-    mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)(data + header->seqindex);
-    mstudioseqdesc_t *seq = &sequences[state->current_sequence];
-    
-    mstudiobone_t *bones = (mstudiobone_t *)(data + header->boneindex);
-    
-    for (int i = 0; i < header->numbones; i++) {
-        // TODO(Karlo): Need to find the positon of each bone and then find the rotation of that bone...
-            
-        
-    }   
-    
-    
-    
-    
+    mstudiobone_t *bones = ( mstudiobone_t * ) ( data + header->boneindex );
+
+    mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * ) ( data + header->seqindex );
+    mstudioseqdesc_t *seq       = &sequences[state->current_sequence];
+
+    mstudioanim_t *anim_data = ( mstudioanim_t * ) ( data + seq->animindex );
+    // TODO(Karlo): Need to find the positon of each bone and then find the rotation of that bone...
+
+    for ( int i = 0; i < header->numbones; i++ )
+    {
+        mstudiobone_t *bone      = &bones[i];
+        mstudioanim_t *bone_anim = &anim_data[i];
+
+        // Now we start with the default T pose position
+        vec3_t position = {
+            bone->value[0],
+            bone->value[1],
+            bone->value[2],
+        };
+
+        vec3_t rotation = {
+            bone->value[3],
+            bone->value[4],
+            bone->value[5],
+        };
+
+        for ( int channel = 0; channel < 6; channel++ )
+        {
+            if ( bone_anim->offset[channel] != 0 )
+            {
+                // ANIMATED
+                
+                
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            }
+        }
+    }
 }
