@@ -79,5 +79,3 @@ inline int mdl_write_report_via_stdout_redirect(
 }
 
 
-
-
