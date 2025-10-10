@@ -1,20 +1,19 @@
 /*======================================================================
- *  File: renderer.c
- *  Project: shaders
- *  Author: karlosiric <email@example.com>
- *  Created: 2025-09-24 14:22:30
- *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-09 23:57:52
- *----------------------------------------------------------------------
- *  Description:
- *
- *----------------------------------------------------------------------
- *  License:
- *  Company:
- *  Version: 0.1.0
- *======================================================================
- */
-
+   File: renderer.c
+   Project: shaders
+   Author: karlosiric <email@example.com>
+   Created: 2025-10-09 23:57:52
+   Last Modified by: karlosiric
+   Last Modified: 2025-10-10 10:16:52
+   ---------------------------------------------------------------------
+   Description:
+       
+   ---------------------------------------------------------------------
+   License: 
+   Company: 
+   Version: 0.1.0
+ ======================================================================
+                                                                       */
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #endif

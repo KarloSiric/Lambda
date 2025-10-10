@@ -1,19 +1,19 @@
 /*======================================================================
- *  File: textures.c
- *  Project: shaders
- *  Author: karlosiric <email@example.com>
- *  Created: 2025-09-27 14:30:32
- *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-10 00:13:21
- *----------------------------------------------------------------------
- *  Description:
- *
- *----------------------------------------------------------------------
- *  License:
- *  Company:
- *  Version: 0.1.0
- *======================================================================
- */
+   File: textures.c
+   Project: shaders
+   Author: karlosiric <email@example.com>
+   Created: 2025-09-27 14:30:32
+   Last Modified by: karlosiric
+   Last Modified: 2025-10-10 10:24:14
+   --------------------------------------------------------------------
+   Description:
+ 
+   --------------------------------------------------------------------
+   License:
+   Company:
+   Version: 0.1.0
+ ======================================================================
+                                                                       */
 
 #include <OpenGL/gl.h>
 #include <stddef.h>
@@ -140,8 +140,8 @@ static bool parse_paletted_block(
 static void debug_texture_data( const studiohdr_t *header, const unsigned char *file_data )
 {
     printf( "\n=== TEXTURE DEBUG INFO ===\n" );
-    printf( "header->textureindex = 0x%X\n", header->textureindex );
-    printf( "header->texturedataindex = 0x%X\n", header->texturedataindex );
+    printf( "header->textureindex = 0x08%X\n", header->textureindex );
+    printf( "header->texturedataindex = 0x08%X\n", header->texturedataindex );
     printf( "header->numtextures = %d\n", header->numtextures );
     
     const mstudiotexture_t *textures = ( const mstudiotexture_t * ) ( file_data + header->textureindex );
@@ -150,9 +150,9 @@ static void debug_texture_data( const studiohdr_t *header, const unsigned char *
     {
         printf( "\nFirst texture:\n" );
         printf( "  name: %s\n", textures[0].name );
-        printf( "  flags: 0x%04X\n", textures[0].flags );
+        printf( "  flags: 0x%08X\n", textures[0].flags );
         printf( "  width x height: %d x %d\n", textures[0].width, textures[0].height );
-        printf( "  index: 0x%X\n", textures[0].index );
+        printf( "  index: 0x%08X\n", textures[0].index );
         
         // The actual texture data location
         const unsigned char *tex_data    = file_data + textures[0].index;
@@ -220,7 +220,6 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         const mstudiotexture_t *T = &textures[i];
 
         printf( "Texture[%d] '%s': flags =0x%04X", i, T->name, T->flags );
-        printf( "Texture[%d] '%s': flags=0x%04X", i, T->name, T->flags );
         if ( T->flags & STUDIO_NF_FLATSHADE ) printf( " [FLATSHADE]" );
         if ( T->flags & STUDIO_NF_CHROME )    printf( " [CHROME]" );
         if ( T->flags & STUDIO_NF_FULLBRIGHT ) printf( " [FULLBRIGHT]" );
@@ -240,7 +239,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
 
         const unsigned char *palette  = indices + pixel_count;
         const int            pal_size = 256;
-        printf( "Loading texture %d: %s (%dx%d), using %d color palette\n", i, T->name, T->width, T->height, pal_size );
+        printf( "Loading Texture [%d]: %s (%dx%d), using %d color palette\n", i, T->name, T->width, T->height, pal_size );
 
         // Allocate RGBA buffer
         unsigned char *rgba = ( unsigned char * ) malloc( ( size_t ) pixel_count * 4u );
@@ -312,7 +311,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         // Unbind texture
         glBindTexture( GL_TEXTURE_2D, 0 );
 
-        printf( "  Texture %d (%s): GL ID %u, dimensions %dx%d\n", i, T->name, tex, T->width, T->height );
+        printf( "  Texture %d (%s): GL ID %u, dimensions %dx%d\n\n", i, T->name, tex, T->width, T->height );
 
         // Special debug for face textures
         if ( strstr( T->name, "Face" ) != NULL || strstr( T->name, "face" ) != NULL )
@@ -335,7 +334,7 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
     out_set->textures = items;
     out_set->count    = n_textures;
 
-    printf( "Texture loading complete: %d textures loaded\n", n_textures );
+    printf( "Texture loading complete: %d textures loaded\n\n\n", n_textures );
     return MDL_SUCCESS;
 }
 

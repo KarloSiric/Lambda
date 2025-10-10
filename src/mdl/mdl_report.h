@@ -1,4 +1,3 @@
-// mdl_report_redirect.c
 #include "mdl_loader.h"
 
 #include <errno.h>
@@ -20,12 +19,6 @@
 
 #include "../studio.h"
 
-// This is your existing function that prints everything with printf(...):
-// void print_complete_model_analysis(const char* model_path,
-//                                    const studiohdr_t* hdr,
-//                                    const studiohdr_t* thdr,
-//                                    const unsigned char* data,
-//                                    const unsigned char* tdata);
 void print_complete_model_analysis(
     const char *, const studiohdr_t *, const studiohdr_t *, const unsigned char *, const unsigned char * );
 

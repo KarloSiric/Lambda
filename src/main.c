@@ -1,22 +1,19 @@
-/*======================================================================;
- *  File: main.c
- *  Project: shaders
- *  Author: karlosiric <email@example.com>
- *  Created: 2025-09-24 14:25:37
- *  Last Modified by: karlosiric
- *  Last Modified: 2025-10-08 16:59:01
- *----------------------------------------------------------------------
- *  Description:
- *
- *  Main entry point of the application itself
- *
- *----------------------------------------------------------------------
- *  License:
- *  Company:
- *  Version: 0.1.0
- *======================================================================
- */
-
+/*======================================================================
+   File: main.c
+   Project: shaders
+   Author: karlosiric <email@example.com>
+   Created: 2025-10-08 16:59:01
+   Last Modified by: karlosiric
+   Last Modified: 2025-10-10 10:16:59
+   ---------------------------------------------------------------------
+   Description:
+       
+   ---------------------------------------------------------------------
+   License: 
+   Company: 
+   Version: 0.1.0
+ ======================================================================
+                                                                       */
 #include "main.h"
 
 #include "graphics/renderer.h"
