@@ -56,13 +56,13 @@ mdl_result_t extract_texture_rgh(
 void transform_vertices_to_opengl( vec3_t *hl_vertices, int count, float *gl_vertices, float scale );
 
 // Dehug/info functions
-void  print_mesh_data( mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count );
+void  print_mesh_data( FILE *output, mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count );
 char *generate_texture_filename( const char *model_filename );
-void  print_model_info( mstudiomodel_t *model, int hodypart_index, int model_index );
-void  print_texture_info( studiohdr_t *texture_h, unsigned char *texture_data );
-void  print_bodypart_info( studiohdr_t *h, unsigned char *file_data );
-void  print_bone_info( mstudiobone_t *bones, int bone_count );
-void  print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count );
-void  print_simple_triangle_info( mstudiomodel_t *model, int hodypart_index, int model_index );
+void  print_model_info( FILE *output, mstudiomodel_t *model, int hodypart_index, int model_index );
+void  print_texture_info( FILE *output, studiohdr_t *texture_h, unsigned char *texture_data );
+void  print_bodypart_info( FILE *output, studiohdr_t *h, unsigned char *file_data );
+void  print_bone_info( FILE *output, mstudiobone_t *bones, int bone_count );
+void  print_sequence_info( FILE *output, mstudioseqdesc_t *sequences, int sequence_count );
+void  print_simple_triangle_info( FILE *output, mstudiomodel_t *model, int hodypart_index, int model_index );
 
 #endif    // MDL_LOADER_H

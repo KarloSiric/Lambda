@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:11:51
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 10:16:19
+   Last Modified: 2025-10-10 11:35:16
    ---------------------------------------------------------------------
    Description:
        
@@ -91,33 +91,34 @@ mdl_result_t parse_mdl_header( const unsigned char *file_data, studiohdr_t **hea
     return MDL_SUCCESS;
 }
 
-void print_bodypart_info( studiohdr_t *header, unsigned char *file_data )
+
+void print_bodypart_info( FILE *output, studiohdr_t *header, unsigned char *file_data )
 {
     if ( header->numbodyparts == 0 )
     {
-        printf( "  No bodyparts found.\n" );
+        fprintf( output, "  No bodyparts found.\n" );
         return;
     }
 
-    printf( "\nDetailed Bodypart Information:\n" );
-    // FIXED: Use correct structure name
+    fprintf( output, "\nDetailed Bodypart Information:\n" );
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( file_data + header->bodypartindex );
 
     for ( int i = 0; i < header->numbodyparts; i++ )
     {
-        printf( "   [%d] Bodypart: %s (%d models)\n", i, bodyparts[i].name, bodyparts[i].nummodels );
+        fprintf( output, "   [%d] Bodypart: %s (%d models)\n", i, bodyparts[i].name, bodyparts[i].nummodels );
 
         mstudiomodel_t *models = ( mstudiomodel_t * ) ( file_data + bodyparts[i].modelindex );
 
         for ( int j = 0; j < bodyparts[i].nummodels; j++ )
         {
-            printf( "      Model [%d]: %s\n", j, models[j].name );
-            printf( "          Vertices: %d\n", models[j].numverts );
-            printf( "          Meshes: %d\n", models[j].nummesh );
+            fprintf( output, "      Model [%d]: %s\n", j, models[j].name );
+            fprintf( output, "          Vertices: %d\n", models[j].numverts );
+            fprintf( output, "          Meshes: %d\n", models[j].nummesh );
         }
-        printf( "\n" );
+        fprintf( output, "\n" );
     }
 }
+
 
 char *generate_texture_filename( const char *model_filename )
 {
@@ -227,17 +228,18 @@ mdl_result_t load_model_with_textures(
     return MDL_SUCCESS;
 }
 
-void print_texture_info( studiohdr_t *texture_header, unsigned char *texture_data )
+
+void print_texture_info( FILE *output, studiohdr_t *texture_header, unsigned char *texture_data )
 {
     if ( !texture_data || !texture_header )
     {
-        printf( "\nTexture Information: No texture file found.\n" );
+        fprintf( output, "\nTexture Information: No texture file found.\n" );
         return;
     }
 
-    printf( "\nTexture Information:\n" );
-    printf( "  Texture file size: %d bytes\n", texture_header->length );
-    printf( "  Number of textures: %d\n\n\n", texture_header->numtextures );
+    fprintf( output, "\nTexture Information:\n" );
+    fprintf( output, "  Texture file size: %d bytes\n", texture_header->length );
+    fprintf( output, "  Number of textures: %d\n\n\n", texture_header->numtextures );
 
     if ( texture_header->numtextures > 0 )
     {
@@ -245,15 +247,16 @@ void print_texture_info( studiohdr_t *texture_header, unsigned char *texture_dat
         for ( int i = 0; i < texture_header->numtextures; i++ )
         {
             int struct_textures_location = texture_header->textureindex + ( i * sizeof( mstudiotexture_t ) );
-            printf( "  TextureStruct[%d] Offset 0x%08X\n", i, struct_textures_location );
-            printf( "  [%d] Name: %s\n", i, textures[i].name );
-            printf( "      Width %d, Height %d\n", textures[i].width, textures[i].height );
-            printf( "      Flags: %d\n", textures[i].flags );
-            printf( "      Index Offset: %d (HEX 0x%08X)\n", textures[i].index, textures[i].index );
-            printf( " \n " );
+            fprintf( output, "  TextureStruct[%d] Offset 0x%08X\n", i, struct_textures_location );
+            fprintf( output, "  [%d] Name: %s\n", i, textures[i].name );
+            fprintf( output, "      Width %d, Height %d\n", textures[i].width, textures[i].height );
+            fprintf( output, "      Flags: %d\n", textures[i].flags );
+            fprintf( output, "      Index Offset: %d (HEX 0x%08X)\n", textures[i].index, textures[i].index );
+            fprintf( output, " \n " );
         }
     }
 }
+
 
 mdl_result_t parse_bone_hierarchy( studiohdr_t *header, unsigned char *data, mstudiobone_t **bones )
 {
@@ -273,35 +276,37 @@ mdl_result_t parse_bone_hierarchy( studiohdr_t *header, unsigned char *data, mst
     return MDL_SUCCESS;
 }
 
-void print_bone_info( mstudiobone_t *bones, int bone_count )
+
+void print_bone_info( FILE *output, mstudiobone_t *bones, int bone_count )
 {
     if ( !bones || bone_count == 0 )
     {
-        printf( "\nBone Information: No bones found\n" );
+        fprintf( output, "\nBone Information: No bones found\n" );
         return;
     }
 
-    printf( "\nBone Hierarchy(%d bones):\n", bone_count );
+    fprintf( output, "\nBone Hierarchy(%d bones):\n", bone_count );
     for ( int i = 0; i < bone_count; i++ )
     {
-        printf( " [%d] %s\n", i, bones[i].name );
+        fprintf( output, " [%d] %s\n", i, bones[i].name );
 
         if ( bones[i].parent == -1 )
         {
-            printf( "     Parent: ROOT (no parent)\n" );
+            fprintf( output, "     Parent: ROOT (no parent)\n" );
         }
         else
         {
-            printf( "     Parent: [%d] %s\n", bones[i].parent, bones[bones[i].parent].name );
+            fprintf( output, "     Parent: [%d] %s\n", bones[i].parent, bones[bones[i].parent].name );
         }
 
-        printf( "     Position: (%.2f, %.2f, %.2f)\n", bones[i].value[0], bones[i].value[1], bones[i].value[2] );
-        printf( "      Rotation: (%.2f, %.2f, %.2f)\n", bones[i].value[3], bones[i].value[4], bones[i].value[5] );
-        printf( "     Scale: (%.2f, %.2f, %.2f)\n", bones[i].scale[0], bones[i].scale[1], bones[i].scale[2] );
-        printf( "      Rot Scale: (%.2f, %.2f, %.2f)\n", bones[i].scale[3], bones[i].scale[4], bones[i].scale[5] );
-        printf( "\n" );
+        fprintf( output, "     Position: (%.2f, %.2f, %.2f)\n", bones[i].value[0], bones[i].value[1], bones[i].value[2] );
+        fprintf( output, "      Rotation: (%.2f, %.2f, %.2f)\n", bones[i].value[3], bones[i].value[4], bones[i].value[5] );
+        fprintf( output, "     Scale: (%.2f, %.2f, %.2f)\n", bones[i].scale[0], bones[i].scale[1], bones[i].scale[2] );
+        fprintf( output, "      Rot Scale: (%.2f, %.2f, %.2f)\n", bones[i].scale[3], bones[i].scale[4], bones[i].scale[5] );
+        fprintf( output, "\n" );
     }
 }
+
 
 
 mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences )
@@ -322,31 +327,34 @@ mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data
     return MDL_SUCCESS;
 }
 
-void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count )
+
+
+void print_sequence_info( FILE *output, mstudioseqdesc_t *sequences, int sequence_count )
 {
     if ( !sequences || sequence_count == 0 )
     {
-        printf( "\nAnimation Sequences: No sequence found\n" );
+        fprintf( output, "\nAnimation Sequences: No sequence found\n" );
         return;
     }
 
-    printf( "\nAnimation Sequences: (%d sequences):\n", sequence_count );
+    fprintf( output, "\nAnimation Sequences: (%d sequences):\n", sequence_count );
     for ( int i = 0; i < sequence_count; i++ )
     {
-        printf( " [%d] %s\n", i, sequences[i].label );
-        printf( "    Frames: %d @ %.1f fps\n", sequences[i].numframes, sequences[i].fps );
-        printf( "    Activity: %d (weight: %d)\n", sequences[i].activity, sequences[i].actweight );
-        printf( "    Events: %d\n", sequences[i].numevents );
-        printf( "    Flags: 0x%x", sequences[i].flags );
+        fprintf( output, " [%d] %s\n", i, sequences[i].label );
+        fprintf( output, "    Frames: %d @ %.1f fps\n", sequences[i].numframes, sequences[i].fps );
+        fprintf( output, "    Activity: %d (weight: %d)\n", sequences[i].activity, sequences[i].actweight );
+        fprintf( output, "    Events: %d\n", sequences[i].numevents );
+        fprintf( output, "    Flags: 0x%x", sequences[i].flags );
 
         if ( sequences[i].flags & 0x01 )
-            printf( " [LOOPING]" );
+            fprintf( output, " [LOOPING]" );
         if ( sequences[i].flags & 0x08 )
-            printf( " [ACTIVITY]" );
-        printf( "\n" );
+            fprintf( output, " [ACTIVITY]" );
+        fprintf( output, "\n" );
 
-        printf( "    Motion: type=%d, bone=%d\n", sequences[i].motiontype, sequences[i].motionbone );
-        printf(
+        fprintf( output, "    Motion: type=%d, bone=%d\n", sequences[i].motiontype, sequences[i].motionbone );
+        fprintf(
+            output,
             "    Bounding box: (%.1f, %.1f, %.1f) to (%.1f, %.1f, %.1f)\n",
             sequences[i].bbmin[0],
             sequences[i].bbmin[1],
@@ -354,30 +362,33 @@ void print_sequence_info( mstudioseqdesc_t *sequences, int sequence_count )
             sequences[i].bbmax[0],
             sequences[i].bbmax[1],
             sequences[i].bbmax[2] );
-        printf( "    Blends: %d\n", sequences[i].numblends );
-        printf( "\n" );
+        fprintf( output, "    Blends: %d\n", sequences[i].numblends );
+        fprintf( output, "\n" );
     }
 }
 
 
-void print_model_info( mstudiomodel_t *model, int bodypart_index, int model_index )
+void print_model_info( FILE *output, mstudiomodel_t *model, int bodypart_index, int model_index )
 {
     if ( !model )
     {
-        printf( "Model [%d][%d]: NULL\n", bodypart_index, model_index );
+        fprintf( output, "Model [%d][%d]: NULL\n", bodypart_index, model_index );
         return;
     }
 
-    printf( "   Model[%d][%d]: %s\n", bodypart_index, model_index, model->name );
-    printf( "     Type: %d\n", model->type );
-    printf( "        Bounding radius: %.2f\n", model->boundingradius );
-    printf( "        Vertices: %d\n", model->numverts );
-    printf( "        Meshes: %d\n", model->nummesh );
-    printf( "        Normals: %d\n", model->numnorms );
-    printf( "        Vertex index: 0x%X\n", model->vertindex );
-    printf( "        Mesh index: 0x%X\n", model->meshindex );
-    printf( "\n" );
+    fprintf( output, "   Model[%d][%d]: %s\n", bodypart_index, model_index, model->name );
+    fprintf( output, "     Type: %d\n", model->type );
+    fprintf( output, "        Bounding radius: %.2f\n", model->boundingradius );
+    fprintf( output, "        Vertices: %d\n", model->numverts );
+    fprintf( output, "        Meshes: %d\n", model->nummesh );
+    fprintf( output, "        Normals: %d\n", model->numnorms );
+    fprintf( output, "        Vertex index: 0x%X\n", model->vertindex );
+    fprintf( output, "        Mesh index: 0x%X\n", model->meshindex );
+    fprintf( output, "\n" );
 }
+
+
+
 
 mdl_result_t parse_mesh_data( mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes )
 {
@@ -397,25 +408,28 @@ mdl_result_t parse_mesh_data( mstudiomodel_t *model, unsigned char *data, mstudi
     return MDL_SUCCESS;
 }
 
-void print_mesh_data( mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count )
+
+void print_mesh_data( FILE *output, mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count )
 {
     if ( !meshes || mesh_count == 0 )
     {
-        printf( "    No meshes found for model: %s\n", model ? model->name : "Unknown" );
+        fprintf( output, "    No meshes found for model: %s\n", model ? model->name : "Unknown" );
         return;
     }
 
-    printf( "    Meshes for Model: %s\n", model->name );
+    fprintf( output, "    Meshes for Model: %s\n", model->name );
     for ( int i = 0; i < mesh_count; i++ )
     {
-        printf( "      Mesh %d:\n", i );
-        printf( "        Triangles: %d\n", meshes[i].numtris );
-        printf( "        Texture ref: %d\n", meshes[i].skinref );
-        printf( "        Normals: %d\n", meshes[i].numnorms );
-        printf( "        Triangle cmd offset: 0x%X\n", meshes[i].triindex );
-        printf( "\n" );
+        fprintf( output, "      Mesh %d:\n", i );
+        fprintf( output, "        Triangles: %d\n", meshes[i].numtris );
+        fprintf( output, "        Texture ref: %d\n", meshes[i].skinref );
+        fprintf( output, "        Normals: %d\n", meshes[i].numnorms );
+        fprintf( output, "        Triangle cmd offset: 0x%X\n", meshes[i].triindex );
+        fprintf( output, "\n" );
     }
 }
+
+
 
 mdl_result_t parse_vertex_data( mstudiomodel_t *model, unsigned char *data, vec3_t **vertices )
 {
@@ -465,20 +479,21 @@ mdl_result_t create_simple_triangle_indices( int vertex_count, short **indices, 
     return MDL_SUCCESS;
 }
 
-void print_simple_triangle_info( mstudiomodel_t *model, int bodypart_index, int model_index )
+
+void print_simple_triangle_info( FILE *output, mstudiomodel_t *model, int bodypart_index, int model_index )
 {
     if ( !model )
     {
-        printf( "    No model data for triangle testing.\n" );
+        fprintf( output, "    No model data for triangle testing.\n" );
         return;
     }
 
-    printf( "    Simple Triangle Index Test:\n" );
-    printf( "      Model[%d][%d]: %s has %d vertices\n", bodypart_index, model_index, model->name, model->numverts );
+    fprintf( output, "    Simple Triangle Index Test:\n" );
+    fprintf( output, "      Model[%d][%d]: %s has %d vertices\n", bodypart_index, model_index, model->name, model->numverts );
 
     if ( model->numverts == 0 )
     {
-        printf( "      No vertices to create triangles from.\n" );
+        fprintf( output, "      No vertices to create triangles from.\n" );
         return;
     }
 
@@ -489,34 +504,33 @@ void print_simple_triangle_info( mstudiomodel_t *model, int bodypart_index, int 
 
     if ( result == MDL_SUCCESS && simple_indices )
     {
-        printf( "      SUCCESS: Created %d triangle indices\n", index_count );
-        printf( "      Triangles: %d (from %d vertices)\n", index_count / 3, model->numverts );
+        fprintf( output, "      SUCCESS: Created %d triangle indices\n", index_count );
+        fprintf( output, "      Triangles: %d (from %d vertices)\n", index_count / 3, model->numverts );
 
-        // Print first few indices
         if ( index_count > 0 )
         {
-            printf( "      First indices: " );
+            fprintf( output, "      First indices: " );
             int print_count = index_count < 12 ? index_count : 12;
             for ( int j = 0; j < print_count; j++ )
             {
-                printf( "%d ", simple_indices[j] );
+                fprintf( output, "%d ", simple_indices[j] );
                 if ( ( j + 1 ) % 3 == 0 )
-                    printf( "| " );
+                    fprintf( output, "| " );
             }
-            printf( "\n" );
+            fprintf( output, "\n" );
         }
 
         free( simple_indices );
     }
     else
     {
-        printf( "      FAILED: Error %d creating simple indices\n", result );
+        fprintf( output, "      FAILED: Error %d creating simple indices\n", result );
     }
-    printf( "\n" );
+    fprintf( output, "\n" );
 }
 
-// TODO(Karlo): Reimplementing extract texture rgb
 
+// TODO(Karlo): Reimplementing extract texture rgb
 mdl_result_t extract_texture_rgb(
     studiohdr_t    *texture_header,
     unsigned char  *texture_data,
