@@ -1,28 +1,30 @@
-/*
-==============================================================================
-
-studio.h - Official Valve Half-Life Studio Model Format
-Version 10 - Half-Life 1 / GoldSource Engine
-
-This is based on Valve's official Half-Life SDK headers.
-This exact format is used by the game engine.
-
-Key structures:
-- studiohdr_t: Main file header (starts every .mdl file)
-- mstudiobodypart_t: Groups of models for different configurations
-- mstudiomodel_t: Individual mesh within a bodypart
-- mstudiomesh_t: Triangle mesh within a model
-- mstudiotrivert_t: Individual vertex in triangle strip/fan
-- mstudiotexture_t: Texture/material information
-- mstudiobone_t: Skeletal bone data
-
-==============================================================================
-*/
+/***
+*
+*   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+*
+*   This product contains software technology licensed from Id
+*   Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc.
+*   All Rights Reserved.
+*
+*   Use, distribution, and modification of this source code and/or resulting
+*   object code is restricted to non-commercial enhancements to products from
+*   Valve LLC.  All other use, distribution, or modification is prohibited
+*   without written permission from Valve LLC.
+*   ==============================================================================
+*
+*   studio.h - Official Valve Half-Life Studio Model Format
+*   Version 10 - Half-Life 1 / GoldSource Engine
+*
+*   Based on Valve's official Half-Life SDK headers (Pure C version)
+*
+*   ==============================================================================
+*
+****/
 
 #ifndef STUDIO_H
 #define STUDIO_H
-#ifdef __cplusplus
 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -35,17 +37,17 @@ extern "C" {
 // Format identification
 #define STUDIO_VERSION   10
 #define STUDIO_VERSION_2 9
-#define IDSTUDIOHEADER   ( ( 'T' << 24 ) + ( 'S' << 16 ) + ( 'D' << 8 ) + 'I' )    // "IDST"
-#define IDSEQGRPHEADER   ( ( 'Q' << 24 ) + ( 'S' << 16 ) + ( 'D' << 8 ) + 'I' )    // "IDSQ"
+#define IDSTUDIOHEADER   ((('T' << 24) + ('S' << 16) + ('D' << 8) + 'I'))  // "IDST"
+#define IDSEQGRPHEADER   ((('Q' << 24) + ('S' << 16) + ('D' << 8) + 'I'))  // "IDSQ"
 
-// Model limits (from Valve's code)
-#define MAXSTUDIOTRIANGLES   20000    // max triangles per model
-#define MAXSTUDIOVERTS       2048     // max vertices per model
-#define MAXSTUDIOSEQUENCES   2048     // total animation sequences
-#define MAXSTUDIOSKINS       100      // total textures
-#define MAXSTUDIOSRCBONES    512      // bones allowed at source movement
-#define MAXSTUDIOBONES       128      // total bones actually used
-#define MAXSTUDIOMODELS      32       // sub-models per model
+// Model limits
+#define MAXSTUDIOTRIANGLES   20000
+#define MAXSTUDIOVERTS       2048
+#define MAXSTUDIOSEQUENCES   2048
+#define MAXSTUDIOSKINS       100
+#define MAXSTUDIOSRCBONES    512
+#define MAXSTUDIOBONES       128
+#define MAXSTUDIOMODELS      32
 #define MAXSTUDIOBODYPARTS   32
 #define MAXSTUDIOGROUPS      16
 #define MAXSTUDIOANIMATIONS  2048
@@ -61,170 +63,157 @@ typedef unsigned char byte;
 
 // ============================================================================
 // MAIN STUDIO HEADER
-// This is the first thing in every .mdl file
 // ============================================================================
 typedef struct {
-    int id;         // Model format ID: "IDST" (0x54534449)
-    int version;    // Format version (should be 10)
+    int id;
+    int version;
 
-    char name[64];    // Model name
-    int  length;      // Model file size in bytes
+    char name[64];
+    int  length;
 
-    vec3_t eyeposition;    // Ideal eye position
-    vec3_t min;            // Ideal movement hull size
+    vec3_t eyeposition;
+    vec3_t min;
     vec3_t max;
-
-    vec3_t bbmin;    // Clipping bounding box
+    vec3_t bbmin;
     vec3_t bbmax;
 
-    int flags;    // Model flags
+    int flags;
 
-    // Bones
-    int numbones;     // Number of bones
-    int boneindex;    // Offset to bone data
+    int numbones;
+    int boneindex;
 
-    // Bone controllers
-    int numbonecontrollers;     // Number of bone controllers
-    int bonecontrollerindex;    // Offset to bone controller data
+    int numbonecontrollers;
+    int bonecontrollerindex;
 
-    // Hit boxes
-    int numhitboxes;    // Number of complex bounding boxes
-    int hitboxindex;    // Offset to hitbox data
+    int numhitboxes;
+    int hitboxindex;
 
-    // Animations
-    int numseq;      // Number of animation sequences
-    int seqindex;    // Offset to sequence data
+    int numseq;
+    int seqindex;
 
-    // Animation groups
-    int numseqgroups;     // Number of demand loaded sequences
-    int seqgroupindex;    // Offset to sequence group data
+    int numseqgroups;
+    int seqgroupindex;
 
-    // Textures
-    int numtextures;         // Number of raw textures
-    int textureindex;        // Offset to texture data
-    int texturedataindex;    // Offset to texture pixel data
+    int numtextures;
+    int textureindex;
+    int texturedataindex;
 
-    // Skins
-    int numskinref;         // Number of replaceable textures
-    int numskinfamilies;    // Number of skin families
-    int skinindex;          // Offset to skin data
+    int numskinref;
+    int numskinfamilies;
+    int skinindex;
 
-    // Body parts
-    int numbodyparts;     // Number of bodypart data
-    int bodypartindex;    // Offset to bodypart data
+    int numbodyparts;
+    int bodypartindex;
 
-    // Attachments
-    int numattachments;     // Number of queryable attachable points
-    int attachmentindex;    // Offset to attachment data
+    int numattachments;
+    int attachmentindex;
 
-    // Sounds
     int soundtable;
     int soundindex;
     int soundgroups;
     int soundgroupindex;
 
-    // Transitions
-    int numtransitions;     // Animation node to animation node transition graph
-    int transitionindex;    // Offset to transition data
+    int numtransitions;
+    int transitionindex;
 } studiohdr_t;
 
 // ============================================================================
-// BODY PARTS
-// Groups of models (like different heads, torsos, etc.)
+// SEQUENCE GROUP HEADER
 // ============================================================================
 typedef struct {
-    char name[64];      // Bodypart name
-    int  nummodels;     // Number of models in this bodypart
-    int  base;          // Base value
-    int  modelindex;    // Offset to models array
+    int  id;
+    int  version;
+    char name[64];
+    int  length;
+} studioseqhdr_t;
+
+// ============================================================================
+// BODY PARTS
+// ============================================================================
+typedef struct {
+    char name[64];
+    int  nummodels;
+    int  base;
+    int  modelindex;
 } mstudiobodyparts_t;
 
 // ============================================================================
 // MODELS
-// Individual mesh within a bodypart
 // ============================================================================
 typedef struct {
-    char name[64];    // Model name
+    char name[64];
 
-    int type;    // Model type
+    int type;
 
-    float boundingradius;    // Bounding sphere radius
+    float boundingradius;
 
-    // Meshes
-    int nummesh;      // Number of meshes
-    int meshindex;    // Offset to first mesh
+    int nummesh;
+    int meshindex;
 
-    // Vertices
-    int numverts;         // Number of unique vertices/normals/texcoords
-    int vertinfoindex;    // Offset to vertex bone info
-    int vertindex;        // Offset to vertex vec3_t array
+    int numverts;
+    int vertinfoindex;
+    int vertindex;
 
-    // Normals
-    int numnorms;         // Number of unique surface normals
-    int norminfoindex;    // Offset to normal bone info
-    int normindex;        // Offset to normal vec3_t array
+    int numnorms;
+    int norminfoindex;
+    int normindex;
 
-    // Groups
-    int numgroups;     // Number of deformation groups
-    int groupindex;    // Offset to group data
+    int numgroups;
+    int groupindex;
 } mstudiomodel_t;
 
 // ============================================================================
 // MESHES
-// Triangle mesh within a model
 // ============================================================================
 typedef struct {
-    int numtris;      // Number of triangles
-    int triindex;     // Offset to triangle commands
-    int skinref;      // Material/texture reference
-    int numnorms;     // Per mesh normals
-    int normindex;    // Offset to normal vec3_t array
+    int numtris;
+    int triindex;
+    int skinref;
+    int numnorms;
+    int normindex;
 } mstudiomesh_t;
 
 // ============================================================================
 // TRIANGLE VERTEX
-// Individual vertex in triangle strip/fan command
 // ============================================================================
 typedef struct {
-    short vertindex;      // Index into vertex array
-    short normalindex;    // Index into normal array
-    short s, t;           // Texture coordinates (skin coords)
+    short vertindex;
+    short normalindex;
+    short s, t;
 } mstudiotrivert_t;
 
 // ============================================================================
 // TEXTURES
-// Material/texture information
 // ============================================================================
 typedef struct {
-    char name[64];         // Texture name
-    int  flags;            // Texture flags
-    int  width, height;    // Texture dimensions
-    int  index;            // Offset into texture data
+    char name[64];
+    int  flags;
+    int  width, height;
+    int  index;
 } mstudiotexture_t;
 
 // ============================================================================
 // BONES
-// Skeletal bone structure
 // ============================================================================
 typedef struct {
-    char  name[32];             // Bone name for symbolic links
-    int   parent;               // Parent bone index (-1 if root)
-    int   flags;                // Bone flags
-    int   bonecontroller[6];    // Bone controller index, -1 = none
-    float value[6];             // Default DoF values
-    float scale[6];             // Scale for delta DoF values
+    char  name[32];
+    int   parent;
+    int   flags;
+    int   bonecontroller[6];
+    float value[6];
+    float scale[6];
 } mstudiobone_t;
 
 // ============================================================================
 // BONE CONTROLLERS
 // ============================================================================
 typedef struct {
-    int   bone;    // -1 = 0
-    int   type;    // X, Y, Z, XR, YR, ZR, M
+    int   bone;
+    int   type;
     float start;
     float end;
-    int   rest;     // byte index value at rest
-    int   index;    // 0-3 user set controller, 4 mouth
+    int   rest;
+    int   index;
 } mstudiobonecontroller_t;
 
 // ============================================================================
@@ -232,8 +221,8 @@ typedef struct {
 // ============================================================================
 typedef struct {
     int    bone;
-    int    group;    // intersection group
-    vec3_t bbmin;    // bounding box
+    int    group;
+    vec3_t bbmin;
     vec3_t bbmax;
 } mstudiobbox_t;
 
@@ -241,10 +230,10 @@ typedef struct {
 // ANIMATION SEQUENCES
 // ============================================================================
 typedef struct {
-    char label[32];    // sequence label
+    char label[32];
 
-    float fps;      // frames per second
-    int   flags;    // looping/non-looping flags
+    float fps;
+    int   flags;
 
     int activity;
     int actweight;
@@ -252,9 +241,9 @@ typedef struct {
     int numevents;
     int eventindex;
 
-    int numframes;    // number of frames per sequence
+    int numframes;
 
-    int numpivots;    // number of foot pivots
+    int numpivots;
     int pivotindex;
 
     int    motiontype;
@@ -263,25 +252,24 @@ typedef struct {
     int    automoveposindex;
     int    automoveangleindex;
 
-    vec3_t bbmin;    // per sequence bounding box
+    vec3_t bbmin;
     vec3_t bbmax;
 
     int numblends;
-    int animindex;    // mstudioanim_t pointer relative to start of sequence group
-                      // data [blend][bone][X, Y, Z, XR, YR, ZR]
+    int animindex;
 
-    int   blendtype[2];     // X, Y, Z, XR, YR, ZR
-    float blendstart[2];    // starting value
-    float blendend[2];      // ending value
+    int   blendtype[2];
+    float blendstart[2];
+    float blendend[2];
     int   blendparent;
 
-    int seqgroup;    // sequence group for demand loading
+    int seqgroup;
 
-    int entrynode;    // transition node at entry
-    int exitnode;     // transition node at exit
-    int nodeflags;    // transition rules
+    int entrynode;
+    int exitnode;
+    int nodeflags;
 
-    int nextseq;    // auto advancing sequences
+    int nextseq;
 } mstudioseqdesc_t;
 
 // ============================================================================
@@ -295,10 +283,25 @@ typedef struct {
 } mstudioevent_t;
 
 // ============================================================================
+// ANIMATION DATA
+// ============================================================================
+typedef struct {
+    unsigned short offset[6];
+} mstudioanim_t;
+
+typedef union {
+    struct {
+        byte valid;
+        byte total;
+    } num;
+    short value;
+} mstudioanimvalue_t;
+
+// ============================================================================
 // PIVOTS
 // ============================================================================
 typedef struct {
-    vec3_t org;    // pivot point
+    vec3_t org;
     int    start, end;
 } mstudiopivot_t;
 
@@ -309,17 +312,19 @@ typedef struct {
     char   name[32];
     int    type;
     int    bone;
-    vec3_t org;    // attachment point
+    vec3_t org;
     vec3_t vectors[3];
 } mstudioattachment_t;
 
 // ============================================================================
-// TRIANGLE COMMAND TYPES
-// These are the values you'll see in triangle commands
+// SEQUENCE GROUPS
 // ============================================================================
-#define STUDIO_RENDER_TRIANGLES      0
-#define STUDIO_RENDER_TRIANGLE_STRIP 1
-#define STUDIO_RENDER_TRIANGLE_FAN   2
+typedef struct {
+    char label[32];
+    char name[64];
+    int  unused1;
+    int  unused2;
+} mstudioseqgroup_t;
 
 // ============================================================================
 // MODEL FLAGS
@@ -340,8 +345,13 @@ typedef struct {
 #define STUDIO_HAS_BBOX     0x0004
 #define STUDIO_HAS_CHROME   0x0008
 
+// ============================================================================
+// SEQUENCE FLAGS
+// ============================================================================
+#define STUDIO_LOOPING 0x0001
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif    // STUDIO_H
+#endif  // STUDIO_H

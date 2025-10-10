@@ -22,3 +22,5 @@ mdl_result_t mdl_animation_calculate_bones(
     mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, float bone_matrices[MAXSTUDIOBONES][3][4] );
 
 #endif
+
+
