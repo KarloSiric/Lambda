@@ -4,13 +4,13 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 23:09:16
+   Last Modified: 2025-10-11 13:12:33
    ---------------------------------------------------------------------
-   Description:
+   Description: MDL Animation System
        
    ---------------------------------------------------------------------
-   License: 
-   Company: 
+   License: MIT License
+   Company: /
    Version: 0.1.0
  ======================================================================
                                                                        */
@@ -29,45 +29,91 @@ void mdl_animation_init( mdl_animation_state_t *state )
     state->is_looping       = false;
 }
 
-void build_bone_matrix(vec3_t position, vec3_t rotation, float matrix[3][3]) {
-    
+void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
+{
     // 1. Calculate the cosine and sine for each rotation axis
-    
-    float cx = cosf(rotation[0]);
-    float sx = sinf(rotation[0]);
-    
-    float cy = cosf(rotation[1]);
-    float sy = sinf(rotation[1]);
-    
-    float cz = cosf(rotation[2]);
-    float sz = sinf(rotation[2]);
-    
-    // 2. Building the rotational matrix using Euler's angle formula
-    matrix[0][0] = cy * cz;
-    matrix[0][1] = cy * sz;
-    matrix[0][2] = -sy;
-    
-    matrix[1][0] = sx * sy * cz - cx * sz;
-    matrix[1][1] = sx * sy * sz - cx * cz;
-    matrix[1][2] = sx * sy;
-    
-    matrix[2][0] = cx * sy * cz + sx * sz;
-    matrix[2][1] = cx * sy * sz - sx * cz;
-    matrix[2][2] = cx * cy;
-    
-    // 3. Adding translation 
-    matrix[0][3] = position[0]; 
-    matrix[1][3] = position[1]; 
-    matrix[2][3] = position[2];  
+    // we will be using Yaw Pitch Roll transformational matrix -> [z,y,x]
+
+    float phi   = rotation[0];    // Roll  (X)
+    float theta = rotation[1];    // Pitch (Y)
+    float psi   = rotation[2];    // Yaw   (Z)
+
+    float sin_phi   = sinf( phi );
+    float cos_phi   = cosf( phi );
+    float sin_theta = sinf( theta );
+    float cos_theta = cosf( theta );
+    float sin_psi   = sinf( psi );
+    float cos_psi   = cosf( psi );
+
+    // 2. Build rotation matrix (Valve's AngleMatrix formula)
+    // Row 0
+    matrix[0][0] = cos_psi * cos_theta;
+    matrix[0][1] = sin_phi * sin_theta * cos_psi - sin_psi * cos_phi;
+    matrix[0][2] = sin_theta * cos_phi * cos_psi + sin_phi * sin_psi;
+
+    // Row 1
+    matrix[1][0] = sin_psi * cos_theta;
+    matrix[1][1] = sin_phi * sin_psi * sin_theta + cos_phi * cos_psi;
+    matrix[1][2] = sin_psi * sin_theta * cos_phi - sin_phi * cos_psi;
+
+    // Row 2
+    matrix[2][0] = -sin_theta;
+    matrix[2][1] = sin_phi * cos_theta;
+    matrix[2][2] = cos_phi * cos_theta;
+
+    // 3. Adding translation to wrap up the complete matrix
+    matrix[0][3] = position[0];
+    matrix[1][3] = position[1];
+    matrix[2][3] = position[2];
 }
 
 
-
-
-
-
-
-
+// TODO(Karlo): Now finished yet need to take more time on this.
+float calc_bone_anim_value(
+    unsigned char *data, mstudioseqdesc_t *seq, mstudioanim_t *bone_anim, int channel, float frame, float scale )
+{
+    
+    mstudioanimvalue_t *anim_value = (mstudioanimvalue_t *)(data + seq->animindex + bone_anim->offset[channel]);
+    
+    int iframe = (int)frame;
+    float s = frame - (float)iframe;
+    
+    int k = iframe;
+    
+    while(anim_value->num.total <= k) {
+        k -= anim_value->num.total;
+        anim_value += anim_value->num.valid + 1;    // moving it by that amount of structs, to skip and get to the next chunk to the header
+    }
+    
+    // this time the anim_value points to the chunk that contains our frame at position k
+    
+    float value1 = 0.0f;
+    float value2 = 0.0f;
+    
+       
+    if (anim_value->num.valid > 3) {
+        value1 = anim_value[k + 1].value;   // + 1 because of the header
+        
+        if (anim_value->num.valid > k + 1) {
+            value2 = anim_value[k + 2].value;
+        }
+        else {
+            value2 = value1;
+        }
+    }
+    else 
+    {
+        value1 = (float)anim_value[anim_value->num.valid].value;
+        value2 = value1;
+    }  
+    
+    
+    // Now we can interpolate the final result
+    float result = value1 * (1.0 - s) + value2 * s;
+    
+    return result * scale;
+}
+       
 
 mdl_result_t
 mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, studiohdr_t *header, unsigned char *data )
@@ -134,6 +180,7 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
      * Meaning only around 35 percent of the 1 frame has been shown and not even the full 1 frame of those 22 frames.
      * This gives us a much smoother look of animations in todays world.
      */
+    
     state->frame_time += delta_time;
 
     float frames_to_advance = state->frame_time * frames_per_second;
@@ -209,11 +256,10 @@ mdl_result_t mdl_animation_calculate_bones(
                 }
             }
         }
+        build_bone_matrix( position, rotation, bone_matrices[i] );
     }
 
     // now here we need to build the proper bone matrix from the rotation and position
-    build_bone_matrix(...);    
-    
 
     return MDL_SUCCESS;
 }
