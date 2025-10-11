@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 13:12:33
+   Last Modified: 2025-10-11 14:19:33
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -67,53 +67,53 @@ void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
     matrix[2][3] = position[2];
 }
 
-
 // TODO(Karlo): Now finished yet need to take more time on this.
 float calc_bone_anim_value(
     unsigned char *data, mstudioseqdesc_t *seq, mstudioanim_t *bone_anim, int channel, float frame, float scale )
 {
-    
-    mstudioanimvalue_t *anim_value = (mstudioanimvalue_t *)(data + seq->animindex + bone_anim->offset[channel]);
-    
-    int iframe = (int)frame;
-    float s = frame - (float)iframe;
-    
+    mstudioanimvalue_t *anim_value = ( mstudioanimvalue_t * ) ( data + seq->animindex + bone_anim->offset[channel] );
+
+    int   iframe = ( int ) frame;
+    float s      = frame - ( float ) iframe;
+
     int k = iframe;
-    
-    while(anim_value->num.total <= k) {
-        k -= anim_value->num.total;
-        anim_value += anim_value->num.valid + 1;    // moving it by that amount of structs, to skip and get to the next chunk to the header
+
+    while ( anim_value->num.total <= k )
+    {
+        k          -= anim_value->num.total;
+        anim_value += anim_value->num.valid
+                      + 1;    // moving it by that amount of structs, to skip and get to the next chunk to the header
     }
-    
+
     // this time the anim_value points to the chunk that contains our frame at position k
-    
+
     float value1 = 0.0f;
     float value2 = 0.0f;
-    
-       
-    if (anim_value->num.valid > 3) {
-        value1 = anim_value[k + 1].value;   // + 1 because of the header
-        
-        if (anim_value->num.valid > k + 1) {
+
+    if ( anim_value->num.valid > k )
+    {
+        value1 = anim_value[k + 1].value;    // + 1 because of the header
+
+        if ( anim_value->num.valid > k + 1 )
+        {
             value2 = anim_value[k + 2].value;
         }
-        else {
+        else
+        {
             value2 = value1;
         }
     }
-    else 
+    else
     {
-        value1 = (float)anim_value[anim_value->num.valid].value;
+        value1 = ( float ) anim_value[anim_value->num.valid].value;
         value2 = value1;
-    }  
-    
-    
+    }
+
     // Now we can interpolate the final result
-    float result = value1 * (1.0 - s) + value2 * s;
-    
+    float result = value1 * ( 1.0f - s ) + value2 * s;
+
     return result * scale;
 }
-       
 
 mdl_result_t
 mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, studiohdr_t *header, unsigned char *data )
@@ -180,7 +180,7 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
      * Meaning only around 35 percent of the 1 frame has been shown and not even the full 1 frame of those 22 frames.
      * This gives us a much smoother look of animations in todays world.
      */
-    
+
     state->frame_time += delta_time;
 
     float frames_to_advance = state->frame_time * frames_per_second;
@@ -256,7 +256,19 @@ mdl_result_t mdl_animation_calculate_bones(
                 }
             }
         }
-        build_bone_matrix( position, rotation, bone_matrices[i] );
+
+        float local_matrix[3][4];
+        build_bone_matrix( position, rotation, local_matrix );    // -> this builds the proper local bone matrix
+
+        if ( bone->parent == -1 )
+        {
+            // This is the root bone it has no parent bones
+            memcpy( bone_matrices[i], local_matrix, sizeof( local_matrix ) );
+        }
+        else 
+        {
+             
+        }
     }
 
     // now here we need to build the proper bone matrix from the rotation and position

@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 11:11:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 12:02:33
+   Last Modified: 2025-10-11 13:29:18
    ---------------------------------------------------------------------
    Description:
        
@@ -17,7 +17,6 @@
 
 
 #include "bone_system.h"
-
 #include <stdio.h>
 #include <string.h>
 
