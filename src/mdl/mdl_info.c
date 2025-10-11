@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 18:40:38
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 11:23:48
+   Last Modified: 2025-10-11 21:44:48
    ---------------------------------------------------------------------
    Description:
        
@@ -21,34 +21,6 @@
 #include "mdl_loader.h"
 
 #include <stdio.h>
-
-
-/* Just moving all of the print functions to be inside this one
- * big file that will hold all the printing functions information 
- * that will later be used in CLI or inside the actual .exe of the 
- * Application.
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void print_complete_model_analysis(
     FILE              *output,      // <-- ADD THIS PARAMETER!

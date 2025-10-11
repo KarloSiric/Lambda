@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 17:41:52
+   Last Modified: 2025-10-11 21:37:56
    ---------------------------------------------------------------------
    Description:
        
@@ -1166,11 +1166,14 @@ void render_loop(void)
         float delta_time = (float)(current_time - g_last_frame_time);
         g_last_frame_time = current_time;
         
-        // Limit delta time to prevent huge jumps (e.g., when debugging)
-        if (delta_time > 0.1f) {
-            delta_time = 0.1f;
+        if (delta_time > 0.033f) {
+            delta_time = 0.033f;
         }
         
+        // FIX #4: Also handle negative deltas (clock skew)
+        if (delta_time < 0.0f) {
+            delta_time = 0.0f;
+        }        
         // Update animation state
         if (g_animation_enabled && global_header && global_data) {
             mdl_animation_update(&g_anim_state, delta_time, global_header, global_data);

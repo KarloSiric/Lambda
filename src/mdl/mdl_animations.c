@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 17:41:15
+   Last Modified: 2025-10-11 21:33:05
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -175,9 +175,19 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
     {
         return;
     }
-
+    
+    if ( delta_time < 0.001f )
+    {
+        return;
+    }
+    
     mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * ) ( data + header->seqindex );
     mstudioseqdesc_t *seq       = &sequences[state->current_sequence];
+
+    if ( delta_time > ( 1.0f / seq->fps * 2.0f ) )
+    {    // Allow 2x slowdown max
+        delta_time = ( 1.0f / seq->fps * 2.0f );
+    }
 
     // still animation because it has no frames whatsoever so
     if ( seq->numframes <= 1 )
@@ -206,6 +216,8 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
     float frames_to_advance = delta_time * frames_per_second;
 
     state->current_frame += frames_to_advance;
+    
+    // printf("DEBUG: Delta Time is: %f\n", delta_time);
 
     if ( state->current_frame >= seq->numframes )
     {
@@ -215,8 +227,12 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
         }
         else
         {
-            state->current_frame = ( float ) ( state->current_frame - 1 );
+            state->current_frame = ( float ) ( seq->numframes - 1 );
         }
+    }
+    else if ( state->current_frame < 0.0f )
+    {
+        state->current_frame = 0.0f;
     }
 
     return;

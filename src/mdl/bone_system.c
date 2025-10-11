@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 11:11:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 17:10:08
+   Last Modified: 2025-10-11 21:41:34
    ---------------------------------------------------------------------
    Description:
        
@@ -123,40 +123,28 @@ void SetUpBonesFromAnimation( studiohdr_t *header, float anim_bones[MAXSTUDIOBON
 {
     for ( int i = 0; i < header->numbones; i++ )
     {
-        // Convert 3x4 row-major to 4x4 column-major (cglm format)
-        // Animation 3x4 format:
-        //   [0][0] [0][1] [0][2] [0][3]  <- rotation row 0 + tx
-        //   [1][0] [1][1] [1][2] [1][3]  <- rotation row 1 + ty
-        //   [2][0] [2][1] [2][2] [2][3]  <- rotation row 2 + tz
-        //
-        // cglm 4x4 column-major format (transposed):
-        //   [0][0] [1][0] [2][0] [3][0]
-        //   [0][1] [1][1] [2][1] [3][1]
-        //   [0][2] [1][2] [2][2] [3][2]
-        //   [0][3] [1][3] [2][3] [3][3]
-
-        // Copy rotation part (transpose 3x3)
-        g_bonetransformations[i][0][0] = anim_bones[i][0][0];
-        g_bonetransformations[i][1][0] = anim_bones[i][0][1];
-        g_bonetransformations[i][2][0] = anim_bones[i][0][2];
-
-        g_bonetransformations[i][0][1] = anim_bones[i][1][0];
-        g_bonetransformations[i][1][1] = anim_bones[i][1][1];
-        g_bonetransformations[i][2][1] = anim_bones[i][1][2];
-
-        g_bonetransformations[i][0][2] = anim_bones[i][2][0];
-        g_bonetransformations[i][1][2] = anim_bones[i][2][1];
-        g_bonetransformations[i][2][2] = anim_bones[i][2][2];
-
-        // Copy translation (4th column in cglm)
-        g_bonetransformations[i][3][0] = anim_bones[i][0][3];
-        g_bonetransformations[i][3][1] = anim_bones[i][1][3];
-        g_bonetransformations[i][3][2] = anim_bones[i][2][3];
-
-        // Set bottom row
+        // Column 0 (X-axis)
+        g_bonetransformations[i][0][0] = anim_bones[i][0][0];    // R00
+        g_bonetransformations[i][0][1] = anim_bones[i][1][0];    // R10
+        g_bonetransformations[i][0][2] = anim_bones[i][2][0];    // R20
         g_bonetransformations[i][0][3] = 0.0f;
+
+        // Column 1 (Y-axis)
+        g_bonetransformations[i][1][0] = anim_bones[i][0][1];    // R01
+        g_bonetransformations[i][1][1] = anim_bones[i][1][1];    // R11
+        g_bonetransformations[i][1][2] = anim_bones[i][2][1];    // R21
         g_bonetransformations[i][1][3] = 0.0f;
+
+        // Column 2 (Z-axis)
+        g_bonetransformations[i][2][0] = anim_bones[i][0][2];    // R02
+        g_bonetransformations[i][2][1] = anim_bones[i][1][2];    // R12
+        g_bonetransformations[i][2][2] = anim_bones[i][2][2];    // R22
         g_bonetransformations[i][2][3] = 0.0f;
+
+        // Column 3 (Translation)
+        g_bonetransformations[i][3][0] = anim_bones[i][0][3];    // Tx
+        g_bonetransformations[i][3][1] = anim_bones[i][1][3];    // Ty
+        g_bonetransformations[i][3][2] = anim_bones[i][2][3];    // Tz
         g_bonetransformations[i][3][3] = 1.0f;
     }
 }
