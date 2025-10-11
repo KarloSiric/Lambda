@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 14:19:33
+   Last Modified: 2025-10-11 14:50:30
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -17,6 +17,7 @@
 
 #include "mdl_animations.h"
 
+#include <cglm/cglm.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,10 +30,37 @@ void mdl_animation_init( mdl_animation_state_t *state )
     state->is_looping       = false;
 }
 
+void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float local_matrix[3][4] )
+{
+    for ( int i = 0; i < 3; i++ )
+    {
+        for ( int j = 0; j < 4; j++ )
+        {
+            // ROTATION
+            if ( j < 3 )
+            {
+                result[i][j] = parent_matrix[i][0] * local_matrix[0][j] + parent_matrix[i][1] * local_matrix[1][j]
+                               + parent_matrix[i][2] * local_matrix[2][j];
+            }
+            else
+            {
+                result[i][j] = parent_matrix[i][0] * local_matrix[0][j] + parent_matrix[i][1] * local_matrix[1][j]
+                               + parent_matrix[i][2] * local_matrix[2][j] + parent_matrix[i][3];
+            }
+        }
+    }
+}
+
 void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
 {
     // 1. Calculate the cosine and sine for each rotation axis
     // we will be using Yaw Pitch Roll transformational matrix -> [z,y,x]
+    
+    /*
+     * I will be ading proper cglm calculating simply because it is fast
+     * This was for educational purposes, so I see what is what happening
+     * and where
+     */
 
     float phi   = rotation[0];    // Roll  (X)
     float theta = rotation[1];    // Pitch (Y)
@@ -267,7 +295,7 @@ mdl_result_t mdl_animation_calculate_bones(
         }
         else 
         {
-             
+                
         }
     }
 
