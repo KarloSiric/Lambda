@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 16:30:26
+   Last Modified: 2025-10-11 17:41:15
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -156,7 +156,6 @@ mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, st
 
     state->current_sequence = sequence_index;
     state->current_frame    = 0.0f;
-    state->frame_time       = 0.0f;
     state->is_looping       = ( seq->flags & 0x01 );
 
     printf(
@@ -203,14 +202,10 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
      * This gives us a much smoother look of animations in todays world.
      */
 
-    state->frame_time += delta_time;
 
-    float frames_to_advance = state->frame_time * frames_per_second;
+    float frames_to_advance = delta_time * frames_per_second;
 
     state->current_frame += frames_to_advance;
-
-    // need to reset the frame time
-    state->frame_time = 0.0f;
 
     if ( state->current_frame >= seq->numframes )
     {

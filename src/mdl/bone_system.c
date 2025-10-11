@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 11:11:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 13:29:18
+   Last Modified: 2025-10-11 17:10:08
    ---------------------------------------------------------------------
    Description:
        
@@ -15,8 +15,8 @@
  ======================================================================
                                                                        */
 
-
 #include "bone_system.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -116,5 +116,47 @@ void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t
             bone = 0;
         }
         VectorTransforms( vertices[i], g_bonetransformations[bone], out_vertices[i] );
+    }
+}
+
+void SetUpBonesFromAnimation( studiohdr_t *header, float anim_bones[MAXSTUDIOBONES][3][4] )
+{
+    for ( int i = 0; i < header->numbones; i++ )
+    {
+        // Convert 3x4 row-major to 4x4 column-major (cglm format)
+        // Animation 3x4 format:
+        //   [0][0] [0][1] [0][2] [0][3]  <- rotation row 0 + tx
+        //   [1][0] [1][1] [1][2] [1][3]  <- rotation row 1 + ty
+        //   [2][0] [2][1] [2][2] [2][3]  <- rotation row 2 + tz
+        //
+        // cglm 4x4 column-major format (transposed):
+        //   [0][0] [1][0] [2][0] [3][0]
+        //   [0][1] [1][1] [2][1] [3][1]
+        //   [0][2] [1][2] [2][2] [3][2]
+        //   [0][3] [1][3] [2][3] [3][3]
+
+        // Copy rotation part (transpose 3x3)
+        g_bonetransformations[i][0][0] = anim_bones[i][0][0];
+        g_bonetransformations[i][1][0] = anim_bones[i][0][1];
+        g_bonetransformations[i][2][0] = anim_bones[i][0][2];
+
+        g_bonetransformations[i][0][1] = anim_bones[i][1][0];
+        g_bonetransformations[i][1][1] = anim_bones[i][1][1];
+        g_bonetransformations[i][2][1] = anim_bones[i][1][2];
+
+        g_bonetransformations[i][0][2] = anim_bones[i][2][0];
+        g_bonetransformations[i][1][2] = anim_bones[i][2][1];
+        g_bonetransformations[i][2][2] = anim_bones[i][2][2];
+
+        // Copy translation (4th column in cglm)
+        g_bonetransformations[i][3][0] = anim_bones[i][0][3];
+        g_bonetransformations[i][3][1] = anim_bones[i][1][3];
+        g_bonetransformations[i][3][2] = anim_bones[i][2][3];
+
+        // Set bottom row
+        g_bonetransformations[i][0][3] = 0.0f;
+        g_bonetransformations[i][1][3] = 0.0f;
+        g_bonetransformations[i][2][3] = 0.0f;
+        g_bonetransformations[i][3][3] = 1.0f;
     }
 }

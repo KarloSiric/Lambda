@@ -24,6 +24,8 @@ void set_model_data(studiohdr_t *header, unsigned char *data, studiohdr_t *tex_h
 
 void clear_screen(void);
 
+
+void UpdateBonesForCurrentFrame(void);
 void ProcessModelForRendering(void);
 void AddVertexToBuffer(int vIndex, int nIndex, short s, short t, float texW, float texH);
 
