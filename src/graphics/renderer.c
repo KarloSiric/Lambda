@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 20:19:44
+   Last Modified: 2025-10-11 16:53:12
    ---------------------------------------------------------------------
    Description:
        
@@ -19,7 +19,7 @@
 #endif
 
 #include "renderer.h"
-
+#include "../mdl/mdl_animations.h"
 #include "../graphics/textures.h"
 #include "../mdl/bodypart_manager.h"
 #include "../mdl/bone_system.h"
@@ -103,6 +103,14 @@ static studiohdr_t   *global_tex_header = NULL;
 static unsigned char *global_tex_data   = NULL;
 
 static mdl_texture_set_t g_textures = { NULL, 0 };
+
+
+// ANIMATIONS
+static mdl_animation_state_t g_anim_state;
+static bool g_animation_enabled = false;
+static double g_last_frame_time = 0.0;
+
+
 
 // Camera controls
 float rotation_x = 0.0f;
@@ -330,10 +338,47 @@ void ProcessModelForRendering( void )
     g_num_ranges          = 0;
 
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );
-
-    // Build bones (pose) once before drawing
-    SetUpBones( global_header, global_data );
-
+    
+    
+    /*
+     * Adding animations here now and SetUpBones keeping it for fallback
+     */
+    
+    if (g_animation_enabled && global_header->numseq > 0) {
+        
+        float bone_matrices[MAXSTUDIOBONES][3][4];
+        
+        mdl_animation_calculate_bones(&g_anim_state, global_header, global_data, bone_matrices);
+        
+        for (int i = 0; i < global_header->numbones; i++) {
+            // Copy rotation part (3x3)
+            for (int row = 0; row < 3; row++) {
+                for (int col = 0; col < 3; col++) {
+                    g_bonetransformations[i][row][col] = bone_matrices[i][row][col];
+                }
+            }
+            
+            // Copy translation part (last column of 3x4)
+            g_bonetransformations[i][3][0] = bone_matrices[i][0][3];
+            g_bonetransformations[i][3][1] = bone_matrices[i][1][3];
+            g_bonetransformations[i][3][2] = bone_matrices[i][2][3];
+            
+            // Set bottom row for homogeneous coordinates
+            g_bonetransformations[i][0][3] = 0.0f;
+            g_bonetransformations[i][1][3] = 0.0f;
+            g_bonetransformations[i][2][3] = 0.0f;
+            g_bonetransformations[i][3][3] = 1.0f;
+        }
+        
+        printf("Using animated bones (frame: %.2f)\n", g_anim_state.current_frame);
+        
+    } 
+    else 
+    {
+        // Build bones (pose) once before drawing
+        SetUpBones( global_header, global_data ); 
+    }
+    
     // Iterate through all bodyparts
     for ( int bp = 0; bp < global_header->numbodyparts; ++bp )
     {
@@ -1005,6 +1050,17 @@ void render_loop( void )
 
     while ( !should_close_window( ) )
     {
+        
+        double current_time = glfwGetTime();
+        float delta_time = (float)(current_time - g_last_frame_time);
+        g_last_frame_time = current_time;
+        
+        if (g_animation_enabled && global_header && global_data) {
+            
+            mdl_animation_update(&g_anim_state, delta_time, global_header, global_data);
+            
+        }
+        
         clear_screen( );
 
         if ( global_header && global_data )
@@ -1160,6 +1216,22 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
     {
         printf( "No textures found for this model.\n" );
     }
+    
+    // Adding animations initializing
+    mdl_animation_init(&g_anim_state);
+    
+    if (header && header->numseq > 0) {
+        mdl_animation_set_sequence(&g_anim_state, 0, header, data);
+        
+        g_animation_enabled = true;
+        g_last_frame_time = glfwGetTime();
+        printf("Animation initialized with sequence 0 \n");
+        
+        
+    }
+    
+    
+    
 
     printf( "Model data set, will be processed on next render\n" );
 }
