@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 16:23:57
+   Last Modified: 2025-10-11 16:30:26
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -31,7 +31,7 @@ void mdl_animation_init( mdl_animation_state_t *state )
 }
 
 void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float local_matrix[3][4] )
-{  
+{
     for ( int i = 0; i < 3; i++ )
     {
         for ( int j = 0; j < 4; j++ )
@@ -287,76 +287,66 @@ mdl_result_t mdl_animation_calculate_bones(
             // This is the root bone it has no parent bones
             memcpy( bone_matrices[i], local_matrix, sizeof( local_matrix ) );
         }
-        else 
+        else
         {
-            matrix_multiply_3x4(bone_matrices[i], bone_matrices[bone->parent], local_matrix);
-            
+            matrix_multiply_3x4( bone_matrices[i], bone_matrices[bone->parent], local_matrix );
         }
-        
+
         // here we need to transform all vertices for a given bone[i]
-        
     }
     return MDL_SUCCESS;
 }
 
-void transform_vertex_by_bone( vec3_t result, vec3_t vertex, float bone_matrix[3][4])
+void transform_vertex_by_bone( vec3_t result, vec3_t vertex, float bone_matrix[3][4] )
 {
-    
-    result[0] = bone_matrix[0][0] * vertex[0] +
-                bone_matrix[0][1] * vertex[1] +
-                bone_matrix[0][2] * vertex[2] +
-                bone_matrix[0][3];
-                
-    result[1] = bone_matrix[1][0] * vertex[0] +
-                bone_matrix[1][1] * vertex[1] + 
-                bone_matrix[1][2] * vertex[2] +
-                bone_matrix[1][3];
-                
-    result[2] = bone_matrix[2][0] * vertex[0] +
-                bone_matrix[2][1] * vertex[1] +
-                bone_matrix[2][2] * vertex[2] +
-                bone_matrix[2][3];  
+    result[0] = bone_matrix[0][0] * vertex[0] + bone_matrix[0][1] * vertex[1] + bone_matrix[0][2] * vertex[2]
+                + bone_matrix[0][3];
+
+    result[1] = bone_matrix[1][0] * vertex[0] + bone_matrix[1][1] * vertex[1] + bone_matrix[1][2] * vertex[2]
+                + bone_matrix[1][3];
+
+    result[2] = bone_matrix[2][0] * vertex[0] + bone_matrix[2][1] * vertex[1] + bone_matrix[2][2] * vertex[2]
+                + bone_matrix[2][3];
 }
 
 void mdl_animation_transform_all_vertices(
-    studiohdr_t *header,
+    studiohdr_t   *header,
     unsigned char *data,
-    float (*bone_matrices)[3][4],
+    float ( *bone_matrices )[3][4],
     vec3_t *output_vertices,
-    int bodypart_index,
-    int model_index) 
+    int     bodypart_index,
+    int     model_index )
 {
-    
-    if (!header || !data || !bone_matrices || !output_vertices) {
+    if ( !header || !data || !bone_matrices || !output_vertices )
+    {
         return;
     }
-    
-    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(data + header->bodypartindex);
-    
-    if (bodypart_index >= header->numbodyparts) {
-        return;       
+
+    mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( data + header->bodypartindex );
+
+    if ( bodypart_index >= header->numbodyparts )
+    {
+        return;
     }
-    
+
     mstudiobodyparts_t *bodypart = &bodyparts[bodypart_index];
-    mstudiomodel_t *models = (mstudiomodel_t *)(data + bodypart->modelindex);
+    mstudiomodel_t     *models   = ( mstudiomodel_t * ) ( data + bodypart->modelindex );
 
-    if (model_index >= bodypart->nummodels) {
+    if ( model_index >= bodypart->nummodels )
+    {
         return;
-    }   
-    
+    }
+
     mstudiomodel_t *model = &models[model_index];
-    
-    vec3_t *vertices = (vec3_t *)(data + model->vertindex);
-    
-    unsigned char *vertex_bone = (unsigned char *)(data + model->vertinfoindex);
-    
-    for (int i = 0; i < model->numverts; i++) {
-        
+
+    vec3_t *vertices = ( vec3_t * ) ( data + model->vertindex );
+
+    unsigned char *vertex_bone = ( unsigned char * ) ( data + model->vertinfoindex );
+
+    for ( int i = 0; i < model->numverts; i++ )
+    {
         int bone_index = vertex_bone[i];
-        
-        transform_vertex_by_bone(output_vertices[i], vertices[i], bone_matrices[bone_index]);
-    }           
+
+        transform_vertex_by_bone( output_vertices[i], vertices[i], bone_matrices[bone_index] );
+    }
 }
-
-
-
