@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 14:50:30
+   Last Modified: 2025-10-11 16:23:57
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -31,7 +31,7 @@ void mdl_animation_init( mdl_animation_state_t *state )
 }
 
 void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float local_matrix[3][4] )
-{
+{  
     for ( int i = 0; i < 3; i++ )
     {
         for ( int j = 0; j < 4; j++ )
@@ -55,12 +55,6 @@ void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
 {
     // 1. Calculate the cosine and sine for each rotation axis
     // we will be using Yaw Pitch Roll transformational matrix -> [z,y,x]
-    
-    /*
-     * I will be ading proper cglm calculating simply because it is fast
-     * This was for educational purposes, so I see what is what happening
-     * and where
-     */
 
     float phi   = rotation[0];    // Roll  (X)
     float theta = rotation[1];    // Pitch (Y)
@@ -295,11 +289,74 @@ mdl_result_t mdl_animation_calculate_bones(
         }
         else 
         {
-                
+            matrix_multiply_3x4(bone_matrices[i], bone_matrices[bone->parent], local_matrix);
+            
         }
+        
+        // here we need to transform all vertices for a given bone[i]
+        
     }
-
-    // now here we need to build the proper bone matrix from the rotation and position
-
     return MDL_SUCCESS;
 }
+
+void transform_vertex_by_bone( vec3_t result, vec3_t vertex, float bone_matrix[3][4])
+{
+    
+    result[0] = bone_matrix[0][0] * vertex[0] +
+                bone_matrix[0][1] * vertex[1] +
+                bone_matrix[0][2] * vertex[2] +
+                bone_matrix[0][3];
+                
+    result[1] = bone_matrix[1][0] * vertex[0] +
+                bone_matrix[1][1] * vertex[1] + 
+                bone_matrix[1][2] * vertex[2] +
+                bone_matrix[1][3];
+                
+    result[2] = bone_matrix[2][0] * vertex[0] +
+                bone_matrix[2][1] * vertex[1] +
+                bone_matrix[2][2] * vertex[2] +
+                bone_matrix[2][3];  
+}
+
+void mdl_animation_transform_all_vertices(
+    studiohdr_t *header,
+    unsigned char *data,
+    float (*bone_matrices)[3][4],
+    vec3_t *output_vertices,
+    int bodypart_index,
+    int model_index) 
+{
+    
+    if (!header || !data || !bone_matrices || !output_vertices) {
+        return;
+    }
+    
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(data + header->bodypartindex);
+    
+    if (bodypart_index >= header->numbodyparts) {
+        return;       
+    }
+    
+    mstudiobodyparts_t *bodypart = &bodyparts[bodypart_index];
+    mstudiomodel_t *models = (mstudiomodel_t *)(data + bodypart->modelindex);
+
+    if (model_index >= bodypart->nummodels) {
+        return;
+    }   
+    
+    mstudiomodel_t *model = &models[model_index];
+    
+    vec3_t *vertices = (vec3_t *)(data + model->vertindex);
+    
+    unsigned char *vertex_bone = (unsigned char *)(data + model->vertinfoindex);
+    
+    for (int i = 0; i < model->numverts; i++) {
+        
+        int bone_index = vertex_bone[i];
+        
+        transform_vertex_by_bone(output_vertices[i], vertices[i], bone_matrices[bone_index]);
+    }           
+}
+
+
+
