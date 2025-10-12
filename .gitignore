@@ -58,4 +58,4 @@ Thumbs.db
 
 
 # Excluding the aider CLI tracking
-*.aider
+*.aider.chat.history.md
