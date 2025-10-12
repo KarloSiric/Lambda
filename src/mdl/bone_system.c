@@ -4,7 +4,7 @@ Project: shaders
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 11:11:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 14:35:09
+   Last Modified: 2025-10-12 20:03:30
    ---------------------------------------------------------------------
    Description:
        
@@ -45,6 +45,11 @@ void QuaternionMatrix( const versor q, mat4 out )
     out[3][0] = out[3][1] = out[3][2] = 0.0f;
 
     out[3][3] = 1.0f;
+}
+
+void QuaternionSlerp( const versor q1, const versor q2, float t, versor out )
+{
+    glm_quat_slerp( q1, q2, t, out );
 }
 
 void R_ConcatTransforms( const mat4 parent, const mat4 local, mat4 out )
@@ -102,8 +107,7 @@ void SetUpBones( studiohdr_t *header, unsigned char *data )
     }
 }
 
-void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t *model, vec3 *out_vertices )
-{
+void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t *model, vec3 *out_vertices ){
     vec3 *vertices = ( vec3 * ) ( data + model->vertindex );
 
     unsigned char *v2bone = ( unsigned char * ) ( data + model->vertinfoindex );

@@ -17,6 +17,8 @@ void AngleQuaternion( const vec3 angles, versor q );
 
 void QuaternionMatrix( const versor q, mat4 out );
 
+void QuaternionSlerp( const versor q1, const versor q2, float t, versor out );
+
 void R_ConcatTransforms( const mat4 parent, const mat4 local, mat4 out );
 
 void VectorTransforms( const vec3 in, const mat4 m, vec3 out );
