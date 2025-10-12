@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 11:30:35
+   Last Modified: 2025-10-12 14:31:16
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -32,20 +32,27 @@ void mdl_animation_init( mdl_animation_state_t *state )
 
 void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float local_matrix[3][4] )
 {
-    for ( int i = 0; i < 3; i++ )
+    // Column-major 3x4 matrix multiplication: result = parent * local
+    // Matrix format is [col][row], where col 3 is translation
+
+    for ( int col = 0; col < 4; col++ )
     {
-        for ( int j = 0; j < 4; j++ )
+        for ( int row = 0; row < 3; row++ )
         {
-            // ROTATION
-            if ( j < 3 )
+            if ( col < 3 )
             {
-                result[i][j] = parent_matrix[i][0] * local_matrix[0][j] + parent_matrix[i][1] * local_matrix[1][j]
-                               + parent_matrix[i][2] * local_matrix[2][j];
+                // Rotation part: multiply 3x3 rotation matrices
+                result[col][row] = parent_matrix[0][row] * local_matrix[col][0] +
+                                   parent_matrix[1][row] * local_matrix[col][1] +
+                                   parent_matrix[2][row] * local_matrix[col][2];
             }
             else
             {
-                result[i][j] = parent_matrix[i][0] * local_matrix[0][j] + parent_matrix[i][1] * local_matrix[1][j]
-                               + parent_matrix[i][2] * local_matrix[2][j] + parent_matrix[i][3];
+                // Translation part: rotate local translation by parent rotation, then add parent translation
+                result[col][row] = parent_matrix[0][row] * local_matrix[col][0] +
+                                   parent_matrix[1][row] * local_matrix[col][1] +
+                                   parent_matrix[2][row] * local_matrix[col][2] +
+                                   parent_matrix[3][row];
             }
         }
     }
@@ -53,10 +60,13 @@ void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float l
 
 void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
 {
-    // Valve uses ZYX Euler angle order (Yaw-Pitch-Roll)
-    float yaw   = rotation[2];    // Z rotation (Yaw)
-    float pitch = rotation[1];    // Y rotation (Pitch) 
-    float roll  = rotation[0];    // X rotation (Roll)
+    // Valve's AngleMatrix uses: angles[PITCH=0], angles[YAW=1], angles[ROLL=2]
+    // In MDL format: rotation[0]=pitch, rotation[1]=yaw, rotation[2]=roll (radians)
+    // Note: Valve's angles are in degrees, MDL stores in radians
+
+    float pitch = rotation[0];    // X rotation (Pitch)
+    float yaw   = rotation[1];    // Y rotation (Yaw)
+    float roll  = rotation[2];    // Z rotation (Roll)
 
     float sy = sinf(yaw);
     float cy = cosf(yaw);
@@ -65,21 +75,23 @@ void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
     float sr = sinf(roll);
     float cr = cosf(roll);
 
-    // Build rotation matrix using Valve's ZYX order
-    // This matches Valve's AngleMatrix implementation
-    matrix[0][0] = cp * cy;
-    matrix[0][1] = cp * sy;
+    // Valve's AngleMatrix - matrix is [col][row] (column-major)
+    // First column
+    matrix[0][0] = cp*cy;
+    matrix[0][1] = cp*sy;
     matrix[0][2] = -sp;
 
-    matrix[1][0] = sr * sp * cy - cr * sy;
-    matrix[1][1] = sr * sp * sy + cr * cy;
-    matrix[1][2] = sr * cp;
+    // Second column
+    matrix[1][0] = sr*sp*cy+cr*-sy;
+    matrix[1][1] = sr*sp*sy+cr*cy;
+    matrix[1][2] = sr*cp;
 
-    matrix[2][0] = cr * sp * cy + sr * sy;
-    matrix[2][1] = cr * sp * sy - sr * cy;
-    matrix[2][2] = cr * cp;
+    // Third column
+    matrix[2][0] = (cr*sp*cy+-sr*-sy);
+    matrix[2][1] = (cr*sp*sy+-sr*cy);
+    matrix[2][2] = cr*cp;
 
-    // Set translation
+    // Translation (4th column)
     matrix[0][3] = position[0];
     matrix[1][3] = position[1];
     matrix[2][3] = position[2];
