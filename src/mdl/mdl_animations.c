@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 00:00:24
+   Last Modified: 2025-10-12 11:30:35
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -236,6 +236,7 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 
     return;
 }
+
 
 mdl_result_t mdl_animation_calculate_bones(
     mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, float ( *bone_matrices )[3][4] )
