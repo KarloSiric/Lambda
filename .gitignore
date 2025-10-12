@@ -61,3 +61,7 @@ Thumbs.db
 
 # Excluding all Aider related files and folders
 aider/
+.aider*
+
+# Excluding the claude code antrogropic enviroments.
+*anthropic.
