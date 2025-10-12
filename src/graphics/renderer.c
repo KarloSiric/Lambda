@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 22:52:02
+   Last Modified: 2025-10-11 23:40:34
    ---------------------------------------------------------------------
    Description:
        
@@ -421,7 +421,7 @@ void UpdateBonesForCurrentFrame( void )
         mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, bone_matrices );
 
         // Convert to 4x4 format used by bone system
-        SetUpBonesFromAnimation( global_header, bone_matrices );
+        SetUpBonesFromAnimation( global_header, global_data ,bone_matrices );
     }
     else
     {
@@ -1237,7 +1237,7 @@ void render_model( studiohdr_t *header, unsigned char *data )
         mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, bone_matrices );
 
         // Convert to our bone system format
-        SetUpBonesFromAnimation( global_header, bone_matrices );
+        SetUpBonesFromAnimation( global_header, global_data, bone_matrices );
 
         // Re-transform vertices with new bone positions
         mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );

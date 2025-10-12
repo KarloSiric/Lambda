@@ -1,10 +1,10 @@
 /*======================================================================
    File: bone_system.c
-   Project: shaders
+Project: shaders
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 11:11:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 22:57:41
+   Last Modified: 2025-10-11 23:38:57
    ---------------------------------------------------------------------
    Description:
        
@@ -119,83 +119,44 @@ void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t
     }
 }
 
-void SetUpBonesFromAnimation( studiohdr_t *header, float anim_bones[MAXSTUDIOBONES][3][4] )
+void SetUpBonesFromAnimation( studiohdr_t *header, unsigned char *data, float anim_bones[MAXSTUDIOBONES][3][4] )
 {
+    mstudiobone_t *bones = ( mstudiobone_t * ) ( data + header->boneindex );
+
     for ( int i = 0; i < header->numbones; i++ )
     {
-        // Print first bone's matrix for debugging
-        if ( i == 0 )
-        {
-            printf( "\n=== BONE 0 ANIMATION MATRIX ===\n" );
-            printf( "Input 3x4 (row-major):\n" );
-            printf(
-                "[%.3f %.3f %.3f %.3f]\n",
-                anim_bones[i][0][0],
-                anim_bones[i][0][1],
-                anim_bones[i][0][2],
-                anim_bones[i][0][3] );
-            printf(
-                "[%.3f %.3f %.3f %.3f]\n",
-                anim_bones[i][1][0],
-                anim_bones[i][1][1],
-                anim_bones[i][1][2],
-                anim_bones[i][1][3] );
-            printf(
-                "[%.3f %.3f %.3f %.3f]\n",
-                anim_bones[i][2][0],
-                anim_bones[i][2][1],
-                anim_bones[i][2][2],
-                anim_bones[i][2][3] );
-        }
+        // Convert 3x4 to 4x4
+        mat4 local;
 
         // Transpose rotation, copy translation
-        g_bonetransformations[i][0][0] = anim_bones[i][0][0];
-        g_bonetransformations[i][0][1] = anim_bones[i][1][0];
-        g_bonetransformations[i][0][2] = anim_bones[i][2][0];
-        g_bonetransformations[i][0][3] = 0.0f;
+        local[0][0] = anim_bones[i][0][0];
+        local[0][1] = anim_bones[i][1][0];
+        local[0][2] = anim_bones[i][2][0];
+        local[0][3] = 0.0f;
 
-        g_bonetransformations[i][1][0] = anim_bones[i][0][1];
-        g_bonetransformations[i][1][1] = anim_bones[i][1][1];
-        g_bonetransformations[i][1][2] = anim_bones[i][2][1];
-        g_bonetransformations[i][1][3] = 0.0f;
+        local[1][0] = anim_bones[i][0][1];
+        local[1][1] = anim_bones[i][1][1];
+        local[1][2] = anim_bones[i][2][1];
+        local[1][3] = 0.0f;
 
-        g_bonetransformations[i][2][0] = anim_bones[i][0][2];
-        g_bonetransformations[i][2][1] = anim_bones[i][1][2];
-        g_bonetransformations[i][2][2] = anim_bones[i][2][2];
-        g_bonetransformations[i][2][3] = 0.0f;
+        local[2][0] = anim_bones[i][0][2];
+        local[2][1] = anim_bones[i][1][2];
+        local[2][2] = anim_bones[i][2][2];
+        local[2][3] = 0.0f;
 
-        g_bonetransformations[i][3][0] = anim_bones[i][0][3];
-        g_bonetransformations[i][3][1] = anim_bones[i][1][3];
-        g_bonetransformations[i][3][2] = anim_bones[i][2][3];
-        g_bonetransformations[i][3][3] = 1.0f;
+        local[3][0] = anim_bones[i][0][3];
+        local[3][1] = anim_bones[i][1][3];
+        local[3][2] = anim_bones[i][2][3];
+        local[3][3] = 1.0f;
 
-        if ( i == 0 )
+        // CRITICAL: Concatenate with parent bone transform!
+        if ( bones[i].parent >= 0 )
         {
-            printf( "\nOutput 4x4 (column-major):\n" );
-            printf(
-                "Col0: [%.3f %.3f %.3f %.3f]\n",
-                g_bonetransformations[i][0][0],
-                g_bonetransformations[i][0][1],
-                g_bonetransformations[i][0][2],
-                g_bonetransformations[i][0][3] );
-            printf(
-                "Col1: [%.3f %.3f %.3f %.3f]\n",
-                g_bonetransformations[i][1][0],
-                g_bonetransformations[i][1][1],
-                g_bonetransformations[i][1][2],
-                g_bonetransformations[i][1][3] );
-            printf(
-                "Col2: [%.3f %.3f %.3f %.3f]\n",
-                g_bonetransformations[i][2][0],
-                g_bonetransformations[i][2][1],
-                g_bonetransformations[i][2][2],
-                g_bonetransformations[i][2][3] );
-            printf(
-                "Col3: [%.3f %.3f %.3f %.3f]\n",
-                g_bonetransformations[i][3][0],
-                g_bonetransformations[i][3][1],
-                g_bonetransformations[i][3][2],
-                g_bonetransformations[i][3][3] );
+            R_ConcatTransforms( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
+        }
+        else
+        {
+            Mat4Copy( local, g_bonetransformations[i] );
         }
     }
 }

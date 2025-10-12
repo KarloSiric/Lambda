@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 21:59:25
+   Last Modified: 2025-10-12 00:00:24
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -250,14 +250,24 @@ mdl_result_t mdl_animation_calculate_bones(
     mstudioseqdesc_t *seq       = &sequences[state->current_sequence];
 
     mstudioanim_t *anim_data = ( mstudioanim_t * ) ( data + seq->animindex );
-    
+
     // Debug: print bind pose for bone 0
-    printf("BONE 0 BIND POSE: pos=[%.3f, %.3f, %.3f] rot=[%.3f, %.3f, %.3f]\n",
-           bones[0].value[0], bones[0].value[1], bones[0].value[2],
-           bones[0].value[3], bones[0].value[4], bones[0].value[5]);
-    printf("BONE 0 SCALE: [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f]\n",
-           bones[0].scale[0], bones[0].scale[1], bones[0].scale[2],
-           bones[0].scale[3], bones[0].scale[4], bones[0].scale[5]);
+    printf(
+        "BONE 0 BIND POSE: pos=[%.3f, %.3f, %.3f] rot=[%.3f, %.3f, %.3f]\n",
+        bones[0].value[0],
+        bones[0].value[1],
+        bones[0].value[2],
+        bones[0].value[3],
+        bones[0].value[4],
+        bones[0].value[5] );
+    printf(
+        "BONE 0 SCALE: [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f]\n",
+        bones[0].scale[0],
+        bones[0].scale[1],
+        bones[0].scale[2],
+        bones[0].scale[3],
+        bones[0].scale[4],
+        bones[0].scale[5] );
     // TODO(Karlo): Need to find the positon of each bone and then find the rotation of that bone...
 
     for ( int i = 0; i < header->numbones; i++ )
@@ -265,46 +275,58 @@ mdl_result_t mdl_animation_calculate_bones(
         mstudiobone_t *bone      = &bones[i];
         mstudioanim_t *bone_anim = &anim_data[i];
 
-        // Start with ZERO (not bind pose!)
-        vec3_t position = { 0.0f, 0.0f, 0.0f };
-        vec3_t rotation = { 0.0f, 0.0f, 0.0f };
+        // START WITH BIND POSE (Valve SDK approach)
+        vec3_t position = {
+            bone->value[0],    // X position from bind pose
+            bone->value[1],    // Y position from bind pose
+            bone->value[2]     // Z position from bind pose
+        };
+        vec3_t rotation = {
+            bone->value[3],    // X rotation from bind pose
+            bone->value[4],    // Y rotation from bind pose
+            bone->value[5]     // Z rotation from bind pose
+        };
 
         for ( int channel = 0; channel < 6; channel++ )
         {
-            float value = 0.0f;
+            float delta = 0.0f;
 
             if ( bone_anim->offset[channel] != 0 )
             {
-                // ANIMATED - get animation DELTA
-                float scale = bone->scale[channel];
-                // If scale is 0, use 1.0 (common for rotation channels)
-                if (scale == 0.0f) {
-                    scale = 1.0f;
+                delta
+                    = calc_bone_anim_value( data, seq, bone_anim, channel, state->current_frame, bone->scale[channel] );
+
+                if ( i == 0 )
+                {    // Debug bone 0
+                    printf( "BONE 0 CH %d: delta=%.3f, scale=%.3f\n", channel, delta, bone->scale[channel] );
                 }
-                float delta = calc_bone_anim_value( data, seq, bone_anim, channel, state->current_frame, scale );
-                // ADD delta to bind pose to get final value
-                value = bone->value[channel] + delta;
             }
-            else
-            {
-                // NOT ANIMATED - use bind pose value directly
-                value = bone->value[channel];
-            }
+
             if ( channel < 3 )
             {
-                position[channel] = value;
+                position[channel] += delta;
             }
             else
             {
-                rotation[channel - 3] = value;
+                rotation[channel - 3] += delta;
+                if (i == 0) {
+                    printf("  After CH %d: rotation=[%.3f, %.3f, %.3f]\n", 
+                   channel, rotation[0], rotation[1], rotation[2]);
+                }
             }
         }
-        
+
         // Debug first bone
-        if ( i == 0 ) {
-            printf("BONE 0 Animation: pos=[%.3f, %.3f, %.3f] rot=[%.3f, %.3f, %.3f]\n",
-                   position[0], position[1], position[2],
-                   rotation[0], rotation[1], rotation[2]);
+        if ( i == 0 )
+        {
+            printf(
+                "BONE 0 Animation: pos=[%.3f, %.3f, %.3f] rot=[%.3f, %.3f, %.3f]\n",
+                position[0],
+                position[1],
+                position[2],
+                rotation[0],
+                rotation[1],
+                rotation[2] );
         }
 
         float local_matrix[3][4];
@@ -346,12 +368,12 @@ void mdl_animation_transform_all_vertices(
     int     model_index )
 {
     if ( !header || !data || !bone_matrices || !output_vertices )
-    {
+    {   
         return;
     }
 
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( data + header->bodypartindex );
-
+    
     if ( bodypart_index >= header->numbodyparts )
     {
         return;
