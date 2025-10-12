@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 23:40:34
+   Last Modified: 2025-10-12 20:37:50
    ---------------------------------------------------------------------
    Description:
        
@@ -261,10 +261,10 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             }
             break;
         // case GLFW_KEY_UP:    // Increase animation speed
-        //     printf( "⏩ Animation speed increased\n" );
+        //     printf( " Animation speed increased\n" );
         //     break;
         // case GLFW_KEY_DOWN:    // Decrease animation speed
-        //     printf( "⏪ Animation speed decreased\n" );
+        //     printf( " Animation speed decreased\n" );
         //     break;
 
         case GLFW_KEY_L:    // Toggle looping

@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 15:29:13
+   Last Modified: 2025-10-12 20:32:06
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -306,6 +306,7 @@ mdl_result_t mdl_animation_calculate_bones(
             // Only read animation data if offset exists
             if ( bone_anim->offset[channel] != 0 )
             {
+                // calc_bone_anim_value already multiplies by scale!
                 delta
                     = calc_bone_anim_value( data, seq, bone_anim, channel, state->current_frame, bone->scale[channel] );
 
@@ -313,67 +314,40 @@ mdl_result_t mdl_animation_calculate_bones(
                 {    // Debug bone 0
                     printf( "BONE 0 CH %d: delta=%.3f, scale=%.3f, offset=%d\n", channel, delta, bone->scale[channel], bone_anim->offset[channel] );
                 }
-
-                // IMPORTANT: If scale is very small (effectively 0), force delta to 0
-                // Use epsilon comparison because floating point values might not be exactly 0
-                if ( fabsf( bone->scale[channel] ) < 0.0001f )
-                {
-                    if ( i == 0 )
-                    {
-                        printf( "  WARNING: CH %d has offset but scale~=0 (%.10f), forcing delta to 0 (was %.6f)\n",
-                               channel, bone->scale[channel], delta );
-                    }
-                    delta = 0.0f;
-                }
             }
 
+            // ADD delta to bind pose (Valve's approach for both position AND rotation)
             if ( channel < 3 )
             {
                 position[channel] += delta;
             }
             else
             {
-                if ( i == 0 )
-                {
-                    printf(
-                        "  Before add: rotation[%d]=%.6f, delta=%.6f\n",
-                        channel - 3,
-                        rotation[channel - 3],
-                        delta );
-                }
                 rotation[channel - 3] += delta;
                 if ( i == 0 )
                 {
-                    printf(
-                        "  After CH %d: rotation=[%.6f, %.6f, %.6f]\n",
-                        channel,
-                        rotation[0],
-                        rotation[1],
-                        rotation[2] );
+                    printf( "  Rotation[%d]: bind=%.6f + delta=%.6f = %.6f\n",
+                           channel - 3, bone->value[channel], delta, rotation[channel - 3] );
                 }
             }
         }
 
-        // Debug first bone
         if ( i == 0 )
         {
-            printf(
-                "BONE 0 Animation: pos=[%.3f, %.3f, %.3f] rot=[%.3f, %.3f, %.3f]\n",
-                position[0],
-                position[1],
-                position[2],
-                rotation[0],
-                rotation[1],
-                rotation[2] );
+            printf( "BONE 0 Final Euler: [%.6f, %.6f, %.6f]\n", rotation[0], rotation[1], rotation[2] );
         }
 
-        // Use quaternions to build the matrix - EXACTLY LIKE T-POSE (SetUpBones)!
+        // NOW convert final Euler angles to quaternion, then to matrix (Valve's approach!)
         versor q;
-        mat4 local;
+        AngleQuaternion( rotation, q );
 
-        // Convert Euler angles to quaternion, then to matrix
-        vec3 euler_angles = { rotation[0], rotation[1], rotation[2] };
-        AngleQuaternion( euler_angles, q );
+        if ( i == 0 )
+        {
+            printf( "BONE 0 Quaternion: [%.3f, %.3f, %.3f, %.3f]\n", q[0], q[1], q[2], q[3] );
+        }
+
+        // Convert quaternion to rotation matrix
+        mat4 local;
         QuaternionMatrix( q, local );
 
         // Set translation in the 4th column (column-major format)
@@ -384,6 +358,7 @@ mdl_result_t mdl_animation_calculate_bones(
         // Debug bone 0 matrix
         if ( i == 0 )
         {
+            printf( "BONE 0 Position: [%.3f, %.3f, %.3f]\n", position[0], position[1], position[2] );
             printf( "BONE 0 LOCAL MATRIX (column-major mat4):\n" );
             printf(
                 "  [%.3f %.3f %.3f %.3f]\n",
@@ -411,7 +386,7 @@ mdl_result_t mdl_animation_calculate_bones(
                 local[3][3] );
         }
 
-        // Concatenate with parent if needed - EXACTLY LIKE T-POSE!
+        // Concatenate with parent bone transform
         if ( bone->parent >= 0 )
         {
             R_ConcatTransforms( bone_transformations[bone->parent], local, bone_transformations[i] );

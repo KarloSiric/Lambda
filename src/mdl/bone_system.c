@@ -29,22 +29,79 @@ static inline void Mat4Copy( mat4 src, mat4 dst )
 
 void AngleQuaternion( const vec3 angles, versor q )
 {
-    versor qx, qy, qz, temp;
-    glm_quatv( qx, angles[0], ( vec3 ) { 1.0f, 0.0f, 0.0f } );
-    glm_quatv( qy, angles[1], ( vec3 ) { 0.0f, 1.0f, 0.0f } );
-    glm_quatv( qz, angles[2], ( vec3 ) { 0.0f, 0.0f, 1.0f } );
+    // Valve's AngleQuaternion - uses HALF angles for proper quaternion conversion
+    // angles[0] = PITCH (X), angles[1] = YAW (Y), angles[2] = ROLL (Z)
+    float angle;
+    float sr, sp, sy, cr, cp, cy;
 
-    glm_quat_mul( qz, qy, temp );
-    glm_quat_mul( temp, qx, q );
+    // Roll (Z) - half angle
+    angle = angles[2] * 0.5f;
+    sy = sinf(angle);
+    cy = cosf(angle);
+
+    // Yaw (Y) - half angle
+    angle = angles[1] * 0.5f;
+    sp = sinf(angle);
+    cp = cosf(angle);
+
+    // Pitch (X) - half angle
+    angle = angles[0] * 0.5f;
+    sr = sinf(angle);
+    cr = cosf(angle);
+
+    // Valve's exact quaternion formula: [X, Y, Z, W]
+    q[0] = sr*cp*cy - cr*sp*sy;  // X
+    q[1] = cr*sp*cy + sr*cp*sy;  // Y
+    q[2] = cr*cp*sy - sr*sp*cy;  // Z
+    q[3] = cr*cp*cy + sr*sp*sy;  // W
 }
 
 void QuaternionMatrix( const versor q, mat4 out )
 {
-    glm_quat_mat4( q, out );
+    // Valve's QuaternionMatrix - converts quaternion to 4x4 rotation matrix
+    // CGLM uses column-major format: out[col][row]
+    // Valve's formula generates row-major, so we transpose during assignment
 
-    out[3][0] = out[3][1] = out[3][2] = 0.0f;
+    // Row 0 (becomes column 0)
+    out[0][0] = 1.0f - 2.0f * q[1] * q[1] - 2.0f * q[2] * q[2];
+    out[0][1] = 2.0f * q[0] * q[1] + 2.0f * q[3] * q[2];
+    out[0][2] = 2.0f * q[0] * q[2] - 2.0f * q[3] * q[1];
+    out[0][3] = 0.0f;
 
+    // Row 1 (becomes column 1)
+    out[1][0] = 2.0f * q[0] * q[1] - 2.0f * q[3] * q[2];
+    out[1][1] = 1.0f - 2.0f * q[0] * q[0] - 2.0f * q[2] * q[2];
+    out[1][2] = 2.0f * q[1] * q[2] + 2.0f * q[3] * q[0];
+    out[1][3] = 0.0f;
+
+    // Row 2 (becomes column 2)
+    out[2][0] = 2.0f * q[0] * q[2] + 2.0f * q[3] * q[1];
+    out[2][1] = 2.0f * q[1] * q[2] - 2.0f * q[3] * q[0];
+    out[2][2] = 1.0f - 2.0f * q[0] * q[0] - 2.0f * q[1] * q[1];
+    out[2][3] = 0.0f;
+
+    // Translation column (set to 0 for pure rotation)
+    out[3][0] = 0.0f;
+    out[3][1] = 0.0f;
+    out[3][2] = 0.0f;
     out[3][3] = 1.0f;
+}
+
+void QuaternionMultiply( const versor q1, const versor q2, versor out )
+{
+    // Quaternion multiplication: out = q1 * q2
+    // This combines two rotations (q1 applied first, then q2)
+    versor temp;
+
+    temp[0] = q1[3]*q2[0] + q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1];  // X
+    temp[1] = q1[3]*q2[1] + q1[1]*q2[3] + q1[2]*q2[0] - q1[0]*q2[2];  // Y
+    temp[2] = q1[3]*q2[2] + q1[2]*q2[3] + q1[0]*q2[1] - q1[1]*q2[0];  // Z
+    temp[3] = q1[3]*q2[3] - q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2];  // W
+
+    out[0] = temp[0];
+    out[1] = temp[1];
+    out[2] = temp[2];
+    out[3] = temp[3];
 }
 
 void QuaternionSlerp( const versor q1, const versor q2, float t, versor out )
