@@ -3,6 +3,7 @@
 
 #include "../studio.h"
 #include "mdl_loader.h"
+#include <cglm/cglm.h>
 
 typedef struct {
     int   current_sequence;
@@ -18,7 +19,7 @@ mdl_result_t mdl_animation_set_sequence(
 void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studiohdr_t *header, unsigned char *data );
 
 mdl_result_t mdl_animation_calculate_bones(
-    mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, float bone_matrices[MAXSTUDIOBONES][3][4] );
+    mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, mat4 *bone_transformations );
 
 // Matrix multiplication
 void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float local_matrix[3][4] );

@@ -416,12 +416,8 @@ void UpdateBonesForCurrentFrame( void )
 
     if ( g_animation_enabled && global_header->numseq > 0 )
     {
-        // Calculate animated bone transforms for current frame
-        float bone_matrices[MAXSTUDIOBONES][3][4];
-        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, bone_matrices );
-
-        // Convert to 4x4 format used by bone system
-        SetUpBonesFromAnimation( global_header, global_data ,bone_matrices );
+        // Calculate animated bone transforms directly into g_bonetransformations
+        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, g_bonetransformations );
     }
     else
     {
@@ -1232,12 +1228,8 @@ void render_model( studiohdr_t *header, unsigned char *data )
     // EVERY FRAME: Update bones and re-skin vertices if animating
     if ( g_animation_enabled && global_header && global_data )
     {
-        // Calculate animated bone transforms
-        float bone_matrices[MAXSTUDIOBONES][3][4];
-        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, bone_matrices );
-
-        // Convert to our bone system format
-        SetUpBonesFromAnimation( global_header, global_data, bone_matrices );
+        // Calculate animated bone transforms directly into g_bonetransformations
+        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, g_bonetransformations );
 
         // Re-transform vertices with new bone positions
         mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );

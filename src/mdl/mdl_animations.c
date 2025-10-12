@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 14:31:16
+   Last Modified: 2025-10-12 15:29:13
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -16,6 +16,7 @@
                                                                        */
 
 #include "mdl_animations.h"
+#include "bone_system.h"
 
 #include <cglm/cglm.h>
 #include <math.h>
@@ -32,68 +33,72 @@ void mdl_animation_init( mdl_animation_state_t *state )
 
 void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float local_matrix[3][4] )
 {
-    // Column-major 3x4 matrix multiplication: result = parent * local
-    // Matrix format is [col][row], where col 3 is translation
+    // ROW-MAJOR 3x4 matrix multiplication - Matches Valve's ConcatTransforms exactly
+    // result = parent * local
+    // Format: matrix[row][col]
 
-    for ( int col = 0; col < 4; col++ )
-    {
-        for ( int row = 0; row < 3; row++ )
-        {
-            if ( col < 3 )
-            {
-                // Rotation part: multiply 3x3 rotation matrices
-                result[col][row] = parent_matrix[0][row] * local_matrix[col][0] +
-                                   parent_matrix[1][row] * local_matrix[col][1] +
-                                   parent_matrix[2][row] * local_matrix[col][2];
-            }
-            else
-            {
-                // Translation part: rotate local translation by parent rotation, then add parent translation
-                result[col][row] = parent_matrix[0][row] * local_matrix[col][0] +
-                                   parent_matrix[1][row] * local_matrix[col][1] +
-                                   parent_matrix[2][row] * local_matrix[col][2] +
-                                   parent_matrix[3][row];
-            }
-        }
-    }
+    result[0][0] = parent_matrix[0][0] * local_matrix[0][0] + parent_matrix[0][1] * local_matrix[1][0]
+                   + parent_matrix[0][2] * local_matrix[2][0];
+    result[0][1] = parent_matrix[0][0] * local_matrix[0][1] + parent_matrix[0][1] * local_matrix[1][1]
+                   + parent_matrix[0][2] * local_matrix[2][1];
+    result[0][2] = parent_matrix[0][0] * local_matrix[0][2] + parent_matrix[0][1] * local_matrix[1][2]
+                   + parent_matrix[0][2] * local_matrix[2][2];
+    result[0][3] = parent_matrix[0][0] * local_matrix[0][3] + parent_matrix[0][1] * local_matrix[1][3]
+                   + parent_matrix[0][2] * local_matrix[2][3] + parent_matrix[0][3];
+
+    result[1][0] = parent_matrix[1][0] * local_matrix[0][0] + parent_matrix[1][1] * local_matrix[1][0]
+                   + parent_matrix[1][2] * local_matrix[2][0];
+    result[1][1] = parent_matrix[1][0] * local_matrix[0][1] + parent_matrix[1][1] * local_matrix[1][1]
+                   + parent_matrix[1][2] * local_matrix[2][1];
+    result[1][2] = parent_matrix[1][0] * local_matrix[0][2] + parent_matrix[1][1] * local_matrix[1][2]
+                   + parent_matrix[1][2] * local_matrix[2][2];
+    result[1][3] = parent_matrix[1][0] * local_matrix[0][3] + parent_matrix[1][1] * local_matrix[1][3]
+                   + parent_matrix[1][2] * local_matrix[2][3] + parent_matrix[1][3];
+
+    result[2][0] = parent_matrix[2][0] * local_matrix[0][0] + parent_matrix[2][1] * local_matrix[1][0]
+                   + parent_matrix[2][2] * local_matrix[2][0];
+    result[2][1] = parent_matrix[2][0] * local_matrix[0][1] + parent_matrix[2][1] * local_matrix[1][1]
+                   + parent_matrix[2][2] * local_matrix[2][1];
+    result[2][2] = parent_matrix[2][0] * local_matrix[0][2] + parent_matrix[2][1] * local_matrix[1][2]
+                   + parent_matrix[2][2] * local_matrix[2][2];
+    result[2][3] = parent_matrix[2][0] * local_matrix[0][3] + parent_matrix[2][1] * local_matrix[1][3]
+                   + parent_matrix[2][2] * local_matrix[2][3] + parent_matrix[2][3];
 }
 
 void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
 {
-    // Valve's AngleMatrix uses: angles[PITCH=0], angles[YAW=1], angles[ROLL=2]
-    // In MDL format: rotation[0]=pitch, rotation[1]=yaw, rotation[2]=roll (radians)
-    // Note: Valve's angles are in degrees, MDL stores in radians
+    // Valve's AngleMatrix uses ROW-MAJOR format: matrix[row][col]
+    // angles[PITCH=0], angles[YAW=1], angles[ROLL=2]
+    // MDL stores: rotation[0/1/2] in radians (Valve uses degrees, so we don't convert)
 
-    float pitch = rotation[0];    // X rotation (Pitch)
-    float yaw   = rotation[1];    // Y rotation (Yaw)
-    float roll  = rotation[2];    // Z rotation (Roll)
+    float pitch = rotation[0];
+    float yaw   = rotation[1];
+    float roll  = rotation[2];
 
-    float sy = sinf(yaw);
-    float cy = cosf(yaw);
-    float sp = sinf(pitch);
-    float cp = cosf(pitch);
-    float sr = sinf(roll);
-    float cr = cosf(roll);
+    float sy = sinf( yaw );
+    float cy = cosf( yaw );
+    float sp = sinf( pitch );
+    float cp = cosf( pitch );
+    float sr = sinf( roll );
+    float cr = cosf( roll );
 
-    // Valve's AngleMatrix - matrix is [col][row] (column-major)
-    // First column
-    matrix[0][0] = cp*cy;
-    matrix[0][1] = cp*sy;
-    matrix[0][2] = -sp;
-
-    // Second column
-    matrix[1][0] = sr*sp*cy+cr*-sy;
-    matrix[1][1] = sr*sp*sy+cr*cy;
-    matrix[1][2] = sr*cp;
-
-    // Third column
-    matrix[2][0] = (cr*sp*cy+-sr*-sy);
-    matrix[2][1] = (cr*sp*sy+-sr*cy);
-    matrix[2][2] = cr*cp;
-
-    // Translation (4th column)
+    // ROW-MAJOR format: matrix[row][col]
+    // Row 0
+    matrix[0][0] = cp * cy;
+    matrix[0][1] = sr * sp * cy + cr * -sy;
+    matrix[0][2] = ( cr * sp * cy + -sr * -sy );
     matrix[0][3] = position[0];
+
+    // Row 1
+    matrix[1][0] = cp * sy;
+    matrix[1][1] = sr * sp * sy + cr * cy;
+    matrix[1][2] = ( cr * sp * sy + -sr * cy );
     matrix[1][3] = position[1];
+
+    // Row 2
+    matrix[2][0] = -sp;
+    matrix[2][1] = sr * cp;
+    matrix[2][2] = cr * cp;
     matrix[2][3] = position[2];
 }
 
@@ -245,11 +250,10 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
     return;
 }
 
-
 mdl_result_t mdl_animation_calculate_bones(
-    mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, float ( *bone_matrices )[3][4] )
+    mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, mat4 *bone_transformations )
 {
-    if ( !state || !header || !bone_matrices )
+    if ( !state || !header || !bone_transformations )
     {
         return MDL_ERROR_INVALID_PARAMETER;
     }
@@ -277,7 +281,6 @@ mdl_result_t mdl_animation_calculate_bones(
         bones[0].scale[3],
         bones[0].scale[4],
         bones[0].scale[5] );
-    // TODO(Karlo): Need to find the positon of each bone and then find the rotation of that bone...
 
     for ( int i = 0; i < header->numbones; i++ )
     {
@@ -300,6 +303,7 @@ mdl_result_t mdl_animation_calculate_bones(
         {
             float delta = 0.0f;
 
+            // Only read animation data if offset exists
             if ( bone_anim->offset[channel] != 0 )
             {
                 delta
@@ -307,7 +311,19 @@ mdl_result_t mdl_animation_calculate_bones(
 
                 if ( i == 0 )
                 {    // Debug bone 0
-                    printf( "BONE 0 CH %d: delta=%.3f, scale=%.3f\n", channel, delta, bone->scale[channel] );
+                    printf( "BONE 0 CH %d: delta=%.3f, scale=%.3f, offset=%d\n", channel, delta, bone->scale[channel], bone_anim->offset[channel] );
+                }
+
+                // IMPORTANT: If scale is very small (effectively 0), force delta to 0
+                // Use epsilon comparison because floating point values might not be exactly 0
+                if ( fabsf( bone->scale[channel] ) < 0.0001f )
+                {
+                    if ( i == 0 )
+                    {
+                        printf( "  WARNING: CH %d has offset but scale~=0 (%.10f), forcing delta to 0 (was %.6f)\n",
+                               channel, bone->scale[channel], delta );
+                    }
+                    delta = 0.0f;
                 }
             }
 
@@ -317,10 +333,23 @@ mdl_result_t mdl_animation_calculate_bones(
             }
             else
             {
+                if ( i == 0 )
+                {
+                    printf(
+                        "  Before add: rotation[%d]=%.6f, delta=%.6f\n",
+                        channel - 3,
+                        rotation[channel - 3],
+                        delta );
+                }
                 rotation[channel - 3] += delta;
-                if (i == 0) {
-                    printf("  After CH %d: rotation=[%.3f, %.3f, %.3f]\n", 
-                   channel, rotation[0], rotation[1], rotation[2]);
+                if ( i == 0 )
+                {
+                    printf(
+                        "  After CH %d: rotation=[%.6f, %.6f, %.6f]\n",
+                        channel,
+                        rotation[0],
+                        rotation[1],
+                        rotation[2] );
                 }
             }
         }
@@ -338,26 +367,68 @@ mdl_result_t mdl_animation_calculate_bones(
                 rotation[2] );
         }
 
-        float local_matrix[3][4];
-        build_bone_matrix( position, rotation, local_matrix );    // -> this builds the proper local bone matrix
+        // Use quaternions to build the matrix - EXACTLY LIKE T-POSE (SetUpBones)!
+        versor q;
+        mat4 local;
 
-        if ( bone->parent == -1 )
+        // Convert Euler angles to quaternion, then to matrix
+        vec3 euler_angles = { rotation[0], rotation[1], rotation[2] };
+        AngleQuaternion( euler_angles, q );
+        QuaternionMatrix( q, local );
+
+        // Set translation in the 4th column (column-major format)
+        local[3][0] = position[0];
+        local[3][1] = position[1];
+        local[3][2] = position[2];
+
+        // Debug bone 0 matrix
+        if ( i == 0 )
         {
-            // This is the root bone it has no parent bones
-            memcpy( bone_matrices[i], local_matrix, sizeof( local_matrix ) );
+            printf( "BONE 0 LOCAL MATRIX (column-major mat4):\n" );
+            printf(
+                "  [%.3f %.3f %.3f %.3f]\n",
+                local[0][0],
+                local[0][1],
+                local[0][2],
+                local[0][3] );
+            printf(
+                "  [%.3f %.3f %.3f %.3f]\n",
+                local[1][0],
+                local[1][1],
+                local[1][2],
+                local[1][3] );
+            printf(
+                "  [%.3f %.3f %.3f %.3f]\n",
+                local[2][0],
+                local[2][1],
+                local[2][2],
+                local[2][3] );
+            printf(
+                "  [%.3f %.3f %.3f %.3f]\n",
+                local[3][0],
+                local[3][1],
+                local[3][2],
+                local[3][3] );
+        }
+
+        // Concatenate with parent if needed - EXACTLY LIKE T-POSE!
+        if ( bone->parent >= 0 )
+        {
+            R_ConcatTransforms( bone_transformations[bone->parent], local, bone_transformations[i] );
         }
         else
         {
-            matrix_multiply_3x4( bone_matrices[i], bone_matrices[bone->parent], local_matrix );
+            glm_mat4_copy( local, bone_transformations[i] );
         }
-
-        // here we need to transform all vertices for a given bone[i]
     }
     return MDL_SUCCESS;
 }
 
 void transform_vertex_by_bone( vec3_t result, vec3_t vertex, float bone_matrix[3][4] )
 {
+    // bone_matrix is in ROW-MAJOR format: bone_matrix[row][col]
+    // Transform: result = bone_matrix * vertex (treating vertex as column vector)
+
     result[0] = bone_matrix[0][0] * vertex[0] + bone_matrix[0][1] * vertex[1] + bone_matrix[0][2] * vertex[2]
                 + bone_matrix[0][3];
 
@@ -377,12 +448,12 @@ void mdl_animation_transform_all_vertices(
     int     model_index )
 {
     if ( !header || !data || !bone_matrices || !output_vertices )
-    {   
+    {
         return;
     }
 
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( data + header->bodypartindex );
-    
+
     if ( bodypart_index >= header->numbodyparts )
     {
         return;

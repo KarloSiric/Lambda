@@ -4,7 +4,7 @@ Project: shaders
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 11:11:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 14:18:02
+   Last Modified: 2025-10-12 14:35:09
    ---------------------------------------------------------------------
    Description:
        
@@ -125,26 +125,28 @@ void SetUpBonesFromAnimation( studiohdr_t *header, unsigned char *data, float an
 
     for ( int i = 0; i < header->numbones; i++ )
     {
-        // Convert 3x4 to 4x4 - CORRECT format (no transpose needed)
+        // Convert row-major 3x4 to column-major 4x4 for CGLM
+        // anim_bones[bone][row][col] (row-major from mdl_animations.c)
+        // CGLM mat4 is mat[col][row] (column-major)
         mat4 local;
 
-        // Copy rotation matrix directly (3x3 part)
-        local[0][0] = anim_bones[i][0][0];
-        local[0][1] = anim_bones[i][0][1];
-        local[0][2] = anim_bones[i][0][2];
+        // Transpose the 3x3 rotation part
+        local[0][0] = anim_bones[i][0][0];  // Row 0 -> Column 0
+        local[0][1] = anim_bones[i][1][0];
+        local[0][2] = anim_bones[i][2][0];
         local[0][3] = 0.0f;
 
-        local[1][0] = anim_bones[i][1][0];
+        local[1][0] = anim_bones[i][0][1];  // Row 0 -> Column 1
         local[1][1] = anim_bones[i][1][1];
-        local[1][2] = anim_bones[i][1][2];
+        local[1][2] = anim_bones[i][2][1];
         local[1][3] = 0.0f;
 
-        local[2][0] = anim_bones[i][2][0];
-        local[2][1] = anim_bones[i][2][1];
+        local[2][0] = anim_bones[i][0][2];  // Row 0 -> Column 2
+        local[2][1] = anim_bones[i][1][2];
         local[2][2] = anim_bones[i][2][2];
         local[2][3] = 0.0f;
 
-        // Copy translation (4th column)
+        // Translation goes to 4th column
         local[3][0] = anim_bones[i][0][3];
         local[3][1] = anim_bones[i][1][3];
         local[3][2] = anim_bones[i][2][3];
