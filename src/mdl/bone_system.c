@@ -1,10 +1,10 @@
 /*======================================================================
    File: bone_system.c
-Project: shaders
+   Project: shaders
    Author: karlosiric <email@example.com>
    Created: 2025-10-08 11:11:35
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 20:03:30
+   Last Modified: 2025-10-12 23:25:03
    ---------------------------------------------------------------------
    Description:
        
@@ -29,62 +29,15 @@ static inline void Mat4Copy( mat4 src, mat4 dst )
 
 void AngleQuaternion( const vec3 angles, versor q )
 {
-    // Valve's AngleQuaternion - uses HALF angles for proper quaternion conversion
-    // angles[0] = PITCH (X), angles[1] = YAW (Y), angles[2] = ROLL (Z)
-    float angle;
-    float sr, sp, sy, cr, cp, cy;
-
-    // Roll (Z) - half angle
-    angle = angles[2] * 0.5f;
-    sy = sinf(angle);
-    cy = cosf(angle);
-
-    // Yaw (Y) - half angle
-    angle = angles[1] * 0.5f;
-    sp = sinf(angle);
-    cp = cosf(angle);
-
-    // Pitch (X) - half angle
-    angle = angles[0] * 0.5f;
-    sr = sinf(angle);
-    cr = cosf(angle);
-
-    // Valve's exact quaternion formula: [X, Y, Z, W]
-    q[0] = sr*cp*cy - cr*sp*sy;  // X
-    q[1] = cr*sp*cy + sr*cp*sy;  // Y
-    q[2] = cr*cp*sy - sr*sp*cy;  // Z
-    q[3] = cr*cp*cy + sr*sp*sy;  // W
+    glm_euler_zyx_quat( angles, q );
 }
 
 void QuaternionMatrix( const versor q, mat4 out )
 {
-    // Valve's QuaternionMatrix - converts quaternion to 4x4 rotation matrix
-    // CGLM uses column-major format: out[col][row]
-    // Valve's formula generates row-major, so we transpose during assignment
+    glm_quat_mat4( q, out );
 
-    // Row 0 (becomes column 0)
-    out[0][0] = 1.0f - 2.0f * q[1] * q[1] - 2.0f * q[2] * q[2];
-    out[0][1] = 2.0f * q[0] * q[1] + 2.0f * q[3] * q[2];
-    out[0][2] = 2.0f * q[0] * q[2] - 2.0f * q[3] * q[1];
-    out[0][3] = 0.0f;
-
-    // Row 1 (becomes column 1)
-    out[1][0] = 2.0f * q[0] * q[1] - 2.0f * q[3] * q[2];
-    out[1][1] = 1.0f - 2.0f * q[0] * q[0] - 2.0f * q[2] * q[2];
-    out[1][2] = 2.0f * q[1] * q[2] + 2.0f * q[3] * q[0];
-    out[1][3] = 0.0f;
-
-    // Row 2 (becomes column 2)
-    out[2][0] = 2.0f * q[0] * q[2] + 2.0f * q[3] * q[1];
-    out[2][1] = 2.0f * q[1] * q[2] - 2.0f * q[3] * q[0];
-    out[2][2] = 1.0f - 2.0f * q[0] * q[0] - 2.0f * q[1] * q[1];
-    out[2][3] = 0.0f;
-
-    // Translation column (set to 0 for pure rotation)
-    out[3][0] = 0.0f;
-    out[3][1] = 0.0f;
-    out[3][2] = 0.0f;
-    out[3][3] = 1.0f;
+    out[3][0] = out[3][1] = out[3][2] = 0.0f;
+    out[3][3]                         = 1.0f;
 }
 
 void QuaternionMultiply( const versor q1, const versor q2, versor out )
@@ -93,10 +46,10 @@ void QuaternionMultiply( const versor q1, const versor q2, versor out )
     // This combines two rotations (q1 applied first, then q2)
     versor temp;
 
-    temp[0] = q1[3]*q2[0] + q1[0]*q2[3] + q1[1]*q2[2] - q1[2]*q2[1];  // X
-    temp[1] = q1[3]*q2[1] + q1[1]*q2[3] + q1[2]*q2[0] - q1[0]*q2[2];  // Y
-    temp[2] = q1[3]*q2[2] + q1[2]*q2[3] + q1[0]*q2[1] - q1[1]*q2[0];  // Z
-    temp[3] = q1[3]*q2[3] - q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2];  // W
+    temp[0] = q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1];    // X
+    temp[1] = q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2];    // Y
+    temp[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0];    // Z
+    temp[3] = q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2];    // W
 
     out[0] = temp[0];
     out[1] = temp[1];
@@ -164,7 +117,8 @@ void SetUpBones( studiohdr_t *header, unsigned char *data )
     }
 }
 
-void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t *model, vec3 *out_vertices ){
+void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t *model, vec3 *out_vertices )
+{
     vec3 *vertices = ( vec3 * ) ( data + model->vertindex );
 
     unsigned char *v2bone = ( unsigned char * ) ( data + model->vertinfoindex );
@@ -192,17 +146,17 @@ void SetUpBonesFromAnimation( studiohdr_t *header, unsigned char *data, float an
         mat4 local;
 
         // Transpose the 3x3 rotation part
-        local[0][0] = anim_bones[i][0][0];  // Row 0 -> Column 0
+        local[0][0] = anim_bones[i][0][0];    // Row 0 -> Column 0
         local[0][1] = anim_bones[i][1][0];
         local[0][2] = anim_bones[i][2][0];
         local[0][3] = 0.0f;
 
-        local[1][0] = anim_bones[i][0][1];  // Row 0 -> Column 1
+        local[1][0] = anim_bones[i][0][1];    // Row 0 -> Column 1
         local[1][1] = anim_bones[i][1][1];
         local[1][2] = anim_bones[i][2][1];
         local[1][3] = 0.0f;
 
-        local[2][0] = anim_bones[i][0][2];  // Row 0 -> Column 2
+        local[2][0] = anim_bones[i][0][2];    // Row 0 -> Column 2
         local[2][1] = anim_bones[i][1][2];
         local[2][2] = anim_bones[i][2][2];
         local[2][3] = 0.0f;

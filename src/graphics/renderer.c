@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 20:37:50
+   Last Modified: 2025-10-13 00:57:44
    ---------------------------------------------------------------------
    Description:
        
@@ -215,10 +215,10 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             printf( "Switched to points mode\n" );
             break;
 
-            /*
+        /*
          * Adding animations for models to see all of the sequences 
          * for and every model for easier debugging and all
-         */
+        */
 
         case GLFW_KEY_SPACE:
             g_animation_enabled = !g_animation_enabled;
@@ -260,12 +260,12 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
                 printf( "Already at last sequence!\n" );
             }
             break;
-        // case GLFW_KEY_UP:    // Increase animation speed
-        //     printf( " Animation speed increased\n" );
-        //     break;
-        // case GLFW_KEY_DOWN:    // Decrease animation speed
-        //     printf( " Animation speed decreased\n" );
-        //     break;
+            // case GLFW_KEY_UP:    // Increase animation speed
+            //     printf( " Animation speed increased\n" );
+            //     break;
+            // case GLFW_KEY_DOWN:    // Decrease animation speed
+            //     printf( " Animation speed decreased\n" );
+            //     break;
 
         case GLFW_KEY_L:    // Toggle looping
             g_anim_state.is_looping = !g_anim_state.is_looping;
@@ -1138,58 +1138,60 @@ void cleanup_renderer( void )
     return;
 }
 
-void clear_screen(void)
+void clear_screen( void )
 {
-    glClearColor(0.1f, 0.2f, 0.45f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClearColor( 0.1f, 0.2f, 0.45f, 1.0f );
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 }
 
-bool should_close_window(void)
+bool should_close_window( void )
 {
-    return glfwWindowShouldClose(window);
+    return glfwWindowShouldClose( window );
 }
 
-void render_loop(void)
+void render_loop( void )
 {
-    printf("Starting render loop...\n");
-    
-    g_last_frame_time = glfwGetTime();  // Initialize to current time
-    
-    while (!glfwWindowShouldClose(window))
+    printf( "Starting render loop...\n" );
+
+    g_last_frame_time = glfwGetTime( );    // Initialize to current time
+
+    while ( !glfwWindowShouldClose( window ) )
     {
         // Calculate delta time
-        double current_time = glfwGetTime();
-        float delta_time = (float)(current_time - g_last_frame_time);
-        g_last_frame_time = current_time;
-        
-        if (delta_time > 0.033f) {
+        double current_time = glfwGetTime( );
+        float  delta_time   = ( float ) ( current_time - g_last_frame_time );
+        g_last_frame_time   = current_time;
+
+        if ( delta_time > 0.033f )
+        {
             delta_time = 0.033f;
         }
-        
+
         // FIX #4: Also handle negative deltas (clock skew)
-        if (delta_time < 0.0f) {
+        if ( delta_time < 0.0f )
+        {
             delta_time = 0.0f;
-        }        
+        }
         // Update animation state
-        if (g_animation_enabled && global_header && global_data) {
-            mdl_animation_update(&g_anim_state, delta_time, global_header, global_data);
+        if ( g_animation_enabled && global_header && global_data )
+        {
+            mdl_animation_update( &g_anim_state, delta_time, global_header, global_data );
         }
-        
+
         // Clear and render
-        clear_screen();
-        
-        if (global_header && global_data) {
-            render_model(global_header, global_data);
+        clear_screen( );
+
+        if ( global_header && global_data )
+        {
+            render_model( global_header, global_data );
         }
-        
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+
+        glfwSwapBuffers( window );
+        glfwPollEvents( );
     }
-    
-    printf("Exiting render loop.\n");
+
+    printf( "Exiting render loop.\n" );
 }
-
-
 
 void set_wireframe_mode( bool enabled )
 {
@@ -1233,7 +1235,7 @@ void render_model( studiohdr_t *header, unsigned char *data )
 
         // Re-transform vertices with new bone positions
         mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );
-
+        /*
         for ( int bp = 0; bp < global_header->numbodyparts; ++bp )
         {
             mstudiobodyparts_t *bpRec                = &bodyparts[bp];
@@ -1246,10 +1248,8 @@ void render_model( studiohdr_t *header, unsigned char *data )
             }
 
             mstudiomodel_t *model = &models[selected_model_index];
-            TransformVertices( global_header, global_data, model, skinned_positions );
-            have_skinned_positions = true;
         }
-
+        */
         // CRITICAL: Re-build the vertex buffer with new skinned positions
         // We need to rebuild the render buffer because AddVertexToBuffer reads from skinned_positions
         total_render_vertices = 0;
@@ -1268,6 +1268,9 @@ void render_model( studiohdr_t *header, unsigned char *data )
             }
 
             mstudiomodel_t *model = &models[selected_model_index];
+            
+            TransformVertices( global_header, global_data, model, skinned_positions );
+            have_skinned_positions = true;
 
             g_current.model        = model;
             g_current.vertices     = ( vec3_t * ) ( global_data + model->vertindex );
@@ -1526,8 +1529,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
         g_animation_enabled = true;
         g_last_frame_time = glfwGetTime();
         printf("Animation initialized with sequence 0 \n");
-        
-        
+         
     }
     
     

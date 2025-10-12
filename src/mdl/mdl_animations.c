@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-12 20:32:06
+   Last Modified: 2025-10-13 00:58:44
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -16,6 +16,7 @@
                                                                        */
 
 #include "mdl_animations.h"
+
 #include "bone_system.h"
 
 #include <cglm/cglm.h>
@@ -257,30 +258,13 @@ mdl_result_t mdl_animation_calculate_bones(
     {
         return MDL_ERROR_INVALID_PARAMETER;
     }
-    mstudiobone_t *bones = ( mstudiobone_t * ) ( data + header->boneindex );
+     
+    mstudiobone_t *bones = ( mstudiobone_t * ) ( data + header->boneindex ); 
 
     mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * ) ( data + header->seqindex );
     mstudioseqdesc_t *seq       = &sequences[state->current_sequence];
 
     mstudioanim_t *anim_data = ( mstudioanim_t * ) ( data + seq->animindex );
-
-    // Debug: print bind pose for bone 0
-    printf(
-        "BONE 0 BIND POSE: pos=[%.3f, %.3f, %.3f] rot=[%.3f, %.3f, %.3f]\n",
-        bones[0].value[0],
-        bones[0].value[1],
-        bones[0].value[2],
-        bones[0].value[3],
-        bones[0].value[4],
-        bones[0].value[5] );
-    printf(
-        "BONE 0 SCALE: [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f]\n",
-        bones[0].scale[0],
-        bones[0].scale[1],
-        bones[0].scale[2],
-        bones[0].scale[3],
-        bones[0].scale[4],
-        bones[0].scale[5] );
 
     for ( int i = 0; i < header->numbones; i++ )
     {
@@ -312,7 +296,12 @@ mdl_result_t mdl_animation_calculate_bones(
 
                 if ( i == 0 )
                 {    // Debug bone 0
-                    printf( "BONE 0 CH %d: delta=%.3f, scale=%.3f, offset=%d\n", channel, delta, bone->scale[channel], bone_anim->offset[channel] );
+                    printf(
+                        "BONE 0 CH %d: delta=%.3f, scale=%.3f, offset=%d\n",
+                        channel,
+                        delta,
+                        bone->scale[channel],
+                        bone_anim->offset[channel] );
                 }
             }
 
@@ -326,8 +315,12 @@ mdl_result_t mdl_animation_calculate_bones(
                 rotation[channel - 3] += delta;
                 if ( i == 0 )
                 {
-                    printf( "  Rotation[%d]: bind=%.6f + delta=%.6f = %.6f\n",
-                           channel - 3, bone->value[channel], delta, rotation[channel - 3] );
+                    printf(
+                        "  Rotation[%d]: bind=%.6f + delta=%.6f = %.6f\n",
+                        channel - 3,
+                        bone->value[channel],
+                        delta,
+                        rotation[channel - 3] );
                 }
             }
         }
@@ -360,30 +353,10 @@ mdl_result_t mdl_animation_calculate_bones(
         {
             printf( "BONE 0 Position: [%.3f, %.3f, %.3f]\n", position[0], position[1], position[2] );
             printf( "BONE 0 LOCAL MATRIX (column-major mat4):\n" );
-            printf(
-                "  [%.3f %.3f %.3f %.3f]\n",
-                local[0][0],
-                local[0][1],
-                local[0][2],
-                local[0][3] );
-            printf(
-                "  [%.3f %.3f %.3f %.3f]\n",
-                local[1][0],
-                local[1][1],
-                local[1][2],
-                local[1][3] );
-            printf(
-                "  [%.3f %.3f %.3f %.3f]\n",
-                local[2][0],
-                local[2][1],
-                local[2][2],
-                local[2][3] );
-            printf(
-                "  [%.3f %.3f %.3f %.3f]\n",
-                local[3][0],
-                local[3][1],
-                local[3][2],
-                local[3][3] );
+            printf( "  [%.3f %.3f %.3f %.3f]\n", local[0][0], local[0][1], local[0][2], local[0][3] );
+            printf( "  [%.3f %.3f %.3f %.3f]\n", local[1][0], local[1][1], local[1][2], local[1][3] );
+            printf( "  [%.3f %.3f %.3f %.3f]\n", local[2][0], local[2][1], local[2][2], local[2][3] );
+            printf( "  [%.3f %.3f %.3f %.3f]\n", local[3][0], local[3][1], local[3][2], local[3][3] );
         }
 
         // Concatenate with parent bone transform
@@ -396,6 +369,8 @@ mdl_result_t mdl_animation_calculate_bones(
             glm_mat4_copy( local, bone_transformations[i] );
         }
     }
+    
+
     return MDL_SUCCESS;
 }
 
