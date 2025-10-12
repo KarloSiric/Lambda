@@ -55,3 +55,7 @@ Thumbs.db
 
 # Textual files
 *.txt
+
+
+# Excluding the aider CLI tracking
+*.aider
