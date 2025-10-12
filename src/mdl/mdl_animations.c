@@ -53,37 +53,33 @@ void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float l
 
 void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
 {
-    // 1. Calculate the cosine and sine for each rotation axis
-    // we will be using Yaw Pitch Roll transformational matrix -> [z,y,x]
+    // Valve uses ZYX Euler angle order (Yaw-Pitch-Roll)
+    float yaw   = rotation[2];    // Z rotation (Yaw)
+    float pitch = rotation[1];    // Y rotation (Pitch) 
+    float roll  = rotation[0];    // X rotation (Roll)
 
-    float phi   = rotation[0];    // Roll  (X)
-    float theta = rotation[1];    // Pitch (Y)
-    float psi   = rotation[2];    // Yaw   (Z)
+    float sy = sinf(yaw);
+    float cy = cosf(yaw);
+    float sp = sinf(pitch);
+    float cp = cosf(pitch);
+    float sr = sinf(roll);
+    float cr = cosf(roll);
 
-    float sin_phi   = sinf( phi );
-    float cos_phi   = cosf( phi );
-    float sin_theta = sinf( theta );
-    float cos_theta = cosf( theta );
-    float sin_psi   = sinf( psi );
-    float cos_psi   = cosf( psi );
+    // Build rotation matrix using Valve's ZYX order
+    // This matches Valve's AngleMatrix implementation
+    matrix[0][0] = cp * cy;
+    matrix[0][1] = cp * sy;
+    matrix[0][2] = -sp;
 
-    // 2. Build rotation matrix (Valve's AngleMatrix formula)
-    // Row 0
-    matrix[0][0] = cos_psi * cos_theta;
-    matrix[0][1] = sin_phi * sin_theta * cos_psi - sin_psi * cos_phi;
-    matrix[0][2] = sin_theta * cos_phi * cos_psi + sin_phi * sin_psi;
+    matrix[1][0] = sr * sp * cy - cr * sy;
+    matrix[1][1] = sr * sp * sy + cr * cy;
+    matrix[1][2] = sr * cp;
 
-    // Row 1
-    matrix[1][0] = sin_psi * cos_theta;
-    matrix[1][1] = sin_phi * sin_psi * sin_theta + cos_phi * cos_psi;
-    matrix[1][2] = sin_psi * sin_theta * cos_phi - sin_phi * cos_psi;
+    matrix[2][0] = cr * sp * cy + sr * sy;
+    matrix[2][1] = cr * sp * sy - sr * cy;
+    matrix[2][2] = cr * cp;
 
-    // Row 2
-    matrix[2][0] = -sin_theta;
-    matrix[2][1] = sin_phi * cos_theta;
-    matrix[2][2] = cos_phi * cos_theta;
-
-    // 3. Adding translation to wrap up the complete matrix
+    // Set translation
     matrix[0][3] = position[0];
     matrix[1][3] = position[1];
     matrix[2][3] = position[2];

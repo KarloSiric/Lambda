@@ -47,7 +47,7 @@ void QuaternionMatrix( const versor q, mat4 out )
     out[3][3] = 1.0f;
 }
 
-void R_ConcatTransforms( const vec4 *parent, const vec4 *local, vec4 *out )
+void R_ConcatTransforms( const mat4 parent, const mat4 local, mat4 out )
 {
     glm_mat4_mul( parent, local, out );
 }
@@ -125,31 +125,32 @@ void SetUpBonesFromAnimation( studiohdr_t *header, unsigned char *data, float an
 
     for ( int i = 0; i < header->numbones; i++ )
     {
-        // Convert 3x4 to 4x4
+        // Convert 3x4 to 4x4 - CORRECT format (no transpose needed)
         mat4 local;
 
-        // Transpose rotation, copy translation
+        // Copy rotation matrix directly (3x3 part)
         local[0][0] = anim_bones[i][0][0];
-        local[0][1] = anim_bones[i][1][0];
-        local[0][2] = anim_bones[i][2][0];
+        local[0][1] = anim_bones[i][0][1];
+        local[0][2] = anim_bones[i][0][2];
         local[0][3] = 0.0f;
 
-        local[1][0] = anim_bones[i][0][1];
+        local[1][0] = anim_bones[i][1][0];
         local[1][1] = anim_bones[i][1][1];
-        local[1][2] = anim_bones[i][2][1];
+        local[1][2] = anim_bones[i][1][2];
         local[1][3] = 0.0f;
 
-        local[2][0] = anim_bones[i][0][2];
-        local[2][1] = anim_bones[i][1][2];
+        local[2][0] = anim_bones[i][2][0];
+        local[2][1] = anim_bones[i][2][1];
         local[2][2] = anim_bones[i][2][2];
         local[2][3] = 0.0f;
 
+        // Copy translation (4th column)
         local[3][0] = anim_bones[i][0][3];
         local[3][1] = anim_bones[i][1][3];
         local[3][2] = anim_bones[i][2][3];
         local[3][3] = 1.0f;
 
-        // CRITICAL: Concatenate with parent bone transform!
+        // Concatenate with parent bone transform
         if ( bones[i].parent >= 0 )
         {
             R_ConcatTransforms( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
