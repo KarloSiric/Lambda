@@ -25,6 +25,6 @@ void R_ConcatTransforms( const mat4 parent, const mat4 local, mat4 out );
 
 void VectorTransforms( const vec3 in, const mat4 m, vec3 out );
 
-void SetUpBonesFromAnimation( studiohdr_t *header, unsigned char *data, float anim_bones[MAXSTUDIOBONES][3][4] );
+// SetUpBonesFromAnimation removed - use mdl_animation_calculate_bones() from mdl_animations.h instead
 
 #endif
