@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 14:18:38
+   Last Modified: 2025-10-14 18:24:39
    ---------------------------------------------------------------------
    Description:
        
@@ -73,23 +73,11 @@ static unsigned int EBO             = 0;    // Element Buffer Object for indices
 static unsigned int shader_program  = 0;
 static unsigned int current_texture = 0;    // Currently bound texture
 
-// For Bone data
-static int            m_numbones = 0;
-static int            m_numverts = 0;
-static mat4           m_bonetransform[MAXSTUDIOBONES];
-static vec3           m_pxformverts[MAXSTUDIOVERTS];
-static unsigned char *m_pvertbone;
-static vec3          *m_pstudioverts;
 
 extern float rotation_x;
 extern float rotation_y;
 extern float zoom;
 
-// Model data
-static float *model_vertices          = NULL;
-static int    vertex_count            = 0;
-static int    index_count             = 0;
-static bool   debug_printfed          = false;
 static bool   bone_system_initialized = false;
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)

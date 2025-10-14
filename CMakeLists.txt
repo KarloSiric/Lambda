@@ -36,7 +36,7 @@ set(SOURCES
     src/utils/utils.c
     src/utils/mdl_messages.c
     src/utils/logger.c
-    
+    src/utils/args.c
 )
 
 # Create executable

@@ -1,27 +1,64 @@
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *   Half-Life Model Viewer
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+ *
+ *   This product contains software technology licensed from Id
+ *   Software, Inc. ("Id Technology"). Id Technology (c) 1996 Id Software, Inc.
+ *   All Rights Reserved.
+ *
+ *   Use, distribution, and modification of this source code and/or resulting
+ *   object code is restricted to non-commercial enhancements to products from
+ *   Valve LLC. All other use, distribution, or modification is prohibited
+ *   without written permission from Valve LLC.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ *   Author: Karlo Siric
+ *   Purpose: Command-Line Argument Parser
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 #ifndef ARGS_H
 #define ARGS_H
 
 #include <stdbool.h>
 
-typedef enum { 
-    DUMP_NONE = 0, 
-    DUMP_BASIC, 
-    DUMP_EXTENDED 
+/*
+ * Dump detail levels
+ */
+typedef enum {
+    DUMP_NONE = 0,      // No dump - just run viewer
+    DUMP_BASIC,         // --dump: Overview (header, bones, sequences)
+    DUMP_EXTENDED       // --dump-ex: Deep dive (vertices, meshes, raw data)
 } dump_level_t;
 
+/*
+ * Parsed command-line arguments
+ */
 typedef struct {
-    const char  *model_path;
-    dump_level_t dump_level;
-    bool         dump_only;
-    bool         quiet;
-    bool         show_help;
-
+    const char  *model_path;    // Path to .mdl file
+    dump_level_t dump_level;    // Dump detail level
+    bool         dump_only;     // Exit after dump (no viewer)
+    bool         quiet;         // Suppress all non-error output
+    bool         show_help;     // Show usage
 } app_args_t;
 
-int parse_arguments( int argc, const char *argv[], app_args_t *args );
+/*
+ * Parse command-line arguments
+ * Returns: 0 on success, -1 on error
+ */
+int parse_args(int argc, const char *argv[], app_args_t *args);
 
-void print_usage( const char *program_name );
+/*
+ * Print usage information
+ */
+void print_usage(const char *program_name);
 
+/*
+ * Print copyright banner
+ */
 void print_banner(void);
 
-#endif
+#endif // ARGS_H

@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:11:51
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 15:03:17
+   Last Modified: 2025-10-14 18:29:39
    ---------------------------------------------------------------------
    Description:
        
@@ -905,7 +905,7 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
         if (file_result != MDL_SUCCESS) 
         {
             fprintf(stderr, "╔════════════════════════════════════════════════════╗\n");
-            fprintf(stderr, "║ WARNING - Missing Sequence Group File             ║\n");
+            fprintf(stderr, "║ WARNING - Missing Sequence Group File              ║\n");
             fprintf(stderr, "╠════════════════════════════════════════════════════╣\n");
             fprintf(stderr, "  Sequence Group: %d\n", i);
             fprintf(stderr, "  Expected File:  %s\n", filename);
@@ -950,15 +950,16 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
     }
     
     if (missing_count > 0)
-    {
-        printf("\n┌──────────────────────────────────────────────────┐\n");
-        printf("│ SEQUENCE GROUPS SUMMARY                          │\n");
-        printf("├──────────────────────────────────────────────────┤\n");
-        printf("│ ✅ Loaded:  %d groups                             │\n", loaded_count);
-        printf("│ ❌ Missing: %d groups                             │\n", missing_count);
-        printf("│                                                  │\n");
-        printf("│ Some animations will fallback to T-pose!         │\n");
-        printf("└──────────────────────────────────────────────────┘\n\n");
+    {   
+        printf("\n\n");
+        printf("┌────────────────────────────────────────────────────┐\n");
+        printf("│ SEQUENCE GROUPS SUMMARY                            │\n");
+        printf("├────────────────────────────────────────────────────┤\n");
+        printf("│  Loaded:  %d groups                                │\n", loaded_count);
+        printf("│  Missing: %d groups                                │\n", missing_count);
+        printf("│                                                    │\n");
+        printf("│ Some animations will fallback to T-pose!           │\n");
+        printf("└────────────────────────────────────────────────────┘\n\n");
     }
     
     return MDL_SUCCESS;
