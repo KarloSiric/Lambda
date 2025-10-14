@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 13:57:12
+   Last Modified: 2025-10-14 15:11:50
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -374,7 +374,7 @@ mdl_result_t mdl_animation_calculate_bones(
         /* Animation data is embedded inside teh original main data of the .mdl file
          * animindex is relative to the sequence descriptor
         */
-        animBase = (unsigned char *)seq; 
+        animBase = data; 
     }
     else 
     {
@@ -392,6 +392,8 @@ mdl_result_t mdl_animation_calculate_bones(
                     seqgroup, state->current_sequence);
             return MDL_ERROR_INVALID_PARAMETER;
         }
+        
+        studiohdr_t *seqgroup_header = (studiohdr_t *)seqgroups[seqgroup].data;
         
         animBase = seqgroups[seqgroup].data;
     }
