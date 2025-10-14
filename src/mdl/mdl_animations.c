@@ -28,6 +28,7 @@
 
 #include <cglm/cglm.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -378,29 +379,42 @@ mdl_result_t mdl_animation_calculate_bones(
         // NOTE(Karlo): CRITICAL FIX: Check if seqgroups array exists
         if (!seqgroups)
         {
+        static bool warned_no_seqgroups = false;
+        if (!warned_no_seqgroups) {
             fprintf(stderr, "ERROR - Sequence group %d required but no seqgroups loaded (sequence %d: '%s')\n",
                     seqgroup, state->current_sequence, seq->label);
-            fprintf(stderr, "       Falling back to T-pose. External files may be missing!\n");
+                fprintf(stderr, "       Falling back to T-pose. External files may be missing!\n");
+                warned_no_seqgroups = true;
+            }
             return MDL_INFO_SEQUENCE_GROUP_FILE;
         }
         
         // NOTE(Karlo): CRITICAL FIX: Validate array bounds
         if (seqgroup >= header->numseqgroups || seqgroup < 0)
         {
-            fprintf(stderr, "ERROR - Invalid sequence group %d (valid range: 0-%d) for sequence %d\n",
-                    seqgroup, header->numseqgroups - 1, state->current_sequence);
-            return MDL_ERROR_INVALID_PARAMETER;
+            static bool warned_invalid_seqgroup = false;
+            if (!warned_invalid_seqgroup) {
+                fprintf(stderr, "ERROR - Invalid sequence group %d (valid range: 0-%d) for sequence %d\n",
+                        seqgroup, header->numseqgroups - 1, state->current_sequence);
+            fprintf(stderr, "       This animation data appears corrupted. Using T-pose.\n");
+        warned_invalid_seqgroup = true;
+        }
+        return MDL_ERROR_INVALID_PARAMETER;
         }
         
-        // NOTE(Karlo): CRITICAL FIX: Check if this specific group's data is loaded
-        if (!seqgroups[seqgroup].data)
-        {
+    // NOTE(Karlo): CRITICAL FIX: Check if this specific group's data is loaded
+    if (!seqgroups[seqgroup].data)
+    {
+        static bool warned_missing_data = false;
+        if (!warned_missing_data) {
             fprintf(stderr, "WARNING - Sequence group %d not loaded for sequence %d: '%s'\n",
                     seqgroup, state->current_sequence, seq->label);
             fprintf(stderr, "          Missing file: %s\n", seqgroups[seqgroup].name);
             fprintf(stderr, "          Falling back to T-pose\n");
-            return MDL_INFO_SEQUENCE_GROUP_FILE;
+            warned_missing_data = true;
         }
+        return MDL_INFO_SEQUENCE_GROUP_FILE;
+    }
         
         animBase = seqgroups[seqgroup].data;
     }

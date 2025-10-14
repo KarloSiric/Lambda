@@ -493,20 +493,30 @@ void ProcessModelForRendering( void )
     
     LOG_DEBUGF("renderer", "  Header: bones=%d, bodyparts=%d, sequences=%d",
               global_header->numbones, global_header->numbodyparts, global_header->numseq);
+    fflush(stdout);  // Force flush!
+    
+    LOG_DEBUGF("renderer", "  Bodypart index offset: 0x%X", global_header->bodypartindex);
+    fflush(stdout);
 
     total_render_vertices = 0;
     g_num_ranges          = 0;
 
+    LOG_DEBUGF("renderer", "  Getting bodyparts pointer...");
+    fflush(stdout);
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );
+    LOG_DEBUGF("renderer", "  Bodyparts pointer obtained: %p", (void*)bodyparts);
+    fflush(stdout);
     
-    LOG_TRACEF("renderer", "  Setting up T-pose bones");
+    LOG_DEBUGF("renderer", "  Setting up T-pose bones...");
+    fflush(stdout);
     /*
      * We set the T-Pose initially and then if we want animations that is rendered
      * in a seperate function right.
      */
 
     SetUpBones( global_header, global_data );
-    LOG_TRACEF("renderer", "  T-pose bones set up");
+    LOG_DEBUGF("renderer", "  T-pose bones completed");
+    fflush(stdout);
 
     // Iterate through all bodyparts
     for ( int bp = 0; bp < global_header->numbodyparts; ++bp )
