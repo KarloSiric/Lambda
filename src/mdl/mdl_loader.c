@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:11:51
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 13:39:14
+   Last Modified: 2025-10-14 14:31:41
    ---------------------------------------------------------------------
    Description:
        
@@ -876,11 +876,28 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
         }
         
         // NOTE(Karlo): Now we have the fir path name, now we need to build the full model
+        char fixed_name[256];
+        strncpy(fixed_name, sq->name, sizeof(fixed_name) - 1);
+        fixed_name[sizeof(fixed_name) - 1] = '\0';
+        
+        #ifndef _WIN32
+        
+            for (char *p = fixed_name; *p; p++) 
+            {
+                if (*p == '\\')
+                {
+                    *p = '/';
+                }
+            }
+            
+        #endif
+        
+        
+        // NOTE(Karlo): Now we have the dir path name, now we need to build the full model path
         char seqgroup_path[512];
-        snprintf(seqgroup_path, sizeof(seqgroup_path), "%s%s", dir_path, sq->name);
-        
+        snprintf(seqgroup_path, sizeof(seqgroup_path), "%s%s", dir_path, fixed_name);
         printf("Loading sequence group %d: %s\n", i, seqgroup_path);
-        
+         
         unsigned char *seq_group_data = NULL;
         size_t group_size = 0;
         

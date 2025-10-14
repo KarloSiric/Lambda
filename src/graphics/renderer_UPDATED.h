@@ -25,6 +25,9 @@ void render_model(studiohdr_t *header, unsigned char *data);
 void set_wireframe_mode(bool enabled);
 void set_current_texture(unsigned int texture_id);
 
+// ==================================================================
+// UPDATED: Now accepts seqgroups!
+// ==================================================================
 void set_model_data(
     studiohdr_t *header,
     unsigned char *data,

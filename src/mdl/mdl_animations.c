@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 13:42:51
+   Last Modified: 2025-10-14 13:57:12
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -278,7 +278,7 @@ mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, st
     return MDL_SUCCESS;
 }
 
-void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studiohdr_t *header, unsigned char *data )
+void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studiohdr_t *header, unsigned char *data, mdl_seqgroup_blob_t *seqgroups )
 {
     // safety checking
     if ( !state || !header || !data )
@@ -349,7 +349,11 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 }
 
 mdl_result_t mdl_animation_calculate_bones(
-    mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data, mat4 *bone_transformations )
+    mdl_animation_state_t *state, 
+    studiohdr_t *header, 
+    unsigned char *data, 
+    mdl_seqgroup_blob_t *seqgroups,
+    mat4 *bone_transformations )
 {
     if ( !state || !header || !bone_transformations )
     {
@@ -361,9 +365,39 @@ mdl_result_t mdl_animation_calculate_bones(
     mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * ) ( data + header->seqindex );
     mstudioseqdesc_t *seq       = &sequences[state->current_sequence];
     
-    unsigned char *seqBase = (unsigned char *)seq;
-    mstudioanim_t *anims = (mstudioanim_t *)(seqBase + seq->animindex);
-
+    // NOTE(Karlo): Adding new fixes necessary for what we are doing today.
+    int seqgroup = seq->seqgroup;
+    unsigned char *animBase;
+    
+    if (seqgroup == 0) 
+    {
+        /* Animation data is embedded inside teh original main data of the .mdl file
+         * animindex is relative to the sequence descriptor
+        */
+        animBase = (unsigned char *)seq; 
+    }
+    else 
+    {
+        // ANimation data is in the external file associated with that seqgroup
+        if (!seqgroups || seqgroup >= header->numseqgroups)
+        {
+            fprintf(stderr, "ERROR - Sequence group %d not loaded for sequence %d\n",
+                    seqgroup, state->current_sequence);
+            return MDL_ERROR_INVALID_PARAMETER;
+        }
+        
+        if (!seqgroups[seqgroup].data)
+        {
+            fprintf(stderr, "ERROR - Sequence group %d not loaded for sequence %d\n",
+                    seqgroup, state->current_sequence);
+            return MDL_ERROR_INVALID_PARAMETER;
+        }
+        
+        animBase = seqgroups[seqgroup].data;
+    }
+     
+    mstudioanim_t *anims = (mstudioanim_t *)(animBase + seq->animindex);
+    
     // Calculate frame and interpolation value
     int   frame = ( int ) state->current_frame;
     float s     = state->current_frame - ( float ) frame;
