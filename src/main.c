@@ -108,10 +108,16 @@ int main(int argc, char const *argv[])
     if (args.dump_level == DUMP_BASIC) {
         print_complete_model_analysis(stdout, args.model_path, model->header, 
                                        model->texture_header, model->data, model->texture_data);
+        
+        // Also print sequence group info
+        print_sequence_group_info(stdout, model->seqgroups, model->num_seqgroups);
     }
     else if (args.dump_level == DUMP_EXTENDED) {
         print_extended_model_dump(stdout, args.model_path, model->header,
                                  model->texture_header, model->data, model->texture_data);
+        
+        // Also print sequence group info
+        print_sequence_group_info(stdout, model->seqgroups, model->num_seqgroups);
     }    
     
     if (args.dump_only) {

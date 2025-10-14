@@ -10,6 +10,7 @@
 
 // adding the necessary things for seqgroups problem
 typedef struct {
+    studioseqhdr_t *sequence_header;
     unsigned char *data;
     size_t         size;
     char           name[64];

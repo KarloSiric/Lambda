@@ -229,7 +229,7 @@
     #define HLMV_COMPILER           "Unknown"
 #endif
 
-// Architecture detection
+// Architecture detectio
 #if defined(__x86_64__) || defined(_M_X64)
     #define HLMV_ARCH               "x86_64"
     #define HLMV_ARCH_64BIT         1

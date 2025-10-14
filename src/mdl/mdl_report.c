@@ -153,6 +153,59 @@ void print_studio_header_file( FILE *output, const char *title, const studiohdr_
 }
 
 
+void print_sequence_group_info(FILE *output, const mdl_seqgroup_blob_t *groups, int num_groups)
+{
+    if (!output) output = stdout;
+    
+    if (!groups || num_groups <= 0)
+    {
+        fprintf(output, "\nSequence Groups: None\n");
+        return;
+    }
+    
+    fprintf(output, "\n%s\n", RULER_THIN);
+    fprintf(output, "  SEQUENCE GROUPS (%d total)\n", num_groups);
+    fprintf(output, "%s\n\n", RULER_THIN);
+    
+    for (int i = 0; i < num_groups; i++)
+    {
+        fprintf(output, "  [%d] ", i);
+        
+        if (i == 0)
+        {
+            fprintf(output, "MAIN (embedded in model file)\n");
+            fprintf(output, "      Size: %zu bytes\n", groups[i].size);
+        }
+        else if (groups[i].sequence_header)
+        {
+            fprintf(output, "'%s'\n", groups[i].sequence_header->name);
+            fprintf(output, "      Magic:   0x%08X (IDSQ)\n", groups[i].sequence_header->id);
+            fprintf(output, "      Version: %d\n", groups[i].sequence_header->version);
+            fprintf(output, "      Size:    %d bytes\n", groups[i].sequence_header->length);
+            fprintf(output, "      Status:  ✓ LOADED\n");
+        }
+        else if (groups[i].data)
+        {
+            fprintf(output, "'%s' (loaded but no header)\n", groups[i].name);
+            fprintf(output, "      Size:   %zu bytes\n", groups[i].size);
+            fprintf(output, "      Status: ⚠ LOADED (no validation)\n");
+        }
+        else
+        {
+            fprintf(output, "'%s'\n", groups[i].name);
+            fprintf(output, "      Status: ✗ MISSING\n");
+            fprintf(output, "      Impact: Animations will show T-pose\n");
+        }
+        
+        if (i < num_groups - 1)
+        {
+            fprintf(output, "\n");
+        }
+    }
+    
+    fprintf(output, "\n%s\n", RULER_THIN);
+}
+
 // Add this function to mdl_report.c
 void print_extended_model_dump(
     FILE *output,

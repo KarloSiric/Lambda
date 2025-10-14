@@ -907,6 +907,25 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
         
         mdl_result_t file_result = read_mdl_file(seqgroup_path, &seq_group_data, &group_size);
         
+        groups[i].sequence_header = (studioseqhdr_t *)seq_group_data;
+
+        if (groups[i].sequence_header->id != IDSEQGRPHEADER)
+        {
+            fprintf(stderr, "ERROR - Invalid sequence group file (wrong magic -> 0x%08X)\n", 
+                    groups[i].sequence_header->id);
+            free(seq_group_data);
+            continue;
+        }
+
+        if (groups[i].sequence_header->version != STUDIO_VERSION)
+        {
+            fprintf(stderr, "ERROR - Wrong sequence group version (got %d, expected %d)\n",
+                    groups[i].sequence_header->version, STUDIO_VERSION);
+            free(seq_group_data);
+            continue;   
+        } 
+        
+        
         // Check if loading failed
         if (file_result != MDL_SUCCESS) 
         {

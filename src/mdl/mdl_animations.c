@@ -404,6 +404,17 @@ mdl_result_t mdl_animation_calculate_bones(
         
         animBase = seqgroups[seqgroup].data;
     }
+    
+    
+    if (seqgroups[seqgroup].sequence_header)
+    {
+        if (seqgroups[seqgroup].sequence_header->id != IDSEQGRPHEADER)
+        {
+            fprintf(stderr, "ERROR - Corrupted sequence groupe %d header!\n",
+                    seqgroup);
+            return MDL_ERROR_INVALID_MAGIC;
+        }
+    }
      
     mstudioanim_t *anims = (mstudioanim_t *)(animBase + seq->animindex);
     
