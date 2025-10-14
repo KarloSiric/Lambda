@@ -511,20 +511,31 @@ void ProcessModelForRendering( void )
     // Iterate through all bodyparts
     for ( int bp = 0; bp < global_header->numbodyparts; ++bp )
     {
+        LOG_TRACEF("renderer", "  Processing bodypart %d/%d", bp, global_header->numbodyparts - 1);
+        
         mstudiobodyparts_t *bpRec  = &bodyparts[bp];
         mstudiomodel_t     *models = ( mstudiomodel_t * ) ( global_data + bpRec->modelindex );
+        
+        LOG_TRACEF("renderer", "    Bodypart '%s': %d models", bpRec->name, bpRec->nummodels);
 
         // GET ONLY THE SELECTED MODEL FOR THIS BODYPART
         int selected_model_index = bodypart_get_model_index( bp );
+        
+        LOG_TRACEF("renderer", "    Selected model index: %d", selected_model_index);
 
         // Safety check
         if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels )
         {
+            LOG_WARNF("renderer", "    Invalid model index %d (max: %d), using 0",
+                     selected_model_index, bpRec->nummodels - 1);
             selected_model_index = 0;    // Fallback to first model
         }
 
         // Get ONLY the selected model (not all of them!)
         mstudiomodel_t *model = &models[selected_model_index];
+        
+        LOG_TRACEF("renderer", "    Model '%s': vertices=%d, meshes=%d",
+                  model->name, model->numverts, model->nummesh);
 
 
         g_current.model        = model;
@@ -534,11 +545,15 @@ void ProcessModelForRendering( void )
         g_current.normal_count = model->numnorms;
 
         // Skin this model's vertices (fills skinned_positions[])
+        LOG_TRACEF("renderer", "    Transforming %d vertices", model->numverts);
         TransformVertices( global_header, global_data, model, skinned_positions );
+        LOG_TRACEF("renderer", "    Vertices transformed successfully");
         have_skinned_positions = true;
 
         // All meshes for this model
         mstudiomesh_t *meshes = ( mstudiomesh_t * ) ( global_data + model->meshindex );
+        
+        LOG_TRACEF("renderer", "    Processing %d meshes", model->nummesh);
 
         // Skin table
         const short *skin_table  = ( const short * ) ( global_data + global_header->skinindex );
@@ -766,6 +781,25 @@ void ProcessModelForRendering( void )
     }
 
     model_processed = true;
+    
+    LOG_DEBUGF("renderer", "  Processing complete:");
+    LOG_DEBUGF("renderer", "    Total vertices: %d", total_render_vertices);
+    LOG_DEBUGF("renderer", "    Draw ranges: %d", g_num_ranges);
+    
+    if (g_num_ranges == 0) {
+        LOG_WARNF("renderer", "  WARNING - No draw ranges created!");
+    }
+    
+    if (total_render_vertices == 0) {
+        LOG_WARNF("renderer", "  WARNING - No vertices generated!");
+    }
+    
+    if (total_render_vertices > MAX_RENDER_VERTICES) {
+        LOG_ERRORF("renderer", "  ERROR - Vertex buffer overflow! %d > %d",
+                  total_render_vertices, MAX_RENDER_VERTICES);
+    }
+    
+    LOG_INFOF("renderer", "Model processing COMPLETE");
 }
 
 void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, float texW, float texH )
