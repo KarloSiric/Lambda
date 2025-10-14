@@ -35,13 +35,25 @@ typedef enum {
 } dump_level_t;
 
 /*
+ * Log detail levels
+ */
+typedef enum {
+    LOG_LEVEL_QUIET = 0,  // Only errors
+    LOG_LEVEL_NORMAL,     // Info and above
+    LOG_LEVEL_VERBOSE,    // Debug and above
+    LOG_LEVEL_TRACE       // Everything including trace
+} log_detail_t;
+
+/*
  * Parsed command-line arguments
  */
 typedef struct {
     const char  *model_path;    // Path to .mdl file
     dump_level_t dump_level;    // Dump detail level
     bool         dump_only;     // Exit after dump (no viewer)
-    bool         quiet;         // Suppress all non-error output
+    bool         quiet;         // Suppress all non-error output (deprecated, use log_level)
+    log_detail_t log_level;     // Logging verbosity
+    const char  *log_file;      // Optional log file path
     bool         show_help;     // Show usage
     bool         show_version;  // Show version information
 } app_args_t;

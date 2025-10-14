@@ -118,13 +118,28 @@ void print_usage(const char *program_name)
     printf("      Dump structure and exit (no viewer window)\n\n");
     
     printf("  --quiet, -q\n");
-    printf("      Suppress all output except errors\n\n");
+    printf("      Quiet mode - only show errors\n\n");
+    
+    printf("  --verbose, -vv\n");
+    printf("      Verbose mode - show debug messages\n\n");
+    
+    printf("  --trace\n");
+    printf("      Trace mode - show all messages including trace\n\n");
+    
+    printf("  --log-file <path>\n");
+    printf("      Write logs to specified file\n\n");
     
     printf("  --version, -v\n");
     printf("      Show detailed version information\n\n");
     
     printf("  --help, -h\n");
     printf("      Show this help message\n\n");
+    
+    printf("LOGGING LEVELS:\n");
+    printf("  quiet   - Only errors\n");
+    printf("  normal  - Info, warnings, errors (default)\n");
+    printf("  verbose - Debug, info, warnings, errors\n");
+    printf("  trace   - All messages including trace\n\n");
     
     printf("EXAMPLES:\n");
     printf("  # Run viewer with model in models directory\n");
@@ -133,14 +148,14 @@ void print_usage(const char *program_name)
     printf("  # Run viewer with relative path\n");
     printf("  %s ../models/HL1_Original/scientist.mdl\n\n", program_name);
     
-    printf("  # Print basic structure\n");
-    printf("  %s ../models/HL1_Original/scientist.mdl --dump\n\n", program_name);
+    printf("  # Print basic structure with verbose logging\n");
+    printf("  %s ../models/HL1_Original/scientist.mdl --dump --verbose\n\n", program_name);
     
     printf("  # Print detailed structure and exit\n");
     printf("  %s scientist.mdl --dump-ex --dump-only\n\n", program_name);
     
-    printf("  # Dump to file\n");
-    printf("  %s scientist.mdl --dump-only > report.txt\n\n", program_name);
+    printf("  # Dump to file with trace logging\n");
+    printf("  %s scientist.mdl --dump-only --trace --log-file debug.log > report.txt\n\n", program_name);
     
     printf("  # Show version information\n");
     printf("  %s --version\n\n", program_name);
@@ -157,6 +172,8 @@ int parse_args(int argc, const char *argv[], app_args_t *args)
     args->dump_level = DUMP_NONE;
     args->dump_only  = false;
     args->quiet      = false;
+    args->log_level  = LOG_LEVEL_NORMAL;  // Default to normal
+    args->log_file   = NULL;
     args->show_help  = false;
     args->show_version = false;
     
@@ -190,9 +207,23 @@ int parse_args(int argc, const char *argv[], app_args_t *args)
         else if (strcmp(arg, "--dump-only") == 0) {
             args->dump_only = true;
         }
-        // Quiet flag
+        // Logging flags
         else if (strcmp(arg, "--quiet") == 0 || strcmp(arg, "-q") == 0) {
             args->quiet = true;
+            args->log_level = LOG_LEVEL_QUIET;
+        }
+        else if (strcmp(arg, "--verbose") == 0 || strcmp(arg, "-vv") == 0) {
+            args->log_level = LOG_LEVEL_VERBOSE;
+        }
+        else if (strcmp(arg, "--trace") == 0) {
+            args->log_level = LOG_LEVEL_TRACE;
+        }
+        else if (strcmp(arg, "--log-file") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "ERROR: --log-file requires a path argument\n");
+                return -1;
+            }
+            args->log_file = argv[++i];
         }
         // Model path (doesn't start with -)
         else if (arg[0] != '-') {

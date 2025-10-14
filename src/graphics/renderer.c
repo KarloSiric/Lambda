@@ -32,6 +32,7 @@
 #include "../mdl/bodypart_manager.h"
 #include "../mdl/bone_system.h"
 #include "../mdl/mdl_animations.h"
+#include "../utils/logger.h"
 
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
@@ -984,11 +985,16 @@ static int load_shaders( void )
 
 int init_renderer( int width, int height, const char *title )
 {
+    
+    LOG_INFOF("renderer", "Initializing renderer: %d%d", width, height);
     if ( !glfwInit( ) )
     {
-        fprintf( stderr, "ERROR - Failed to initialize the GLFW, glfw_init() FAILED!\n" );
+        LOG_FATALF("renderer", "Failed to initialize GLFW");
+        fprintf(stderr, "Failed to initialize GLFW\n");
         return ( -1 );
     }
+    
+    LOG_DEBUGF("renderer", "GLFW initialized successfully!\n");
 
 #ifdef __APPLE__
     /* MacOS M chips specific */
@@ -1013,11 +1019,19 @@ int init_renderer( int width, int height, const char *title )
 
     if ( !window )
     {
-        glfwTerminate( );
+        LOG_FATALF("renderer", "Failed to create GLFW window");
+        fprintf(stderr, "Failed to create GLFW window\n");
+        glfwTerminate();        
         return ( -1 );
     }
+    
+    LOG_DEBUGF("renderer", "Window created successfully!\n");
 
     glfwMakeContextCurrent( window );
+    
+    const char *gl_version = (const char*)glGetString(GL_VERSION);
+    const char *glsl_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    LOG_INFOF("renderer", "OpenGL %s, GLSL %s", gl_version, glsl_version);
 
     glfwSetKeyCallback( window, glfw_key_callback );
     glfwSetErrorCallback( glfw_error_callback );
@@ -1083,6 +1097,8 @@ int init_renderer( int width, int height, const char *title )
     printf( "╠════════════════════════════════════╣\n" );
     printf( "║   ESC        : Exit                ║\n" );
     printf( "╚════════════════════════════════════╝\n\n" );
+    
+    LOG_INFOF("renderer", "Renderer initialized successfully");
     return ( 0 );
 }
 
@@ -1119,10 +1135,25 @@ bool should_close_window( void )
 
 void render_loop( void )
 {
+    
+    LOG_INFOF("renderer", "Entering render loop");
+    
+    double last_time = glfwGetTime();
+    int frame_count = 0;
+
     g_last_frame_time = glfwGetTime( );    // Initialize to current time
 
     while ( !glfwWindowShouldClose( window ) )
     {
+        
+        LOG_TRACEF("renderer", "=== Frame %d START ===", frame_count);
+        
+        
+        if (!global_header || !global_data) {
+            LOG_ERRORF("renderer", "NULL model data in render loop! Exiting.");
+            break;
+        }
+        
         // Calculate delta time
         double current_time = glfwGetTime( );
         float  delta_time   = ( float ) ( current_time - g_last_frame_time );
@@ -1445,6 +1476,18 @@ void render_model( studiohdr_t *header, unsigned char *data )
 }
 void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data, mdl_seqgroup_blob_t *seqgroups, int num_seqgroups )
 {
+    
+    LOG_INFOF("renderer", "Setting model data");
+    
+    if (!header || !data) {
+        LOG_ERRORF("renderer", "NULL model data passed to renderer!");
+        return;
+    }
+    
+    LOG_DEBUGF("renderer", "  Bones: %d", header->numbones);
+    LOG_DEBUGF("renderer", "  Bodyparts: %d", header->numbodyparts);
+    LOG_DEBUGF("renderer", "  Sequences: %d", header->numseq);
+    
     global_header     = header;
     global_data       = data;
     global_tex_header = tex_header;    // may be NULL
@@ -1477,4 +1520,8 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
         g_animation_enabled = true;
         g_last_frame_time = glfwGetTime();
     }
+    
+    
+    LOG_DEBUGF("renderer", "  Textures: %d", tex_header ? tex_header->numtextures : 0);
+    LOG_INFOF("renderer", "Model data set successfully");
 }
