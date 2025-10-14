@@ -16,7 +16,7 @@
  *
  * ───────────────────────────────────────────────────────────────────────────
  *   Author: Karlo Siric
- *   Purpose: Main Entry Point with Command-Line Argument Support
+ *   Purpose: Command-Line Argument Parser Implementation
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -105,54 +105,13 @@ int main(int argc, char const *argv[])
     }
     
     if (args.dump_level == DUMP_BASIC) {
-        // Basic dump: Use existing analysis function
-        print_complete_model_analysis(
-            stdout, 
-            args.model_path, 
-            model->header, 
-            model->texture_header, 
-            model->data, 
-            model->texture_data
-        );
+        print_complete_model_analysis(stdout, args.model_path, model->header, 
+                                       model->texture_header, model->data, model->texture_data);
     }
     else if (args.dump_level == DUMP_EXTENDED) {
-        // Extended dump: Show EVERYTHING
-        printf("\n");
-        printf("═══════════════════════════════════════════════════════════════\n");
-        printf("  EXTENDED MODEL DUMP\n");
-        printf("═══════════════════════════════════════════════════════════════\n");
-        printf("\n");
-        
-        // 1. Basic analysis
-        print_complete_model_analysis(
-            stdout, 
-            args.model_path, 
-            model->header, 
-            model->texture_header, 
-            model->data, 
-            model->texture_data
-        );
-        
-        // 2. Raw header dump
-        printf("\n");
-        printf("═══════════════════════════════════════════════════════════════\n");
-        printf("  RAW HEADER DATA\n");
-        printf("═══════════════════════════════════════════════════════════════\n");
-        printf("\n");
-        
-        print_studio_header_file(stdout, "MAIN HEADER", model->header);
-        
-        if (model->texture_header) {
-            printf("\n");
-            print_studio_header_file(stdout, "TEXTURE HEADER", model->texture_header);
-        }
-        
-        printf("\n");
-        printf("═══════════════════════════════════════════════════════════════\n");
-        printf("  END OF EXTENDED DUMP\n");
-        printf("═══════════════════════════════════════════════════════════════\n");
-        printf("\n");
-    }
+        print_extended_model_dump(stdout, args.model_path, model->header,
+                                 model->texture_header, model->data, model->texture_data);
+    }    
     
     if (args.dump_only) {
         if (!args.quiet) {

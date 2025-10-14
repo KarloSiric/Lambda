@@ -29,6 +29,14 @@ void print_complete_model_analysis(
 
 void print_studio_header_file(FILE *output, const char *title, const studiohdr_t *header);
 
+void print_extended_model_dump(
+    FILE *output,
+    const char *model_path,
+    const studiohdr_t *main_header,
+    const studiohdr_t *texture_header,
+    const unsigned char *main_data,
+    const unsigned char *texture_data);
+
 // Redirect stdout to a file while calling your existing analysis function.
 // Returns 0 on success.
 inline int mdl_write_report_via_stdout_redirect(
