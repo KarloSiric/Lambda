@@ -315,7 +315,18 @@ void logger_logv(
     if ( level > LOG_FATAL )
         level = LOG_FATAL;
     const char *cat      = ( category && category[0] ) ? category : LOG_CAT_DEFAULT;
-    const char *src_file = file ? file : "?";
+    
+    // CRITICAL FIX: Extract just the filename from full path
+    const char *src_file = "?";
+    if (file) {
+        // Find last '/' or '\\' to get filename only
+        const char *slash = strrchr(file, '/');
+        if (!slash) {
+            slash = strrchr(file, '\\');
+        }
+        src_file = slash ? (slash + 1) : file;
+    }
+    
     const char *src_func = func ? func : "?";
     if ( !fmt )
         fmt = "";    // avoid null format

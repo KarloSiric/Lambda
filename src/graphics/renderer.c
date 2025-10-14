@@ -983,6 +983,8 @@ static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader 
 static int load_shaders( void )
 {
     // Try to load textured shaders first, fall back to basic if not found
+    // NOTE(Karlo): Shader source path need to be placed on some MACRO
+    // THis is being hardocded so not good -----> change it 
     char *vertex_shader_file = read_shader_source(
         "/Users/karlosiric/Documents/SublimeText "
         "Programming/C_Projects/ModelViewer/shaders/textured.vert" );

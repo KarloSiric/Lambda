@@ -51,10 +51,10 @@
 
 #define HLMV_VERSION_MAJOR          0
 #define HLMV_VERSION_MINOR          1
-#define HLMV_VERSION_PATCH          0
+#define HLMV_VERSION_PATCH          1
 
 // Build number (increment with each build)
-#define HLMV_VERSION_BUILD          1
+#define HLMV_VERSION_BUILD          2
 
 // Build timestamp (automatically set by compiler)
 #define HLMV_BUILD_DATE             __DATE__

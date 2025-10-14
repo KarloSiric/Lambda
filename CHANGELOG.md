@@ -19,6 +19,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.1-alpha.1] - 2025-10-15
+
+### Fixed
+- **Logging System**
+  - Moved texture creation logs from DEBUG to TRACE level
+  - Prevents texture spam in verbose mode (`-vv`)
+  - Texture creation now only shown with `--trace` flag
+  - Reduces log file size significantly (from 11MB to manageable size)
+  - Improves readability of verbose logging output
+
+### Changed
+- **Debug Verbosity**
+  - `-vv` (verbose) now shows useful debug info without texture spam
+  - `--trace` flag remains for ultra-detailed logging including all texture operations
+  - Better separation between debugging levels
+
+### Technical Details
+- Modified `src/graphics/textures.c` line 299
+- Changed `LOG_DEBUGF` to `LOG_TRACEF` for texture creation success messages
+- Build number incremented from 1 to 2
+- No API changes, fully backward compatible
+
+---
+
 ## [0.1.0-alpha.1] - 2025-01-15
 
 ### Added
@@ -139,7 +163,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version History Summary
 
 | Version | Release Date | Milestone |
-|---------|-------------|-----------|
+|---------|-------------|-----------|  
+| 0.1.1-alpha.1 | 2025-10-15 | Logging improvements |
 | 0.1.0-alpha.1 | 2025-01-15 | Initial release |
 
 ---
