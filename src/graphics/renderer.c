@@ -1239,7 +1239,17 @@ void render_model( studiohdr_t *header, unsigned char *data )
     if ( g_animation_enabled && global_header && global_data )
     {
         // Calculate animated bone transforms directly into g_bonetransformations
-        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations );
+        mdl_result_t anim_result = mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations );
+        
+        // CRITICAL FIX: If sequence group is missing, fall back to T-pose
+        if ( anim_result == MDL_ERROR_SEQUENCE_GROUP_MISSING )
+        {
+            // Fallback to T-pose by using static bone setup
+            SetUpBones( global_header, global_data );
+            
+            // Don't spam the console - this error was already printed in mdl_animation_calculate_bones
+            // Just continue rendering with T-pose
+        }
 
         // Re-transform vertices with new bone positions
         mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );

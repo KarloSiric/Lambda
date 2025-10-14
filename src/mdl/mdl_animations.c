@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 15:46:28
+   Last Modified: 2025-10-14 17:12:58
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -334,6 +334,7 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
     {
         // CRITICAL: This is Valve's EXACT formula!
         // It wraps smoothly at (numframes - 1) for ALL frames
+        
         float wrap_point = (float)( seq->numframes - 1 );
         state->current_frame -= (int)( state->current_frame / wrap_point ) * wrap_point;
         
@@ -376,29 +377,41 @@ mdl_result_t mdl_animation_calculate_bones(
     
     if (seqgroup == 0) 
     {
-        /* Animation data is embedded inside teh original main data of the .mdl file
+        /* Animation data is embedded inside the original main data of the .mdl file
          * animindex is relative to the sequence descriptor
         */
         animBase = data; 
     }
     else 
     {
-        // ANimation data is in the external file associated with that seqgroup
-        if (!seqgroups || seqgroup >= header->numseqgroups)
+        // Animation data is in the external file associated with that seqgroup
+        
+        // CRITICAL FIX: Check if seqgroups array exists
+        if (!seqgroups)
         {
-            fprintf(stderr, "ERROR - Sequence group %d not loaded for sequence %d\n",
-                    seqgroup, state->current_sequence);
+            fprintf(stderr, "ERROR - Sequence group %d required but no seqgroups loaded (sequence %d: '%s')\n",
+                    seqgroup, state->current_sequence, seq->label);
+            fprintf(stderr, "       Falling back to T-pose. External files may be missing!\n");
+            return MDL_INFO_SEQUENCE_GROUP_FILE;
+        }
+        
+        // CRITICAL FIX: Validate array bounds
+        if (seqgroup >= header->numseqgroups || seqgroup < 0)
+        {
+            fprintf(stderr, "ERROR - Invalid sequence group %d (valid range: 0-%d) for sequence %d\n",
+                    seqgroup, header->numseqgroups - 1, state->current_sequence);
             return MDL_ERROR_INVALID_PARAMETER;
         }
         
+        // CRITICAL FIX: Check if this specific group's data is loaded
         if (!seqgroups[seqgroup].data)
         {
-            fprintf(stderr, "ERROR - Sequence group %d not loaded for sequence %d\n",
-                    seqgroup, state->current_sequence);
-            return MDL_ERROR_INVALID_PARAMETER;
+            fprintf(stderr, "WARNING - Sequence group %d not loaded for sequence %d: '%s'\n",
+                    seqgroup, state->current_sequence, seq->label);
+            fprintf(stderr, "          Missing file: %s\n", seqgroups[seqgroup].name);
+            fprintf(stderr, "          Falling back to T-pose\n");
+            return MDL_INFO_SEQUENCE_GROUP_FILE;
         }
-        
-        studiohdr_t *seqgroup_header = (studiohdr_t *)seqgroups[seqgroup].data;
         
         animBase = seqgroups[seqgroup].data;
     }

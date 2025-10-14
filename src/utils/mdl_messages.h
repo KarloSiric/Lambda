@@ -49,6 +49,7 @@ typedef enum {
     // animations
     MDL_ERROR_SEQGROUP_NOT_FOUND,   // seqdesc points to NN but file missing
     MDL_ERROR_ANIM_BLOCK_BROKEN,
+    MDL_ERROR_SEQUENCE_GROUP_MISSING, // sequence group data is NULL (file failed to load)
 
     MDL_ERROR_NO_TEXTURES_IN_FILE,
 
