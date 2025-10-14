@@ -1,22 +1,33 @@
-/*======================================================================
-   File: main.c
-   Project: Half-Life Model Viewer with Animation & Seqgroups
-   Author: karlosiric
-   Updated: 2025-10-14 (FINAL VERSION WITH SEQGROUPS)
-   ---------------------------------------------------------------------
-   Description:
-       Main entry point with proper seqgroup loading
-   ---------------------------------------------------------------------
-   License: MIT
-   Version: 1.0.0 - WORKING WITH ANIMATIONS!
- ======================================================================*/
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *   Half-Life Model Viewer
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+ *
+ *   This product contains software technology licensed from Id
+ *   Software, Inc. ("Id Technology"). Id Technology (c) 1996 Id Software, Inc.
+ *   All Rights Reserved.
+ *
+ *   Use, distribution, and modification of this source code and/or resulting
+ *   object code is restricted to non-commercial enhancements to products from
+ *   Valve LLC. All other use, distribution, or modification is prohibited
+ *   without written permission from Valve LLC.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ *   Author: Karlo Siric
+ *   Purpose: Main Entry Point with Command-Line Argument Support
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
 
 #include "main.h"
 
 #include "graphics/renderer.h"
 #include "mdl/mdl_info.h"
 #include "mdl/mdl_loader.h"
+#include "mdl/mdl_report.h"
 #include "studio.h"
+#include "utils/args.h"
 #include "utils/logger.h"
 
 #include <stdio.h>
@@ -35,88 +46,180 @@ t_log_options log_options = {
     .max_files     = 0,
     .use_colors    = true,
     .json_lines    = false,
-    .console_level = LOG_TRACE
+    .console_level = LOG_ERROR  // Default to ERROR (quiet)
 };
 
 int main(int argc, char const *argv[])
 {
-    // Initialize logger
-    logger_init(&log_options);
-    logger_set_global_level(LOG_INFO);
-    logger_set_category_level("renderer", LOG_DEBUG);
-    logger_set_category_level("mdl", LOG_DEBUG);
-    logger_set_category_level("textures", LOG_DEBUG);
-
-    LOG_INFOF("app", "Logger Initialized");
-    LOG_INFOF("app", "Application started: PID %d\n", getpid());
-
-    // Check arguments
-    if (argc != 2) {
-        LOG_INFOF("app", "Usage: %s <model.mdl>", argv[0]);
-        logger_shutdown();
-        return 1;
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 1: Parse command-line arguments
+    // ═══════════════════════════════════════════════════════════════════════
+    app_args_t args;
+    if (parse_args(argc, argv, &args) != 0) {
+        return 1;  // Error already printed by parse_args
     }
-
-    // ==================================================================
-    // METHOD 1: Use the NEW create_mdl_model() function (RECOMMENDED!)
-    // ==================================================================
     
-    LOG_TIME_BLOCK("load_complete_model", "mdl");
+    // Show help if requested
+    if (args.show_help) {
+        print_usage(argv[0]);
+        return 0;
+    }
+    
+    // Show banner ONLY if dumping (not in quiet mode)
+    if (args.dump_level != DUMP_NONE && !args.quiet) {
+        print_banner();
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 2: Initialize logger (quiet mode affects log level)
+    // ═══════════════════════════════════════════════════════════════════════
+    if (args.quiet) {
+        log_options.console_level = LOG_ERROR;  // Only errors
+        log_options.use_colors = false;
+    } else {
+        log_options.console_level = LOG_INFO;
+        log_options.use_colors = true;
+    }
+    
+    logger_init(&log_options);
+    logger_set_global_level(args.quiet ? LOG_ERROR : LOG_INFO);
+    
+    if (!args.quiet) {
+        logger_set_category_level("renderer", LOG_DEBUG);
+        logger_set_category_level("mdl", LOG_DEBUG);
+        logger_set_category_level("textures", LOG_DEBUG);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 3: Load model
+    // ═══════════════════════════════════════════════════════════════════════
+    if (!args.quiet) {
+        LOG_INFOF("app", "Loading model: %s", args.model_path);
+    }
     
     mdl_model_t *model = NULL;
-    mdl_result_t result = create_mdl_model(argv[1], &model);
+    mdl_result_t result = create_mdl_model(args.model_path, &model);
     
     if (result != MDL_SUCCESS) {
-        LOG_ERRORF("mdl", "Failed to load model! Error code: %d\n", result);
+        fprintf(stderr, "ERROR: Failed to load model '%s' (error code: %d)\n", 
+                args.model_path, result);
         logger_shutdown();
         return 1;
     }
     
-    LOG_INFOF("mdl", "Model loaded successfully!");
-    LOG_INFOF("mdl", "  Main header: %p", (void*)model->header);
-    LOG_INFOF("mdl", "  Texture header: %p", (void*)model->texture_header);
-    LOG_INFOF("mdl", "  Sequence groups: %d", model->num_seqgroups);
-
-    // Print complete model analysis
-    print_complete_model_analysis(
-        stdout, 
-        argv[1], 
-        model->header, 
-        model->texture_header, 
-        model->data, 
-        model->texture_data
-    );
-
-    // Initialize renderer
-    LOG_INFOF("renderer", "Initializing renderer...");
+    if (!args.quiet) {
+        LOG_INFOF("mdl", "Model loaded successfully!");
+        LOG_INFOF("mdl", "  Bones: %d", model->header->numbones);
+        LOG_INFOF("mdl", "  Bodyparts: %d", model->header->numbodyparts);
+        LOG_INFOF("mdl", "  Sequences: %d", model->header->numseq);
+        LOG_INFOF("mdl", "  Sequence groups: %d", model->num_seqgroups);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 4: Dump structure if requested
+    // ═══════════════════════════════════════════════════════════════════════
+    if (args.dump_level == DUMP_BASIC) {
+        // Basic dump: Use existing analysis function
+        print_complete_model_analysis(
+            stdout, 
+            args.model_path, 
+            model->header, 
+            model->texture_header, 
+            model->data, 
+            model->texture_data
+        );
+    }
+    else if (args.dump_level == DUMP_EXTENDED) {
+        // Extended dump: Show EVERYTHING
+        printf("\n");
+        printf("═══════════════════════════════════════════════════════════════\n");
+        printf("  EXTENDED MODEL DUMP\n");
+        printf("═══════════════════════════════════════════════════════════════\n");
+        printf("\n");
+        
+        // 1. Basic analysis
+        print_complete_model_analysis(
+            stdout, 
+            args.model_path, 
+            model->header, 
+            model->texture_header, 
+            model->data, 
+            model->texture_data
+        );
+        
+        // 2. Raw header dump
+        printf("\n");
+        printf("═══════════════════════════════════════════════════════════════\n");
+        printf("  RAW HEADER DATA\n");
+        printf("═══════════════════════════════════════════════════════════════\n");
+        printf("\n");
+        
+        print_studio_header_file("MAIN HEADER", model->header);
+        
+        if (model->texture_header) {
+            printf("\n");
+            print_studio_header_file("TEXTURE HEADER", model->texture_header);
+        }
+        
+        printf("\n");
+        printf("═══════════════════════════════════════════════════════════════\n");
+        printf("  END OF EXTENDED DUMP\n");
+        printf("═══════════════════════════════════════════════════════════════\n");
+        printf("\n");
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 5: Exit if dump-only mode
+    // ═══════════════════════════════════════════════════════════════════════
+    if (args.dump_only) {
+        if (!args.quiet) {
+            LOG_INFOF("app", "Dump complete. Exiting (--dump-only mode)");
+        }
+        free_model(model);
+        logger_shutdown();
+        return 0;  // Exit without opening viewer
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 6: Initialize renderer and run viewer (only if not dump-only)
+    // ═══════════════════════════════════════════════════════════════════════
+    if (!args.quiet) {
+        LOG_INFOF("renderer", "Initializing OpenGL renderer...");
+    }
+    
     if (init_renderer(WIDTH, HEIGHT, "Half-Life Model Viewer") != 0) {
-        LOG_ERRORF("renderer", "Failed to initialize renderer!");
+        fprintf(stderr, "ERROR: Failed to initialize renderer\n");
         free_model(model);
         logger_shutdown();
         return 1;
     }
-
-    // ==================================================================
-    // CRITICAL: Pass ALL data including seqgroups to renderer!
-    // ==================================================================
+    
+    // Pass model data to renderer
     set_model_data(
         model->header,
         model->data,
         model->texture_header,
         model->texture_data,
-        model->seqgroups,         // <-- NEW! Seqgroups parameter
-        model->num_seqgroups      // <-- NEW! Number of seqgroups
+        model->seqgroups,
+        model->num_seqgroups
     );
-
-    // Start render loop
+    
+    if (!args.quiet) {
+        LOG_INFOF("renderer", "Starting render loop...");
+    }
+    
+    // Start render loop (blocks until window closes)
     render_loop();
-
-    // Cleanup
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 7: Cleanup
+    // ═══════════════════════════════════════════════════════════════════════
+    if (!args.quiet) {
+        LOG_INFOF("app", "Shutting down...");
+    }
+    
     cleanup_renderer();
-    free_model(model);  // This frees everything including seqgroups
-
-    LOG_INFOF("app", "Shutting down");
-    LOG_INFOF("app", "Application PID: %d killed!\n", getpid());
+    free_model(model);
     logger_shutdown();
     
     return 0;
