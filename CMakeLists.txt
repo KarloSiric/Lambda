@@ -27,6 +27,7 @@ set(SOURCES
     src/main.c
     src/mdl/mdl_loader.c
     src/mdl/mdl_info.c
+    src/mdl/mdl_report.c
     src/mdl/bone_system.c
     src/mdl/bodypart_manager.c
     src/mdl/mdl_animations.c
