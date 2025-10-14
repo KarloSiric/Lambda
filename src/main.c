@@ -74,13 +74,55 @@ int main(int argc, char const *argv[])
         log_options.use_colors = true;
     }
     
-    logger_init(&log_options);
-    logger_set_global_level(args.quiet ? LOG_ERROR : LOG_INFO);
+    // CRITICAL FIX: Respect log_level from CLI args!
+    switch (args.log_level) {
+        case LOG_LEVEL_QUIET:
+            log_options.console_level = LOG_ERROR;
+            log_options.use_colors = false;
+            break;
+        case LOG_LEVEL_NORMAL:
+            log_options.console_level = LOG_INFO;
+            break;
+        case LOG_LEVEL_VERBOSE:
+            log_options.console_level = LOG_DEBUG;
+            break;
+        case LOG_LEVEL_TRACE:
+            log_options.console_level = LOG_TRACE;  // <-- THIS WAS MISSING!
+            break;
+    }
     
-    if (!args.quiet) {
+    // Use log file if specified
+    if (args.log_file) {
+        log_options.file_path = args.log_file;
+    }
+    
+    logger_init(&log_options);
+    
+    // Set global level based on CLI
+    int global_level = LOG_INFO;  // default
+    switch (args.log_level) {
+        case LOG_LEVEL_QUIET:   global_level = LOG_ERROR; break;
+        case LOG_LEVEL_NORMAL:  global_level = LOG_INFO; break;
+        case LOG_LEVEL_VERBOSE: global_level = LOG_DEBUG; break;
+        case LOG_LEVEL_TRACE:   global_level = LOG_TRACE; break;
+    }
+    logger_set_global_level(global_level);
+    
+    // Set per-category levels for verbose/trace
+    if (args.log_level >= LOG_LEVEL_VERBOSE) {
         logger_set_category_level("renderer", LOG_DEBUG);
         logger_set_category_level("mdl", LOG_DEBUG);
         logger_set_category_level("textures", LOG_DEBUG);
+        logger_set_category_level("animation", LOG_DEBUG);
+        logger_set_category_level("seqgroup", LOG_DEBUG);
+    }
+    
+    if (args.log_level == LOG_LEVEL_TRACE) {
+        logger_set_category_level("renderer", LOG_TRACE);
+        logger_set_category_level("mdl", LOG_TRACE);
+        logger_set_category_level("textures", LOG_TRACE);
+        logger_set_category_level("animation", LOG_TRACE);
+        logger_set_category_level("seqgroup", LOG_TRACE);
     }
     
     if (!args.quiet) {
