@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 15:11:50
+   Last Modified: 2025-10-14 15:46:28
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -299,13 +299,8 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
         delta_time = ( 1.0f / seq->fps * 2.0f );
     }
 
-    // still animation because it has no frames whatsoever so
-    if ( seq->numframes <= 1 )
-    {
-        return;
-    }
+    
 
-    float frames_per_second = seq->fps;
     
     // float frames_testing = 1 / seq->fps;
 
@@ -324,27 +319,37 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
      * This gives us a much smoother look of animations in todays world.
      */
 
+    float frames_per_second = seq->fps;
     float frames_to_advance = delta_time * frames_per_second;
     state->current_frame += frames_to_advance;
 
-    // printf("DEBUG: Delta Time is: %f\n", delta_time);
+    
+    float max_frame = (float)(seq->numframes - 1);
 
-    if ( state->current_frame >= seq->numframes )
-    {
-        if ( state->is_looping )
-        {
-            state->current_frame = fmodf( state->current_frame, ( float ) seq->numframes );
-        }
-        else
-        {
-            state->current_frame = ( float ) ( seq->numframes - 1 );
-        }
-    }
-    else if ( state->current_frame < 0.0f )
+    if ( seq->numframes <= 1 )
     {
         state->current_frame = 0.0f;
     }
+    else
+    {
+        // CRITICAL: This is Valve's EXACT formula!
+        // It wraps smoothly at (numframes - 1) for ALL frames
+        float wrap_point = (float)( seq->numframes - 1 );
+        state->current_frame -= (int)( state->current_frame / wrap_point ) * wrap_point;
+        
+        // For non-looping animations, clamp to last frame
+        if ( !state->is_looping && state->current_frame >= wrap_point )
+        {
+            state->current_frame = wrap_point;
+        }
+    }
 
+    // Additional safety clamp
+    if ( state->current_frame < 0.0f )
+    {
+        state->current_frame = 0.0f;
+    }
+    
     return;
 }
 
