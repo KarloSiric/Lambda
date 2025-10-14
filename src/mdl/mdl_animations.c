@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-13 23:02:17
+   Last Modified: 2025-10-14 13:42:51
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -18,6 +18,7 @@
 #include "mdl_animations.h"
 
 #include "bone_system.h"
+#include "mdl_loader.h"
 
 #include <cglm/cglm.h>
 #include <math.h>
@@ -247,7 +248,7 @@ void CalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *
 }
 
 mdl_result_t
-mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, studiohdr_t *header, unsigned char *data )
+mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, studiohdr_t *header, unsigned char *data, mdl_seqgroup_blob_t *seqgroups )
 {
     if ( !state || !header || !data )
     {
