@@ -51,13 +51,13 @@ t_log_options log_options = {
 
 int main(int argc, char const *argv[])
 {
-    // ═══════════════════════════════════════════════════════════════════════
-    // STEP 1: Parse command-line arguments
-    // ═══════════════════════════════════════════════════════════════════════
     app_args_t args;
     if (parse_args(argc, argv, &args) != 0) {
         return 1;  // Error already printed by parse_args
     }
+    
+    // Show banner ALWAYS (Valve copyright)
+    print_banner();
     
     // Show help if requested
     if (args.show_help) {
@@ -65,14 +65,6 @@ int main(int argc, char const *argv[])
         return 0;
     }
     
-    // Show banner ONLY if dumping (not in quiet mode)
-    if (args.dump_level != DUMP_NONE && !args.quiet) {
-        print_banner();
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // STEP 2: Initialize logger (quiet mode affects log level)
-    // ═══════════════════════════════════════════════════════════════════════
     if (args.quiet) {
         log_options.console_level = LOG_ERROR;  // Only errors
         log_options.use_colors = false;
@@ -90,9 +82,6 @@ int main(int argc, char const *argv[])
         logger_set_category_level("textures", LOG_DEBUG);
     }
     
-    // ═══════════════════════════════════════════════════════════════════════
-    // STEP 3: Load model
-    // ═══════════════════════════════════════════════════════════════════════
     if (!args.quiet) {
         LOG_INFOF("app", "Loading model: %s", args.model_path);
     }
@@ -115,9 +104,6 @@ int main(int argc, char const *argv[])
         LOG_INFOF("mdl", "  Sequence groups: %d", model->num_seqgroups);
     }
     
-    // ═══════════════════════════════════════════════════════════════════════
-    // STEP 4: Dump structure if requested
-    // ═══════════════════════════════════════════════════════════════════════
     if (args.dump_level == DUMP_BASIC) {
         // Basic dump: Use existing analysis function
         print_complete_model_analysis(
@@ -154,11 +140,11 @@ int main(int argc, char const *argv[])
         printf("═══════════════════════════════════════════════════════════════\n");
         printf("\n");
         
-        print_studio_header_file("MAIN HEADER", model->header);
+        print_studio_header_file(stdout, "MAIN HEADER", model->header);
         
         if (model->texture_header) {
             printf("\n");
-            print_studio_header_file("TEXTURE HEADER", model->texture_header);
+            print_studio_header_file(stdout, "TEXTURE HEADER", model->texture_header);
         }
         
         printf("\n");
@@ -168,9 +154,6 @@ int main(int argc, char const *argv[])
         printf("\n");
     }
     
-    // ═══════════════════════════════════════════════════════════════════════
-    // STEP 5: Exit if dump-only mode
-    // ═══════════════════════════════════════════════════════════════════════
     if (args.dump_only) {
         if (!args.quiet) {
             LOG_INFOF("app", "Dump complete. Exiting (--dump-only mode)");
@@ -180,9 +163,6 @@ int main(int argc, char const *argv[])
         return 0;  // Exit without opening viewer
     }
     
-    // ═══════════════════════════════════════════════════════════════════════
-    // STEP 6: Initialize renderer and run viewer (only if not dump-only)
-    // ═══════════════════════════════════════════════════════════════════════
     if (!args.quiet) {
         LOG_INFOF("renderer", "Initializing OpenGL renderer...");
     }
@@ -211,9 +191,6 @@ int main(int argc, char const *argv[])
     // Start render loop (blocks until window closes)
     render_loop();
     
-    // ═══════════════════════════════════════════════════════════════════════
-    // STEP 7: Cleanup
-    // ═══════════════════════════════════════════════════════════════════════
     if (!args.quiet) {
         LOG_INFOF("app", "Shutting down...");
     }

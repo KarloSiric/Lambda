@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-09-27 14:30:32
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 10:24:14
+   Last Modified: 2025-10-14 19:19:45
    --------------------------------------------------------------------
    Description:
  
@@ -128,14 +128,10 @@ static bool parse_paletted_block(
     *out_palette  = file_start + pal_bytes_off;
     *out_pal_size = ( int ) pal_count_le;
 
-    // Debug prints so you can see exactly what is used
-    printf(
-        "Found palette: %d colors at offset %ld (strict 16-bit count)\n",
-        *out_pal_size,
-        ( long ) ( *out_palette - file_start ) );
     return true;
 }
 
+/*
 // ADDING FOR DEBUGGING FUNCTION
 static void debug_texture_data( const studiohdr_t *header, const unsigned char *file_data )
 {
@@ -184,10 +180,11 @@ static void debug_texture_data( const studiohdr_t *header, const unsigned char *
     }
     printf( "=========================\n\n" );
 }
+*/
 
 mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *file_data, mdl_texture_set_t *out_set )
 {
-    debug_texture_data( header, file_data );
+    // debug_texture_data( header, file_data );
 
     if ( !out_set )
     {
@@ -219,15 +216,6 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
     {
         const mstudiotexture_t *T = &textures[i];
 
-        printf( "Texture[%d] '%s': flags =0x%04X", i, T->name, T->flags );
-        if ( T->flags & STUDIO_NF_FLATSHADE ) printf( " [FLATSHADE]" );
-        if ( T->flags & STUDIO_NF_CHROME )    printf( " [CHROME]" );
-        if ( T->flags & STUDIO_NF_FULLBRIGHT ) printf( " [FULLBRIGHT]" );
-        if ( T->flags & STUDIO_NF_NOMIPS )    printf( " [NOMIPS]" );
-        if ( T->flags & STUDIO_NF_ALPHA )     printf( " [ALPHA]" );
-        if ( T->flags & STUDIO_NF_ADDITIVE )  printf( " [ADDITIVE]" );
-        if ( T->flags & STUDIO_NF_MASKED )    printf( " [MASKED]" );
-        printf( "\n" ); 
         
          
         // T->index is an absolute offset from file start
@@ -239,7 +227,6 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
 
         const unsigned char *palette  = indices + pixel_count;
         const int            pal_size = 256;
-        printf( "Loading Texture [%d]: %s (%dx%d), using %d color palette\n", i, T->name, T->width, T->height, pal_size );
 
         // Allocate RGBA buffer
         unsigned char *rgba = ( unsigned char * ) malloc( ( size_t ) pixel_count * 4u );
@@ -311,14 +298,6 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         // Unbind texture
         glBindTexture( GL_TEXTURE_2D, 0 );
 
-        printf( "  Texture %d (%s): GL ID %u, dimensions %dx%d\n\n", i, T->name, tex, T->width, T->height );
-
-        // Special debug for face textures
-        if ( strstr( T->name, "Face" ) != NULL || strstr( T->name, "face" ) != NULL )
-        {
-            printf( "  >>> FACE TEXTURE DETECTED: %s at %dx%d\n", T->name, T->width, T->height );
-        }
-
         // Free temporary RGBA buffer
         free( rgba );
 
@@ -334,7 +313,6 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
     out_set->textures = items;
     out_set->count    = n_textures;
 
-    printf( "Texture loading complete: %d textures loaded\n\n\n", n_textures );
     return MDL_SUCCESS;
 }
 

@@ -53,7 +53,7 @@ void print_banner(void)
     printf("\n");
     printf("%s\n", RULER_SINGLE);
     printf("  Author: Karlo Siric\n");
-    printf("  Version: 1.0.0\n");
+    printf("  Version: Alpha 0.0.1\n");
     printf("%s\n", RULER_DOUBLE);
     printf("\n");
 }

@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 18:24:39
+   Last Modified: 2025-10-14 19:15:15
    ---------------------------------------------------------------------
    Description:
        
@@ -508,14 +508,6 @@ void ProcessModelForRendering( void )
         // Get ONLY the selected model (not all of them!)
         mstudiomodel_t *model = &models[selected_model_index];
 
-        // Debug output
-        printf(
-            "Bodypart %d '%s': Using model %d/%d '%s'\n",
-            bp,
-            bpRec->name,
-            selected_model_index,
-            bpRec->nummodels,
-            model->name );
 
         g_current.model        = model;
         g_current.vertices     = ( vec3_t * ) ( global_data + model->vertindex );
@@ -569,14 +561,6 @@ void ProcessModelForRendering( void )
                 texH   = 2;
             }
 
-            printf(
-                "  mesh %d: skinref %d -> tex %d  GL=%u  %dx%d\n",
-                mesh,
-                meshes[mesh].skinref,
-                tex_index,
-                ( unsigned ) gl_tex,
-                texW,
-                texH );
 
             short *ptricmds = ( short * ) ( global_data + meshes[mesh].triindex );
 
@@ -710,8 +694,6 @@ void ProcessModelForRendering( void )
                         }
                         n2 &= 0x7FFF;
 
-                        if ( dbg_count++ < 8 )
-                            printf( "    s=%d t=%d  (tex %dx%d)\n", s0, t0, texW, texH );
                         s_min = ( s0 < s_min ) ? s0 : s_min;
                         s_max = ( s0 > s_max ) ? s0 : s_max;
                         t_min = ( t0 < t_min ) ? t0 : t_min;

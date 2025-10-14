@@ -20,7 +20,14 @@
 #include "../studio.h"
 
 void print_complete_model_analysis(
-    const char *, const studiohdr_t *, const studiohdr_t *, const unsigned char *, const unsigned char * );
+    FILE *output,
+    const char *filename,
+    studiohdr_t *main_header,
+    studiohdr_t *texture_header,
+    unsigned char *main_data,
+    unsigned char *texture_data);
+
+void print_studio_header_file(FILE *output, const char *title, const studiohdr_t *header);
 
 // Redirect stdout to a file while calling your existing analysis function.
 // Returns 0 on success.
@@ -62,8 +69,8 @@ inline int mdl_write_report_via_stdout_redirect(
         return -4;
     }
 
-    // Call your existing function — all its printf(...) go to the file now
-    print_complete_model_analysis( model_path, hdr, thdr, data, tdata );
+    // Call your existing function — write directly to file
+    print_complete_model_analysis( fp, model_path, hdr, thdr, data, tdata );
 
     // Flush and restore stdout
     fflush( stdout );
