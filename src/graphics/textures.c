@@ -31,6 +31,7 @@
 #endif
 
 #include "textures.h"
+#include "../utils/logger.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -292,11 +293,11 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         GLenum err = glGetError( );
         if ( err != GL_NO_ERROR )
         {
-            printf( "  WARNING: OpenGL Error 0x%x after creating texture %s\n", err, T->name );
+            LOG_WARNF("textures", "OpenGL error 0x%x creating texture %s", err, T->name);
         }
         else
         {
-            printf( "  Successfully created GL texture ID %u for %s\n", tex, T->name );
+            LOG_TRACEF("textures", "Created GL texture ID %u for %s", tex, T->name);
         }
         // Unbind texture
         glBindTexture( GL_TEXTURE_2D, 0 );
