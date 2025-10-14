@@ -247,7 +247,7 @@ const char *bodypart_get_debug_string( void ) {
     mstudiobodyparts_t *bodyparts     = ( mstudiobodyparts_t * ) ( g_data + g_header->bodypartindex );
     int                 current_model = bodypart_get_model_index( g_bodypart_state.current_bodypart );
     mstudiomodel_t *models = ( mstudiomodel_t * ) ( g_data + bodyparts[g_bodypart_state.current_bodypart].modelindex );
-
+    
     sprintf(
         debug_string,
         "Bodygroup: %d | Part %d/%d: %s | Model %d/%d: %s\n"

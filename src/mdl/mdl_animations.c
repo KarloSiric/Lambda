@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-10 11:47:17
    Last Modified by: karlosiric
-   Last Modified: 2025-10-13 16:34:44
+   Last Modified: 2025-10-13 23:02:17
    ---------------------------------------------------------------------
    Description: MDL Animation System
        
@@ -105,72 +105,69 @@ void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
 
 // Calculate bone rotation using quaternion interpolation (SLERP)
 // This matches Valve's CalcBoneQuaternion exactly
-void CalcBoneQuaternion( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim,
-                         unsigned char *data, mstudioseqdesc_t *seq, versor q )
+void CalcBoneQuaternion( int frame, float s, const mstudiobone_t *pbone, const mstudioanim_t *panim,
+                         versor q )
 {
     vec3_t angle1, angle2;
-
+    
+    angle1[0] = angle2[0] = pbone->value[3];
+    angle1[1] = angle2[1] = pbone->value[4];
+    angle1[2] = angle2[2] = pbone->value[5];
+    
     // Process all 3 rotation channels (X, Y, Z)
     for ( int j = 0; j < 3; j++ )
     {
-        if ( panim->offset[j + 3] == 0 )
+        
+        if (panim->offset[j + 3]) 
         {
-            // No animation data, use bind pose
-            angle2[j] = angle1[j] = pbone->value[j + 3];
-        }
-        else
-        {
-            mstudioanimvalue_t *panimvalue = ( mstudioanimvalue_t * ) ( data + seq->animindex + panim->offset[j + 3] );
+            const unsigned char *animBase = (const unsigned char *)panim;
+            const mstudioanimvalue_t *panimvalue = (const mstudioanimvalue_t *)
+                                                    (animBase + panim->offset[j + 3]);
+            
             int k = frame;
-
-            // Find the animation data chunk that contains our frame
-            while ( panimvalue->num.total <= k )
+            
+            while (panimvalue->num.total <= k)
             {
                 k -= panimvalue->num.total;
                 panimvalue += panimvalue->num.valid + 1;
-            }
-
-            // Extract values for frame interpolation
-            if ( panimvalue->num.valid > k )
+            }   
+            
+                                                                         
+            
+            if (panimvalue->num.valid > k) 
             {
-                angle1[j] = panimvalue[k + 1].value;
-
-                if ( panimvalue->num.valid > k + 1 )
+                angle1[j] += panimvalue[k + 1].value * pbone->scale[j + 3];
+                
+                if (panimvalue->num.valid > k + 1) 
                 {
-                    angle2[j] = panimvalue[k + 2].value;
+                    angle2[j] += panimvalue[k + 2].value * pbone->scale[j + 3];   
                 }
-                else
+                else if (panimvalue->num.total > k + 1)
                 {
-                    if ( panimvalue->num.total > k + 1 )
-                        angle2[j] = angle1[j];
-                    else
-                        angle2[j] = panimvalue[panimvalue->num.valid + 2].value;
+                    angle2[j] = angle1[j];
+                }
+                else 
+                {
+                    angle2[j] += panimvalue[panimvalue->num.valid].value * pbone->scale[j + 3];
                 }
             }
-            else
+            else 
             {
-                angle1[j] = panimvalue[panimvalue->num.valid].value;
+                // out of valid range; use last valid
+                angle1[j] += panimvalue[panimvalue->num.valid].value
+                             * pbone->scale[j + 3];
+
                 if ( panimvalue->num.total > k + 1 )
                 {
                     angle2[j] = angle1[j];
                 }
                 else
                 {
-                    angle2[j] = panimvalue[panimvalue->num.valid + 2].value;
+                    angle2[j] += panimvalue[panimvalue->num.valid + 2].value
+                                 * pbone->scale[j + 3];
                 }
-            }
-
-            // Apply scale and add to bind pose
-            angle1[j] = pbone->value[j + 3] + angle1[j] * pbone->scale[j + 3];
-            angle2[j] = pbone->value[j + 3] + angle2[j] * pbone->scale[j + 3];
-        }
-
-        // TODO: Add bone controller support if needed
-        // if ( pbone->bonecontroller[j + 3] != -1 )
-        // {
-        //     angle1[j] += adj[pbone->bonecontroller[j + 3]];
-        //     angle2[j] += adj[pbone->bonecontroller[j + 3]];
-        // }
+            }                                         
+        }                 
     }
 
     // If angles are different, do SLERP interpolation in quaternion space
@@ -188,10 +185,12 @@ void CalcBoneQuaternion( int frame, float s, mstudiobone_t *pbone, mstudioanim_t
     }
 }
 
+
+
 // Calculate bone position using linear interpolation
 // This matches Valve's CalcBonePosition exactly
 void CalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim,
-                       unsigned char *data, mstudioseqdesc_t *seq, vec3_t pos )
+                      vec3_t pos )
 {
     // Process all 3 position channels (X, Y, Z)
     for ( int j = 0; j < 3; j++ )
@@ -200,8 +199,9 @@ void CalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *
 
         if ( panim->offset[j] != 0 )
         {
-            mstudioanimvalue_t *panimvalue = ( mstudioanimvalue_t * ) ( data + seq->animindex + panim->offset[j] );
-            int k = frame;
+            const unsigned char *animBase = (const unsigned char *)panim;
+            const mstudioanimvalue_t *panimvalue =
+                (const mstudioanimvalue_t *)(animBase + panim->offset[j]);            int k = frame;
 
             // Find span of values that includes the frame we want
             while ( panimvalue->num.total <= k )
@@ -359,8 +359,9 @@ mdl_result_t mdl_animation_calculate_bones(
 
     mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * ) ( data + header->seqindex );
     mstudioseqdesc_t *seq       = &sequences[state->current_sequence];
-
-    mstudioanim_t *anim_data = ( mstudioanim_t * ) ( data + seq->animindex );
+    
+    unsigned char *seqBase = (unsigned char *)seq;
+    mstudioanim_t *anims = (mstudioanim_t *)(seqBase + seq->animindex);
 
     // Calculate frame and interpolation value
     int   frame = ( int ) state->current_frame;
@@ -369,27 +370,23 @@ mdl_result_t mdl_animation_calculate_bones(
     // Process each bone
     for ( int i = 0; i < header->numbones; i++ )
     {
+        
         mstudiobone_t *bone      = &bones[i];
-        mstudioanim_t *bone_anim = &anim_data[i];
+        mstudioanim_t *panim = &anims[i];
+        
+        
 
         // Calculate bone rotation using SLERP (quaternion interpolation)
         versor q;
-        CalcBoneQuaternion( frame, s, bone, bone_anim, data, seq, q );
-
-        // Calculate bone position using linear interpolation
         vec3_t pos;
-        CalcBonePosition( frame, s, bone, bone_anim, data, seq, pos );
+        // Calculate bone position using linear interpolation
 
-        // DEBUG: Print bone 0 data
-        if ( i == 0 && frame < 2 )
-        {
-            printf( "=== BONE 0 DEBUG (frame=%d, s=%.3f) ===\n", frame, s );
-            printf( "  Quaternion: [%.3f, %.3f, %.3f, %.3f]\n", q[0], q[1], q[2], q[3] );
-            printf( "  Position: [%.3f, %.3f, %.3f]\n", pos[0], pos[1], pos[2] );
-        }
+        CalcBoneQuaternion( frame, s, bone, panim, q );
+        CalcBonePosition( frame, s, bone, panim, pos );
+
 
         // Convert quaternion to rotation matrix
-        mat4 local;
+        mat4 local = GLM_MAT4_IDENTITY_INIT;
         QuaternionMatrix( q, local );
 
         // Set translation in the 4th column (column-major format)
@@ -397,15 +394,6 @@ mdl_result_t mdl_animation_calculate_bones(
         local[3][1] = pos[1];
         local[3][2] = pos[2];
 
-        // DEBUG: Print bone 0 local matrix
-        if ( i == 0 && frame < 2 )
-        {
-            printf( "  Local matrix (column-major):\n" );
-            printf( "    [%.3f %.3f %.3f %.3f]\n", local[0][0], local[0][1], local[0][2], local[0][3] );
-            printf( "    [%.3f %.3f %.3f %.3f]\n", local[1][0], local[1][1], local[1][2], local[1][3] );
-            printf( "    [%.3f %.3f %.3f %.3f]\n", local[2][0], local[2][1], local[2][2], local[2][3] );
-            printf( "    [%.3f %.3f %.3f %.3f]\n", local[3][0], local[3][1], local[3][2], local[3][3] );
-        }
 
         // Concatenate with parent bone transform
         if ( bone->parent >= 0 )
@@ -415,16 +403,6 @@ mdl_result_t mdl_animation_calculate_bones(
         else
         {
             glm_mat4_copy( local, bone_transformations[i] );
-        }
-
-        // DEBUG: Print bone 0 final matrix
-        if ( i == 0 && frame < 2 )
-        {
-            printf( "  Final matrix (column-major):\n" );
-            printf( "    [%.3f %.3f %.3f %.3f]\n", bone_transformations[i][0][0], bone_transformations[i][0][1], bone_transformations[i][0][2], bone_transformations[i][0][3] );
-            printf( "    [%.3f %.3f %.3f %.3f]\n", bone_transformations[i][1][0], bone_transformations[i][1][1], bone_transformations[i][1][2], bone_transformations[i][1][3] );
-            printf( "    [%.3f %.3f %.3f %.3f]\n", bone_transformations[i][2][0], bone_transformations[i][2][1], bone_transformations[i][2][2], bone_transformations[i][2][3] );
-            printf( "    [%.3f %.3f %.3f %.3f]\n\n", bone_transformations[i][3][0], bone_transformations[i][3][1], bone_transformations[i][3][2], bone_transformations[i][3][3] );
         }
     }
 

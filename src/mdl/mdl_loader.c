@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:11:51
    Last Modified by: karlosiric
-   Last Modified: 2025-10-10 11:35:16
+   Last Modified: 2025-10-14 11:47:18
    ---------------------------------------------------------------------
    Description:
        
@@ -811,3 +811,128 @@ get_model_by_bodypart( studiohdr_t *header, unsigned char *main_data, int bodygr
 
     return &models[index];
 }
+
+
+/*
+ * Adding animations seqgroups files for opening
+ * Since seqgroup == 0 only refers to data inside that current .mdl file
+ * All other ones need to be accessed via external IDSQ containing mdl files
+ */
+
+mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, unsigned char *main_data, mdl_seqgroup_blob_t **groups_out, int *num_groups_out) 
+{
+    
+    if (!model_path || !header || !main_data || !groups_out || !num_groups_out) 
+    {
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+    
+    int num_groups = header->numseqgroups;
+    
+    if (num_groups < 0)
+    {
+        // no sequence groups, so place everything to NULL
+        *groups_out = NULL;
+        *num_groups_out = 0;
+        return MDL_SUCCESS;
+    }
+    
+    mdl_seqgroup_blob_t *groups = malloc(num_groups * sizeof(mdl_seqgroup_blob_t));
+    if (!groups) 
+    {
+        fprintf(stderr, "ERRRO - Failed to allocate memory for sequence groups\n");
+        return MDL_ERROR_MEMORY_ALLOCATION;
+    }
+    
+    memset(groups, 0, num_groups * sizeof(mdl_seqgroup_blob_t));
+    
+    groups[0].data = main_data;
+    groups[0].size = header->length;
+    
+    strncpy(groups[0].name, "main", sizeof(groups[0].name) - 1);
+    
+    mstudioseqgroup_t *seqgroup_descriptors = (mstudioseqgroup_t *)(main_data + header->seqgroupindex);
+    
+    for (int i = 1; i < num_groups; i++) 
+    {
+        mstudioseqgroup_t *sq = &seqgroup_descriptors[i];
+        
+        // NOTE(Karlo): TO store the directory name that contains all the mdoels
+        char dir_path[256] = {0};
+        
+        const char *last_slash = strrchr(model_path, '/');
+        if (!last_slash) 
+        {
+            // WINDOWS
+            last_slash = strrchr(model_path, '\\');
+        }
+        
+        if (last_slash)
+        {
+            // find the dir size that contains the models, include the slash as well
+            size_t dir_size = last_slash - model_path + 1;   
+            strncpy(dir_path, model_path, dir_size);
+            dir_path[dir_size] = '\0';
+        }
+        
+        // NOTE(Karlo): Now we have the fir path name, now we need to build the full model
+        char seqgroup_path[512];
+        snprintf(seqgroup_path, sizeof(seqgroup_path), "%s%s", dir_path, sq->name);
+        
+        printf("Loading sequence group %d: %s\n", i, seqgroup_path);
+        
+        unsigned char *seq_group_data = NULL;
+        size_t group_size = 0;
+        
+        mdl_result_t file_result = read_mdl_file(seqgroup_path, &seq_group_data, &group_size);
+        if (!file_result) 
+        {
+            fprintf(stderr, "WARNING - Failed to load sequence group %d: %s\n", i, seqgroup_path);
+            fprintf(stderr, "          Animations using this group will not work!\n");
+            fprintf(stderr, "          Some models do not contain animations or are broken!\n");
+            groups[i].data = NULL;
+            groups[i].size = 0;
+            continue;
+        }
+        
+        groups[i].data = seq_group_data;
+        groups[i].size = group_size;
+        
+        strncpy(groups[i].name, sq->name, sizeof(groups[i].name) - 1);
+        
+        printf("  Loaded sequence group %d: %s (%zu bytes of data loaded)\n",
+                i, sq->name, group_size);
+                    
+    }
+    
+    *groups_out = groups;
+    *num_groups_out = num_groups;
+     
+    return MDL_SUCCESS;
+}
+
+
+void free_sequences_groups(mdl_seqgroup_blob_t *groups, int num_groups)
+{
+    
+    if (!groups)
+    {
+        return;
+    }
+    
+    for (int i = 1; i < num_groups; i++)
+    {
+        if (groups[i].data)
+        {
+            free(groups[i].data);
+            groups[i].data = NULL;
+        }
+    }
+    
+     
+    free(groups);
+}
+
+
+
+
