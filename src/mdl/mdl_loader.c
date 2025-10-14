@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:11:51
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 11:47:18
+   Last Modified: 2025-10-14 13:39:14
    ---------------------------------------------------------------------
    Description:
        
@@ -933,6 +933,99 @@ void free_sequences_groups(mdl_seqgroup_blob_t *groups, int num_groups)
     free(groups);
 }
 
+
+mdl_result_t create_mdl_model(const char *model_path, mdl_model_t **model_out) 
+{
+    if (!model_path || !model_out) 
+    {
+        return MDL_ERROR_INVALID_PARAMETER;
+    }
+    
+    mdl_model_t *model = malloc(sizeof(mdl_model_t));
+    
+    if (!model)
+    {
+        fprintf(stderr, "ERROR - Failed to allocate model structure.\n");
+        return MDL_ERROR_MEMORY_ALLOCATION;
+    }
+    
+    memset(model, 0, sizeof(mdl_model_t));
+
+    mdl_result_t result = load_model_with_textures(
+        model_path, 
+        &model->header, 
+        &model->texture_header, 
+        &model->data, 
+        &model->texture_data );
+    
+    
+    if (result != MDL_SUCCESS)
+    {
+        fprintf(stderr, "ERROR - Failed to load model: '%s\n", model_path);
+        free(model);
+        return result;
+    }
+    
+    printf("Loaded main model: '%s\n", model_path);
+    
+    result = load_sequence_groups(
+        model_path, 
+        model->header, 
+        model->data, 
+        &model->seqgroups, 
+        &model->num_seqgroups);
+    
+    if (result != MDL_SUCCESS)
+    {
+        fprintf(stderr, "WARNING - Failed to load sequence groups.\n");
+        // we continue because some dont have them simply
+    }
+    
+    if (model->num_seqgroups > 1)
+    {
+        printf("     Loaded %d sequence groups\n", model->num_seqgroups - 1);
+    }
+    else 
+    {
+        printf("     No external sequence groups (animations in main file)\n");
+    }
+    
+    *model_out = model;
+    
+    return MDL_SUCCESS;
+}
+
+
+void free_model(mdl_model_t *model)
+{
+    
+    if (!model)
+    {
+        return;
+    }
+    
+    if (model->seqgroups)
+    {
+        free_sequences_groups(model->seqgroups, model->num_seqgroups);
+        model->seqgroups = NULL;
+    }
+    
+    if (model->data)
+    {
+        free(model->data);
+        model->data = NULL;
+    }
+    
+    if (model->texture_data)
+    {
+        free(model->texture_data);
+        model->texture_data = NULL;
+    }
+    
+    free(model);
+    
+    printf("   Model Fully Freed!\n"); 
+}
 
 
 
