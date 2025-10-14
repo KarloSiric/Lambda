@@ -98,7 +98,7 @@ mdl_result_t parse_mdl_header( const unsigned char *file_data, studiohdr_t **hea
 }
 
 
-void print_bodypart_info( FILE *output, studiohdr_t *header, unsigned char *file_data )
+void print_bodypart_info( FILE *output, const studiohdr_t *header, const unsigned char *file_data )
 {
     if ( header->numbodyparts == 0 )
     {
@@ -235,7 +235,7 @@ mdl_result_t load_model_with_textures(
 }
 
 
-void print_texture_info( FILE *output, studiohdr_t *texture_header, unsigned char *texture_data )
+void print_texture_info( FILE *output, const studiohdr_t *texture_header, const unsigned char *texture_data )
 {
     if ( !texture_data || !texture_header )
     {
@@ -264,7 +264,7 @@ void print_texture_info( FILE *output, studiohdr_t *texture_header, unsigned cha
 }
 
 
-mdl_result_t parse_bone_hierarchy( studiohdr_t *header, unsigned char *data, mstudiobone_t **bones )
+mdl_result_t parse_bone_hierarchy( const studiohdr_t *header, const unsigned char *data, mstudiobone_t **bones )
 {
     if ( !header || !data || !bones )
     {
@@ -283,7 +283,7 @@ mdl_result_t parse_bone_hierarchy( studiohdr_t *header, unsigned char *data, mst
 }
 
 
-void print_bone_info( FILE *output, mstudiobone_t *bones, int bone_count )
+void print_bone_info( FILE *output, const mstudiobone_t *bones, int bone_count )
 {
     if ( !bones || bone_count == 0 )
     {
@@ -315,7 +315,7 @@ void print_bone_info( FILE *output, mstudiobone_t *bones, int bone_count )
 
 
 
-mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data, mstudioseqdesc_t **sequences )
+mdl_result_t parse_animation_sequences( const studiohdr_t *header, const unsigned char *data, mstudioseqdesc_t **sequences )
 {
     if ( !header || !data || !sequences )
     {
@@ -335,7 +335,7 @@ mdl_result_t parse_animation_sequences( studiohdr_t *header, unsigned char *data
 
 
 
-void print_sequence_info( FILE *output, mstudioseqdesc_t *sequences, int sequence_count )
+void print_sequence_info( FILE *output, const mstudioseqdesc_t *sequences, int sequence_count )
 {
     if ( !sequences || sequence_count == 0 )
     {
@@ -374,7 +374,7 @@ void print_sequence_info( FILE *output, mstudioseqdesc_t *sequences, int sequenc
 }
 
 
-void print_model_info( FILE *output, mstudiomodel_t *model, int bodypart_index, int model_index )
+void print_model_info( FILE *output, const mstudiomodel_t *model, int bodypart_index, int model_index )
 {
     if ( !model )
     {
@@ -396,7 +396,7 @@ void print_model_info( FILE *output, mstudiomodel_t *model, int bodypart_index, 
 
 
 
-mdl_result_t parse_mesh_data( mstudiomodel_t *model, unsigned char *data, mstudiomesh_t **meshes )
+mdl_result_t parse_mesh_data( const mstudiomodel_t *model, const unsigned char *data, mstudiomesh_t **meshes )
 {
     if ( !model || !data || !meshes )
     {
@@ -415,7 +415,7 @@ mdl_result_t parse_mesh_data( mstudiomodel_t *model, unsigned char *data, mstudi
 }
 
 
-void print_mesh_data( FILE *output, mstudiomesh_t *meshes, mstudiomodel_t *model, int mesh_count )
+void print_mesh_data( FILE *output, const mstudiomesh_t *meshes, const mstudiomodel_t *model, int mesh_count )
 {
     if ( !meshes || mesh_count == 0 )
     {
@@ -437,7 +437,7 @@ void print_mesh_data( FILE *output, mstudiomesh_t *meshes, mstudiomodel_t *model
 
 
 
-mdl_result_t parse_vertex_data( mstudiomodel_t *model, unsigned char *data, vec3_t **vertices )
+mdl_result_t parse_vertex_data( const mstudiomodel_t *model, const unsigned char *data, vec3_t **vertices )
 {
     if ( !model || !data || !vertices )
     {
@@ -486,7 +486,7 @@ mdl_result_t create_simple_triangle_indices( int vertex_count, short **indices, 
 }
 
 
-void print_simple_triangle_info( FILE *output, mstudiomodel_t *model, int bodypart_index, int model_index )
+void print_simple_triangle_info( FILE *output, const mstudiomodel_t *model, int bodypart_index, int model_index )
 {
     if ( !model )
     {
@@ -538,8 +538,8 @@ void print_simple_triangle_info( FILE *output, mstudiomodel_t *model, int bodypa
 
 // TODO(Karlo): Reimplementing extract texture rgb
 mdl_result_t extract_texture_rgb(
-    studiohdr_t    *texture_header,
-    unsigned char  *texture_data,
+    const studiohdr_t    *texture_header,
+    const unsigned char  *texture_data,
     int             texture_index,
     unsigned char **rgb_output,
     int            *width,
@@ -596,9 +596,9 @@ mdl_result_t extract_texture_rgb(
 }
 
 mdl_result_t extract_triangles_with_uvs(
-    mstudiomesh_t *mesh,
-    unsigned char *main_data,
-    vec3_t        *model_vertices,
+    const mstudiomesh_t *mesh,
+    const unsigned char *main_data,
+    const vec3_t        *model_vertices,
     int            model_vertex_count,
     float        **out_vertices,
     float        **out_texcoords,
