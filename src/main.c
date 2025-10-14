@@ -22,6 +22,7 @@
 
 #include "main.h"
 
+#include "platform.h"
 #include "graphics/renderer.h"
 #include "mdl/mdl_info.h"
 #include "mdl/mdl_loader.h"
@@ -33,12 +34,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __APPLE__
-#define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl3.h>
-#else
-#include <GL/gl3.h>
-#endif
 
 t_log_options log_options = {
     .file_path     = "../logs/viewer.log",

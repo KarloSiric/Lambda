@@ -1,19 +1,25 @@
-/*======================================================================
-   File: mdl_animations.c
-   Project: shaders
-   Author: karlosiric <email@example.com>
-   Created: 2025-10-10 11:47:17
-   Last Modified by: karlosiric
-   Last Modified: 2025-10-14 17:12:58
-   ---------------------------------------------------------------------
-   Description: MDL Animation System
-       
-   ---------------------------------------------------------------------
-   License: MIT License
-   Company: /
-   Version: 0.1.0
- ======================================================================
-                                                                       */
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *   Half-Life Model Viewer
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+ *
+ *   This product contains software technology licensed from Id
+ *   Software, Inc. ("Id Technology"). Id Technology (c) 1996 Id Software, Inc.
+ *   All Rights Reserved.
+ *
+ *   Use, distribution, and modification of this source code and/or resulting
+ *   object code is restricted to non-commercial enhancements to products from
+ *   Valve LLC. All other use, distribution, or modification is prohibited
+ *   without written permission from Valve LLC.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ *   Author: Karlo Siric
+ *   Purpose: Command-Line Argument Parser Implementation
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
 
 #include "mdl_animations.h"
 
@@ -35,7 +41,6 @@ void mdl_animation_init( mdl_animation_state_t *state )
 
 void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float local_matrix[3][4] )
 {
-    // ROW-MAJOR 3x4 matrix multiplication - Matches Valve's ConcatTransforms exactly
     // result = parent * local
     // Format: matrix[row][col]
 
@@ -69,7 +74,6 @@ void matrix_multiply_3x4( float result[3][4], float parent_matrix[3][4], float l
 
 void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
 {
-    // Valve's AngleMatrix uses ROW-MAJOR format: matrix[row][col]
     // angles[PITCH=0], angles[YAW=1], angles[ROLL=2]
     // MDL stores: rotation[0/1/2] in radians (Valve uses degrees, so we don't convert)
 
@@ -104,8 +108,6 @@ void build_bone_matrix( vec3_t position, vec3_t rotation, float matrix[3][4] )
     matrix[2][3] = position[2];
 }
 
-// Calculate bone rotation using quaternion interpolation (SLERP)
-// This matches Valve's CalcBoneQuaternion exactly
 void CalcBoneQuaternion( int frame, float s, const mstudiobone_t *pbone, const mstudioanim_t *panim,
                          versor q )
 {
@@ -188,8 +190,6 @@ void CalcBoneQuaternion( int frame, float s, const mstudiobone_t *pbone, const m
 
 
 
-// Calculate bone position using linear interpolation
-// This matches Valve's CalcBonePosition exactly
 void CalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim,
                       vec3_t pos )
 {
@@ -238,12 +238,6 @@ void CalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *
                 }
             }
         }
-
-        // TODO: Add bone controller support if needed
-        // if ( pbone->bonecontroller[j] != -1 )
-        // {
-        //     pos[j] += adj[pbone->bonecontroller[j]];
-        // }
     }
 }
 
@@ -299,11 +293,6 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
         delta_time = ( 1.0f / seq->fps * 2.0f );
     }
 
-    
-
-    
-    // float frames_testing = 1 / seq->fps;
-
     /* 
      * Running the game @ 60 fps makes the animations smmother for the following reason.
      * So lets say we ahve 60 frames per second and that means the delta time 
@@ -332,7 +321,7 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
     }
     else
     {
-        // CRITICAL: This is Valve's EXACT formula!
+        // NOTE(Karlo): CRITICAL: This is Valve's EXACT formula!
         // It wraps smoothly at (numframes - 1) for ALL frames
         
         float wrap_point = (float)( seq->numframes - 1 );
@@ -386,7 +375,7 @@ mdl_result_t mdl_animation_calculate_bones(
     {
         // Animation data is in the external file associated with that seqgroup
         
-        // CRITICAL FIX: Check if seqgroups array exists
+        // NOTE(Karlo): CRITICAL FIX: Check if seqgroups array exists
         if (!seqgroups)
         {
             fprintf(stderr, "ERROR - Sequence group %d required but no seqgroups loaded (sequence %d: '%s')\n",
@@ -395,7 +384,7 @@ mdl_result_t mdl_animation_calculate_bones(
             return MDL_INFO_SEQUENCE_GROUP_FILE;
         }
         
-        // CRITICAL FIX: Validate array bounds
+        // NOTE(Karlo): CRITICAL FIX: Validate array bounds
         if (seqgroup >= header->numseqgroups || seqgroup < 0)
         {
             fprintf(stderr, "ERROR - Invalid sequence group %d (valid range: 0-%d) for sequence %d\n",
@@ -403,7 +392,7 @@ mdl_result_t mdl_animation_calculate_bones(
             return MDL_ERROR_INVALID_PARAMETER;
         }
         
-        // CRITICAL FIX: Check if this specific group's data is loaded
+        // NOTE(Karlo): CRITICAL FIX: Check if this specific group's data is loaded
         if (!seqgroups[seqgroup].data)
         {
             fprintf(stderr, "WARNING - Sequence group %d not loaded for sequence %d: '%s'\n",
