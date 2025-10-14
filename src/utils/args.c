@@ -21,12 +21,53 @@
  */
 
 #include "args.h"
+#include "../version.h"
 #include <stdio.h>
 #include <string.h>
 
 // Styling constants
 #define RULER_DOUBLE "═══════════════════════════════════════════════════════════════"
 #define RULER_SINGLE "───────────────────────────────────────────────────────────────"
+
+/*
+ * Print detailed version information
+ */
+void print_version_info(void)
+{
+    printf("\n");
+    printf("%s\n", RULER_DOUBLE);
+    printf("  %s\n", HLMV_VERSION_LONG);
+    printf("%s\n", RULER_DOUBLE);
+    printf("\n");
+    printf("  Build Information:\n");
+    printf("    Version:        %s\n", HLMV_VERSION_STRING);
+    printf("    Build Number:   %d\n", HLMV_VERSION_BUILD);
+    printf("    Build Date:     %s\n", HLMV_BUILD_DATE);
+    printf("    Build Time:     %s\n", HLMV_BUILD_TIME);
+    printf("    Build Type:     %s\n", HLMV_BUILD_TYPE);
+    printf("\n");
+    printf("  Git Information:\n");
+    printf("    Commit:         %s\n", HLMV_GIT_COMMIT);
+    printf("    Branch:         %s\n", HLMV_GIT_BRANCH);
+    printf("\n");
+    printf("  Platform:\n");
+    printf("    OS:             %s\n", HLMV_PLATFORM);
+    printf("    Architecture:   %s\n", HLMV_ARCH);
+    printf("    Compiler:       %s\n", HLMV_COMPILER);
+    printf("\n");
+    printf("  Features:\n");
+    printf("    Rendering:      %s\n", (HLMV_HAS_RENDERING) ? "Yes" : "No");
+    printf("    Animation:      %s\n", (HLMV_HAS_ANIMATION) ? "Yes" : "No");
+    printf("    Textures:       %s\n", (HLMV_HAS_TEXTURES) ? "Yes" : "No");
+    printf("    Bones:          %s\n", (HLMV_HAS_BONES) ? "Yes" : "No");
+    printf("    Dump:           %s\n", (HLMV_HAS_DUMP) ? "Yes" : "No");
+    printf("    GUI:            %s\n", (HLMV_HAS_GUI) ? "Yes" : "No");
+    printf("    Export:         %s\n", (HLMV_HAS_EXPORT) ? "Yes" : "No");
+    printf("    Editing:        %s\n", (HLMV_HAS_EDITING) ? "Yes" : "No");
+    printf("\n");
+    printf("%s\n", RULER_DOUBLE);
+    printf("\n");
+}
 
 /*
  * Print copyright banner
@@ -53,7 +94,7 @@ void print_banner(void)
     printf("\n");
     printf("%s\n", RULER_SINGLE);
     printf("  Author: Karlo Siric\n");
-    printf("  Version: Alpha 0.0.1\n");
+    printf("  Version: %s\n", HLMV_VERSION_SHORT);
     printf("%s\n", RULER_DOUBLE);
     printf("\n");
 }
@@ -63,7 +104,6 @@ void print_banner(void)
  */
 void print_usage(const char *program_name)
 {
-    
     printf("USAGE:\n");
     printf("  %s <model.mdl> [OPTIONS]\n\n", program_name);
     
@@ -80,21 +120,30 @@ void print_usage(const char *program_name)
     printf("  --quiet, -q\n");
     printf("      Suppress all output except errors\n\n");
     
+    printf("  --version, -v\n");
+    printf("      Show detailed version information\n\n");
+    
     printf("  --help, -h\n");
     printf("      Show this help message\n\n");
     
     printf("EXAMPLES:\n");
-    printf("  # Run viewer silently\n");
-    printf("  %s scientist.mdl\n\n", program_name);
+    printf("  # Run viewer with model in models directory\n");
+    printf("  %s models/scientist.mdl\n\n", program_name);
     
-    printf("  # Print basic structure + run viewer\n");
-    printf("  %s scientist.mdl --dump\n\n", program_name);
+    printf("  # Run viewer with relative path\n");
+    printf("  %s ../models/HL1_Original/scientist.mdl\n\n", program_name);
+    
+    printf("  # Print basic structure\n");
+    printf("  %s ../models/HL1_Original/scientist.mdl --dump\n\n", program_name);
     
     printf("  # Print detailed structure and exit\n");
     printf("  %s scientist.mdl --dump-ex --dump-only\n\n", program_name);
     
     printf("  # Dump to file\n");
     printf("  %s scientist.mdl --dump-only > report.txt\n\n", program_name);
+    
+    printf("  # Show version information\n");
+    printf("  %s --version\n\n", program_name);
 }
 
 /*
@@ -109,6 +158,7 @@ int parse_args(int argc, const char *argv[], app_args_t *args)
     args->dump_only  = false;
     args->quiet      = false;
     args->show_help  = false;
+    args->show_version = false;
     
     // No arguments = show help
     if (argc < 2) {
@@ -120,8 +170,13 @@ int parse_args(int argc, const char *argv[], app_args_t *args)
     for (int i = 1; i < argc; i++) {
         const char *arg = argv[i];
         
+        // Version flag
+        if (strcmp(arg, "--version") == 0 || strcmp(arg, "-v") == 0) {
+            args->show_version = true;
+            return 0;
+        }
         // Help flags
-        if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
+        else if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
             args->show_help = true;
             return 0;
         }
@@ -158,8 +213,8 @@ int parse_args(int argc, const char *argv[], app_args_t *args)
         }
     }
     
-    // Validate: must have model path if not showing help
-    if (!args->show_help && args->model_path == NULL) {
+    // Validate: must have model path if not showing help or version
+    if (!args->show_help && !args->show_version && args->model_path == NULL) {
         fprintf(stderr, "ERROR: No model file specified\n");
         fprintf(stderr, "       Use --help for usage information\n");
         return -1;

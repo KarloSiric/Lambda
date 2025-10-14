@@ -43,6 +43,7 @@ typedef struct {
     bool         dump_only;     // Exit after dump (no viewer)
     bool         quiet;         // Suppress all non-error output
     bool         show_help;     // Show usage
+    bool         show_version;  // Show version information
 } app_args_t;
 
 /*
@@ -60,5 +61,10 @@ void print_usage(const char *program_name);
  * Print copyright banner
  */
 void print_banner(void);
+
+/*
+ * Print detailed version information
+ */
+void print_version_info(void);
 
 #endif // ARGS_H

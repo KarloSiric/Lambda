@@ -54,6 +54,12 @@ int main(int argc, char const *argv[])
     // Show banner ALWAYS (Valve copyright)
     print_banner();
     
+    // Show version if requested
+    if (args.show_version) {
+        print_version_info();
+        return 0;
+    }
+    
     // Show help if requested
     if (args.show_help) {
         print_usage(argv[0]);
