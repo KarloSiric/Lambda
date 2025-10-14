@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:11:51
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 14:39:15
+   Last Modified: 2025-10-14 15:03:17
    ---------------------------------------------------------------------
    Description:
        
@@ -875,51 +875,31 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
             dir_path[dir_size] = '\0';
         }
         
-        // NOTE(Karlo): Now we have the fir path name, now we need to build the full model
-        char fixed_name[256];
-        strncpy(fixed_name, sq->name, sizeof(fixed_name) - 1);
-        fixed_name[sizeof(fixed_name) - 1] = '\0';
-        
-        #ifndef _WIN32
-        
-            for (char *p = fixed_name; *p; p++) 
-            {
-                if (*p == '\\')
-                {
-                    *p = '/';
-                }
+        const char *filename = strrchr(sq->name, '/');
+        if (filename) {
+            filename++; // Skip the '/' character
+        } else {
+            // Try backslash (Windows)
+            filename = strrchr(sq->name, '\\');
+            if (filename) {
+                filename++; // Skip the '\' character
+            } else {
+                // No path separator, it's already just a filename
+                filename = sq->name;
             }
-            
-        #endif
+        }        
+        
         
         
         // NOTE(Karlo): Now we have the dir path name, now we need to build the full model path
         unsigned char *seq_group_data = NULL;
         size_t group_size = 0;
-        mdl_result_t file_result = MDL_ERROR_FILE_NOT_FOUND;
+         
+        char seqgroup_path[512]; 
+        snprintf(seqgroup_path, sizeof(seqgroup_path), "%s%s", dir_path, filename);
+        printf("Loading sequence group %d: trying '%s'...\n", i, seqgroup_path);   
         
-        // ATTEMPT 1: Try with the full path as stored in MDL (e.g., "models/scientist01.mdl")
-        char seqgroup_path_full[512];
-        snprintf(seqgroup_path_full, sizeof(seqgroup_path_full), "%s%s", dir_path, fixed_name);
-        
-        printf("Loading sequence group %d: trying '%s'...\n", i, seqgroup_path_full);
-        file_result = read_mdl_file(seqgroup_path_full, &seq_group_data, &group_size);
-        
-        // ATTEMPT 2: If first attempt failed, strip directory and try just filename
-        if (file_result != MDL_SUCCESS) {
-            const char *filename = strrchr(fixed_name, '/');
-            if (filename) {
-                filename++; // Skip the slash to get just the filename
-            } else {
-                filename = fixed_name; // No slash found, already just a filename
-            }
-            
-            char seqgroup_path_simple[512];
-            snprintf(seqgroup_path_simple, sizeof(seqgroup_path_simple), "%s%s", dir_path, filename);
-            
-            printf("  First attempt failed, trying '%s'...\n", seqgroup_path_simple);
-            file_result = read_mdl_file(seqgroup_path_simple, &seq_group_data, &group_size);
-        }
+        mdl_result_t file_result = read_mdl_file(seqgroup_path, &seq_group_data, &group_size);
         
         // Check if BOTH attempts failed
         if (file_result != MDL_SUCCESS) 
@@ -939,9 +919,10 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
         printf("  Loaded sequence group %d: %s (%zu bytes)\n", i, sq->name, group_size);
     }
     
+    
+    *num_groups_out = num_groups;
     return MDL_SUCCESS;
 }
-
 
 
 void free_sequences_groups(mdl_seqgroup_blob_t *groups, int num_groups)
