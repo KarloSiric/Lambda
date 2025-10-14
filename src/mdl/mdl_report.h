@@ -29,6 +29,8 @@ void print_complete_model_analysis(
 
 void print_studio_header_file(FILE *output, const char *title, const studiohdr_t *header);
 
+void print_sequence_group_info(FILE *output, const mdl_seqgroup_blob_t *groups, int num_groups);
+
 void print_extended_model_dump(
     FILE *output,
     const char *model_path,
