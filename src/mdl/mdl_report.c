@@ -1,19 +1,24 @@
-/*======================================================================
-   File: mdl_report.c
-   Project: shaders
-   Author: karlosiric <email@example.com>
-   Created: 2025-10-09 23:02:35
-   Last Modified by: karlosiric
-   Last Modified: 2025-10-14 19:05:46
-   ---------------------------------------------------------------------
-   Description:
-       
-   ---------------------------------------------------------------------
-   License: 
-   Company: 
-   Version: 0.1.0
- ======================================================================
-                                                                       */
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *   Half-Life Model Viewer
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+ *
+ *   This product contains software technology licensed from Id
+ *   Software, Inc. ("Id Technology"). Id Technology (c) 1996 Id Software, Inc.
+ *   All Rights Reserved.
+ *
+ *   Use, distribution, and modification of this source code and/or resulting
+ *   object code is restricted to non-commercial enhancements to products from
+ *   Valve LLC. All other use, distribution, or modification is prohibited
+ *   without written permission from Valve LLC.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ *   Author: Karlo Siric
+ *   Purpose: Command-Line Argument Parser Implementation
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
 
 
 #include "mdl_report.h"
@@ -148,4 +153,38 @@ void print_studio_header_file( FILE *output, const char *title, const studiohdr_
 }
 
 
+// Add this function to mdl_report.c
+void print_extended_model_dump(
+    FILE *output,
+    const char *model_path,
+    const studiohdr_t *main_header,
+    const studiohdr_t *texture_header,
+    const unsigned char *main_data,
+    const unsigned char *texture_data)
+{
+    if (!output) output = stdout;
+    
+    printf("\n═══════════════════════════════════════════════════════════════\n");
+    printf("  EXTENDED MODEL DUMP\n");
+    printf("═══════════════════════════════════════════════════════════════\n\n");
+    
+    // 1. Basic analysis
+    print_complete_model_analysis(output, model_path, main_header, texture_header, main_data, texture_data);
+    
+    // 2. Raw headers - single section
+    printf("\n═══════════════════════════════════════════════════════════════\n");
+    printf("  RAW HEADER DATA\n");
+    printf("═══════════════════════════════════════════════════════════════\n\n");
+    
+    print_studio_header_file(output, "MAIN HEADER", main_header);
+    
+    if (texture_header) {
+        printf("\n");
+        print_studio_header_file(output, "TEXTURE HEADER", texture_header);
+    }
+    
+    printf("\n═══════════════════════════════════════════════════════════════\n");
+    printf("  END OF EXTENDED DUMP\n");
+    printf("═══════════════════════════════════════════════════════════════\n\n");
+}
 

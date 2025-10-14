@@ -63,7 +63,6 @@ void print_banner(void)
  */
 void print_usage(const char *program_name)
 {
-    print_banner();
     
     printf("USAGE:\n");
     printf("  %s <model.mdl> [OPTIONS]\n\n", program_name);

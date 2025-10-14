@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-09-27 14:30:32
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 19:19:45
+   Last Modified: 2025-10-14 19:29:24
    --------------------------------------------------------------------
    Description:
  
@@ -45,7 +45,6 @@ const studiohdr_t *mdl_pick_texture_header( const studiohdr_t *main_header, cons
     return NULL;
 }
 
-// --- REPLACE YOUR mdl_pal8_to_rgba WITH THIS ---
 bool mdl_pal8_to_rgba(
     const unsigned char *indices,
     int                  w,
@@ -61,8 +60,8 @@ bool mdl_pal8_to_rgba(
 
     const int px = w * h;
 
-    // MDL palettes are effectively RGB (R,G,B). Do NOT swap unless you verify
-    // otherwise.
+    // MDL palettes are effectively RGB (R,G,B). 
+    // Do NOT swap unless you verify otherwise.
     for ( int i = 0; i < px; ++i )
     {
         const unsigned idx  = indices[i];
@@ -77,7 +76,6 @@ bool mdl_pal8_to_rgba(
     return true;
 }
 
-// --- REPLACE your parse_paletted_block WITH THIS STRICT VERSION ---
 static bool parse_paletted_block(
     const unsigned char  *text_struct_base,
     int                   width,
@@ -107,7 +105,6 @@ static bool parse_paletted_block(
     const size_t after_pixels = pix_off + pixels_sz;
 
     // MDL format: uint16 palette size (little endian), then palette (pal_size *
-    // 3) bytes.
     if ( after_pixels + 2 > file_size )
         return false;
 
