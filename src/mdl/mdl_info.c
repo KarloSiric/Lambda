@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 18:40:38
    Last Modified by: karlosiric
-   Last Modified: 2025-10-11 21:44:48
+   Last Modified: 2025-10-14 19:44:53
    ---------------------------------------------------------------------
    Description:
        
@@ -25,10 +25,10 @@
 void print_complete_model_analysis(
     FILE              *output,      // <-- ADD THIS PARAMETER!
     const char        *filename,
-    studiohdr_t       *main_header,
-    studiohdr_t       *texture_header,
-    unsigned char     *main_data,
-    unsigned char     *texture_data )
+    const studiohdr_t       *main_header,
+    const studiohdr_t       *texture_header,
+    const unsigned char     *main_data,
+    const unsigned char     *texture_data )
 {
     /* Pretty rulers */
     static const char *RULER      = "──────────────────────────────────────────────────────────────────────────────";

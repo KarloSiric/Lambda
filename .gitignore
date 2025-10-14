@@ -55,13 +55,3 @@ Thumbs.db
 
 # Textual files
 *.txt
-
-# Excluding the aider CLI tracking
-*.aider.chat.history.md
-
-# Excluding all Aider related files and folders
-aider/
-.aider*
-
-# Excluding the claude code antrogropic enviroments.
-*anthropic.

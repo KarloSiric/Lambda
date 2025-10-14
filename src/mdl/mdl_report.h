@@ -22,10 +22,10 @@
 void print_complete_model_analysis(
     FILE *output,
     const char *filename,
-    studiohdr_t *main_header,
-    studiohdr_t *texture_header,
-    unsigned char *main_data,
-    unsigned char *texture_data);
+    const studiohdr_t *main_header,
+    const studiohdr_t *texture_header,
+    const unsigned char *main_data,
+    const unsigned char *texture_data);
 
 void print_studio_header_file(FILE *output, const char *title, const studiohdr_t *header);
 
