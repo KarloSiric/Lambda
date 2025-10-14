@@ -4,7 +4,7 @@
    Author: karlosiric <email@example.com>
    Created: 2025-10-09 23:57:52
    Last Modified by: karlosiric
-   Last Modified: 2025-10-14 00:04:18
+   Last Modified: 2025-10-14 14:18:38
    ---------------------------------------------------------------------
    Description:
        
@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>    // For getcwd
+
 #define MAX_DRAW_RANGES 4096
 
 typedef struct {
@@ -109,6 +110,13 @@ static mdl_texture_set_t g_textures = { NULL, 0 };
 static mdl_animation_state_t g_anim_state;
 static bool                  g_animation_enabled = false;
 static double                g_last_frame_time   = 0.0;
+
+
+// SEQGROUPS -- > newly added for testing animations
+static mdl_seqgroup_blob_t *global_seqgroups = NULL;
+static int global_num_seqgroups = 0;
+
+
 
 // Camera controls
 float rotation_x = 0.0f;
@@ -239,7 +247,7 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             if ( global_header && g_anim_state.current_sequence > 0 )
             {
                 mdl_animation_set_sequence(
-                    &g_anim_state, g_anim_state.current_sequence - 1, global_header, global_data );
+                    &g_anim_state, g_anim_state.current_sequence - 1, global_header, global_data, global_seqgroups );
                 printf( "◀ Previous Sequence: %d\n", g_anim_state.current_sequence );
             }
             else
@@ -251,7 +259,7 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             if ( global_header && g_anim_state.current_sequence < global_header->numseq - 1 )
             {
                 mdl_animation_set_sequence(
-                    &g_anim_state, g_anim_state.current_sequence + 1, global_header, global_data );
+                    &g_anim_state, g_anim_state.current_sequence + 1, global_header, global_data, global_seqgroups );
                 model_processed = false;    // Force reprocess
                 printf( "▶ Next Sequence: %d\n", g_anim_state.current_sequence );
             }
@@ -417,7 +425,7 @@ void UpdateBonesForCurrentFrame( void )
     if ( g_animation_enabled && global_header->numseq > 0 )
     {
         // Calculate animated bone transforms directly into g_bonetransformations
-        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, g_bonetransformations );
+        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, global_seqgroups ,g_bonetransformations );
     }
     else
     {
@@ -1175,7 +1183,7 @@ void render_loop( void )
         // Update animation state
         if ( g_animation_enabled && global_header && global_data )
         {
-            mdl_animation_update( &g_anim_state, delta_time, global_header, global_data );
+            mdl_animation_update( &g_anim_state, delta_time, global_header, global_data, global_seqgroups );
         }
 
         // Clear and render
@@ -1231,25 +1239,11 @@ void render_model( studiohdr_t *header, unsigned char *data )
     if ( g_animation_enabled && global_header && global_data )
     {
         // Calculate animated bone transforms directly into g_bonetransformations
-        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, g_bonetransformations );
+        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations );
 
         // Re-transform vertices with new bone positions
         mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );
-        /*
-        for ( int bp = 0; bp < global_header->numbodyparts; ++bp )
-        {
-            mstudiobodyparts_t *bpRec                = &bodyparts[bp];
-            mstudiomodel_t     *models               = ( mstudiomodel_t * ) ( global_data + bpRec->modelindex );
-            int                 selected_model_index = bodypart_get_model_index( bp );
-
-            if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels )
-            {
-                selected_model_index = 0;
-            }
-
-            mstudiomodel_t *model = &models[selected_model_index];
-        }
-        */
+        
         // CRITICAL: Re-build the vertex buffer with new skinned positions
         // We need to rebuild the render buffer because AddVertexToBuffer reads from skinned_positions
         total_render_vertices = 0;
@@ -1484,12 +1478,14 @@ void render_model( studiohdr_t *header, unsigned char *data )
         glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
     }
 }
-void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data )
+void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data, mdl_seqgroup_blob_t *seqgroups, int num_seqgroups )
 {
     global_header     = header;
     global_data       = data;
     global_tex_header = tex_header;    // may be NULL
     global_tex_data   = tex_data;      // may be NULL
+    global_seqgroups  = seqgroups;
+    global_num_seqgroups = num_seqgroups;
 
     model_processed         = false;
     bone_system_initialized = false;
@@ -1524,16 +1520,12 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
     mdl_animation_init(&g_anim_state);
     
     if (header && header->numseq > 0) {
-        mdl_animation_set_sequence(&g_anim_state, 0, header, data);
+        mdl_animation_set_sequence(&g_anim_state, 0, header, data, global_seqgroups );
         
         g_animation_enabled = true;
         g_last_frame_time = glfwGetTime();
         printf("Animation initialized with sequence 0 \n");
          
     }
-    
-    
-    
-
     printf( "Model data set, will be processed on next render\n" );
 }
