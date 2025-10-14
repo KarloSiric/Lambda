@@ -481,23 +481,32 @@ void UpdateBonesForCurrentFrame( void )
 // Updated ProcessModelForRendering to extract normals and UVs
 void ProcessModelForRendering( void )
 {
+    LOG_INFOF("renderer", "Processing model for rendering");
+    
     if ( !global_header || !global_data )
     {
+        LOG_FATALF("renderer", "FATAL - Cannot process NULL model data! header=%p data=%p",
+                  (void*)global_header, (void*)global_data);
         fprintf( stderr, "ERROR - Invalid argument pointers value passed!\n" );
         return;
     }
+    
+    LOG_DEBUGF("renderer", "  Header: bones=%d, bodyparts=%d, sequences=%d",
+              global_header->numbones, global_header->numbodyparts, global_header->numseq);
 
     total_render_vertices = 0;
     g_num_ranges          = 0;
 
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );
-
+    
+    LOG_TRACEF("renderer", "  Setting up T-pose bones");
     /*
      * We set the T-Pose initially and then if we want animations that is rendered
      * in a seperate function right.
      */
 
     SetUpBones( global_header, global_data );
+    LOG_TRACEF("renderer", "  T-pose bones set up");
 
     // Iterate through all bodyparts
     for ( int bp = 0; bp < global_header->numbodyparts; ++bp )
@@ -1148,12 +1157,14 @@ void render_loop( void )
         
         LOG_TRACEF("renderer", "=== Frame %d START ===", frame_count);
         
-        
+        // CRITICAL: Check for NULL before ANYTHING
         if (!global_header || !global_data) {
-            LOG_ERRORF("renderer", "NULL model data in render loop! Exiting.");
+            LOG_ERRORF("renderer", "NULL model data! header=%p data=%p", 
+                      (void*)global_header, (void*)global_data);
             break;
         }
         
+        LOG_TRACEF("renderer", "Frame %d: Getting time", frame_count);
         // Calculate delta time
         double current_time = glfwGetTime( );
         float  delta_time   = ( float ) ( current_time - g_last_frame_time );
@@ -1169,23 +1180,43 @@ void render_loop( void )
         {
             delta_time = 0.0f;
         }
+        
+        LOG_TRACEF("renderer", "Frame %d: Delta time = %.4f", frame_count, delta_time);
+        
         // Update animation state
         if ( g_animation_enabled && global_header && global_data )
         {
+            LOG_TRACEF("renderer", "Frame %d: Updating animation", frame_count);
             mdl_animation_update( &g_anim_state, delta_time, global_header, global_data, global_seqgroups );
         }
 
         // Clear and render
+        LOG_TRACEF("renderer", "Frame %d: Clearing screen", frame_count);
         clear_screen( );
 
         if ( global_header && global_data )
         {
+            LOG_TRACEF("renderer", "Frame %d: Calling render_model", frame_count);
             render_model( global_header, global_data );
+            LOG_TRACEF("renderer", "Frame %d: render_model returned", frame_count);
         }
 
+        LOG_TRACEF("renderer", "Frame %d: Swapping buffers", frame_count);
         glfwSwapBuffers( window );
+        
+        LOG_TRACEF("renderer", "Frame %d: Polling events", frame_count);
         glfwPollEvents( );
+        
+        frame_count++;
+        
+        if (frame_count % 60 == 0) {
+            LOG_DEBUGF("renderer", "Rendered %d frames", frame_count);
+        }
+        
+        LOG_TRACEF("renderer", "=== Frame %d END ===", frame_count - 1);
     }
+    
+    LOG_INFOF("renderer", "Exiting render loop after %d frames", frame_count);
 }
 
 void set_wireframe_mode( bool enabled )
@@ -1209,17 +1240,27 @@ void set_current_texture( unsigned int texture_id )
 
 void render_model( studiohdr_t *header, unsigned char *data )
 {
+    LOG_TRACEF("renderer", "render_model() START");
+    
     ( void ) header;
     ( void ) data;
 
     // ONE-TIME: Build mesh topology
     if ( !model_processed )
     {
+        LOG_DEBUGF("renderer", "First frame - processing model");
         ProcessModelForRendering( );
+        LOG_DEBUGF("renderer", "Model processing complete - %d vertices, %d ranges",
+                  total_render_vertices, g_num_ranges);
     }
 
-    if ( total_render_vertices == 0 )
+    if ( total_render_vertices == 0 ) {
+        LOG_WARNF("renderer", "No vertices to render!");
         return;
+    }
+    
+    LOG_TRACEF("renderer", "render_model: animated=%d, vertices=%d, ranges=%d",
+              g_animation_enabled, total_render_vertices, g_num_ranges);
 
     // EVERY FRAME: Update bones and re-skin vertices if animating
     if ( g_animation_enabled && global_header && global_data )
