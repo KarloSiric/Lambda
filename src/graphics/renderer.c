@@ -126,6 +126,33 @@ float zoom       = 0.15f;    // Even more zoomed out for scientist model
 static bool   mouse_pressed = false;
 static double last_x = 400, last_y = 225;
 
+// Helper function to check if a sequence is available (has loaded sequence group data)
+static bool is_sequence_available( int seq_index )
+{
+    if ( !global_header || !global_data || seq_index < 0 || seq_index >= global_header->numseq )
+    {
+        return false;
+    }
+    
+    mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * ) ( global_data + global_header->seqindex );
+    mstudioseqdesc_t *seq       = &sequences[seq_index];
+    int seqgroup = seq->seqgroup;
+    
+    // Sequence group 0 is always available (embedded in main file)
+    if ( seqgroup == 0 )
+    {
+        return true;
+    }
+    
+    // Check if external sequence group is loaded
+    if ( !global_seqgroups || seqgroup >= global_num_seqgroups )
+    {
+        return false;
+    }
+    
+    return ( global_seqgroups[seqgroup].data != NULL );
+}
+
 static void glfw_mouse_callback( GLFWwindow *window, double xpos, double ypos )
 {
     if ( mouse_pressed )
@@ -210,17 +237,14 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             if ( wireframe_enabled )
             {
                 glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-                printf( "Switched to wireframe mode\n" );
             }
             else
             {
                 glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-                printf( "Switched to solid mode\n" );
             }
             break;
         case GLFW_KEY_P:    // Toggle points
             glPolygonMode( GL_FRONT_AND_BACK, GL_POINT );
-            printf( "Switched to points mode\n" );
             break;
 
         /*
@@ -230,63 +254,65 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
 
         case GLFW_KEY_SPACE:
             g_animation_enabled = !g_animation_enabled;
-            if ( g_animation_enabled )
-            {
-                printf(
-                    " Animation ENABLED (Frame: %.2f, Seq: >%d)\n",
-                    g_anim_state.current_frame,
-                    g_anim_state.current_sequence );
-            }
-            else
-            {
-                printf( " Animation DISABLED: (T - Pose)\n" );
-            }
             break;
 
         case GLFW_KEY_LEFT:
             if ( global_header && g_anim_state.current_sequence > 0 )
             {
-                mdl_animation_set_sequence(
-                    &g_anim_state, g_anim_state.current_sequence - 1, global_header, global_data, global_seqgroups );
-                printf( "◀ Previous Sequence: %d\n", g_anim_state.current_sequence );
+                // Try to find previous available sequence
+                int target_seq = g_anim_state.current_sequence - 1;
+                int attempts = 0;
+                
+                while ( target_seq >= 0 && !is_sequence_available( target_seq ) && attempts < global_header->numseq )
+                {
+                    target_seq--;
+                    attempts++;
+                }
+                
+                if ( target_seq >= 0 && is_sequence_available( target_seq ) )
+                {
+                    mdl_animation_set_sequence(
+                        &g_anim_state, target_seq, global_header, global_data, global_seqgroups );
+                }
             }
             else
             {
-                printf( "Already at first sequence!\n" );
+                // At first sequence - do nothing
             }
             break;
         case GLFW_KEY_RIGHT:
             if ( global_header && g_anim_state.current_sequence < global_header->numseq - 1 )
             {
-                mdl_animation_set_sequence(
-                    &g_anim_state, g_anim_state.current_sequence + 1, global_header, global_data, global_seqgroups );
-                model_processed = false;    // Force reprocess
-                printf( "▶ Next Sequence: %d\n", g_anim_state.current_sequence );
+                // Try to find next available sequence
+                int target_seq = g_anim_state.current_sequence + 1;
+                int attempts = 0;
+                
+                while ( target_seq < global_header->numseq && !is_sequence_available( target_seq ) && attempts < global_header->numseq )
+                {
+                    target_seq++;
+                    attempts++;
+                }
+                
+                if ( target_seq < global_header->numseq && is_sequence_available( target_seq ) )
+                {
+                    mdl_animation_set_sequence(
+                        &g_anim_state, target_seq, global_header, global_data, global_seqgroups );
+                    model_processed = false;    // Force reprocess
+                }
             }
             else
             {
-                printf( "Already at last sequence!\n" );
+                // At last sequence - do nothing
             }
             break;
-            // case GLFW_KEY_UP:    // Increase animation speed
-            //     printf( " Animation speed increased\n" );
-            //     break;
-            // case GLFW_KEY_DOWN:    // Decrease animation speed
-            //     printf( " Animation speed decreased\n" );
-            //     break;
 
         case GLFW_KEY_L:    // Toggle looping
             g_anim_state.is_looping = !g_anim_state.is_looping;
-            printf(
-                "%s Looping %s\n",
-                g_anim_state.is_looping ? "🔁" : "➡",
-                g_anim_state.is_looping ? "ENABLED" : "DISABLED" );
             break;
 
         case GLFW_KEY_0:    // Reset to first frame
             g_anim_state.current_frame = 0.0f;
             model_processed            = false;
-            printf( "⏮ Reset to frame 0\n" );
             break;
         case GLFW_KEY_I:    // Print animation info
             if ( global_header && global_header->numseq > 0 )
@@ -625,8 +651,6 @@ void ProcessModelForRendering( void )
                         n2 &= 0x7FFF;
 
                         // update min/max + quick sample printf
-                        if ( dbg_count++ < 8 )
-                            printf( "    s=%d t=%d  (tex %dx%d)\n", s0, t0, texW, texH );
                         s_min = ( s0 < s_min ) ? s0 : s_min;
                         s_max = ( s0 > s_max ) ? s0 : s_max;
                         t_min = ( t0 < t_min ) ? t0 : t_min;
@@ -753,12 +777,6 @@ void ProcessModelForRendering( void )
         }
     }
 
-    printf(
-        "Generated %d vertices (%d triangles) for bodygroup %d\n",
-        total_render_vertices,
-        total_render_vertices / 3,
-        bodypart_get_bodygroup( ) );
-
     model_processed = true;
 }
 
@@ -827,19 +845,7 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
     float u = ( ( float ) s + 0.5f ) / ( float ) texW;
     float v = ( ( float ) t + 0.5f ) / ( float ) texH;
 
-    // Debug UV mapping for specific textures
-    if ( total_render_vertices < 50 )
-    {    // Only printf first few to avoid spam
-        printf(
-            "Vertex %d: tex dims %fx%f, s=%d t=%d -> u=%.3f v=%.3f", total_render_vertices, texW, texH, s, t, u, v );
-    }
-
     // v = 1.0f - v;
-
-    if ( total_render_vertices < 50 )
-    {
-        printf( " -> v_flipped=%.3f\n", v );
-    }
 
     /* Optional safety clamp */
     if ( u < 0.0f )
@@ -871,7 +877,6 @@ void setup_triangle( void )
 
 static char *read_shader_source( const char *filepath )
 {
-    printf( "DEBUG - Trying to load shader from: %s\n", filepath );
     FILE *file = fopen( filepath, "r" );
     if ( !file )
     {
@@ -945,13 +950,6 @@ static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader 
 
 static int load_shaders( void )
 {
-    // Debug: printf current working directory
-    char cwd[1024];
-    if ( getcwd( cwd, sizeof( cwd ) ) != NULL )
-    {
-        printf( "DEBUG - Current working directory: %s\n", cwd );
-    }
-
     // Try to load textured shaders first, fall back to basic if not found
     char *vertex_shader_file = read_shader_source(
         "/Users/karlosiric/Documents/SublimeText "
@@ -962,7 +960,6 @@ static int load_shaders( void )
 
     if ( !vertex_shader_file || !fragment_shader_file )
     {
-        printf( "Textured shaders not found, falling back to basic shaders\n" );
         if ( vertex_shader_file )
             free( vertex_shader_file );
         if ( fragment_shader_file )
@@ -975,10 +972,6 @@ static int load_shaders( void )
             "/Users/karlosiric/Documents/SublimeText "
             "Programming/C_Projects/ModelViewer/shaders/basic.frag" );
     }
-    else
-    {
-        printf( "Using textured shaders\n" );
-    }
 
     if ( !vertex_shader_file || !fragment_shader_file )
     {
@@ -989,9 +982,7 @@ static int load_shaders( void )
             free( fragment_shader_file );
         return ( -1 );
     }
-    printf( "Compiling vertex shader...\n" );
     GLuint vertexShader = compile_shader( vertex_shader_file, GL_VERTEX_SHADER );
-    printf( "Compiling fragment shader...\n" );
     GLuint fragmentShader = compile_shader( fragment_shader_file, GL_FRAGMENT_SHADER );
 
     free( vertex_shader_file );
@@ -1009,9 +1000,6 @@ static int load_shaders( void )
         fprintf( stderr, "ERROR - Failed to create properly a shader program!\n" );
         return ( -1 );
     }
-
-    printf( "Shaders loaded and compiled successfully!\n" );
-    printf( "Shader program up and ready to be used!\n" );
 
     return ( 0 );
 }
@@ -1091,10 +1079,6 @@ int init_renderer( int width, int height, const char *title )
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, white );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
-    printf( "White fallback texture created with GL ID: %u\n", g_white_tex );
-
-    printf( "OpenGL Version: %s\n", glGetString( GL_VERSION ) );
-
     printf( "\n\n" );
     printf( "╔════════════════════════════════════╗\n" );
     printf( "║         MODEL VIEWER CONTROLS      ║\n" );
@@ -1138,11 +1122,9 @@ void cleanup_renderer( void )
     if ( window )
     {
         glfwDestroyWindow( window );
-        printf( "Shutting down Window ...\n" );
     }
 
     glfwTerminate( );
-    printf( "GLFW Fully Terminated!\n" );
     return;
 }
 
@@ -1159,8 +1141,6 @@ bool should_close_window( void )
 
 void render_loop( void )
 {
-    printf( "Starting render loop...\n" );
-
     g_last_frame_time = glfwGetTime( );    // Initialize to current time
 
     while ( !glfwWindowShouldClose( window ) )
@@ -1197,8 +1177,6 @@ void render_loop( void )
         glfwSwapBuffers( window );
         glfwPollEvents( );
     }
-
-    printf( "Exiting render loop.\n" );
 }
 
 void set_wireframe_mode( bool enabled )
@@ -1218,7 +1196,6 @@ void set_wireframe_mode( bool enabled )
 void set_current_texture( unsigned int texture_id )
 {
     current_texture = texture_id;
-    printf( "Set current texture to ID: %u\n", texture_id );
 }
 
 void render_model( studiohdr_t *header, unsigned char *data )
@@ -1511,19 +1488,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
     const studiohdr_t *texHdr = mdl_pick_texture_header( header, tex_header );
     if ( texHdr )
     {
-        mdl_result_t texRes = mdl_load_textures( texHdr, ( texHdr == header ) ? data : tex_data, &g_textures );
-        if ( texRes == MDL_SUCCESS )
-        {
-            printf( "Loaded %d textures\n", g_textures.count );
-        }
-        else
-        {
-            printf( "Failed to load textures, error code: %d\n", texRes );
-        }
-    }
-    else
-    {
-        printf( "No textures found for this model.\n" );
+        mdl_load_textures( texHdr, ( texHdr == header ) ? data : tex_data, &g_textures );
     }
     
     // Adding animations initializing
@@ -1531,11 +1496,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
     
     if (header && header->numseq > 0) {
         mdl_animation_set_sequence(&g_anim_state, 0, header, data, global_seqgroups );
-        
         g_animation_enabled = true;
         g_last_frame_time = glfwGetTime();
-        printf("Animation initialized with sequence 0 \n");
-         
     }
-    printf( "Model data set, will be processed on next render\n" );
 }

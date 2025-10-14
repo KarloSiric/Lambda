@@ -15,7 +15,15 @@ endif
 SOURCES = src/main.c \
           src/mdl/mdl_loader.c \
           src/mdl/mdl_info.c \
-          src/graphics/renderer.c
+          src/mdl/mdl_animations.c \
+          src/mdl/bodypart_manager.c \
+          src/mdl/bone_system.c \
+          src/graphics/renderer.c \
+          src/graphics/camera.c \
+          src/graphics/textures.c \
+          src/utils/logger.c \
+          src/utils/mdl_messages.c \
+          src/utils/utils.c
 
 # Object files
 OBJECTS = $(SOURCES:.c=.o)

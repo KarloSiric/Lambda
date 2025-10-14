@@ -901,13 +901,23 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
         
         mdl_result_t file_result = read_mdl_file(seqgroup_path, &seq_group_data, &group_size);
         
-        // Check if BOTH attempts failed
+        // Check if loading failed
         if (file_result != MDL_SUCCESS) 
         {
-            fprintf(stderr, "WARNING - Failed to load sequence group %d: %s\n", i, sq->name);
-            fprintf(stderr, "          Animations using this group will not work!\n");
+            fprintf(stderr, "╔════════════════════════════════════════════════════╗\n");
+            fprintf(stderr, "║ WARNING - Missing Sequence Group File             ║\n");
+            fprintf(stderr, "╠════════════════════════════════════════════════════╣\n");
+            fprintf(stderr, "  Sequence Group: %d\n", i);
+            fprintf(stderr, "  Expected File:  %s\n", filename);
+            fprintf(stderr, "  Full Path:      %s\n", seqgroup_path);
+            fprintf(stderr, "╠════════════════════════════════════════════════════╣\n");
+            fprintf(stderr, "  IMPACT: Animations requiring this group will show  \n");
+            fprintf(stderr, "          the T-pose instead of playing.             \n");
+            fprintf(stderr, "╚════════════════════════════════════════════════════╝\n\n");
+            
             groups[i].data = NULL;
             groups[i].size = 0;
+            strncpy(groups[i].name, filename, sizeof(groups[i].name) - 1);
             continue;
         }
         
@@ -920,7 +930,37 @@ mdl_result_t load_sequence_groups(const char *model_path, studiohdr_t *header, u
     }
     
     
+    *groups_out = groups;
     *num_groups_out = num_groups;
+    
+    // Print summary
+    int loaded_count = 0;
+    int missing_count = 0;
+    
+    for (int i = 0; i < num_groups; i++)
+    {
+        if (groups[i].data != NULL)
+        {
+            loaded_count++;
+        }
+        else if (i > 0)  // Don't count group 0
+        {
+            missing_count++;
+        }
+    }
+    
+    if (missing_count > 0)
+    {
+        printf("\n┌──────────────────────────────────────────────────┐\n");
+        printf("│ SEQUENCE GROUPS SUMMARY                          │\n");
+        printf("├──────────────────────────────────────────────────┤\n");
+        printf("│ ✅ Loaded:  %d groups                             │\n", loaded_count);
+        printf("│ ❌ Missing: %d groups                             │\n", missing_count);
+        printf("│                                                  │\n");
+        printf("│ Some animations will fallback to T-pose!         │\n");
+        printf("└──────────────────────────────────────────────────┘\n\n");
+    }
+    
     return MDL_SUCCESS;
 }
 
