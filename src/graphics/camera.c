@@ -1,19 +1,27 @@
-/*======================================================================
- *  File: camera.c
- *  Project: shaders
- *  Author: karlosiric <email@example.com>
- *  Created: 2025-07-31 21:31:54
- *  Last Modified by: karlosiric
- *  Last Modified: 2025-09-24 14:51:32
- *----------------------------------------------------------------------
- *  Description:
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *   Half-Life Model Viewer/Editor ~ Lambda
+ * ═══════════════════════════════════════════════════════════════════════════
  *
- *----------------------------------------------------------------------
- *  License:
- *  Company:
- *  Version: 0.1.0
- *======================================================================
+ *   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+ *
+ *   This product contains software technology licensed from Id
+ *   Software, Inc. ("Id Technology"). Id Technology (c) 1996 Id Software, Inc.
+ *   All Rights Reserved.
+ *
+ *   Use, distribution, and modification of this source code and/or resulting
+ *   object code is restricted to non-commercial enhancements to products from
+ *   Valve LLC. All other use, distribution, or modification is prohibited
+ *   without written permission from Valve LLC.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ *   Author: Karlo Siric
+ *   Purpose: Command-Line Argument Parser Implementation
+ * ═══════════════════════════════════════════════════════════════════════════
  */
+
+
 #include "camera.h"
+
 
 // Implementation will go here

@@ -1,6 +1,6 @@
 /*
  * ═══════════════════════════════════════════════════════════════════════════
- *   Half-Life Model Viewer
+ *   Half-Life Model Viewer/Editor ~ Lambda
  * ═══════════════════════════════════════════════════════════════════════════
  *
  *   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
@@ -19,6 +19,7 @@
  *   Purpose: Command-Line Argument Parser Implementation
  * ═══════════════════════════════════════════════════════════════════════════
  */
+
 
 
 #ifdef __APPLE__
