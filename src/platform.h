@@ -11,8 +11,8 @@
     #include <windows.h>
 #endif
 #ifdef __lINUX__
-#include <GL/gl3.h>
 #include <GL/glew.h>
+#include <GL/glfw3.h>
 #endif
 
 #endif

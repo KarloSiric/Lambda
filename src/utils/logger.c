@@ -423,7 +423,7 @@ void logger_hexdump(
         for ( size_t j = 0; j < r && n + 2 < ( int ) sizeof( row ); ++j )
         {
             unsigned char c = p[i + j];
-            row[n++]        = *( ( c >= 32 && c < 127 ) ? ( char ) c : "." );
+            row[n++]        = ( ( c >= 32 && c < 127 ) ? ( char ) c : '.' );
         }
         
         if ((size_t)n < sizeof(row)) {
