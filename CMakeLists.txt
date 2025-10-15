@@ -42,7 +42,7 @@ endif()
 #   Project Definition
 # ═══════════════════════════════════════════════════════════════════════════
 
-project(HalfLifeModelViewer VERSION 0.1.0 LANGUAGES C)
+project(HalfLifeModelViewer VERSION 0.1.1 LANGUAGES C)
 
 # Set C standard
 set(CMAKE_C_STANDARD 11)
@@ -82,6 +82,24 @@ add_compile_definitions(
 
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#   Dependencies (Linux / Arch)
+# ═══════════════════════════════════════════════════════════════════════════
+
+find_package(OpenGL REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
+pkg_search_module(GLEW glew)
+
+include_directories(
+    ${OPENGL_INCLUDE_DIR}
+    ${GLFW_INCLUDE_DIRS}
+    ${GLEW_INCLUDE_DIRS}
+    src
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #   Source Files
@@ -123,9 +141,10 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} 
-    glfw 
-    OpenGL::GL
-    m  # Math library
+${OPENGL_LIBRARIES}
+    ${GLFW_LIBRARIES}
+    ${GLEW_LIBRARIES}
+    m
 )
 
 # Set output directory
