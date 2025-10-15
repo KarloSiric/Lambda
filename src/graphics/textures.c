@@ -21,7 +21,7 @@
  */
 
 
-#include "../platform.h"
+#include "../graphics/gl_platform.h"
 #include "textures.h"
 #include "../utils/logger.h"
 
