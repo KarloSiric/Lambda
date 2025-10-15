@@ -33,15 +33,7 @@
 #include "../mdl/bone_system.h"
 #include "../mdl/mdl_animations.h"
 #include "../utils/logger.h"
-
-#ifdef __APPLE__
-#include <OpenGL/gl3.h>
-#else
-#include <GL/gl3.h>
-#endif
-
-// Diagnostic function will be added below
-#include <GLFW/glfw3.h>
+#include "../platform.h"
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
