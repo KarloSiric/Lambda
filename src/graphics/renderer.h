@@ -3,7 +3,7 @@
 
 #include "../studio.h"
 #include "../mdl/mdl_loader.h"  // <-- Need this for mdl_seqgroup_blob_t
-#include "GLFW/glfw3.h"
+#include "../graphics/gl_platform.h"
 #include <stdbool.h>
 
 extern GLFWwindow *window;

@@ -33,7 +33,7 @@
 #include "../mdl/bone_system.h"
 #include "../mdl/mdl_animations.h"
 #include "../utils/logger.h"
-#include "../platform.h"
+#include "../graphics/gl_platform.h"
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
