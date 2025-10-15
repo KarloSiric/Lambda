@@ -1032,83 +1032,157 @@ static int load_shaders( void )
 
 int init_renderer( int width, int height, const char *title )
 {
+    LOG_INFOF("renderer", "Initializing renderer: %dx%d", width, height);
     
-    LOG_INFOF("renderer", "Initializing renderer: %d%d", width, height);
-    if ( !glfwInit( ) )
+    if ( !glfwInit() )
     {
         LOG_FATALF("renderer", "Failed to initialize GLFW");
         fprintf(stderr, "Failed to initialize GLFW\n");
-        return ( -1 );
+        return -1;
     }
     
     LOG_DEBUGF("renderer", "GLFW initialized successfully!\n");
 
-#ifdef __APPLE__
-    /* MacOS M chips specific */
-    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
-    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
-    glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
-#elif _WIN32
-    /* Windows: Can go up to the latest version supported by drivers */
-    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
-    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
-#else
-    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
-    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
-#endif
+    // ═══════════════════════════════════════════════════════════════
+    // Platform-specific OpenGL version hints
+    // ═══════════════════════════════════════════════════════════════
+    #ifdef __APPLE__
+        /* macOS: Limited to OpenGL 4.1 Core Profile */
+        glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+        glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+        glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+        glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
+        LOG_DEBUGF("renderer", "Platform: macOS - OpenGL 4.1 Core Profile");
+    #elif defined(_WIN32)
+        /* Windows: Can use latest OpenGL version */
+        glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+        glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
+        glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+        LOG_DEBUGF("renderer", "Platform: Windows - OpenGL 4.5 Core Profile");
+    #else
+        /* Linux: Can usually support OpenGL 4.5+ */
+        glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+        glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
+        glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+        LOG_DEBUGF("renderer", "Platform: Linux - OpenGL 4.5 Core Profile");
+    #endif
 
-    GLFWmonitor *primary = glfwGetPrimaryMonitor( );
-    ( void ) primary;    // We get this for future use but don't use it yet
+    GLFWmonitor *primary = glfwGetPrimaryMonitor();
+    (void)primary;  // Reserved for future fullscreen support
+    
     window = glfwCreateWindow( width, height, title, NULL, NULL );
 
     if ( !window )
     {
         LOG_FATALF("renderer", "Failed to create GLFW window");
         fprintf(stderr, "Failed to create GLFW window\n");
-        glfwTerminate();        
-        return ( -1 );
+        glfwTerminate();
+        return -1;
     }
     
     LOG_DEBUGF("renderer", "Window created successfully!\n");
 
+    // Make the OpenGL context current
     glfwMakeContextCurrent( window );
-    
-    const char *gl_version = (const char*)glGetString(GL_VERSION);
-    const char *glsl_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
-    LOG_INFOF("renderer", "OpenGL %s, GLSL %s", gl_version, glsl_version);
 
+    // ═══════════════════════════════════════════════════════════════
+    // CRITICAL: Initialize GLEW on Linux/Windows
+    // macOS doesn't need GLEW - it uses native OpenGL framework
+    // ═══════════════════════════════════════════════════════════════
+    #if GLEW_REQUIRED
+        LOG_INFOF("renderer", "Initializing GLEW (required on this platform)...");
+        
+        // Enable experimental features for modern OpenGL
+        glewExperimental = GL_TRUE;
+        
+        GLenum glew_err = glewInit();  // ← FIXED: Was glfwInit()!
+        
+        if ( glew_err != GLEW_OK )
+        {
+            LOG_FATALF("renderer", "Failed to initialize GLEW: %s", 
+                      glewGetErrorString(glew_err));
+            fprintf(stderr, "GLEW Error: %s\n", glewGetErrorString(glew_err));
+            glfwDestroyWindow(window);
+            glfwTerminate();
+            return -1;
+        }
+        
+        LOG_INFOF("renderer", "GLEW initialized successfully");
+        LOG_DEBUGF("renderer", "GLEW version: %s", glewGetString(GLEW_VERSION));
+        
+        // GLEW sometimes sets a spurious GL_INVALID_ENUM error during init
+        // Clear it so it doesn't interfere with later error checking
+        glGetError();
+        
+    #else
+        LOG_DEBUGF("renderer", "GLEW not required (macOS native OpenGL)");
+    #endif
+
+    // ═══════════════════════════════════════════════════════════════
+    // Query OpenGL information (now safe on all platforms)
+    // ═══════════════════════════════════════════════════════════════
+    const char *gl_version = (const char*)glGetString(GL_VERSION);
+    const char *gl_vendor = (const char*)glGetString(GL_VENDOR);
+    const char *gl_renderer = (const char*)glGetString(GL_RENDERER);
+    const char *glsl_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
+    
+    if (!gl_version || !glsl_version) {
+        LOG_FATALF("renderer", "Failed to query OpenGL version - context may not be current");
+        fprintf(stderr, "ERROR: OpenGL context is invalid\n");
+        return -1;
+    }
+    
+    LOG_INFOF("renderer", "OpenGL Version: %s", gl_version);
+    LOG_INFOF("renderer", "OpenGL Vendor: %s", gl_vendor);
+    LOG_INFOF("renderer", "OpenGL Renderer: %s", gl_renderer);
+    LOG_INFOF("renderer", "GLSL Version: %s", glsl_version);
+
+    // ═══════════════════════════════════════════════════════════════
+    // Setup GLFW callbacks
+    // ═══════════════════════════════════════════════════════════════
     glfwSetKeyCallback( window, glfw_key_callback );
     glfwSetErrorCallback( glfw_error_callback );
-
-    // Add mouse controls
     glfwSetCursorPosCallback( window, glfw_mouse_callback );
     glfwSetMouseButtonCallback( window, glfw_mouse_button_callback );
     glfwSetScrollCallback( window, glfw_scroll_callback );
 
+    // ═══════════════════════════════════════════════════════════════
+    // OpenGL state setup
+    // ═══════════════════════════════════════════════════════════════
     glEnable( GL_DEPTH_TEST );
     glViewport( 0, 0, width, height );
-    // DISABLE CULLING TO SEE IF TRIANGLES ARE BACKWARDS
-    glDisable( GL_CULL_FACE );    // Changed from glEnable
+    
+    // Culling disabled to see if triangles are backwards
+    glDisable( GL_CULL_FACE );
 
     // Enable point size for vertex visualization
     glEnable( GL_PROGRAM_POINT_SIZE );
-    glPointSize( 5.0f );    // Make points bigger
+    glPointSize( 5.0f );
 
-    setup_triangle( );
+    // ═══════════════════════════════════════════════════════════════
+    // Initialize scene geometry and shaders
+    // ═══════════════════════════════════════════════════════════════
+    setup_triangle();
 
-    if ( load_shaders( ) != 0 )
+    if ( load_shaders() != 0 )
     {
+        LOG_FATALF("renderer", "Failed to load shaders");
         fprintf( stderr, "ERROR - Failed to load shaders!\n" );
-        return ( -1 );
+        return -1;
     }
 
-    // Fallback 2x2 white texture so meshes always draw
+    // ═══════════════════════════════════════════════════════════════
+    // Create fallback white texture (so meshes always draw)
+    // ═══════════════════════════════════════════════════════════════
     glGenTextures( 1, &g_white_tex );
     glBindTexture( GL_TEXTURE_2D, g_white_tex );
-    unsigned char white[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
+    
+    unsigned char white[] = { 
+        255, 255, 255, 255, 
+        255, 255, 255, 255, 
+        255, 255, 255, 255, 
+        255, 255, 255, 255 
+    };
 
     glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -1118,6 +1192,9 @@ int init_renderer( int width, int height, const char *title )
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, white );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
+    // ═══════════════════════════════════════════════════════════════
+    // Print controls help
+    // ═══════════════════════════════════════════════════════════════
     printf( "\n\n" );
     printf( "╔════════════════════════════════════╗\n" );
     printf( "║         MODEL VIEWER CONTROLS      ║\n" );
@@ -1146,8 +1223,10 @@ int init_renderer( int width, int height, const char *title )
     printf( "╚════════════════════════════════════╝\n\n" );
     
     LOG_INFOF("renderer", "Renderer initialized successfully");
-    return ( 0 );
+    
+    return 0;
 }
+
 
 void cleanup_renderer( void )
 {

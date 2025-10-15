@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.2.0-alpha.1] - 2025-10-15
+
+### Fixed:
+- **Dependencies**
+  - Added proper dependency for Linux(Tested for Arch Linux Kernel 6.17.3 version)
+  - Improved the CMakeList.txt to contain proper dependencies and initializaton
+  - Added a so called gl_platform header that takes care of different OS and architecture dependencies 
+  - Made the GLEW be initialized on Linux and kept it off for macOS that was caussing seg faults on Linux
+  - Added proper GLEW and GL/gl3 dependency difference detection to make seg fault free
+  - Currently fully working and stable for both macOS and Linux (tested on macOS Tahoe 26.0.1 and Arch Linux Kernel 6.17.3)
+  
+### Changed
+- **Dependenices**
+  - Added a new header called gl_platform which takes care of all the necessary dependencies
+  - Improved the GLEW and GL/gl3 header dependency initialization to prevent seg fault crashes
+  - Improved the core functionality for both macOS and Linux to make it cross platform and working for now
+
+### Technical Details
+- Modified and added a new file called gl_platform.h -> new core cross platform handling file
+- Added in init_renderer support for additional checking and initialization of GLEW for Windows/Linux
+
+---
+
+
 ### Planned Features
 - Qt GUI framework integration
 - Model export capabilities (OBJ, FBX, SMD)
