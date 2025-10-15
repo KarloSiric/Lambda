@@ -10,9 +10,12 @@
 #ifdef _WIN32
     #include <windows.h>
 #endif
+#ifdef __lINUX__
 #include <GL/gl3.h>
 #include <GL/glew.h>
 #endif
 
-
 #endif
+#endif
+
+
