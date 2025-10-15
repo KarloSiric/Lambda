@@ -1,21 +1,23 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#ifdef __APPLE__
-#define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl3.h>
-#include <OpenGL/OpenGL.h>
-#include <OpenGL/glu.h>
-#else
-#ifdef _WIN32
-    #include <windows.h>
-#endif
-#ifdef __lINUX__
-#include <GL/glew.h>
-#include <GL/glfw3.h>
+// Platform detection
+#if defined(__APPLE__) || defined(__MACH__)
+    #define PLATFORM_MACOS 1
+#elif defined(__linux__)
+    #define PLATFORM_LINUX 1
+#elif defined(_WIN32) || defined(_WIN64)
+    #define PLATFORM_WINDOWS 1
 #endif
 
-#endif
+// Silence deprecation warnings on macOS (if not already defined)
+#ifdef PLATFORM_MACOS
+    #ifndef GL_SILENCE_DEPRECATION
+        #define GL_SILENCE_DEPRECATION
+    #endif
 #endif
 
+// NO OpenGL includes here!
+// Use gl_platform.h for OpenGL headers instead
 
+#endif // PLATFORM_H

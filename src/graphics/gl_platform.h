@@ -1,6 +1,7 @@
 #ifndef GL_PLATFORM_H
 #define GL_PLATFORM_H
 
+
 /*
  * Cross-platform OpenGL header management
  * 
@@ -10,21 +11,22 @@
  * CRITICAL: On Linux/Windows, GLEW must be included BEFORE GLFW!
  */
 
+
 // ═══════════════════════════════════════════════════════════════════════════
 //   Platform Detection
 // ═══════════════════════════════════════════════════════════════════════════
 
-#if defined(__APPLE__) || defined(__MACH__)
-    #define PLATFORM_MACOS 1
-    #define GLEW_REQUIRED 0
-#elif defined(__linux__)
-    #define PLATFORM_LINUX 1
-    #define GLEW_REQUIRED 1
-#elif defined(_WIN32) || defined(_WIN64)
-    #define PLATFORM_WINDOWS 1
-    #define GLEW_REQUIRED 1
+#if defined( __APPLE__ ) || defined( __MACH__ )
+#define PLATFORM_MACOS 1
+#define GLEW_REQUIRED  0
+#elif defined( __linux__ )
+#define PLATFORM_LINUX 1
+#define GLEW_REQUIRED  1
+#elif defined( _WIN32 ) || defined( _WIN64 )
+#define PLATFORM_WINDOWS 1
+#define GLEW_REQUIRED    1
 #else
-    #error "Unsupported platform for OpenGL"
+#error "Unsupported platform for OpenGL"
 #endif
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -32,19 +34,19 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 #if PLATFORM_MACOS
-    // macOS: Use native OpenGL framework headers
-    #ifndef GL_SILENCE_DEPRECATION
-        #define GL_SILENCE_DEPRECATION
-    #endif
-    
-    #include <OpenGL/gl3.h>
-    #include <OpenGL/gl3ext.h>
-    #include <GLFW/glfw3.h>
-    
+// macOS: Use native OpenGL framework headers (NO GLEW!)
+#ifndef GL_SILENCE_DEPRECATION
+#define GL_SILENCE_DEPRECATION
+#endif
+
+#include <GLFW/glfw3.h>
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
+
 #elif PLATFORM_LINUX || PLATFORM_WINDOWS
-    // Linux/Windows: GLEW MUST be included BEFORE GLFW!
-    #include <GL/glew.h>
-    #include <GLFW/glfw3.h>
+// Linux/Windows: GLEW MUST be included BEFORE GLFW!
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
     
 #endif
 
