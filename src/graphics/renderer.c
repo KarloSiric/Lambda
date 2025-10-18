@@ -28,6 +28,7 @@
 #include "../mdl/bone_system.h"
 #include "../mdl/mdl_animations.h"
 #include "../utils/logger.h"
+#include "../shaders/shader.h"
 
 #include <cglm/cglm.h>
 #include <stdio.h>
@@ -43,6 +44,8 @@ typedef struct {
     int             vertex_count;
     int             normal_count;
 } current_model_data_t;
+
+
 
 typedef struct {
     GLuint tex;      // GL texture to bind
@@ -865,10 +868,6 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
     render_vertex_buffer[base + 4] = Ny;
     render_vertex_buffer[base + 5] = Nz;
 
-    /* ----- UVs: USE invW/invH PER TEXTURE (this is the fix) ----- */
-    // s,t come from the tri-cmds as 16-bit texel coords for THIS mesh’s texture.
-    // Convert to [0,1], sample at texel centers (+0.5), flip V for GL.
-
     /* s,t are 16-bit *texel* coords for THIS texture */
     float u = ( ( float ) s + 0.5f ) / ( float ) texW;
     float v = ( ( float ) t + 0.5f ) / ( float ) texH;
@@ -903,12 +902,16 @@ void setup_triangle( void )
     glEnableVertexAttribArray( 0 );
 }
 
-static char *read_shader_source( const char *filepath )
+static char *read_shader_source( const char *filename )
 {
-    FILE *file = fopen( filepath, "r" );
+    
+    char fullpath[512];
+    snprintf(fullpath, sizeof(fullpath), "%s/%s", SHADER_DIR, filename);
+    
+    FILE *file = fopen( fullpath, "rb" );
     if ( !file )
     {
-        fprintf( stderr, "ERROR - Failed to open the shader file: '%s' \n", filepath );
+        fprintf( stderr, "ERROR - Failed to open the shader file: '%s' \n", fullpath );
         return NULL;
     }
 
@@ -978,15 +981,10 @@ static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader 
 
 static int load_shaders( void )
 {
-    // Try to load textured shaders first, fall back to basic if not found
-    // NOTE(Karlo): Shader source path need to be placed on some MACRO
-    //His is being hardocded so not good -----> change it
-    char *vertex_shader_file = read_shader_source(
-        "/Users/karlosiric/Documents/SublimeText "
-        "Programming/C_Projects/ModelViewer/shaders/textured.vert" );
-    char *fragment_shader_file = read_shader_source(
-        "/Users/karlosiric/Documents/SublimeText "
-        "Programming/C_Projects/ModelViewer/shaders/textured.frag" );
+    
+    char *vertex_shader_file = read_shader_source( "textured.vert" );
+    
+    char *fragment_shader_file = read_shader_source( "textured.frag" );
 
     if ( !vertex_shader_file || !fragment_shader_file )
     {
@@ -995,12 +993,8 @@ static int load_shaders( void )
         if ( fragment_shader_file )
             free( fragment_shader_file );
 
-        vertex_shader_file = read_shader_source(
-            "/Users/karlosiric/Documents/SublimeText "
-            "Programming/C_Projects/ModelViewer/shaders/basic.vert" );
-        fragment_shader_file = read_shader_source(
-            "/Users/karlosiric/Documents/SublimeText "
-            "Programming/C_Projects/ModelViewer/shaders/basic.frag" );
+        vertex_shader_file = read_shader_source( "basic.vert" );
+        fragment_shader_file = read_shader_source( "basic.frag" );
     }
 
     if ( !vertex_shader_file || !fragment_shader_file )
