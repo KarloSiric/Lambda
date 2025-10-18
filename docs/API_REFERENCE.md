@@ -4,17 +4,22 @@
 ---
 
 <div align="center">
-**Version:** 0.2.0-alpha.1  
-**Last Updated:** January 16, 2025  
-**Author:** Karlo Siric  
-**License:** Valve SDK License (Non-Commercial)
+**Version:**  0.2.0-alpha.1
+
+
+**Last Updated:**  January 16, 2025  
+
+**Author:**. Karlo Siric 
+
+**License:**  Valve SDK License (Non-Commercial)
+
 *Complete line-by-line technical reference documenting every function, structure, macro, and system in the Lambda Half-Life Model Editor codebase.*
 
 </div>
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
 ### **PART I: INTRODUCTION & OVERVIEW**
 
