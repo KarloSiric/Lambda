@@ -4,8 +4,8 @@
 ---
 
 <div align="center">
-**Version:**  0.2.0-alpha.1
 
+**Version:**  0.2.0-alpha.1
 
 **Last Updated:**  January 16, 2025  
 
