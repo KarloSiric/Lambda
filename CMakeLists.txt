@@ -74,6 +74,7 @@ add_compile_definitions(
     HLMV_GIT_COMMIT="${GIT_COMMIT_HASH}"
     HLMV_GIT_BRANCH="${GIT_BRANCH}"
     HLMV_GIT_TAG="${GIT_TAG}"
+    SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"
 )
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -249,6 +250,10 @@ set(SOURCES
 # ═══════════════════════════════════════════════════════════════════════════
 
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+  SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"   # absolute path to repo’s shaders
+)
 
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
