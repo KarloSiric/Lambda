@@ -189,7 +189,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | Version | Release Date | Milestone |
 |:--------|-------------|:----------|
 | 0.2.0-alpha.1 <br/>0.1.1-alpha.1 | 2025-10-15<br />2025-10-15 | Stable for Linux and MacOS(Alpha)<br />Logging improvements |
-| 0.1.0-alpha.1 | 2025-01-15 | Initial release |
+| 0.1.0-alpha.1 | 2025-10-10 | Initial release |
 
 
 
