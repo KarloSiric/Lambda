@@ -64,12 +64,13 @@ CMakeFiles/HalfLifeModelViewer.dir/src/graphics/renderer.c.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_stdio.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_common.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/../graphics/gl_platform.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h \
+  /opt/homebrew/include/GLFW/glfw3.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGLAvailability.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/availability.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3ext.h \
-  /opt/homebrew/include/GLFW/glfw3.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/../graphics/textures.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/../graphics/../studio.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/../graphics/../utils/mdl_messages.h \

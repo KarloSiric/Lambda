@@ -1,24 +1,29 @@
 # Build output
 build/
+cmake-build-*/
 *.o
 *.so
 *.dylib
 *.dll
+*.a
+*.exe
+*.out
+*.app
 
-# Model files and game assets (user must provide their own)
-models/
-models/objs/
-models/HL1_Original/
-models/HL1_HD/
+# # Model files and game assets (user must provide their own)
+# models/
+# models/objs/
+# models/HL1_Original/
+# models/HL1_HD/
 
-# Game asset files
-*.mdl
-*.bsp
-*.wad
-*.pak
-*.vpk
-*.gcf
-*.ncf
+# # Game asset files
+# *.mdl
+# *.bsp
+# *.wad
+# *.pak
+# *.vpk
+# *.gcf
+# *.ncf
 
 # Audio files
 *.wav
@@ -46,6 +51,7 @@ Thumbs.db
 *.sublime-*
 
 # Logs
+logs/
 *.log
 
 # Archive files
@@ -53,5 +59,9 @@ Thumbs.db
 *.rar
 *.7z
 
-# Textual files
-*.txt
+# Don't ignore these
+!CMakeLists.txt
+!*.cmake
+!README.txt
+!LICENSE.txt
+

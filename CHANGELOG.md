@@ -33,7 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-
 ### Planned Features
 - Qt GUI framework integration
 - Model export capabilities (OBJ, FBX, SMD)

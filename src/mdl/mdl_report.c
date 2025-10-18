@@ -44,7 +44,7 @@
 static const char *RULER      = "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────";
 static const char *RULER_THIN = "────────────────────────────────────────────────────────────────────────────────";
 
-#define DUMP_I32( FP, L, V ) fprintf( (FP), "  %-22s %d\n", ( L ), ( int ) ( V ) )
+#define DUMP_I32( FP, L, V ) fprintf( (FP), "  %-22s %d (0x%08X)\n", ( L ), ( int ) ( V ), ( unsigned ) ( V ) )
 #define DUMP_HEX( FP, L, V ) fprintf( (FP), "  %-22s 0x%08X\n", ( L ), ( unsigned ) ( V ) )
 #define DUMP_STR( FP, L, V ) fprintf( (FP), "  %-22s %s\n", ( L ), ( V ) )
 #define DUMP_V3( FP, L, V )                                                                                                \

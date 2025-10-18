@@ -1,7 +1,6 @@
 CMakeFiles/HalfLifeModelViewer.dir/src/main.c.o: \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/main.c \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/main.h \
-  /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/platform.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/renderer.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/../studio.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdint.h \
@@ -66,14 +65,13 @@ CMakeFiles/HalfLifeModelViewer.dir/src/main.c.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_stdio.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_common.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/../graphics/gl_platform.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h \
+  /opt/homebrew/include/GLFW/glfw3.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGLAvailability.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/availability.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3ext.h \
-  /opt/homebrew/include/GLFW/glfw3.h \
-  /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/mdl_info.h \
-  /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/../studio.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/mdl_loader.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/mdl_report.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/errno.h \
@@ -136,6 +134,7 @@ CMakeFiles/HalfLifeModelViewer.dir/src/main.c.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_select.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uuid_t.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/gethostuuid.h \
+  /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/../studio.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/studio.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/utils/args.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/utils/logger.h \

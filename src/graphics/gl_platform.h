@@ -1,7 +1,6 @@
 #ifndef GL_PLATFORM_H
 #define GL_PLATFORM_H
 
-
 /*
  * Cross-platform OpenGL header management
  * 
@@ -10,7 +9,6 @@
  * 
  * CRITICAL: On Linux/Windows, GLEW must be included BEFORE GLFW!
  */
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 //   Platform Detection

@@ -21,10 +21,10 @@
  */
 
 
-#include "../graphics/gl_platform.h"
 #include "textures.h"
-#include "../utils/logger.h"
 
+#include "../graphics/gl_platform.h"
+#include "../utils/logger.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,7 +59,7 @@ bool mdl_pal8_to_rgba(
 
     const int px = w * h;
 
-    // MDL palettes are effectively RGB (R,G,B). 
+    // MDL palettes are effectively RGB (R,G,B).
     // Do NOT swap unless you verify otherwise.
     for ( int i = 0; i < px; ++i )
     {
@@ -127,57 +127,6 @@ static bool parse_paletted_block(
     return true;
 }
 
-/*
-// ADDING FOR DEBUGGING FUNCTION
-static void debug_texture_data( const studiohdr_t *header, const unsigned char *file_data )
-{
-    printf( "\n=== TEXTURE DEBUG INFO ===\n" );
-    printf( "header->textureindex = 0x08%X\n", header->textureindex );
-    printf( "header->texturedataindex = 0x08%X\n", header->texturedataindex );
-    printf( "header->numtextures = %d\n", header->numtextures );
-    
-    const mstudiotexture_t *textures = ( const mstudiotexture_t * ) ( file_data + header->textureindex );
-    
-    if ( header->numtextures > 0 )
-    {
-        printf( "\nFirst texture:\n" );
-        printf( "  name: %s\n", textures[0].name );
-        printf( "  flags: 0x%08X\n", textures[0].flags );
-        printf( "  width x height: %d x %d\n", textures[0].width, textures[0].height );
-        printf( "  index: 0x%08X\n", textures[0].index );
-        
-        // The actual texture data location
-        const unsigned char *tex_data    = file_data + textures[0].index;
-        int                  pixel_count = textures[0].width * textures[0].height;
-        
-        printf( "\nFirst 16 bytes of pixel indices:\n" );
-        for ( int i = 0; i < 16 && i < pixel_count; i++ )
-        {
-            printf( "%02X ", tex_data[i] );
-        }
-        printf( "\n" );
-        
-        // CORRECT: Palette starts IMMEDIATELY after pixel data (no size field!)
-        const unsigned char *palette = tex_data + pixel_count;
-        
-        printf( "\nFirst 16 bytes of palette (RGB data, no size field):\n" );
-        for ( int i = 0; i < 16; i++ )
-        {
-            printf( "%02X ", palette[i] );
-        }
-        printf( "\n" );
-        
-        // Show beginning of palette data (always 256 colors)
-        printf( "\nFirst 5 palette entries (always 256 colors total):\n" );
-        for ( int i = 0; i < 5; i++ )
-        {
-            printf( "  [%d]: R=%3d G=%3d B=%3d\n", i, palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2] );
-        }
-    }
-    printf( "=========================\n\n" );
-}
-*/
-
 mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *file_data, mdl_texture_set_t *out_set )
 {
     // debug_texture_data( header, file_data );
@@ -212,14 +161,11 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
     {
         const mstudiotexture_t *T = &textures[i];
 
-        
-         
         // T->index is an absolute offset from file start
         const unsigned char *indices = file_data + T->index;
 
         // Calculate pixel data size
         const int pixel_count = T->width * T->height;
-
 
         const unsigned char *palette  = indices + pixel_count;
         const int            pal_size = 256;
@@ -231,13 +177,15 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
             free( items );
             return MDL_ERROR_MEMORY_ALLOCATION;
         }
-        /*
+        /* NOTE(Karlo):
+        // 
         // Convert palette indices to RGBA
         // Need to modify this to detect if it is RGBA or BGR or something else
         // RIght now issue is happening because some models maybe store things
         // differently so it is not quite RGB, most of them are RGB but some are 
         // as it seems quite obvious when I was testing models not quite right so 
         // we need to add that as well.
+        // 
         */
         for ( int j = 0; j < pixel_count; j++ )
         {
@@ -285,11 +233,11 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         GLenum err = glGetError( );
         if ( err != GL_NO_ERROR )
         {
-            LOG_WARNF("textures", "OpenGL error 0x%x creating texture %s", err, T->name);
+            LOG_WARNF( "textures", "OpenGL error 0x%x creating texture %s", err, T->name );
         }
         else
         {
-            LOG_TRACEF("textures", "Created GL texture ID %u for %s", tex, T->name);
+            LOG_TRACEF( "textures", "Created GL texture ID %u for %s", tex, T->name );
         }
         // Unbind texture
         glBindTexture( GL_TEXTURE_2D, 0 );
@@ -301,9 +249,9 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
         items[i].gl_id  = tex;
         items[i].width  = T->width;
         items[i].height = T->height;
-        items[i].flags = T->flags;
-        strncpy( items[i].name, T->name, sizeof( items[i].name ) - 1 );
-        items[i].name[sizeof( items[i].name ) - 1] = '\0'; 
+        items[i].flags  = T->flags;
+        strncpy( items[i].name, T->name, sizeof( items[i].name ) - 1 ); 
+        items[i].name[sizeof( items[i].name ) - 1] = '\0';
     }
 
     out_set->textures = items;

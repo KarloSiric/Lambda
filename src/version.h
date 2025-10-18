@@ -50,11 +50,11 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 #define HLMV_VERSION_MAJOR          0
-#define HLMV_VERSION_MINOR          1
-#define HLMV_VERSION_PATCH          1
+#define HLMV_VERSION_MINOR          2
+#define HLMV_VERSION_PATCH          0
 
-// Build number (increment with each build)
-#define HLMV_VERSION_BUILD          2
+// Build number (increment with each build) NOTE(Karlo): [current build is 3 - 2025-10-15]
+#define HLMV_VERSION_BUILD          3
 
 // Build timestamp (automatically set by compiler)
 #define HLMV_BUILD_DATE             __DATE__
@@ -101,7 +101,7 @@
 #define HLMV_STRINGIFY(x)           #x
 #define HLMV_TOSTRING(x)            HLMV_STRINGIFY(x)
 
-// Base version without pre-release: "0.1.0"
+// Base version without pre-release: "0.2.0"
 #define HLMV_VERSION_BASE \
     HLMV_TOSTRING(HLMV_VERSION_MAJOR) "." \
     HLMV_TOSTRING(HLMV_VERSION_MINOR) "." \
@@ -109,21 +109,21 @@
 
 // Standard version string (with or without pre-release)
 #ifdef HLMV_VERSION_PRERELEASE
-    // Pre-release version: "0.1.0-alpha.1"
+    // Pre-release version: "0.2.0-alpha.1"
     #define HLMV_VERSION_STRING     HLMV_VERSION_BASE "-" HLMV_VERSION_PRERELEASE
 #else
-    // Stable version: "0.1.0"
+    // Stable version: "0.2.0"
     #define HLMV_VERSION_STRING     HLMV_VERSION_BASE
 #endif
 
-// Full version with build metadata: "0.1.0-alpha.1+build.1"
+// Full version with build metadata: "0.2.0-alpha.1+build.1"
 #define HLMV_VERSION_FULL \
     HLMV_VERSION_STRING "+build." HLMV_TOSTRING(HLMV_VERSION_BUILD)
 
-// Short display version: "v0.1.0-alpha.1"
+// Short display version: "v0.2.0-alpha.1"
 #define HLMV_VERSION_SHORT          "v" HLMV_VERSION_STRING
 
-// Long display version: "Half-Life Model Viewer v0.1.0-alpha.1 (build 1)"
+// Long display version: "Half-Life Model Viewer v0.2.0-alpha.1 (build 1)"
 #define HLMV_VERSION_LONG \
     "Half-Life Model Viewer " HLMV_VERSION_SHORT " (build " HLMV_TOSTRING(HLMV_VERSION_BUILD) ")"
 
