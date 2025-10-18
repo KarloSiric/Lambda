@@ -139,6 +139,7 @@ CMakeFiles/HalfLifeModelViewer.dir/src/graphics/renderer.c.o: /Users/karlosiric/
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdint.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGLAvailability.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3ext.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h \
@@ -353,6 +354,7 @@ CMakeFiles/HalfLifeModelViewer.dir/src/graphics/textures.c.o: /Users/karlosiric/
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdint.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGLAvailability.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3ext.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h \
@@ -367,9 +369,7 @@ CMakeFiles/HalfLifeModelViewer.dir/src/main.c.o: /Users/karlosiric/Documents/Sub
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternalLegacy.h \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityVersions.h \
-  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_abort.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_ctermid.h \
@@ -492,19 +492,11 @@ CMakeFiles/HalfLifeModelViewer.dir/src/main.c.o: /Users/karlosiric/Documents/Sub
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdbool.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdint.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLCurrent.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLDevice.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLIOSurface.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLRenderers.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLTypes.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGL.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGLAvailability.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl3ext.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/glext.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gltypes.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/glu.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/gl_platform.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/studio.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/utils/mdl_messages.h \
@@ -513,14 +505,11 @@ CMakeFiles/HalfLifeModelViewer.dir/src/main.c.o: /Users/karlosiric/Documents/Sub
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/graphics/renderer.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/main.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/studio.h \
-  /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/mdl_info.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/mdl_loader.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/mdl_report.h \
-  /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/platform.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/studio.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/utils/args.h \
   /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/utils/logger.h \
-  /opt/homebrew/include/GL/glew.h \
   /opt/homebrew/include/GLFW/glfw3.h
 
 CMakeFiles/HalfLifeModelViewer.dir/src/mdl/bodypart_manager.c.o: /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/bodypart_manager.c \
@@ -1625,6 +1614,8 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 
 /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/utils/mdl_messages.c:
 
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/qos.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_mach_port_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_clock_t.h:
@@ -1636,6 +1627,8 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_key_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_condattr_t.h:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/pthread/pthread_impl.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/pthread.h:
 
@@ -1661,29 +1654,9 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 
 /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/utils/args.h:
 
-/Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/platform.h:
-
 /Users/karlosiric/Documents/SublimeText\ Programming/C_Projects/ModelViewer/src/mdl/mdl_report.h:
 
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/glu.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/pthread/pthread_impl.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/glext.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/OpenGL.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/qos.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLRenderers.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLDevice.h:
-
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/errno.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityMacros.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/string.h:
 
@@ -1707,12 +1680,6 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 
 /opt/homebrew/include/cglm/simd/neon/mat2.h:
 
-/opt/homebrew/include/cglm/sphere.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h:
-
-/opt/homebrew/include/cglm/simd/neon/affine.h:
-
 /opt/homebrew/include/cglm/simd/intrin.h:
 
 /opt/homebrew/include/cglm/mat4x3.h:
@@ -1733,15 +1700,11 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 
 /opt/homebrew/include/cglm/simd/arm.h:
 
-/opt/homebrew/include/GL/glew.h:
-
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_va_list.h:
 
 /opt/homebrew/include/cglm/handed/euler_to_quat_rh.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_rwlockattr_t.h:
-
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLTypes.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_suseconds_t.h:
 
@@ -1792,8 +1755,6 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/__stdarg_va_arg.h:
 
 /opt/homebrew/include/cglm/aabb2d.h:
-
-/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ucontext.h:
 
@@ -2017,8 +1978,6 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_stdio.h:
 
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLCurrent.h:
-
 /opt/homebrew/include/cglm/cam.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_rune_t.h:
@@ -2067,8 +2026,6 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 
 /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include/stdarg.h:
 
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/CGLIOSurface.h:
-
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_timespec.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/libkern/arm/_OSByteOrder.h:
@@ -2109,6 +2066,12 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/malloc/_ptrcheck.h:
 
+/opt/homebrew/include/cglm/sphere.h:
+
+/opt/homebrew/include/cglm/simd/neon/affine.h:
+
+/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h:
+
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_endian.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_setsize.h:
@@ -2136,6 +2099,8 @@ CMakeFiles/HalfLifeModelViewer.dir/src/utils/utils.c.o: /Users/karlosiric/Docume
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_posix_vdisable.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/stdint.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/gl.h:
 
 /opt/homebrew/include/cglm/color.h:
 

@@ -2,7 +2,7 @@
 #define RENDERER_H
 
 #include "../studio.h"
-#include "../mdl/mdl_loader.h"  // <-- Need this for mdl_seqgroup_blob_t
+#include "../mdl/mdl_loader.h"  // <-- Need this for mdl_seqgroup_blob_tS
 #include "../graphics/gl_platform.h"
 #include <stdbool.h>
 

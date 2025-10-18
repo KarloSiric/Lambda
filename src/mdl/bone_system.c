@@ -66,31 +66,24 @@ void AngleQuaternion( const vec3 angles, versor q )
 
 void QuaternionMatrix( const versor q, mat4 out )
 {
-    // CGLM mat4 is column-major: mat[column][row]
-    // This matches Sam Vanheer's mathlib.cpp QuaternionMatrix implementation
-    // When converting row-major to column-major, mat[row][col] becomes mat[col][row]
 
     float x = q[0], y = q[1], z = q[2], w = q[3];
 
-    // Column 0 (maps to Sam's Row 0)
-    out[0][0] = 1.0f - 2.0f * (y*y + z*z);   // Sam's matrix[0][0]
-    out[0][1] = 2.0f * (x*y + w*z);          // Sam's matrix[1][0]
-    out[0][2] = 2.0f * (x*z - w*y);          // Sam's matrix[2][0]
+    out[0][0] = 1.0f - 2.0f * (y*y + z*z);   
+    out[0][1] = 2.0f * (x*y + w*z);          
+    out[0][2] = 2.0f * (x*z - w*y);          
     out[0][3] = 0.0f;
 
-    // Column 1 (maps to Sam's Row 1)
-    out[1][0] = 2.0f * (x*y - w*z);          // Sam's matrix[0][1]
-    out[1][1] = 1.0f - 2.0f * (x*x + z*z);   // Sam's matrix[1][1]
-    out[1][2] = 2.0f * (y*z + w*x);          // Sam's matrix[2][1]
+    out[1][0] = 2.0f * (x*y - w*z);          
+    out[1][1] = 1.0f - 2.0f * (x*x + z*z);   
+    out[1][2] = 2.0f * (y*z + w*x);          
     out[1][3] = 0.0f;
 
-    // Column 2 (maps to Sam's Row 2)
-    out[2][0] = 2.0f * (x*z + w*y);          // Sam's matrix[0][2]
-    out[2][1] = 2.0f * (y*z - w*x);          // Sam's matrix[1][2]
-    out[2][2] = 1.0f - 2.0f * (x*x + y*y);   // Sam's matrix[2][2]
+    out[2][0] = 2.0f * (x*z + w*y);          
+    out[2][1] = 2.0f * (y*z - w*x);          
+    out[2][2] = 1.0f - 2.0f * (x*x + y*y);   
     out[2][3] = 0.0f;
 
-    // Column 3 (Translation - initialized to zero, will be set by caller)
     out[3][0] = 0.0f;
     out[3][1] = 0.0f;
     out[3][2] = 0.0f;

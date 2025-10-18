@@ -20,20 +20,15 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-
-
-#ifdef __APPLE__
-#define GL_SILENCE_DEPRECATION
-#endif
-
 #include "renderer.h"
 
+#include "../graphics/gl_platform.h"
 #include "../graphics/textures.h"
 #include "../mdl/bodypart_manager.h"
 #include "../mdl/bone_system.h"
 #include "../mdl/mdl_animations.h"
 #include "../utils/logger.h"
-#include "../graphics/gl_platform.h"
+
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,12 +69,11 @@ static unsigned int EBO             = 0;    // Element Buffer Object for indices
 static unsigned int shader_program  = 0;
 static unsigned int current_texture = 0;    // Currently bound texture
 
-
 extern float rotation_x;
 extern float rotation_y;
 extern float zoom;
 
-static bool   bone_system_initialized = false;
+static bool bone_system_initialized = false;
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
 #define MAX_RENDER_VERTICES 32768
@@ -100,12 +94,9 @@ static mdl_animation_state_t g_anim_state;
 static bool                  g_animation_enabled = false;
 static double                g_last_frame_time   = 0.0;
 
-
 // SEQGROUPS -- > newly added for testing animations
-static mdl_seqgroup_blob_t *global_seqgroups = NULL;
-static int global_num_seqgroups = 0;
-
-
+static mdl_seqgroup_blob_t *global_seqgroups     = NULL;
+static int                  global_num_seqgroups = 0;
 
 // Camera controls
 float rotation_x = 0.0f;
@@ -122,23 +113,23 @@ static bool is_sequence_available( int seq_index )
     {
         return false;
     }
-    
+
     mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * ) ( global_data + global_header->seqindex );
     mstudioseqdesc_t *seq       = &sequences[seq_index];
-    int seqgroup = seq->seqgroup;
-    
+    int               seqgroup  = seq->seqgroup;
+
     // Sequence group 0 is always available (embedded in main file)
     if ( seqgroup == 0 )
     {
         return true;
     }
-    
+
     // Check if external sequence group is loaded
     if ( !global_seqgroups || seqgroup >= global_num_seqgroups )
     {
         return false;
     }
-    
+
     return ( global_seqgroups[seqgroup].data != NULL );
 }
 
@@ -236,7 +227,7 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             glPolygonMode( GL_FRONT_AND_BACK, GL_POINT );
             break;
 
-        /*
+            /*
          * Adding animations for models to see all of the sequences 
          * for and every model for easier debugging and all
         */
@@ -250,14 +241,14 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             {
                 // Try to find previous available sequence
                 int target_seq = g_anim_state.current_sequence - 1;
-                int attempts = 0;
-                
+                int attempts   = 0;
+
                 while ( target_seq >= 0 && !is_sequence_available( target_seq ) && attempts < global_header->numseq )
                 {
                     target_seq--;
                     attempts++;
                 }
-                
+
                 if ( target_seq >= 0 && is_sequence_available( target_seq ) )
                 {
                     mdl_animation_set_sequence(
@@ -274,14 +265,15 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
             {
                 // Try to find next available sequence
                 int target_seq = g_anim_state.current_sequence + 1;
-                int attempts = 0;
-                
-                while ( target_seq < global_header->numseq && !is_sequence_available( target_seq ) && attempts < global_header->numseq )
+                int attempts   = 0;
+
+                while ( target_seq < global_header->numseq && !is_sequence_available( target_seq )
+                        && attempts < global_header->numseq )
                 {
                     target_seq++;
                     attempts++;
                 }
-                
+
                 if ( target_seq < global_header->numseq && is_sequence_available( target_seq ) )
                 {
                     mdl_animation_set_sequence(
@@ -440,7 +432,8 @@ void UpdateBonesForCurrentFrame( void )
     if ( g_animation_enabled && global_header->numseq > 0 )
     {
         // Calculate animated bone transforms directly into g_bonetransformations
-        mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, global_seqgroups ,g_bonetransformations );
+        mdl_animation_calculate_bones(
+            &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations );
     }
     else
     {
@@ -473,72 +466,81 @@ void UpdateBonesForCurrentFrame( void )
 // Updated ProcessModelForRendering to extract normals and UVs
 void ProcessModelForRendering( void )
 {
-    LOG_INFOF("renderer", "Processing model for rendering");
-    
+    LOG_INFOF( "renderer", "Processing model for rendering" );
+
     if ( !global_header || !global_data )
     {
-        LOG_FATALF("renderer", "FATAL - Cannot process NULL model data! header=%p data=%p",
-                  (void*)global_header, (void*)global_data);
+        LOG_FATALF(
+            "renderer",
+            "FATAL - Cannot process NULL model data! header=%p data=%p",
+            ( void * ) global_header,
+            ( void * ) global_data );
         fprintf( stderr, "ERROR - Invalid argument pointers value passed!\n" );
         return;
     }
-    
-    LOG_DEBUGF("renderer", "  Header: bones=%d, bodyparts=%d, sequences=%d",
-              global_header->numbones, global_header->numbodyparts, global_header->numseq);
-    fflush(stdout);  // Force flush!
-    
-    LOG_DEBUGF("renderer", "  Bodypart index offset: 0x%X", global_header->bodypartindex);
-    fflush(stdout);
+
+    LOG_DEBUGF(
+        "renderer",
+        "  Header: bones=%d, bodyparts=%d, sequences=%d",
+        global_header->numbones,
+        global_header->numbodyparts,
+        global_header->numseq );
+    fflush( stdout );    // Force flush!
+
+    LOG_DEBUGF( "renderer", "  Bodypart index offset: 0x%X", global_header->bodypartindex );
+    fflush( stdout );
 
     total_render_vertices = 0;
     g_num_ranges          = 0;
 
-    LOG_DEBUGF("renderer", "  Getting bodyparts pointer...");
-    fflush(stdout);
+    LOG_DEBUGF( "renderer", "  Getting bodyparts pointer..." );
+    fflush( stdout );
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );
-    LOG_DEBUGF("renderer", "  Bodyparts pointer obtained: %p", (void*)bodyparts);
-    fflush(stdout);
-    
-    LOG_DEBUGF("renderer", "  Setting up T-pose bones...");
-    fflush(stdout);
+    LOG_DEBUGF( "renderer", "  Bodyparts pointer obtained: %p", ( void * ) bodyparts );
+    fflush( stdout );
+
+    LOG_DEBUGF( "renderer", "  Setting up T-pose bones..." );
+    fflush( stdout );
     /*
      * We set the T-Pose initially and then if we want animations that is rendered
      * in a seperate function right.
      */
 
     SetUpBones( global_header, global_data );
-    LOG_DEBUGF("renderer", "  T-pose bones completed");
-    fflush(stdout);
+    LOG_DEBUGF( "renderer", "  T-pose bones completed" );
+    fflush( stdout );
 
     // Iterate through all bodyparts
     for ( int bp = 0; bp < global_header->numbodyparts; ++bp )
     {
-        LOG_TRACEF("renderer", "  Processing bodypart %d/%d", bp, global_header->numbodyparts - 1);
-        
+        LOG_TRACEF( "renderer", "  Processing bodypart %d/%d", bp, global_header->numbodyparts - 1 );
+
         mstudiobodyparts_t *bpRec  = &bodyparts[bp];
         mstudiomodel_t     *models = ( mstudiomodel_t * ) ( global_data + bpRec->modelindex );
-        
-        LOG_TRACEF("renderer", "    Bodypart '%s': %d models", bpRec->name, bpRec->nummodels);
+
+        LOG_TRACEF( "renderer", "    Bodypart '%s': %d models", bpRec->name, bpRec->nummodels );
 
         // GET ONLY THE SELECTED MODEL FOR THIS BODYPART
         int selected_model_index = bodypart_get_model_index( bp );
-        
-        LOG_TRACEF("renderer", "    Selected model index: %d", selected_model_index);
+
+        LOG_TRACEF( "renderer", "    Selected model index: %d", selected_model_index );
 
         // Safety check
         if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels )
         {
-            LOG_WARNF("renderer", "    Invalid model index %d (max: %d), using 0",
-                     selected_model_index, bpRec->nummodels - 1);
+            LOG_WARNF(
+                "renderer",
+                "    Invalid model index %d (max: %d), using 0",
+                selected_model_index,
+                bpRec->nummodels - 1 );
             selected_model_index = 0;    // Fallback to first model
         }
 
         // Get ONLY the selected model (not all of them!)
         mstudiomodel_t *model = &models[selected_model_index];
-        
-        LOG_TRACEF("renderer", "    Model '%s': vertices=%d, meshes=%d",
-                  model->name, model->numverts, model->nummesh);
 
+        LOG_TRACEF(
+            "renderer", "    Model '%s': vertices=%d, meshes=%d", model->name, model->numverts, model->nummesh );
 
         g_current.model        = model;
         g_current.vertices     = ( vec3_t * ) ( global_data + model->vertindex );
@@ -547,15 +549,15 @@ void ProcessModelForRendering( void )
         g_current.normal_count = model->numnorms;
 
         // Skin this model's vertices (fills skinned_positions[])
-        LOG_TRACEF("renderer", "    Transforming %d vertices", model->numverts);
+        LOG_TRACEF( "renderer", "    Transforming %d vertices", model->numverts );
         TransformVertices( global_header, global_data, model, skinned_positions );
-        LOG_TRACEF("renderer", "    Vertices transformed successfully");
+        LOG_TRACEF( "renderer", "    Vertices transformed successfully" );
         have_skinned_positions = true;
 
         // All meshes for this model
         mstudiomesh_t *meshes = ( mstudiomesh_t * ) ( global_data + model->meshindex );
-        
-        LOG_TRACEF("renderer", "    Processing %d meshes", model->nummesh);
+
+        LOG_TRACEF( "renderer", "    Processing %d meshes", model->nummesh );
 
         // Skin table
         const short *skin_table  = ( const short * ) ( global_data + global_header->skinindex );
@@ -595,7 +597,6 @@ void ProcessModelForRendering( void )
                 texW   = 2;
                 texH   = 2;
             }
-
 
             short *ptricmds = ( short * ) ( global_data + meshes[mesh].triindex );
 
@@ -783,25 +784,28 @@ void ProcessModelForRendering( void )
     }
 
     model_processed = true;
-    
-    LOG_DEBUGF("renderer", "  Processing complete:");
-    LOG_DEBUGF("renderer", "    Total vertices: %d", total_render_vertices);
-    LOG_DEBUGF("renderer", "    Draw ranges: %d", g_num_ranges);
-    
-    if (g_num_ranges == 0) {
-        LOG_WARNF("renderer", "  WARNING - No draw ranges created!");
+
+    LOG_DEBUGF( "renderer", "  Processing complete:" );
+    LOG_DEBUGF( "renderer", "    Total vertices: %d", total_render_vertices );
+    LOG_DEBUGF( "renderer", "    Draw ranges: %d", g_num_ranges );
+
+    if ( g_num_ranges == 0 )
+    {
+        LOG_WARNF( "renderer", "  WARNING - No draw ranges created!" );
     }
-    
-    if (total_render_vertices == 0) {
-        LOG_WARNF("renderer", "  WARNING - No vertices generated!");
+
+    if ( total_render_vertices == 0 )
+    {
+        LOG_WARNF( "renderer", "  WARNING - No vertices generated!" );
     }
-    
-    if (total_render_vertices > MAX_RENDER_VERTICES) {
-        LOG_ERRORF("renderer", "  ERROR - Vertex buffer overflow! %d > %d",
-                  total_render_vertices, MAX_RENDER_VERTICES);
+
+    if ( total_render_vertices > MAX_RENDER_VERTICES )
+    {
+        LOG_ERRORF(
+            "renderer", "  ERROR - Vertex buffer overflow! %d > %d", total_render_vertices, MAX_RENDER_VERTICES );
     }
-    
-    LOG_INFOF("renderer", "Model processing COMPLETE");
+
+    LOG_INFOF( "renderer", "Model processing COMPLETE" );
 }
 
 void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, float texW, float texH )
@@ -976,7 +980,7 @@ static int load_shaders( void )
 {
     // Try to load textured shaders first, fall back to basic if not found
     // NOTE(Karlo): Shader source path need to be placed on some MACRO
-    //His is being hardocded so not good -----> change it 
+    //His is being hardocded so not good -----> change it
     char *vertex_shader_file = read_shader_source(
         "/Users/karlosiric/Documents/SublimeText "
         "Programming/C_Projects/ModelViewer/shaders/textured.vert" );
@@ -1008,7 +1012,7 @@ static int load_shaders( void )
             free( fragment_shader_file );
         return ( -1 );
     }
-    GLuint vertexShader = compile_shader( vertex_shader_file, GL_VERTEX_SHADER );
+    GLuint vertexShader   = compile_shader( vertex_shader_file, GL_VERTEX_SHADER );
     GLuint fragmentShader = compile_shader( fragment_shader_file, GL_FRAGMENT_SHADER );
 
     free( vertex_shader_file );
@@ -1032,110 +1036,110 @@ static int load_shaders( void )
 
 int init_renderer( int width, int height, const char *title )
 {
-    LOG_INFOF("renderer", "Initializing renderer: %dx%d", width, height);
-    
-    if ( !glfwInit() )
+    LOG_INFOF( "renderer", "Initializing renderer: %dx%d", width, height );
+
+    if ( !glfwInit( ) )
     {
-        LOG_FATALF("renderer", "Failed to initialize GLFW");
-        fprintf(stderr, "Failed to initialize GLFW\n");
+        LOG_FATALF( "renderer", "Failed to initialize GLFW" );
+        fprintf( stderr, "Failed to initialize GLFW\n" );
         return -1;
     }
-    
-    LOG_DEBUGF("renderer", "GLFW initialized successfully!\n");
 
-    // ═══════════════════════════════════════════════════════════════
-    // Platform-specific OpenGL version hints
-    // ═══════════════════════════════════════════════════════════════
-    #ifdef __APPLE__
-        /* macOS: Limited to OpenGL 4.1 Core Profile */
-        glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-        glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
-        glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
-        glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
-        LOG_DEBUGF("renderer", "Platform: macOS - OpenGL 4.1 Core Profile");
-    #elif defined(_WIN32)
-        /* Windows: Can use latest OpenGL version */
-        glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-        glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
-        glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
-        LOG_DEBUGF("renderer", "Platform: Windows - OpenGL 4.5 Core Profile");
-    #else
-        /* Linux: Can usually support OpenGL 4.5+ */
-        glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
-        glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
-        glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
-        LOG_DEBUGF("renderer", "Platform: Linux - OpenGL 4.5 Core Profile");
-    #endif
+    LOG_DEBUGF( "renderer", "GLFW initialized successfully!\n" );
 
-    GLFWmonitor *primary = glfwGetPrimaryMonitor();
-    (void)primary;  // Reserved for future fullscreen support
-    
+// ═══════════════════════════════════════════════════════════════
+// Platform-specific OpenGL version hints
+// ═══════════════════════════════════════════════════════════════
+#ifdef __APPLE__
+    /* macOS: Limited to OpenGL 4.1 Core Profile */
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );
+    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+    glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
+    LOG_DEBUGF( "renderer", "Platform: macOS - OpenGL 4.1 Core Profile" );
+#elif defined( _WIN32 )
+    /* Windows: Can use latest OpenGL version */
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
+    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+    LOG_DEBUGF( "renderer", "Platform: Windows - OpenGL 4.5 Core Profile" );
+#else
+    /* Linux: Can usually support OpenGL 4.5+ */
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );
+    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+    LOG_DEBUGF( "renderer", "Platform: Linux - OpenGL 4.5 Core Profile" );
+#endif
+
+    GLFWmonitor *primary = glfwGetPrimaryMonitor( );
+    ( void ) primary;    // Reserved for future fullscreen support
+
     window = glfwCreateWindow( width, height, title, NULL, NULL );
 
     if ( !window )
     {
-        LOG_FATALF("renderer", "Failed to create GLFW window");
-        fprintf(stderr, "Failed to create GLFW window\n");
-        glfwTerminate();
+        LOG_FATALF( "renderer", "Failed to create GLFW window" );
+        fprintf( stderr, "Failed to create GLFW window\n" );
+        glfwTerminate( );
         return -1;
     }
-    
-    LOG_DEBUGF("renderer", "Window created successfully!\n");
+
+    LOG_DEBUGF( "renderer", "Window created successfully!\n" );
 
     // Make the OpenGL context current
     glfwMakeContextCurrent( window );
 
-    // ═══════════════════════════════════════════════════════════════
-    // CRITICAL: Initialize GLEW on Linux/Windows
-    // macOS doesn't need GLEW - it uses native OpenGL framework
-    // ═══════════════════════════════════════════════════════════════
-    #if GLEW_REQUIRED
-        LOG_INFOF("renderer", "Initializing GLEW (required on this platform)...");
-        
-        // Enable experimental features for modern OpenGL
-        glewExperimental = GL_TRUE;
-        
-        GLenum glew_err = glewInit();  // ← FIXED: Was glfwInit()!
-        
-        if ( glew_err != GLEW_OK )
-        {
-            LOG_FATALF("renderer", "Failed to initialize GLEW: %s", 
-                      glewGetErrorString(glew_err));
-            fprintf(stderr, "GLEW Error: %s\n", glewGetErrorString(glew_err));
-            glfwDestroyWindow(window);
-            glfwTerminate();
-            return -1;
-        }
-        
-        LOG_INFOF("renderer", "GLEW initialized successfully");
-        LOG_DEBUGF("renderer", "GLEW version: %s", glewGetString(GLEW_VERSION));
-        
-        // GLEW sometimes sets a spurious GL_INVALID_ENUM error during init
-        // Clear it so it doesn't interfere with later error checking
-        glGetError();
-        
-    #else
-        LOG_DEBUGF("renderer", "GLEW not required (macOS native OpenGL)");
-    #endif
+// ═══════════════════════════════════════════════════════════════
+// CRITICAL: Initialize GLEW on Linux/Windows
+// macOS doesn't need GLEW - it uses native OpenGL framework
+// ═══════════════════════════════════════════════════════════════
+#if GLEW_REQUIRED
+    LOG_INFOF( "renderer", "Initializing GLEW (required on this platform)..." );
+
+    // Enable experimental features for modern OpenGL
+    glewExperimental = GL_TRUE;
+
+    GLenum glew_err = glewInit( );    // ← FIXED: Was glfwInit()!
+
+    if ( glew_err != GLEW_OK )
+    {
+        LOG_FATALF( "renderer", "Failed to initialize GLEW: %s", glewGetErrorString( glew_err ) );
+        fprintf( stderr, "GLEW Error: %s\n", glewGetErrorString( glew_err ) );
+        glfwDestroyWindow( window );
+        glfwTerminate( );
+        return -1;
+    }
+
+    LOG_INFOF( "renderer", "GLEW initialized successfully" );
+    LOG_DEBUGF( "renderer", "GLEW version: %s", glewGetString( GLEW_VERSION ) );
+
+    // GLEW sometimes sets a spurious GL_INVALID_ENUM error during init
+    // Clear it so it doesn't interfere with later error checking
+    glGetError( );
+
+#else
+    LOG_DEBUGF( "renderer", "GLEW not required (macOS native OpenGL)" );
+#endif
 
     // ═══════════════════════════════════════════════════════════════
     // Query OpenGL information (now safe on all platforms)
     // ═══════════════════════════════════════════════════════════════
-    const char *gl_version = (const char*)glGetString(GL_VERSION);
-    const char *gl_vendor = (const char*)glGetString(GL_VENDOR);
-    const char *gl_renderer = (const char*)glGetString(GL_RENDERER);
-    const char *glsl_version = (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION);
-    
-    if (!gl_version || !glsl_version) {
-        LOG_FATALF("renderer", "Failed to query OpenGL version - context may not be current");
-        fprintf(stderr, "ERROR: OpenGL context is invalid\n");
+    const char *gl_version   = ( const char * ) glGetString( GL_VERSION );
+    const char *gl_vendor    = ( const char * ) glGetString( GL_VENDOR );
+    const char *gl_renderer  = ( const char * ) glGetString( GL_RENDERER );
+    const char *glsl_version = ( const char * ) glGetString( GL_SHADING_LANGUAGE_VERSION );
+
+    if ( !gl_version || !glsl_version )
+    {
+        LOG_FATALF( "renderer", "Failed to query OpenGL version - context may not be current" );
+        fprintf( stderr, "ERROR: OpenGL context is invalid\n" );
         return -1;
     }
-    
-    LOG_INFOF("renderer", "OpenGL Version: %s", gl_version);
-    LOG_INFOF("renderer", "OpenGL Vendor: %s", gl_vendor);
-    LOG_INFOF("renderer", "OpenGL Renderer: %s", gl_renderer);
-    LOG_INFOF("renderer", "GLSL Version: %s", glsl_version);
+
+    LOG_INFOF( "renderer", "OpenGL Version: %s", gl_version );
+    LOG_INFOF( "renderer", "OpenGL Vendor: %s", gl_vendor );
+    LOG_INFOF( "renderer", "OpenGL Renderer: %s", gl_renderer );
+    LOG_INFOF( "renderer", "GLSL Version: %s", glsl_version );
 
     // ═══════════════════════════════════════════════════════════════
     // Setup GLFW callbacks
@@ -1151,7 +1155,7 @@ int init_renderer( int width, int height, const char *title )
     // ═══════════════════════════════════════════════════════════════
     glEnable( GL_DEPTH_TEST );
     glViewport( 0, 0, width, height );
-    
+
     // Culling disabled to see if triangles are backwards
     glDisable( GL_CULL_FACE );
 
@@ -1162,11 +1166,11 @@ int init_renderer( int width, int height, const char *title )
     // ═══════════════════════════════════════════════════════════════
     // Initialize scene geometry and shaders
     // ═══════════════════════════════════════════════════════════════
-    setup_triangle();
+    setup_triangle( );
 
-    if ( load_shaders() != 0 )
+    if ( load_shaders( ) != 0 )
     {
-        LOG_FATALF("renderer", "Failed to load shaders");
+        LOG_FATALF( "renderer", "Failed to load shaders" );
         fprintf( stderr, "ERROR - Failed to load shaders!\n" );
         return -1;
     }
@@ -1176,13 +1180,8 @@ int init_renderer( int width, int height, const char *title )
     // ═══════════════════════════════════════════════════════════════
     glGenTextures( 1, &g_white_tex );
     glBindTexture( GL_TEXTURE_2D, g_white_tex );
-    
-    unsigned char white[] = { 
-        255, 255, 255, 255, 
-        255, 255, 255, 255, 
-        255, 255, 255, 255, 
-        255, 255, 255, 255 
-    };
+
+    unsigned char white[] = { 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 };
 
     glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
@@ -1221,12 +1220,11 @@ int init_renderer( int width, int height, const char *title )
     printf( "╠════════════════════════════════════╣\n" );
     printf( "║   ESC        : Exit                ║\n" );
     printf( "╚════════════════════════════════════╝\n\n" );
-    
-    LOG_INFOF("renderer", "Renderer initialized successfully");
-    
+
+    LOG_INFOF( "renderer", "Renderer initialized successfully" );
+
     return 0;
 }
-
 
 void cleanup_renderer( void )
 {
@@ -1261,27 +1259,26 @@ bool should_close_window( void )
 
 void render_loop( void )
 {
-    
-    LOG_INFOF("renderer", "Entering render loop");
-    
-    double last_time = glfwGetTime();
-    int frame_count = 0;
+    LOG_INFOF( "renderer", "Entering render loop" );
+
+    double last_time   = glfwGetTime( );
+    int    frame_count = 0;
 
     g_last_frame_time = glfwGetTime( );    // Initialize to current time
 
     while ( !glfwWindowShouldClose( window ) )
     {
-        
-        LOG_TRACEF("renderer", "=== Frame %d START ===", frame_count);
-        
+        LOG_TRACEF( "renderer", "=== Frame %d START ===", frame_count );
+
         // CRITICAL: Check for NULL before ANYTHING
-        if (!global_header || !global_data) {
-            LOG_ERRORF("renderer", "NULL model data! header=%p data=%p", 
-                      (void*)global_header, (void*)global_data);
+        if ( !global_header || !global_data )
+        {
+            LOG_ERRORF(
+                "renderer", "NULL model data! header=%p data=%p", ( void * ) global_header, ( void * ) global_data );
             break;
         }
-        
-        LOG_TRACEF("renderer", "Frame %d: Getting time", frame_count);
+
+        LOG_TRACEF( "renderer", "Frame %d: Getting time", frame_count );
         // Calculate delta time
         double current_time = glfwGetTime( );
         float  delta_time   = ( float ) ( current_time - g_last_frame_time );
@@ -1297,43 +1294,44 @@ void render_loop( void )
         {
             delta_time = 0.0f;
         }
-        
-        LOG_TRACEF("renderer", "Frame %d: Delta time = %.4f", frame_count, delta_time);
-        
+
+        LOG_TRACEF( "renderer", "Frame %d: Delta time = %.4f", frame_count, delta_time );
+
         // Update animation state
         if ( g_animation_enabled && global_header && global_data )
         {
-            LOG_TRACEF("renderer", "Frame %d: Updating animation", frame_count);
+            LOG_TRACEF( "renderer", "Frame %d: Updating animation", frame_count );
             mdl_animation_update( &g_anim_state, delta_time, global_header, global_data, global_seqgroups );
         }
 
         // Clear and render
-        LOG_TRACEF("renderer", "Frame %d: Clearing screen", frame_count);
+        LOG_TRACEF( "renderer", "Frame %d: Clearing screen", frame_count );
         clear_screen( );
 
         if ( global_header && global_data )
         {
-            LOG_TRACEF("renderer", "Frame %d: Calling render_model", frame_count);
+            LOG_TRACEF( "renderer", "Frame %d: Calling render_model", frame_count );
             render_model( global_header, global_data );
-            LOG_TRACEF("renderer", "Frame %d: render_model returned", frame_count);
+            LOG_TRACEF( "renderer", "Frame %d: render_model returned", frame_count );
         }
 
-        LOG_TRACEF("renderer", "Frame %d: Swapping buffers", frame_count);
+        LOG_TRACEF( "renderer", "Frame %d: Swapping buffers", frame_count );
         glfwSwapBuffers( window );
-        
-        LOG_TRACEF("renderer", "Frame %d: Polling events", frame_count);
+
+        LOG_TRACEF( "renderer", "Frame %d: Polling events", frame_count );
         glfwPollEvents( );
-        
+
         frame_count++;
-        
-        if (frame_count % 60 == 0) {
-            LOG_DEBUGF("renderer", "Rendered %d frames", frame_count);
+
+        if ( frame_count % 60 == 0 )
+        {
+            LOG_DEBUGF( "renderer", "Rendered %d frames", frame_count );
         }
-        
-        LOG_TRACEF("renderer", "=== Frame %d END ===", frame_count - 1);
+
+        LOG_TRACEF( "renderer", "=== Frame %d END ===", frame_count - 1 );
     }
-    
-    LOG_INFOF("renderer", "Exiting render loop after %d frames", frame_count);
+
+    LOG_INFOF( "renderer", "Exiting render loop after %d frames", frame_count );
 }
 
 void set_wireframe_mode( bool enabled )
@@ -1357,47 +1355,53 @@ void set_current_texture( unsigned int texture_id )
 
 void render_model( studiohdr_t *header, unsigned char *data )
 {
-    LOG_TRACEF("renderer", "render_model() START");
-    
+    LOG_TRACEF( "renderer", "render_model() START" );
+
     ( void ) header;
     ( void ) data;
 
     // ONE-TIME: Build mesh topology
     if ( !model_processed )
     {
-        LOG_DEBUGF("renderer", "First frame - processing model");
+        LOG_DEBUGF( "renderer", "First frame - processing model" );
         ProcessModelForRendering( );
-        LOG_DEBUGF("renderer", "Model processing complete - %d vertices, %d ranges",
-                  total_render_vertices, g_num_ranges);
+        LOG_DEBUGF(
+            "renderer", "Model processing complete - %d vertices, %d ranges", total_render_vertices, g_num_ranges );
     }
 
-    if ( total_render_vertices == 0 ) {
-        LOG_WARNF("renderer", "No vertices to render!");
+    if ( total_render_vertices == 0 )
+    {
+        LOG_WARNF( "renderer", "No vertices to render!" );
         return;
     }
-    
-    LOG_TRACEF("renderer", "render_model: animated=%d, vertices=%d, ranges=%d",
-              g_animation_enabled, total_render_vertices, g_num_ranges);
+
+    LOG_TRACEF(
+        "renderer",
+        "render_model: animated=%d, vertices=%d, ranges=%d",
+        g_animation_enabled,
+        total_render_vertices,
+        g_num_ranges );
 
     // EVERY FRAME: Update bones and re-skin vertices if animating
     if ( g_animation_enabled && global_header && global_data )
     {
         // Calculate animated bone transforms directly into g_bonetransformations
-        mdl_result_t anim_result = mdl_animation_calculate_bones( &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations );
-        
+        mdl_result_t anim_result = mdl_animation_calculate_bones(
+            &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations );
+
         // CRITICAL FIX: If sequence group is missing, fall back to T-pose
         if ( anim_result == MDL_ERROR_SEQUENCE_GROUP_MISSING )
         {
             // Fallback to T-pose by using static bone setup
             SetUpBones( global_header, global_data );
-            
+
             // Don't spam the console - this error was already printed in mdl_animation_calculate_bones
             // Just continue rendering with T-pose
         }
 
         // Re-transform vertices with new bone positions
         mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( global_data + global_header->bodypartindex );
-        
+
         // CRITICAL: Re-build the vertex buffer with new skinned positions
         // We need to rebuild the render buffer because AddVertexToBuffer reads from skinned_positions
         total_render_vertices = 0;
@@ -1416,7 +1420,7 @@ void render_model( studiohdr_t *header, unsigned char *data )
             }
 
             mstudiomodel_t *model = &models[selected_model_index];
-            
+
             TransformVertices( global_header, global_data, model, skinned_positions );
             have_skinned_positions = true;
 

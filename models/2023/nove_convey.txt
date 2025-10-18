@@ -1,0 +1,8 @@
+nove_convey:
+Map by Muc Atient
+
+Maxplayer:32
+hostage:4
+
+Welcome to NOVE!
+QQ:25733665
