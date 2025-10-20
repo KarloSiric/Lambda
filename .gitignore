@@ -65,3 +65,7 @@ logs/
 !README.txt
 !LICENSE.txt
 
+# Ignoring unnecessary documentation that is a reference just for us
+docs/DEVELOPMENT_INFO.md
+
+
