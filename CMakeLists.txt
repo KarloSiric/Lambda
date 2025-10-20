@@ -42,7 +42,7 @@ endif()
 #   Project Definition
 # ═══════════════════════════════════════════════════════════════════════════
 
-project(HalfLifeModelViewer VERSION 0.1.1 LANGUAGES C)
+project(Lambda VERSION 0.2.1 LANGUAGES C)
 
 # Set C standard
 set(CMAKE_C_STANDARD 11)
