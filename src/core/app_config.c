@@ -29,8 +29,7 @@ void app_config_setup_logger_options( const app_args_t *args, t_log_options *log
     log_opts->max_files     = 0;
     log_opts->use_colors    = true;
     log_opts->json_lines    = false;
-    // log_opts->console_level = LOG_ERROR;  --> not really needed
-
+    
     // Check if the quiet mode is being applied
     if ( args->quiet )
     {
@@ -72,21 +71,3 @@ void app_config_setup_logger_options( const app_args_t *args, t_log_options *log
         log_opts->file_path = "..logs/viewer.log";   
     }
 }
-
-
-int app_config_get_log_level( const app_args_t *args )
-{ 
-    switch ( args->log_level ) {
-        case LOG_LEVEL_QUIET:
-            return LOG_ERROR;
-        case LOG_LEVEL_NORMAL:
-            return LOG_INFO;
-        case LOG_LEVEL_VERBOSE:
-            return LOG_DEBUG;
-        case LOG_LEVEL_TRACE:
-            return LOG_TRACE;
-        default:
-            return LOG_INFO;
-    } 
-}
-

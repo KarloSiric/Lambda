@@ -35,10 +35,8 @@ int app_init_logger( const app_args_t *args )
 
     logger_init( &log_options );
 
-    int global_level = app_config_get_log_level( args );
-
-    logger_set_global_level( global_level );
-
+    logger_set_global_level( log_options.console_level );
+    
     if ( args->log_level >= LOG_LEVEL_VERBOSE )
     {
         logger_set_category_level( "renderer", LOG_DEBUG );
