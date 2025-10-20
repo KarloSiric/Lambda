@@ -20,7 +20,6 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "main.h"
 
 #include "graphics/renderer.h"
 #include "mdl/mdl_loader.h"
