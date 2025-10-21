@@ -27,6 +27,8 @@
 #include "../utils/logger.h"
 #include "../graphics/renderer.h"
 #include "../mdl/mdl_loader.h"
+#include "../mdl/mdl_report.h"
+#include <stdio.h>
 
 
 static app_state_t g_app_state = {0};
@@ -39,10 +41,75 @@ app_state_t *app_get_state(void)
     
 }
 
+static int handle_dump_mode(const app_args_t *args)
+{
+ 
+    if (app_init_logger(args) != 0) 
+    {
+        fprintf(stderr, "ERROR: Failed to initialize logger\n");
+        return ( -1 );
+    }
+    
+    
+    LOG_INFOF("app", "Starting dump mode...");
+    if (app_load_model(args->model_path, &g_app_state.model) != 0)
+    {
+        LOG_ERRORF("app", "Failed to load model");
+        logger_shutdown();
+        return ( -1 );
+    }
+    
+    if (args->dump_level == DUMP_BASIC)
+    { 
+        print_complete_model_analysis(stdout, 
+            args->model_path, 
+            g_app_state.model->header,  
+            g_app_state.model->texture_header, 
+            g_app_state.model->data, 
+            g_app_state.model->texture_data
+        );
+        
+        print_sequence_group_info(
+            stdout, 
+            g_app_state.model->seqgroups, 
+            g_app_state.model->num_seqgroups
+        );
+    }
+    
+    else if (args->dump_level == DUMP_EXTENDED)
+    {
+        print_extended_model_dump(
+            stdout,
+            args->model_path,
+            g_app_state.model->header,
+            g_app_state.model->texture_header,
+            g_app_state.model->data,
+            g_app_state.model->texture_data
+        );
+        
+        print_sequence_group_info(
+            stdout,
+            g_app_state.model->seqgroups,
+            g_app_state.model->num_seqgroups
+        );
+    }
+    
+    free_model(g_app_state.model);
+    
+    if (!args->quiet)
+    {
+        LOG_INFOF("app", "Dump complete. Exiting.");
+        
+    }
+    
+    logger_shutdown();
+    
+    return ( 0 );
+}
+
 
 int app_init(const app_args_t *args)
 {
-    
     
     if (!args)
     {
@@ -50,6 +117,32 @@ int app_init(const app_args_t *args)
         return ( -1 );
     }
     
+    print_banner();
+    
+    // Show help if prompted for
+    if (args->show_help)
+    {
+        print_usage("Half-Life Model Viewer - Lambda");
+        return ( 0 );
+    }
+    
+    
+    // Show version if prompted for
+    if (args->show_version)
+    {
+        print_version_info();
+        return ( 1 ); 
+    }
+    
+    if (args->dump_only)
+    {
+        return handle_dump_mode(args);
+    }
+    
+    
+    // Everything else continues just as it was
+    
+
     if (app_init_logger(args) != 0)
     {
         LOG_ERRORF("app", "Failed to initialize logger");
@@ -149,3 +242,4 @@ void app_shutdown( void )
     
     logger_shutdown();
 }
+
