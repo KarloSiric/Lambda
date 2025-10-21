@@ -79,6 +79,7 @@ typedef struct {
     bool model_modified;
     // TODO: Undo/redo stacks later    
      
+     
 } app_state_t;
 
 int app_init( const app_args_t *args );

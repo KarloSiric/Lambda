@@ -224,6 +224,9 @@ set(SOURCES
     src/main.c
     src/version.h
     src/studio.h
+    src/core/app.c
+    src/core/app_config.c
+    src/core/app_init.c
     
     # MDL subsystem
     src/mdl/mdl_loader.c
