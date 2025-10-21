@@ -16,11 +16,10 @@
  *
  * ───────────────────────────────────────────────────────────────────────────
  *   Author: Karlo Siric
- *   Purpose: Command-Line Argument Parser Implementation
+ *   Purpose: Main Entry point for the Application.
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "main.h"
 
 #include "graphics/renderer.h"
 #include "mdl/mdl_loader.h"

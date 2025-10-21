@@ -16,7 +16,7 @@
  *
  * ───────────────────────────────────────────────────────────────────────────
  *   Author: Karlo Siric
- *   Purpose: Command-Line Argument Parser Implementation
+ *   Purpose: Logger implementation
  * ═══════════════════════════════════════════════════════════════════════════
  */
 

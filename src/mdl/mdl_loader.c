@@ -1035,7 +1035,8 @@ mdl_result_t create_mdl_model(const char *model_path, mdl_model_t **model_out)
         &model->header, 
         &model->texture_header, 
         &model->data, 
-        &model->texture_data );
+        &model->texture_data 
+    );
     
     
     if (result != MDL_SUCCESS)

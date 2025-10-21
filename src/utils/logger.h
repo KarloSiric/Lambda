@@ -1,10 +1,3 @@
-// =============================
-// File: logger.h
-// A tiny, fast, thread‑safe logger for C (single TU, no deps)
-// Features: levels, categories, color console, JSON/file output,
-// rotation, per-category levels, hexdumps, time blocks, assertions.
-// =============================
-
 #pragma once
 
 #include <stdarg.h>
@@ -30,7 +23,7 @@ extern "C" {
 #endif
 
 typedef enum {
-
+    
     LOG_TRACE = 0,
     LOG_DEBUG,
     LOG_INFO,
@@ -41,6 +34,7 @@ typedef enum {
 } t_log_level;
 
 typedef struct log_options {
+    
     const char *file_path;        // path to log file (NULL = no file)
     size_t      max_bytes;        // rotate when file exceeds this (0 = no rotate)
     int         max_files;        // number of rotated files to keep
@@ -67,6 +61,7 @@ void logger_logv(
 void logger_log( int level, const char *category, const char *file, int line, const char *func, const char *fmt, ... );
 
 void logger_hexdump(
+    
     int         level,
     const char *category,
     const char *file,
