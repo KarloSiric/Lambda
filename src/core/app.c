@@ -91,19 +91,61 @@ int app_init(const app_args_t *args)
     g_app_state.animation_playing = true;
     
     g_app_state.running = true;
+    g_app_state.initialized = true;
+    
+    LOG_INFOF("app", "Application initialized successfully!\n");
     
     
+    return ( 0 );
+    
+}
+
+
+int app_run( void )
+{
+    
+    if(!g_app_state.initialized)
+    {
+        LOG_ERRORF("app", "Cannot run: Application not initialized");
+        return ( -1 );
+    }
     
     
+    LOG_INFOF("app", "Starting main loop...");
     
+    // NOTE(Karlo): Later we should move the rendering loop logic to here
     
+    render_loop();
     
+    g_app_state.running = false;
     
+    LOG_INFOF("app", "Main loop exited");
     
+    return ( 0 );
+}
+
+
+void app_shutdown( void )
+{
     
+    if (!g_app_state.initialized)
+    {
+        // It is either already shut down or not initialized
+        return;
+    }
     
+    LOG_INFOF("app", "Shutting down application...");
     
+    if (g_app_state.model)
+    {
+        free_model(g_app_state.model);
+        g_app_state.model = NULL;
+    }
     
+    cleanup_renderer();
     
+    g_app_state.initialized = false;
+    g_app_state.running = false;
     
+    logger_shutdown();
 }
