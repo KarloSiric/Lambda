@@ -4,6 +4,7 @@
 #include "../utils/args.h"
 #include "../utils/logger.h"
 
+
 void app_config_setup_logger_options(const app_args_t *args, t_log_options *log_opts);
 
 

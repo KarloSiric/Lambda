@@ -16,7 +16,7 @@
  *
  * ───────────────────────────────────────────────────────────────────────────
  *   Author: Karlo Siric
- *   Purpose: Command-Line Argument Parser
+ *   Purpose: Arguments extraction for the CLI application runtime.
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
