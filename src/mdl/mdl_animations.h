@@ -1,7 +1,7 @@
 #ifndef MDLANIMATIONS_H
 #define MDLANIMATIONS_H
 
-#include "../studio.h"
+#include "studio.h"
 #include "mdl_loader.h"
 #include <cglm/cglm.h>
 

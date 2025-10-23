@@ -23,9 +23,9 @@
 
 #include "mdl_loader.h"
 
-#include "../studio.h"
-#include "../utils/mdl_messages.h"
-#include "../utils/utils.h"
+#include "studio.h"
+#include "utils/mdl_messages.h"
+#include "utils/utils.h"
 
 #include <stdbool.h>
 #include <stdio.h>

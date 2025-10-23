@@ -2,7 +2,6 @@
 #define MDL_INFO_H 
 
 
-#include "../studio.h"
 #include <stdio.h>
 
 

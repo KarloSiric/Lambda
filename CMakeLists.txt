@@ -48,6 +48,8 @@ project(Lambda VERSION 0.2.1 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # ═══════════════════════════════════════════════════════════════════════════
 #   Build Configuration
 # ═══════════════════════════════════════════════════════════════════════════
@@ -262,6 +264,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
+
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
 # Link OpenGL
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)

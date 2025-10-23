@@ -23,7 +23,7 @@
 #include "bone_system.h"
 
 
-#include "../utils/logger.h"
+#include "utils/logger.h"
 #include <stdio.h>
 #include <string.h>
 

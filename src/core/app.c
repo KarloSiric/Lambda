@@ -24,10 +24,10 @@
 #include "app.h"
 
 #include "app_init.h"
-#include "../utils/logger.h"
-#include "../graphics/renderer.h"
-#include "../mdl/mdl_loader.h"
-#include "../mdl/mdl_report.h"
+#include "utils/logger.h"
+#include "graphics/renderer.h"
+#include "mdl/mdl_loader.h"
+#include "mdl/mdl_report.h"
 #include <stdio.h>
 
 
@@ -54,7 +54,7 @@ static int handle_dump_mode(const app_args_t *args)
     LOG_INFOF("app", "Starting dump mode...");
     if (app_load_model(args->model_path, &g_app_state.model) != 0)
     {
-        LOG_ERRORF("app", "Failed to load model");
+        LOG_ERRORF("app", "Failed to load model: '%s'", g_app_state.model->header->name);
         logger_shutdown();
         return ( -1 );
     }
