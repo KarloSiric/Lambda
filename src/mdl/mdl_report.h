@@ -17,7 +17,7 @@
 #define FILENO fileno
 #endif
 
-#include "../studio.h"
+#include "studio.h"
 
 void print_complete_model_analysis(
     FILE *output,

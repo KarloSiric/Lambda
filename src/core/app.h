@@ -1,9 +1,9 @@
 #ifndef CORE_APP_H
 #define CORE_APP_H
 
-#include "../utils/args.h"
-#include "../mdl/mdl_loader.h"
-#include "../graphics/gl_platform.h"
+#include "utils/args.h"
+#include "mdl/mdl_loader.h"
+#include "graphics/gl_platform.h"
 
 #include <stdbool.h>
 

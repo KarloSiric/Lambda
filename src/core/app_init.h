@@ -2,8 +2,8 @@
 #define CORE_APP_INIT_H 
 
 
-#include "../utils/args.h"
-#include "../mdl/mdl_loader.h"
+#include "utils/args.h"
+#include "mdl/mdl_loader.h"
 
 int app_init_logger(const app_args_t *args);
 

@@ -23,8 +23,8 @@
 
 #include "textures.h"
 
-#include "../graphics/gl_platform.h"
-#include "../utils/logger.h"
+#include "graphics/gl_platform.h"
+#include "utils/logger.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

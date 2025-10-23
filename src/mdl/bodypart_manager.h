@@ -7,7 +7,7 @@
 #ifndef BODYPART_MANAGER_H
 #define BODYPART_MANAGER_H
 
-#include "../studio.h"
+#include "studio.h"
 #include <stdbool.h>
 
 // Structure to track current bodypart configuration

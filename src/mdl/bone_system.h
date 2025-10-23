@@ -1,7 +1,7 @@
 #ifndef BONESYSTEM_H
 #define BONESYSTEM_H
 
-#include "../studio.h"
+#include "studio.h"
 
 #include <cglm/cglm.h>
 
