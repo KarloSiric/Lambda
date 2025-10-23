@@ -23,9 +23,9 @@
 #include "app_init.h"
 
 #include "app_config.h"
-#include "../utils/logger.h"
-#include "../graphics/renderer.h"
-#include "../mdl/mdl_loader.h"
+#include "utils/logger.h"
+#include "graphics/renderer.h"
+#include "mdl/mdl_loader.h"
 
 #include <stdio.h>
 

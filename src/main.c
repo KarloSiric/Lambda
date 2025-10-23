@@ -20,14 +20,9 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-
 #include "core/app.h"
-#include "graphics/renderer.h"
-#include "mdl/mdl_loader.h"
 #include "mdl/mdl_report.h"
-#include "studio.h"
 #include "utils/args.h"
-#include "utils/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
