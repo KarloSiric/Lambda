@@ -1,8 +1,8 @@
 #ifndef MDL_LOADER_H
 #define MDL_LOADER_H
 
-#include "../studio.h"
-#include "../utils/mdl_messages.h"
+#include "studio.h"
+#include "utils/mdl_messages.h"
 
 #include <stddef.h>
 #include <stdio.h>

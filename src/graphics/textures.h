@@ -2,8 +2,8 @@
 #define TEXTURE_H
 
 #pragma once
-#include "../studio.h"
-#include "../utils/mdl_messages.h"
+#include "studio.h"
+#include "utils/mdl_messages.h"
 
 #include <stdbool.h>
 #include <stddef.h>
