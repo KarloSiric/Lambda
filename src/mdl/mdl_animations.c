@@ -21,7 +21,6 @@
  */
 
 #include "mdl_animations.h"
-
 #include "mdl_bones.h"
 #include "mdl_loader.h"
 

@@ -24,7 +24,7 @@
 #include "cl_app_config.h"
 
 #include "util/util_logger.h"
-#include "r/r_renderer.h"
+#include "r/r_draw.h"
 #include "mdl/mdl_loader.h"
 
 #include <stdio.h>
