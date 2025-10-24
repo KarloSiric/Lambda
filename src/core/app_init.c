@@ -59,13 +59,13 @@ int app_init_logger( const app_args_t *args ) {
 
 int app_load_model( const char *model_path, mdl_model_t **model_out ) {
 	if ( !model_path ) {
-		LOG_ERRORF( "app", "Model path is NULL!" );
+		LOG_ERROR( "app", "Model path is NULL!" );
 		LOG_ERRORF( "app", "Invalid parameter: model_path=%p", (void *)model_path );
 		return ( -1 );
 	}
 
 	if ( !model_out ) {
-		LOG_ERRORF( "app", "Model Output pointer is NULL" );
+		LOG_ERROR( "app", "Model Output pointer is NULL" );
 		LOG_ERRORF( "app", "Invalid parameter: model_out=%p", (void *)model_out );
 		return ( -1 );
 	}
@@ -82,7 +82,7 @@ int app_load_model( const char *model_path, mdl_model_t **model_out ) {
 
 	mdl_model_t *model = *model_out;
 
-	LOG_INFOF( "mdl", "Model loaded successfully!" );
+	LOG_INFO( "mdl", "Model loaded successfully!" );
 	LOG_INFOF( "mdl", "   Bones: %d", model->header->numbones );
 	LOG_INFOF( "mdl", "   Bodyparts: %d", model->header->numbodyparts );
 	LOG_INFOF( "mdl", "   Sequences: %d", model->header->numseq );
@@ -99,7 +99,7 @@ int app_init_renderer( int width, int height, const char *title ) {
 	}
 
 	if ( !title ) {
-		LOG_ERRORF( "renderer", "Window title is NULL" );
+		LOG_ERROR( "renderer", "Window title is NULL" );
 		LOG_ERRORF( "renderer", "Invalid parameter: title=%p", (void *)title );
 		return ( -1 );
 	}
@@ -110,11 +110,11 @@ int app_init_renderer( int width, int height, const char *title ) {
 	int result = init_renderer( width, height, title );
 
 	if ( result != MDL_SUCCESS ) {
-		LOG_ERRORF( "renderer", "Failed to initialize renderer" );
+		LOG_ERROR( "renderer", "Failed to initialize renderer" );
 		return ( -1 );
 	}
 
-	LOG_INFOF( "renderer", "Renderer initialized successfully!" );
+	LOG_INFO( "renderer", "Renderer initialized successfully!" );
 
 	return ( 0 );
 }

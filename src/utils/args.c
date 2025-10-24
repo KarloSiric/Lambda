@@ -24,21 +24,18 @@
 #include "version.h"
 #include <string.h>
 
-
 #ifdef _WIN32
-    #include <io.h>
-    #define F_OK 0
-#else 
-    #include <unistd.h>
-    #include <sys/unistd.h>
-    #include <sys/stat.h>
+#include <io.h>
+#define F_OK 0
+#else
+#include <unistd.h>
+#include <sys/unistd.h>
+#include <sys/stat.h>
 #endif
-
 
 // Styling constants
 #define RULER_DOUBLE "═══════════════════════════════════════════════════════════════"
 #define RULER_SINGLE "───────────────────────────────────────────────────────────────"
-
 
 /**
  * @brief      Determines if file exists.
@@ -47,19 +44,16 @@
  *
  * @return     True if file exists, False otherwise.
  */
-static bool file_exists( const char *filepath )
-{
-     if ( filepath == NULL )
-     {
-        return false;
-     }
-     
-    #ifdef _WIN32
-        return ( _access( filepath, 0 ) == 0);
-    #else
-        return ( access( filepath, F_OK ) == 0);
-    #endif
-     
+static bool file_exists( const char *filepath ) {
+	if ( filepath == NULL ) {
+		return false;
+	}
+
+#ifdef _WIN32
+	return ( _access( filepath, 0 ) == 0 );
+#else
+	return ( access( filepath, F_OK ) == 0 );
+#endif
 }
 
 /**
@@ -69,44 +63,33 @@ static bool file_exists( const char *filepath )
  *
  * @return     True if model extensions, False otherwise.
  */
-static bool has_mdl_extensions( const char *filepath )
-{
-    
-    if ( filepath == NULL )
-    {
-        return false;
-    }
-    
-    size_t file_length = strlen( filepath );
-    if ( file_length < 4 )
-    {
-        return false;
-    }
-    
-    const char *dot_ptr = filepath + ( file_length - 4 );
-    const char *expected_ptr = ".mdl";
-    
-    for ( int i = 0; i < 4; i++ )
-    {
-        if ( i == 0 )
-        {
-            if ( dot_ptr[i] != expected_ptr[i])
-            {
-                return false;
-            }
-        }   
-        else
-        {
-            if ( tolower( (unsigned char)dot_ptr[i] ) != expected_ptr[i] )
-            {
-                return false;
-            }
-        }
-    } 
-    
-    return true;
-}
+static bool has_mdl_extensions( const char *filepath ) {
+	if ( filepath == NULL ) {
+		return false;
+	}
 
+	size_t file_length = strlen( filepath );
+	if ( file_length < 4 ) {
+		return false;
+	}
+
+	const char *dot_ptr = filepath + ( file_length - 4 );
+	const char *expected_ptr = ".mdl";
+
+	for ( int i = 0; i < 4; i++ ) {
+		if ( i == 0 ) {
+			if ( dot_ptr[i] != expected_ptr[i] ) {
+				return false;
+			}
+		} else {
+			if ( tolower( (unsigned char)dot_ptr[i] ) != expected_ptr[i] ) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
 
 /**
  * @brief      Prints a version information.
@@ -256,8 +239,6 @@ int parse_args( int argc, const char *argv[], app_args_t *args ) {
 	if ( argc < 2 ) {
 		args->show_help = true;
 		return ( 0 );
-
-
 	}
 
 	// Parse arguments
@@ -277,13 +258,13 @@ int parse_args( int argc, const char *argv[], app_args_t *args ) {
 		// Dump flags
 		else if ( strcmp( arg, "--dump" ) == 0 || strcmp( arg, "-d" ) == 0 ) {
 			args->dump_level = DUMP_BASIC;
-            
+
 		} else if ( strcmp( arg, "--dump-ex" ) == 0 || strcmp( arg, "-dx" ) == 0 ) {
 			args->dump_level = DUMP_EXTENDED;
-            
+
 		} else if ( strcmp( arg, "--dump-only" ) == 0 ) {
 			args->dump_only = true;
-            
+
 		}
 		// Logging flags
 		else if ( strcmp( arg, "--quiet" ) == 0 || strcmp( arg, "-q" ) == 0 ) {
@@ -297,25 +278,23 @@ int parse_args( int argc, const char *argv[], app_args_t *args ) {
 			if ( i + 1 >= argc ) {
 				fprintf( stderr, "ERROR: --log-file requires a path argument\n" );
 				return ( -1 );
-
 			}
 			args->log_file = argv[++i];
 		}
 		// Model path (doesn't start with -)
 		else if ( arg[0] != '-' ) {
 			if ( args->model_path == NULL ) {
-                
-                if ( !file_exists(arg) ) {
-                    fprintf(stderr, "ERROR: File not found: '%s'\n", arg);
-                    return ( -1 );
-                } 
+				if ( !file_exists( arg ) ) {
+					fprintf( stderr, "ERROR: File not found: '%s'\n", arg );
+					return ( -1 );
+				}
 				if ( !has_mdl_extensions( arg ) ) {
 					fprintf( stderr, "ERROR: Invalid file type '%s'\n", arg );
 					fprintf( stderr, "       Only .mdl files are supported!\n" );
 					return ( -1 );
 				}
-                
-			     args->model_path = arg;
+
+				args->model_path = arg;
 			} else {
 				fprintf( stderr, "ERROR: Multiple model files specified\n" );
 				fprintf( stderr, "       Already have: %s\n", args->model_path );
@@ -336,12 +315,7 @@ int parse_args( int argc, const char *argv[], app_args_t *args ) {
 		fprintf( stderr, "ERROR: No model file specified\n" );
 		fprintf( stderr, "       Use --help for usage information\n" );
 		return ( -1 );
-
-
 	}
 
 	return ( 0 );
 }
-
-
-

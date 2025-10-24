@@ -39,7 +39,7 @@ static int handle_dump_mode( const app_args_t *args ) {
 		return ( APP_INIT_ERROR );
 	}
 
-	LOG_INFOF( "app", "Starting dump mode..." );
+	LOG_INFO( "app", "Starting dump mode..." );
 	if ( app_load_model( args->model_path, &local_model ) != APP_INIT_SUCCESS ) {
 		LOG_ERRORF( "app", "Failed to load model: '%s'", local_model->header->name );
 		logger_shutdown();
@@ -79,7 +79,7 @@ static int handle_dump_mode( const app_args_t *args ) {
 	free_model( local_model );
 
 	if ( !args->quiet ) {
-		LOG_INFOF( "app", "Dump complete. Exiting." );
+		LOG_INFO( "app", "Dump complete. Exiting." );
 	}
 
 	logger_shutdown();
@@ -89,7 +89,7 @@ static int handle_dump_mode( const app_args_t *args ) {
 
 int app_init( const app_args_t *args ) {
 	if ( !args ) {
-		LOG_ERRORF( "app", "Arguments pointer is NULL" );
+		LOG_ERROR( "app", "Arguments pointer is NULL" );
 		return ( APP_INIT_ERROR );
 	}
 
@@ -114,14 +114,14 @@ int app_init( const app_args_t *args ) {
 	// Everything else continues just as it was
 
 	if ( app_init_logger( args ) != APP_INIT_SUCCESS ) {
-		LOG_ERRORF( "app", "Failed to initialize logger" );
+		LOG_ERROR( "app", "Failed to initialize logger" );
 		return ( APP_INIT_ERROR );
 	}
 
-	LOG_INFOF( "app", "Initializing application..." );
+	LOG_INFO( "app", "Initializing application..." );
 
 	if ( app_init_renderer( WIDTH, HEIGHT, "Half-Life Model Viewer - Lambda" ) != 0 ) {
-		LOG_ERRORF( "app", "Failed to initialize renderer" );
+		LOG_ERROR( "app", "Failed to initialize renderer" );
 		logger_shutdown();
 		return ( APP_INIT_ERROR );
 	}
@@ -130,7 +130,7 @@ int app_init( const app_args_t *args ) {
 	g_app_state.window = window;
 
 	if ( app_load_model( args->model_path, &g_app_state.model ) != APP_INIT_SUCCESS ) {
-		LOG_ERRORF( "app", "Failed to load model" );
+		LOG_ERROR( "app", "Failed to load model" );
 		cleanup_renderer();
 		logger_shutdown();
 		return ( APP_INIT_ERROR );
@@ -151,18 +151,18 @@ int app_init( const app_args_t *args ) {
 	g_app_state.running = true;
 	g_app_state.initialized = true;
 
-	LOG_INFOF( "app", "Application initialized successfully!\n" );
+	LOG_INFO( "app", "Application initialized successfully!\n" );
 
 	return ( APP_INIT_SUCCESS );
 }
 
 int app_run( void ) {
 	if ( !g_app_state.initialized ) {
-		LOG_ERRORF( "app", "Cannot run: Application not initialized" );
+		LOG_ERROR( "app", "Cannot run: Application not initialized" );
 		return ( APP_INIT_ERROR );
 	}
 
-	LOG_INFOF( "app", "Starting main loop..." );
+	LOG_INFO( "app", "Starting main loop..." );
 
 	// NOTE(Karlo): Later we should move the rendering loop logic to here
 
@@ -170,7 +170,7 @@ int app_run( void ) {
 
 	g_app_state.running = false;
 
-	LOG_INFOF( "app", "Main loop exited" );
+	LOG_INFO( "app", "Main loop exited" );
 
 	return ( APP_INIT_SUCCESS );
 }
@@ -181,7 +181,7 @@ void app_shutdown( void ) {
 		return;
 	}
 
-	LOG_INFOF( "app", "Shutting down application..." );
+	LOG_INFO( "app", "Shutting down application..." );
 
 	if ( g_app_state.model ) {
 		free_model( g_app_state.model );

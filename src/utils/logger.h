@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,9 +56,11 @@ int logger_get_category_level( const char *category, int *out_level );
 void logger_set_console_level( int level );
 int logger_is_tty( void );
 
+void logger_log( int level, const char *category, const char *file, int line, const char *func, const char *message );
+
 void logger_logv(
 	int level, const char *category, const char *file, int line, const char *func, const char *fmt, va_list ap );
-void logger_log( int level, const char *category, const char *file, int line, const char *func, const char *fmt, ... );
+void logger_logf( int level, const char *category, const char *file, int line, const char *func, const char *fmt, ... );
 
 void logger_hexdump(
 
@@ -92,16 +95,27 @@ bool logger_should_log( int level, const char *category );
 #endif
 
 // base macro: send everything with auto file/line/func
-#define LOG_AT( LVL, CAT, FMT, ... ) \
-	logger_log( ( LVL ), ( CAT ), __FILE__, __LINE__, __func__, (FMT)LOG_VA_COMMA( __VA_ARGS__ ) )
+#define LOG_ATF( LVL, CAT, FMT, ... ) \
+	logger_logf( ( LVL ), ( CAT ), __FILE__, __LINE__, __func__, (FMT)LOG_VA_COMMA( __VA_ARGS__ ) )
+
+#define LOG_AT( LVL, CAT, MSG ) \
+	logger_log( ( LVL ), ( CAT ), __FILE__, __LINE__, __func__, ( MSG ) )
+
+// Logging macros without formatting
+#define LOG_TRACE( CAT, MSG ) LOG_AT( LOG_TRACE, ( CAT ), ( MSG ) )
+#define LOG_DEBUG( CAT, MSG ) LOG_AT( LOG_DEBUG, ( CAT ), ( MSG ) )
+#define LOG_INFO( CAT, MSG ) LOG_AT( LOG_INFO, ( CAT ), ( MSG ) )
+#define LOG_WARN( CAT, MSG ) LOG_AT( LOG_WARN, ( CAT ), ( MSG ) )
+#define LOG_ERROR( CAT, MSG ) LOG_AT( LOG_ERROR, ( CAT ), ( MSG ) )
+#define LOG_FATAL( CAT, MSG ) LOG_AT( LOG_FATAL, ( CAT ), ( MSG ) )
 
 // convenience per-level macros
-#define LOG_TRACEF( CAT, FMT, ... ) LOG_AT( LOG_TRACE, ( CAT ), ( FMT ), __VA_ARGS__ )
-#define LOG_DEBUGF( CAT, FMT, ... ) LOG_AT( LOG_DEBUG, ( CAT ), ( FMT ), __VA_ARGS__ )
-#define LOG_INFOF( CAT, FMT, ... ) LOG_AT( LOG_INFO, ( CAT ), ( FMT ), __VA_ARGS__ )
-#define LOG_WARNF( CAT, FMT, ... ) LOG_AT( LOG_WARN, ( CAT ), ( FMT ), __VA_ARGS__ )
-#define LOG_ERRORF( CAT, FMT, ... ) LOG_AT( LOG_ERROR, ( CAT ), ( FMT ), __VA_ARGS__ )
-#define LOG_FATALF( CAT, FMT, ... ) LOG_AT( LOG_FATAL, ( CAT ), ( FMT ), __VA_ARGS__ )
+#define LOG_TRACEF( CAT, FMT, ... ) LOG_ATF( LOG_TRACE, ( CAT ), ( FMT ), __VA_ARGS__ )
+#define LOG_DEBUGF( CAT, FMT, ... ) LOG_ATF( LOG_DEBUG, ( CAT ), ( FMT ), __VA_ARGS__ )
+#define LOG_INFOF( CAT, FMT, ... ) LOG_ATF( LOG_INFO, ( CAT ), ( FMT ), __VA_ARGS__ )
+#define LOG_WARNF( CAT, FMT, ... ) LOG_ATF( LOG_WARN, ( CAT ), ( FMT ), __VA_ARGS__ )
+#define LOG_ERRORF( CAT, FMT, ... ) LOG_ATF( LOG_ERROR, ( CAT ), ( FMT ), __VA_ARGS__ )
+#define LOG_FATALF( CAT, FMT, ... ) LOG_ATF( LOG_FATAL, ( CAT ), ( FMT ), __VA_ARGS__ )
 
 // hexdump helper (already implemented in .c)
 #define LOG_HEXDUMP( LVL, CAT, DATA, LEN, LABEL ) \
@@ -129,7 +143,7 @@ bool logger_should_log( int level, const char *category );
 
 #else // LOG_ENABLE == 0  → compile out everything
 
-#define LOG_AT( ... ) ( (void)0 )
+#define LOG_ATF( ... ) ( (void)0 )
 #define LOG_TRACEF( ... ) ( (void)0 )
 #define LOG_DEBUGF( ... ) ( (void)0 )
 #define LOG_INFOF( ... ) ( (void)0 )
