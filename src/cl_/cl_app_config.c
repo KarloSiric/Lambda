@@ -20,7 +20,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "app_config.h"
+#include "cl_app_config.h"
 
 void app_config_setup_logger_options( const app_args_t *args, t_log_options *log_opts )
 {

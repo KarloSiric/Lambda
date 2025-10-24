@@ -222,50 +222,80 @@ message(STATUS "═════════════════════�
 # ═══════════════════════════════════════════════════════════════════════════
 
 set(SOURCES
-    # Core
-    src/main.c
-    src/version.h
-    src/studio.h
-    src/core/app.c
-    src/core/app_config.c
-    src/core/app_init.c
+    # # Core
+    # src/main.c
+    # src/version.h
+    # src/studio.h
+    # src/core/app.c
+    # src/core/app_config.c
+    # src/core/app_init.c
     
-    # MDL subsystem
-    src/mdl/mdl_loader.c
-    src/mdl/mdl_info.c
-    src/mdl/mdl_report.c
-    src/mdl/bone_system.c
-    src/mdl/bodypart_manager.c
-    src/mdl/mdl_animations.c
+    # # MDL subsystem
+    # src/mdl/mdl_loader.c
+    # src/mdl/mdl_info.c
+    # src/mdl/mdl_report.c
+    # src/mdl/bone_system.c
+    # src/mdl/bodypart_manager.c
+    # src/mdl/mdl_animations.c
     
-    # Graphics subsystem
-    src/graphics/renderer.c
-    src/graphics/camera.c
-    src/graphics/textures.c
+    # # Graphics subsystem
+    # src/graphics/renderer.c
+    # src/graphics/camera.c
+    # src/graphics/textures.c
     
-    # Utilities
-    src/utils/utils.c
-    src/utils/mdl_messages.c
-    src/utils/logger.c
-    src/utils/args.c
+    # # Utilities
+    # src/utils/utils.c
+    # src/utils/mdl_messages.c
+    # src/utils/logger.c
+    # src/utils/args.c
+    # Adding new system for adding all the .c file
 )
+
+file(GLOB SRC_CL CONFIGURE_DEPENDS "src/cl_/*.c")
+file(GLOB SRC_R CONFIGURE_DEPENDS "src/r_/*.c")
+file(GLOB SRC_MDL CONFIGURE_DEPENDS "src/mdl_/*.c")
+file(GLOB SRC_SYS CONFIGURE_DEPENDS "src/sys_/*.c")
+file(GLOB SRC_UTIL CONFIGURE_DEPENDS "src/util_/*.c")
+
+file(GLOB SRC_TOP CONFIGURE_DEPENDS "src/*.c")
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #   Executable
 # ═══════════════════════════════════════════════════════════════════════════
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME}
+  ${SRC_TOP}
+  ${SRC_CL}
+  ${SRC_R}
+  ${SRC_MDL}
+  ${SRC_SYS}
+  ${SRC_UTIL}
+)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
   SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders"   # absolute path to repo’s shaders
 )
 
-# Include directories
+
+# -------- Include directories --------
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/src        # for studio.h, version.h, etc.
+  ${CMAKE_SOURCE_DIR}/src/core
+  ${CMAKE_SOURCE_DIR}/src/cl_
+  ${CMAKE_SOURCE_DIR}/src/r_
+  ${CMAKE_SOURCE_DIR}/src/mdl_
+  ${CMAKE_SOURCE_DIR}/src/sys_
+  ${CMAKE_SOURCE_DIR}/src/util_
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
+# ---------- Warnings ----------
+target_compile_options(${PROJECT_NAME} PRIVATE
+  -Wall -Wextra -Wpedantic
+  -Wno-unused-function          # temporary while stubbing
+  -Wno-c23-extensions           # suppress Apple's gl3.h #warning noise
+)
+
 
 # Link OpenGL
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
