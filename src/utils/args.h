@@ -24,59 +24,69 @@
 #define ARGS_H
 
 #include <stdbool.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+
 
 /*
  * Dump detail levels
  */
 typedef enum {
-    DUMP_NONE = 0,      // No dump - just run viewer
-    DUMP_BASIC,         // --dump: Overview (header, bones, sequences)
-    DUMP_EXTENDED       // --dump-ex: Deep dive (vertices, meshes, raw data)
+    
+	DUMP_NONE = 0, // No dump - just run viewer
+	DUMP_BASIC,    // --dump: Overview (header, bones, sequences)
+	DUMP_EXTENDED  // --dump-ex: Deep dive (vertices, meshes, raw data)
+    
 } dump_level_t;
 
 /*
  * Log detail levels
  */
 typedef enum {
-    LOG_LEVEL_QUIET = 0,  // Only errors
-    LOG_LEVEL_NORMAL,     // Info and above
-    LOG_LEVEL_VERBOSE,    // Debug and above
-    LOG_LEVEL_TRACE       // Everything including trace
+    
+	LOG_LEVEL_QUIET = 0, // Only errors
+	LOG_LEVEL_NORMAL,    // Info and above
+	LOG_LEVEL_VERBOSE,   // Debug and above
+	LOG_LEVEL_TRACE      // Everything including trace
+    
 } log_detail_t;
 
 /*
  * Parsed command-line arguments
  */
 typedef struct {
-    const char  *model_path;    // Path to .mdl file
-    dump_level_t dump_level;    // Dump detail level
-    bool         dump_only;     // Exit after dump (no viewer)
-    bool         quiet;         // Suppress all non-error output (deprecated, use log_level)
-    log_detail_t log_level;     // Logging verbosity
-    const char  *log_file;      // Optional log file path
-    bool         show_help;     // Show usage
-    bool         show_version;  // Show version information
+    
+	const char *model_path; // Path to .mdl file
+	dump_level_t dump_level; // Dump detail level
+	bool dump_only; // Exit after dump (no viewer)
+	bool quiet; // Suppress all non-error output (deprecated, use log_level)
+	log_detail_t log_level; // Logging verbosity
+	const char *log_file; // Optional log file path
+	bool show_help; // Show usage
+	bool show_version; // Show version information
+    
 } app_args_t;
 
 /*
  * Parse command-line arguments
  * Returns: 0 on success, -1 on error
  */
-int parse_args(int argc, const char *argv[], app_args_t *args);
+int parse_args( int argc, const char *argv[], app_args_t *args );
 
 /*
  * Print usage information
  */
-void print_usage(const char *program_name);
+void print_usage( const char *program_name );
 
 /*
  * Print copyright banner
  */
-void print_banner(void);
+void print_banner( void );
 
 /*
  * Print detailed version information
  */
-void print_version_info(void);
+void print_version_info( void );
 
 #endif // ARGS_H

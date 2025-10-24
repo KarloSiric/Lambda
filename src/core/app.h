@@ -7,6 +7,12 @@
 
 #include <stdbool.h>
 
+
+#define APP_INIT_ERROR           -1  // error initialization just stop...
+#define APP_INIT_EXIT_SUCCESS     1  // quick exit but not an error initialization
+#define APP_INIT_SUCCESS          0  // normal successfull initialization
+
+
 typedef struct {
     
     // ============ Application Lifecycle ============
