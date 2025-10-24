@@ -20,9 +20,9 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "app.h"
+#include "cl_app.h"
 
-#include "app_init.h"
+#include "cl_app_init.h"
 #include "utils/logger.h"
 #include "graphics/renderer.h"
 #include "mdl/mdl_loader.h"
