@@ -89,7 +89,7 @@ int app_load_model(const char *model_path, mdl_model_t **model_out)
     
     mdl_model_t *model = *model_out;
     
-    LOG_INFOF("mld", "Model loaded successfully!");
+    LOG_INFOF("mdl", "Model loaded successfully!");
     LOG_INFOF("mdl", "   Bones: %d", model->header->numbones);
     LOG_INFOF("mdl", "   Bodyparts: %d", model->header->numbodyparts);
     LOG_INFOF("mdl", "   Sequences: %d", model->header->numseq);

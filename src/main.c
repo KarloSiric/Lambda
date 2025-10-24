@@ -27,27 +27,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static app_args_t args = { 0 };
 
-static app_args_t args = {0};
+int main( int argc, char const *argv[] ) {
+    
+	if ( parse_args( argc, argv, &args ) != 0 ) {
+		return ( 1 );
+	}
 
+	if ( app_init( &args ) != 0 ) {
+		return ( 1 );
+	}
 
-int main( int argc, char const *argv[] )
-{
-    
-    if (parse_args(argc, argv, &args) != 0)
-    {
-        return ( 1 ); 
-    }
-    
-    
-    if (app_init(&args) != 0) 
-    {
-        return ( 1 );
-    }
-    
-    app_run();
-    
-    app_shutdown();
-    
-    return 0;
+	app_run();
+
+	app_shutdown();
+
+	return 0;
 }
