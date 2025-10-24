@@ -2,11 +2,13 @@
 #define MATH_TYPES_H 
 
 #include <cglm/cglm.h>
+#include <cglm/struct.h>
 #include <cglm/vec3.h>
 #include <cglm/mat3x4.h>
 #include <cglm/mat4.h>
 #include <stdbool.h>
 #include <math.h>
+#include <stdalign.h>
 
 
 #define MATH_PI             3.14159265358979323846f
@@ -26,9 +28,10 @@ typedef versor              math_quat_t;
 typedef mat4                math_mat4_t;
 typedef mat3                math_mat3_t;
 
+
 typedef struct {
     
-    float mat[3][4];
+    alignas(16) float mat[3][4];
     
 } math_mat3x4_t;
 
