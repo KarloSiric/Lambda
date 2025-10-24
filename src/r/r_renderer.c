@@ -20,15 +20,15 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "renderer.h"
+#include "r_renderer.h"
+#include "r_gl_platform.h"
+#include "r_textures.h"
 
-#include "graphics/gl_platform.h"
-#include "graphics/textures.h"
-#include "mdl/bodypart_manager.h"
-#include "mdl/bone_system.h"
+#include "mdl/mdl_bodypart.h"
+#include "mdl/mdl_bones.h"
 #include "mdl/mdl_animations.h"
 #include "shaders/shader.h"
-#include "utils/logger.h"
+#include "util/util_logger.h"
 
 #include <OpenGL/gltypes.h>
 #include <cglm/cglm.h>

@@ -21,13 +21,15 @@
  */
 
 #include "cl_app.h"
-
 #include "cl_app_init.h"
-#include "utils/logger.h"
-#include "graphics/renderer.h"
+
+#include "util/util_logger.h"
+#include "r/r_renderer.h"
 #include "mdl/mdl_loader.h"
 #include "mdl/mdl_report.h"
+
 #include <stdio.h>
+
 
 static app_state_t g_app_state = { 0 };
 

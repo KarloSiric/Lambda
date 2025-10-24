@@ -20,11 +20,11 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "app_init.h"
+#include "cl_app_init.h"
+#include "cl_app_config.h"
 
-#include "app_config.h"
-#include "utils/logger.h"
-#include "graphics/renderer.h"
+#include "util/util_logger.h"
+#include "r/r_renderer.h"
 #include "mdl/mdl_loader.h"
 
 #include <stdio.h>

@@ -251,11 +251,11 @@ set(SOURCES
     # Adding new system for adding all the .c file
 )
 
-file(GLOB SRC_CL CONFIGURE_DEPENDS "src/cl_/*.c")
-file(GLOB SRC_R CONFIGURE_DEPENDS "src/r_/*.c")
-file(GLOB SRC_MDL CONFIGURE_DEPENDS "src/mdl_/*.c")
-file(GLOB SRC_SYS CONFIGURE_DEPENDS "src/sys_/*.c")
-file(GLOB SRC_UTIL CONFIGURE_DEPENDS "src/util_/*.c")
+file(GLOB SRC_CL CONFIGURE_DEPENDS "src/cl/*.c")
+file(GLOB SRC_R CONFIGURE_DEPENDS "src/r/*.c")
+file(GLOB SRC_MDL CONFIGURE_DEPENDS "src/mdl/*.c")
+# file(GLOB SRC_SYS CONFIGURE_DEPENDS "src/sys/*.c")
+file(GLOB SRC_UTIL CONFIGURE_DEPENDS "src/util/*.c")
 
 file(GLOB SRC_TOP CONFIGURE_DEPENDS "src/*.c")
 
@@ -269,7 +269,7 @@ add_executable(${PROJECT_NAME}
   ${SRC_CL}
   ${SRC_R}
   ${SRC_MDL}
-  ${SRC_SYS}
+  # ${SRC_SYS}
   ${SRC_UTIL}
 )
 
@@ -282,11 +282,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/src        # for studio.h, version.h, etc.
   ${CMAKE_SOURCE_DIR}/src/core
-  ${CMAKE_SOURCE_DIR}/src/cl_
-  ${CMAKE_SOURCE_DIR}/src/r_
-  ${CMAKE_SOURCE_DIR}/src/mdl_
-  ${CMAKE_SOURCE_DIR}/src/sys_
-  ${CMAKE_SOURCE_DIR}/src/util_
+  ${CMAKE_SOURCE_DIR}/src/cl
+  ${CMAKE_SOURCE_DIR}/src/r
+  ${CMAKE_SOURCE_DIR}/src/mdl
+  # ${CMAKE_SOURCE_DIR}/src/sys
+  ${CMAKE_SOURCE_DIR}/src/util
 )
 
 # ---------- Warnings ----------

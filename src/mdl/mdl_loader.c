@@ -22,10 +22,9 @@
 
 
 #include "mdl_loader.h"
-
 #include "studio.h"
-#include "utils/mdl_messages.h"
-#include "utils/utils.h"
+#include "util/util_messages.h"
+#include "util/util_utils.h"
 
 #include <stdbool.h>
 #include <stdio.h>

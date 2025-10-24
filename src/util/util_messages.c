@@ -15,7 +15,7 @@
  *======================================================================
  */
 
-#include "mdl_messages.h"
+#include "util_messages.h"
 
 #include <stdio.h>
 #include <string.h>

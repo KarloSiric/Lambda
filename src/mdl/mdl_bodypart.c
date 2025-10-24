@@ -21,7 +21,7 @@
  */
 
 
-#include "bodypart_manager.h"
+#include "mdl_bodypart.h"
 
 #include <stdio.h>
 #include <stdlib.h>

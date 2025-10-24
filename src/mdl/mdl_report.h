@@ -1,6 +1,5 @@
 #include "mdl_loader.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -94,5 +93,3 @@ inline int mdl_write_report_via_stdout_redirect(
     fclose( fp );
     return 0;
 }
-
-

@@ -24,9 +24,7 @@
 #define ARGS_H
 
 #include <stdbool.h>
-#include <ctype.h>
 #include <stdio.h>
-#include <string.h>
 
 
 /*

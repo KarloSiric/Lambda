@@ -21,7 +21,6 @@
  */
 
 
-#include "camera.h"
+#include "r_camera.h"
 
 
-// Implementation will go here
