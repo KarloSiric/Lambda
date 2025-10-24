@@ -20,7 +20,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "r_renderer.h"
+#include "r_draw.h"
 #include "r_gl_platform.h"
 #include "r_textures.h"
 
