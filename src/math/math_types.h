@@ -2,6 +2,9 @@
 #define MATH_TYPES_H 
 
 #include <cglm/cglm.h>
+#include <cglm/vec3.h>
+#include <cglm/mat3x4.h>
+#include <cglm/mat4.h>
 #include <stdbool.h>
 #include <math.h>
 
@@ -17,8 +20,8 @@
 #define MATH_DEG2RAD        ( MATH_PI / 180.0f )
 #define MATH_RAD2DEG        ( 180.0f / MATH_PI )
 
-typedef vec3                math_vec3_t;
 typedef vec4                math_vec4_t;
+typedef vec3                math_vec3_t;
 typedef versor              math_quat_t;
 typedef mat4                math_mat4_t;
 typedef mat3                math_mat3_t;
