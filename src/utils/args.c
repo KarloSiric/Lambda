@@ -27,6 +27,10 @@
 #include <stdio.h>
 #include <string.h>
 
+
+static app_args_t g_args_t = {0};
+
+
 // Styling constants
 #define RULER_DOUBLE "═══════════════════════════════════════════════════════════════"
 #define RULER_SINGLE "───────────────────────────────────────────────────────────────"
@@ -170,14 +174,14 @@ void print_usage( const char *program_name )
 int parse_args( int argc, const char *argv[], app_args_t *args )
 {
     // Initialize with defaults
-    args->model_path   = NULL;
-    args->dump_level   = DUMP_NONE;
-    args->dump_only    = false;
-    args->quiet        = false;
-    args->log_level    = LOG_LEVEL_NORMAL;    // Default to normal
-    args->log_file     = NULL;
-    args->show_help    = false;
-    args->show_version = false;
+    // args->model_path   = NULL;
+    // args->dump_level   = DUMP_NONE;
+    // args->dump_only    = false;
+    // args->quiet        = false;
+    // args->log_level    = LOG_LEVEL_NORMAL;    // Default to normal
+    // args->log_file     = NULL;
+    // args->show_help    = false;
+    // args->show_version = false;
 
     // No arguments = show help
     if ( argc < 2 )
