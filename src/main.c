@@ -31,17 +31,19 @@ static app_args_t args = { 0 };
 
 int main( int argc, char const *argv[] ) {
     
-	if ( parse_args( argc, argv, &args ) != 0 ) {
-		return ( 1 );
+	if ( parse_args( argc, argv, &args ) != APP_INIT_SUCCESS ) {
+		return ( APP_INIT_EXIT_SUCCESS );
 	}
+    
+    
 
-	if ( app_init( &args ) != 0 ) {
-		return ( 1 );
+	if ( app_init( &args ) != APP_INIT_SUCCESS ) {
+		return ( APP_INIT_EXIT_SUCCESS );
 	}
 
 	app_run();
 
 	app_shutdown();
 
-	return 0;
+	return ( APP_INIT_SUCCESS );
 }
