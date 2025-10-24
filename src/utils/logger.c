@@ -335,13 +335,29 @@ void logger_logv(
 	unlock_();
 }
 
-void logger_log( int level, const char *category, const char *file, int line, const char *func, const char *fmt, ... ) {
+void logger_logf( int level, const char *category, const char *file, int line, const char *func, const char *fmt, ... ) {
 	va_list ap;
 	va_start( ap, fmt );
 	logger_logv( level, category, file, line, func, fmt, ap );
 	va_end( ap );
 }
 
+
+void logger_log(int level,
+                const char *category,
+                const char *file,
+                int line,
+                const char *func,
+                const char *message)
+{
+    logger_logf(
+        level, 
+        category, 
+        file, 
+        line, 
+        func,
+        "%s", message ? message : "");   
+}
 void logger_hexdump(
 	int level,
 	const char *category,
@@ -351,7 +367,6 @@ void logger_hexdump(
 	const void *data,
 	size_t len,
 	const char *label ) {
-    
 	if ( !logger_should_log( level, category ) || !data || len == 0 ) {
 		return;
 	}
@@ -385,6 +400,6 @@ void logger_hexdump(
 			row[sizeof( row ) - 1] = '\0';
 		}
 
-		logger_log( level, category, file, line, func, "%s", row );
+		logger_logf( level, category, file, line, func, "%s", row );
 	}
 }
