@@ -34,45 +34,41 @@
 static app_state_t g_app_state = {0};
 
 
-app_state_t *app_get_state(void)
-{
-    
-    return &g_app_state;
-    
-}
-
 static int handle_dump_mode(const app_args_t *args)
-{
- 
+{ 
+    
+    mdl_model_t *local_model = NULL;
+     
     if (app_init_logger(args) != 0) 
     {
         fprintf(stderr, "ERROR: Failed to initialize logger\n");
         return ( -1 );
     }
     
-    
+        
     LOG_INFOF("app", "Starting dump mode...");
-    if (app_load_model(args->model_path, &g_app_state.model) != 0)
+    if (app_load_model(args->model_path, &local_model) != 0)
     {
-        LOG_ERRORF("app", "Failed to load model: '%s'", g_app_state.model->header->name);
+        LOG_ERRORF("app", "Failed to load model: '%s'", local_model->header->name);
         logger_shutdown();
         return ( -1 );
     }
     
     if (args->dump_level == DUMP_BASIC)
     { 
-        print_complete_model_analysis(stdout, 
+        print_complete_model_analysis(
+            stdout, 
             args->model_path, 
-            g_app_state.model->header,  
-            g_app_state.model->texture_header, 
-            g_app_state.model->data, 
-            g_app_state.model->texture_data
+            local_model->header,  
+            local_model->texture_header, 
+            local_model->data, 
+            local_model->texture_data
         );
         
         print_sequence_group_info(
             stdout, 
-            g_app_state.model->seqgroups, 
-            g_app_state.model->num_seqgroups
+            local_model->seqgroups, 
+            local_model->num_seqgroups
         );
     }
     
@@ -81,20 +77,20 @@ static int handle_dump_mode(const app_args_t *args)
         print_extended_model_dump(
             stdout,
             args->model_path,
-            g_app_state.model->header,
-            g_app_state.model->texture_header,
-            g_app_state.model->data,
-            g_app_state.model->texture_data
+            local_model->header,
+            local_model->texture_header,
+            local_model->data,
+            local_model->texture_data
         );
         
         print_sequence_group_info(
             stdout,
-            g_app_state.model->seqgroups,
-            g_app_state.model->num_seqgroups
+            local_model->seqgroups,
+            local_model->num_seqgroups
         );
     }
     
-    free_model(g_app_state.model);
+    free_model(local_model);
     
     if (!args->quiet)
     {
