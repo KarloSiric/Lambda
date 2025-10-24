@@ -22,7 +22,7 @@
 
 #include "mdl_animations.h"
 
-#include "bone_system.h"
+#include "mdl_bones.h"
 #include "mdl_loader.h"
 
 #include <cglm/cglm.h>

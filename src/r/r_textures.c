@@ -21,10 +21,10 @@
  */
 
 
-#include "textures.h"
+#include "r_textures.h"
+#include "r_gl_platform.h"
+#include "util/util_logger.h"
 
-#include "graphics/gl_platform.h"
-#include "utils/logger.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

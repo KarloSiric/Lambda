@@ -21,7 +21,7 @@
  */
 
 
-#include "utils.h"
+#include "util_utils.h"
 
 // Derive the base model path from a sequence group file
 bool mdl_derive_base_path( const char *seq_path, char *out, size_t out_size )

@@ -22,7 +22,6 @@
 
 
 #include "mdl_info.h"
-
 #include "mdl_loader.h"
 
 #include <stdio.h>

@@ -20,9 +20,9 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "core/app.h"
+#include "cl/cl_app.h"
 #include "mdl/mdl_report.h"
-#include "utils/args.h"
+#include "util/util_args.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,8 +35,6 @@ int main( int argc, char const *argv[] ) {
 		return ( APP_INIT_EXIT_SUCCESS );
 	}
     
-    
-
 	if ( app_init( &args ) != APP_INIT_SUCCESS ) {
 		return ( APP_INIT_EXIT_SUCCESS );
 	}

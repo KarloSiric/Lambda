@@ -20,11 +20,10 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "bone_system.h"
+#include "mdl_bones.h"
+#include "util/util_logger.h"
 
-#include "utils/logger.h"
 #include <stdio.h>
-#include <string.h>
 
 mat4 g_bonetransformations[MAXSTUDIOBONES];
 

@@ -20,9 +20,10 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "args.h"
+#include "util_args.h"
 #include "version.h"
 #include <string.h>
+#include <ctype.h>
 
 #ifdef _WIN32
 #include <io.h>
