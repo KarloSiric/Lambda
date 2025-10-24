@@ -161,7 +161,7 @@
 #define HLMV_PROJECT_DESCRIPTION    "GoldSrc Studio Model Format Viewer"
 #define HLMV_PROJECT_AUTHOR         "Karlo Siric"
 #define HLMV_PROJECT_LICENSE        "Valve SDK License"
-#define HLMV_PROJECT_URL            "https://github.com/karlosiric/ModelViewer"
+#define HLMV_PROJECT_URL            "https://github.com/karlosiric/Lambda"
 
 // ═══════════════════════════════════════════════════════════════════════════
 //   COPYRIGHT INFORMATION

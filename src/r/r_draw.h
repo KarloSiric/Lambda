@@ -1,9 +1,11 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include "r_gl_platform.h"
+
 #include "studio.h"
 #include "mdl/mdl_loader.h"  // <-- Need this for mdl_seqgroup_blob_tS
-#include "r_gl_platform.h"
+
 #include <stdbool.h>
 
 

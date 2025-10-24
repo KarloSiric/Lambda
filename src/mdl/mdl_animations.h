@@ -6,9 +6,11 @@
 #include <cglm/cglm.h>
 
 typedef struct {
+    
     int   current_sequence;
     float current_frame;
     bool  is_looping;
+    
 } mdl_animation_state_t;
 
 void mdl_animation_init( mdl_animation_state_t *state );
