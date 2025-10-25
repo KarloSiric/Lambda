@@ -46,15 +46,17 @@
  * @return     True if file exists, False otherwise.
  */
 static bool file_exists( const char *filepath ) {
+    
 	if ( filepath == NULL ) {
 		return false;
 	}
 
-#ifdef _WIN32
-	return ( _access( filepath, 0 ) == 0 );
-#else
-	return ( access( filepath, F_OK ) == 0 );
-#endif
+#    ifdef _WIN32
+    	return ( _access( filepath, 0 ) == 0 );
+#    else
+    	return ( access( filepath, F_OK ) == 0 );
+#    endif
+        
 }
 
 /**

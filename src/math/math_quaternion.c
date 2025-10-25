@@ -108,10 +108,22 @@ void Math_QuaternionMultiply( const math_quat_t q1, const math_quat_t q2, math_q
     const float x1 = q1[0], y1 = q1[1], z1 = q1[2], w1 = q1[3];
     const float x2 = q2[0], y2 = q2[1], z2 = q2[2], w2 = q2[3];
     
+    out[0] = w1*x2 + x1*w2 + y1*z2 - z1*y2;               // x
+    out[1] = w1*y2 - x1*z2 + y1*w2 + z1*x2;               // y
+    out[2] = w1*z2 + x1*y2 - y1*x2 + z1*w2;               // z 
+    out[3] = w1*w2 - x1*x2 - y1*y2 - z1*z2;               // w
 }
 
 
-
-
-
+void Math_QuaternionSlerp( const math_quat_t q1, const math_quat_t q2, float t, math_quat_t out )
+{  
+    
+    float cos_omega = q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2];
+    
+    
+    
+    
+    
+    
+}
 
