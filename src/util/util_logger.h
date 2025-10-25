@@ -35,6 +35,7 @@ typedef enum {
 } t_log_level;
 
 typedef struct log_options {
+    
 	const char *file_path; // path to log file (NULL = no file)
 	size_t max_bytes; // rotate when file exceeds this (0 = no rotate)
 	int max_files; // number of rotated files to keep

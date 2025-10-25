@@ -22,6 +22,7 @@
 
 
 #include "math_vector.h"
+#include "math_types.h"
 
 void Math_Vec3Copy( math_vec3_t src, math_vec3_t dst )
 { 
