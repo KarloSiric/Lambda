@@ -42,9 +42,11 @@
 #endif
 
 typedef struct category_level {
+    
 	char name[48];
 	int level;
 	int in_use;
+    
 } t_category_level;
 
 // need to ensure one thread only writes to our .log file
@@ -274,6 +276,7 @@ static const char *LEVEL_NAME[] = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "
 
 void logger_logv(
 	int level, const char *category, const char *file, int line, const char *func, const char *fmt, va_list ap ) {
+    
 	if ( !logger_should_log( level, category ) ) {
 		return;
 	}
