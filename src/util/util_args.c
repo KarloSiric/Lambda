@@ -46,15 +46,17 @@
  * @return     True if file exists, False otherwise.
  */
 static bool file_exists( const char *filepath ) {
+    
 	if ( filepath == NULL ) {
 		return false;
 	}
 
-#ifdef _WIN32
-	return ( _access( filepath, 0 ) == 0 );
-#else
-	return ( access( filepath, F_OK ) == 0 );
-#endif
+#    ifdef _WIN32
+    	return ( _access( filepath, 0 ) == 0 );
+#    else
+    	return ( access( filepath, F_OK ) == 0 );
+#    endif
+        
 }
 
 /**
@@ -153,7 +155,7 @@ void print_banner( void ) {
 	printf( "  distribution, or modification is prohibited without written\n" );
 	printf( "  permission from Valve LLC.\n" );
 	printf( "\n" );
-	printf( "%s\n", RULER_SINGLE );
+	printf( "%s\n", RULER_DOUBLE );
 	printf( "  Author: Karlo Siric\n" );
 	printf( "  Version: %s\n", HLMV_VERSION_SHORT );
 	printf( "%s\n", RULER_DOUBLE );
@@ -221,9 +223,14 @@ void print_usage( const char *program_name ) {
 	printf( "  %s --version\n\n", program_name );
 }
 
-/*
- * Parse command-line arguments
- * Returns: 0 on success, -1 on error
+/**
+ * @brief      { Parsing arguments from the CLI start }
+ *
+ * @param[in]  argc  The count of arguments
+ * @param      argv  The arguments array
+ * @param      args  The arguments structure to hold everything that is being parsed
+ *
+ * @return     { int representing if parsing was successful or not [ 0 or -1 ] }
  */
 int parse_args( int argc, const char *argv[], app_args_t *args ) {
 	// Initialize with defaults
