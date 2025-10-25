@@ -42,9 +42,11 @@
 #endif
 
 typedef struct category_level {
+    
 	char name[48];
 	int level;
 	int in_use;
+    
 } t_category_level;
 
 // need to ensure one thread only writes to our .log file
