@@ -20,92 +20,122 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-
 #include "math_matrix.h"
 #include "math_types.h"
 #include <string.h>
 
-void Math_Mat3x4_Identity( math_mat3x4_t *matrix )
-{
-    // just setting it to be 1 for all rotations and 0 for translation
-    // make a pointer to an array of 4 floats
-    float (*A)[4] = matrix->mat;
-    
-    A[0][0] = 1.0f; A[0][1] = 0.0f; A[0][2] = 0.0f; A[0][3] = 0.0f;
-    A[1][0] = 0.0f; A[1][1] = 1.0f; A[1][2] = 0.0f; A[1][3] = 0.0f;
-    A[2][0] = 0.0f; A[2][1] = 0.0f; A[2][2] = 1.0f; A[2][3] = 0.0f; 
+void Math_Mat3x4_Identity( math_mat3x4_t *matrix ) {
+	// using memset for speed and efficiency
+	memset( matrix->mat, 0, sizeof( matrix->mat ) );
+	matrix->mat[0][0] = matrix->mat[1][1] = matrix->mat[2][2] = 1.0f;
 }
 
-void Math_Mat3x4_Copy( const math_mat3x4_t *src, math_mat3x4_t *dst )
-{ 
-    memcpy( dst, src, sizeof( *dst ) ); 
+void Math_Mat3x4_Copy( const math_mat3x4_t *src, math_mat3x4_t *dst ) {
+	memcpy( dst, src, sizeof( *dst ) );
+}
+
+void Math_Mat3x4_ConcatTransforms( const math_mat3x4_t *in1, const math_mat3x4_t *in2, math_mat3x4_t *out ) {
+	// for cleaner code, but it can be written without this as well
+	const float ( *RA )[4] = in1->mat;
+	const float ( *RB )[4] = in2->mat;
+	float ( *RC )[4] = out->mat;
+
+	for ( int i = 0; i < 3; i++ ) {
+		for ( int j = 0; j < 3; j++ ) {
+			RC[i][j] = RA[i][0] * RB[0][j] + RA[i][1] * RB[1][j] + RA[i][2] * RB[2][j];
+		}
+	}
+
+	// Now we need special translation part formula calculation
+	// We are basically rotating the translation into right parent world and adding the offset translation
+	RC[0][3] = RA[0][0] * RB[0][3] + RA[0][1] * RB[1][3] + RA[0][2] * RB[2][3] + RA[0][3];
+	RC[1][3] = RA[1][0] * RB[0][3] + RA[1][1] * RB[1][3] + RA[1][2] * RB[2][3] + RA[1][3];
+	RC[2][3] = RA[2][0] * RB[0][3] + RA[2][1] * RB[1][3] * RA[2][2] * RB[2][3] + RA[2][3];
+}
+
+void Math_Mat3x4_FromQuaternionPosition( const math_quat_t q, const math_vec3_t pos_v, math_mat3x4_t *out ) {
+	// because the original one is a const we cannot modify it
+	math_quat_t q_copy;
+	memcpy( q_copy, q, sizeof( math_quat_t ) );
+
+	float x = q_copy[0], y = q_copy[1], z = q_copy[2], w = q_copy[3];
+
+	float xx = x * x;
+	float yy = y * y;
+	float zz = z * z;
+	float ww = w * w;
+	float xy = x * y;
+	float xz = x * z;
+	float yz = y * z;
+	float wx = w * x;
+	float wy = w * y;
+	float wz = w * z;
+
+	float q_magnitude = sqrt( xx + yy + zz + ww );
+
+	if ( q_magnitude < 1.0f ) {
+		glm_quat_normalize( q_copy );
+	}
+
+	out->mat[0][0] = 1 - 2 * ( yy + zz );
+	out->mat[0][1] = 2 * ( xy - wz );
+	out->mat[0][2] = 2 * ( xz + wy );
+	out->mat[0][3] = pos_v[0];
+
+	// Row 1
+	out->mat[1][0] = 2 * ( xy + wz );
+	out->mat[1][1] = 1 - 2 * ( xx + zz );
+	out->mat[1][2] = 2 * ( yz - wx );
+	out->mat[1][3] = pos_v[1];
+
+	// Row 2
+	out->mat[2][0] = 2 * ( xz - wy );
+	out->mat[2][1] = 2 * ( yz + wx );
+	out->mat[2][2] = 1 - 2 * ( xx + yy );
+	out->mat[2][3] = pos_v[2];
+}
+
+void Math_Mat4_Identity( math_mat4_t m ) {
+	// can be done in different ways, I opted for memset because of speed and efficiency
+	memset( m, 0, sizeof( math_mat4_t ) );
+	m[0][0] = m[1][1] = m[2][2] = m[3][3] = 1.0f;
+}
+
+void Math_Mat4_Copy( const math_mat4_t src, math_mat4_t dst ) {
+	memcpy( dst, src, sizeof( math_mat4_t ) );
+}
+
+void Math_Mat4_Multiply( const math_mat4_t a, const math_mat4_t b, math_mat4_t out ) {
+	for ( int i = 0; i < 4; i++ ) {
+		out[i][0] = a[i][0] * b[0][0] + a[i][1] * b[1][0] + a[i][2] * b[2][0] + a[i][3] * b[3][0];
+		out[i][1] = a[i][0] * b[0][1] + a[i][1] * b[1][1] + a[i][2] * b[2][1] + a[i][3] * b[3][1];
+		out[i][2] = a[i][0] * b[0][2] + a[i][1] * b[1][2] + a[i][2] * b[2][2] + a[i][3] * b[3][2];
+		out[i][3] = a[i][0] * b[0][3] + a[i][1] * b[1][3] + a[i][2] * b[2][3] + a[i][3] * b[3][3];
+	}
+}
+
+void Math_Mat3x4_ToMat4( const math_mat3x4_t *mat3x4, math_mat4_t mat4 ) {
+    
+    const float (*A)[4] = mat3x4->mat;
+    
+    memcpy( mat4[0], A[0], 4 * sizeof( float ) );
+    memcpy( mat4[1], A[1], 4 * sizeof( float ) );
+    memcpy( mat4[2], A[2], 4 * sizeof( float ) );
+    
+    mat4[3][0] = mat4[3][1] = mat4[3][2] = 0.0f;
+    mat4[3][3] = 1.0f; 
 }
 
 
-void Math_Mat3x4_ConcatTransforms( const math_mat3x4_t *in1, const math_mat3x4_t *in2, math_mat3x4_t *out )
+void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 )
 {
-    // for cleaner code, but it can be written without this as well
-    const float (*RA)[4] = in1->mat;
-    const float (*RB)[4] = in2->mat;
-    float (*RC)[4] = out->mat;
+    // making alias 
+    float (*A)[4] = mat3x4->mat;
     
-    for ( int i = 0; i < 3; i++ ) {
-        for ( int j = 0; j < 3; j++ ) {
-            RC[i][j] = RA[i][0] * RB[0][j] +
-                       RA[i][1] * RB[1][j] +
-                       RA[i][2] * RB[2][j];
-        }
-    }
-    
-    // Now we need special translation part formula calculation
-    // We are basically rotating the translation into right parent world and adding the offset translation
-    RC[0][3] = RA[0][0] * RB[0][3] + RA[0][1] * RB[1][3] + RA[0][2] * RB[2][3] + RA[0][3];
-    RC[1][3] = RA[1][0] * RB[0][3] + RA[1][1] * RB[1][3] + RA[1][2] * RB[2][3] + RA[1][3];
-    RC[2][3] = RA[2][0] * RB[0][3] + RA[2][1] * RB[1][3] * RA[2][2] * RB[2][3] + RA[2][3];
-     
-} 
+    memcpy( A[0], mat4[0], 4 * sizeof( float ) );
+    memcpy( A[1], mat4[1], 4 * sizeof( float ) );
+    memcpy( A[2], mat4[2], 4 * sizeof( float ) );
 
-void Math_Mat3x4_FromQuaternionPosition( const math_quat_t q, const math_vec3_t pos_v, math_mat3x4_t *out )
-{
-    // because the original one is a const we cannot modify it     
-    math_quat_t q_copy;
-    memcpy( q_copy, q, sizeof( math_quat_t ) );
-    
-    float x = q_copy[0], y = q_copy[1], z = q_copy[2], w = q_copy[3];
-    
-    float xx = x * x; float yy = y * y; float zz = z * z; float ww = w * w;
-    float xy = x * y; float xz = x * z; float yz = y * z;
-    float wx = w * x; float wy = w * y; float wz = w * z;
-    
-    float q_magnitude = sqrt( xx + yy + zz + ww );
-    
-    if ( q_magnitude < 1.0f )
-    {
-        glm_quat_normalize( q_copy );
-    }
-    
-    out->mat[0][0] = 1 - 2*(yy + zz);
-    out->mat[0][1] =     2*(xy - wz);
-    out->mat[0][2] =     2*(xz + wy);
-    out->mat[0][3] = pos_v[0];
-
-    // Row 1
-    out->mat[1][0] =     2*(xy + wz);
-    out->mat[1][1] = 1 - 2*(xx + zz);
-    out->mat[1][2] =     2*(yz - wx);
-    out->mat[1][3] = pos_v[1];
-
-    // Row 2
-    out->mat[2][0] =     2*(xz - wy);
-    out->mat[2][1] =     2*(yz + wx);
-    out->mat[2][2] = 1 - 2*(xx + yy);
-    out->mat[2][3] = pos_v[2]; 
-}
-
-void Math_Mat4_Identity( math_mat4_t m )
-{
-    
-    
     
     
 }
