@@ -65,6 +65,47 @@ void Math_Mat3x4_ConcatTransforms( const math_mat3x4_t *in1, const math_mat3x4_t
      
 } 
 
+void Math_Mat3x4_FromQuaternionPosition( const math_quat_t q, const math_vec3_t pos_v, math_mat3x4_t *out )
+{
+    // because the original one is a const we cannot modify it     
+    math_quat_t q_copy;
+    memcpy( q_copy, q, sizeof( math_quat_t ) );
+    
+    float x = q_copy[0], y = q_copy[1], z = q_copy[2], w = q_copy[3];
+    
+    float xx = x * x; float yy = y * y; float zz = z * z; float ww = w * w;
+    float xy = x * y; float xz = x * z; float yz = y * z;
+    float wx = w * x; float wy = w * y; float wz = w * z;
+    
+    float q_magnitude = sqrt( xx + yy + zz + ww );
+    
+    if ( q_magnitude < 1.0f )
+    {
+        glm_quat_normalize( q_copy );
+    }
+    
+    out->mat[0][0] = 1 - 2*(yy + zz);
+    out->mat[0][1] =     2*(xy - wz);
+    out->mat[0][2] =     2*(xz + wy);
+    out->mat[0][3] = pos_v[0];
 
+    // Row 1
+    out->mat[1][0] =     2*(xy + wz);
+    out->mat[1][1] = 1 - 2*(xx + zz);
+    out->mat[1][2] =     2*(yz - wx);
+    out->mat[1][3] = pos_v[1];
 
+    // Row 2
+    out->mat[2][0] =     2*(xz - wy);
+    out->mat[2][1] =     2*(yz + wx);
+    out->mat[2][2] = 1 - 2*(xx + yy);
+    out->mat[2][3] = pos_v[2]; 
+}
 
+void Math_Mat4_Identity( math_mat4_t m )
+{
+    
+    
+    
+    
+}
