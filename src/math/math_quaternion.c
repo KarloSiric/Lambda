@@ -208,5 +208,3 @@ void Math_QuaternionInverse( const math_quat_t q, math_quat_t out ) {
         out[3] = 1.0f;
     } 
 }
-
-

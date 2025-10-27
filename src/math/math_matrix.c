@@ -126,7 +126,6 @@ void Math_Mat3x4_ToMat4( const math_mat3x4_t *mat3x4, math_mat4_t mat4 ) {
     mat4[3][3] = 1.0f; 
 }
 
-
 void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 )
 {
     // making alias 
@@ -134,8 +133,5 @@ void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 )
     
     memcpy( A[0], mat4[0], 4 * sizeof( float ) );
     memcpy( A[1], mat4[1], 4 * sizeof( float ) );
-    memcpy( A[2], mat4[2], 4 * sizeof( float ) );
-
-    
-    
+    memcpy( A[2], mat4[2], 4 * sizeof( float ) );    
 }
