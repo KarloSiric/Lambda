@@ -51,8 +51,8 @@ typedef struct
 typedef struct
 {
 	GLuint tex; // GL texture to bind
-	int first;	// first vertex in the big VBO
-	int count;	// how many vertices to draw
+	int first; // first vertex in the big VBO
+	int count; // how many vertices to draw
 } DrawRange;
 
 static DrawRange g_ranges[MAX_DRAW_RANGES];
@@ -167,7 +167,7 @@ static void glfw_error_callback( int error, const char *description ) {
 
 static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int action, int mods ) {
 	(void)scancode; // Suppress unused parameter warning
-	(void)mods;		// Suppress unused parameter warning
+	(void)mods; // Suppress unused parameter warning
 
 	if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS ) {
 		glfwSetWindowShouldClose( window, GLFW_TRUE );
@@ -197,7 +197,7 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
 			zoom *= 0.9f;
 			if ( zoom < 0.1f )
 				zoom = 0.1f;
-			break;		 // Zoom out with limit
+			break; // Zoom out with limit
 		case GLFW_KEY_R: // Reset view
 			rotation_x = 0.0f;
 			rotation_y = 0.0f;
@@ -765,7 +765,8 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 		bone = 0;
 
 	vec3 Nfile = {
-		g_current.normals[normal_index][0], g_current.normals[normal_index][1], g_current.normals[normal_index][2] };
+		g_current.normals[normal_index][0], g_current.normals[normal_index][1], g_current.normals[normal_index][2]
+	};
 	vec3 Nrot;
 	TransformNormalByBone( g_bonetransformations[bone], Nfile, Nrot );
 
@@ -777,7 +778,7 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 	float ny = Nrot[1];
 	float nz = Nrot[2];
 
-	float Py = z;  // Z -> Y
+	float Py = z; // Z -> Y
 	float Pz = -y; // -Y -> Z
 	float Ny = nz;
 	float Nz = -ny;
@@ -1495,7 +1496,6 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	}
 }
 void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data, mdl_seqgroup_blob_t *seqgroups, int num_seqgroups ) {
-
 	LOG_INFOF( "renderer", "Setting model data" );
 
 	if ( !header || !data ) {
@@ -1510,7 +1510,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 	global_header = header;
 	global_data = data;
 	global_tex_header = tex_header; // may be NULL
-	global_tex_data = tex_data;		// may be NULL
+	global_tex_data = tex_data; // may be NULL
 	global_seqgroups = seqgroups;
 	global_num_seqgroups = num_seqgroups;
 
