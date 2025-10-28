@@ -24,9 +24,7 @@
 
 float Math_Clamp( float value, float min, float max ) {
 	float temp;
-
-	// 7, 5 -> 7 > 5
-
+    
 	if ( min > max ) {
 		temp = min;
 		min = max;
