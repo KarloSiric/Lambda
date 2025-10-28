@@ -88,7 +88,5 @@ void Math_Vec3Lerp( const math_vec3_t a, const math_vec3_t b, float t, math_vec3
 
 bool Math_FloatEqual( float a, float b, float epsilon ) {
     
-       
-    
-    
+    return fabsf( a - b ) <= epsilon;
 }
