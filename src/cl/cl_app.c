@@ -30,7 +30,6 @@
 
 #include <stdio.h>
 
-
 static app_state_t g_app_state = { 0 };
 
 static int handle_dump_mode( const app_args_t *args ) {
