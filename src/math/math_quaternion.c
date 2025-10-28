@@ -36,7 +36,7 @@ void Math_AngleQuaternion( const math_vec3_t angles, math_quat_t q ) {
 	const float x = sx * cy * cz + cx * sy * sz;
 	const float y = cx * sy * cz - sx * cy * sz;
 	const float z = cx * cy * sz + sx * sy * cz;
-	const float w = cx * cy * cy - sx * sy * sz;
+	const float w = cx * cy * cz - sx * sy * sz;
 
 	q[0] = x, q[1] = y, q[2] = z, q[3] = w;
 	glm_quat_normalize( q );
