@@ -314,7 +314,7 @@ void dump_complete_mdl_structure( void ) {
 
 	printf( "\n===============================================\n" );
 	printf( "COMPLETE MDL STRUCTURE DIAGNOSTIC\n" );
-	printf( "===============================================\n" );
+	printf( "=================================================\n" );
 
 	// 1. Header info
 	printf( "\n1. HEADER INFO:\n" );
@@ -340,7 +340,7 @@ void dump_complete_mdl_structure( void ) {
 
 	for ( int bp = 0; bp < global_header->numbodyparts && bp < 2; bp++ ) {
 		printf( "\n   Bodypart %d: '%s'\n", bp, bodyparts[bp].name );
-		printf( "      Models: %d\n", bodyparts[bp].nummodels );
+		printf( "     Models: %d\n", bodyparts[bp].nummodels );
 
 		mstudiomodel_t *models = (mstudiomodel_t *)( global_data + bodyparts[bp].modelindex );
 		mstudiomodel_t *model = &models[0];
