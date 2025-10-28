@@ -42,7 +42,7 @@ void Math_AngleQuaternion( const math_vec3_t angles, math_quat_t q ) {
 	glm_quat_normalize( q );
 }
 
-void Math_QuaternionMatrix3x4( const float *q, math_mat3x4_t *out ) {    
+void Math_QuaternionMatrix3x4( const float *q, math_mat3x4_t *out ) {
 	const float x = q[0];
 	const float y = q[1];
 	const float z = q[2];
@@ -68,7 +68,7 @@ void Math_QuaternionMatrix3x4( const float *q, math_mat3x4_t *out ) {
 	out->mat[2][3] = 0.0f;
 }
 
-void Math_QuaternionMatrix4x4( const math_quat_t q, math_mat4_t *out ) {    
+void Math_QuaternionMatrix4x4( const math_quat_t q, math_mat4_t *out ) {
 	const float x = q[0], y = q[1], z = q[2], w = q[3];
 	const float xx = x * x, yy = y * y, zz = z * z;
 	const float xy = x * y, xz = x * z, yz = y * z;
@@ -181,30 +181,27 @@ void Math_QuaternionNormalize( math_quat_t q ) {
 }
 
 void Math_QuaternionInverse( const math_quat_t q, math_quat_t out ) {
-    const float xx = q[0] * q[0];
-    const float yy = q[1] * q[1];
-    const float zz = q[2] * q[2];
-    const float ww = q[3] * q[3];
-    
-    const float q_squared = xx + yy + zz + ww;
-    
-    math_quat_t q_copy;
-    
-    if ( q_squared > 0.0f )
-    {
-        
-        q_copy[0] = -q[0];
-        q_copy[1] = -q[1];
-        q_copy[2] = -q[2];
-        q_copy[3] =  q[3];
-        
-        out[0] = q_copy[0] / q_squared;
-        out[1] = q_copy[1] / q_squared;
-        out[2] = q_copy[2] / q_squared;
-        out[3] = q_copy[3] / q_squared; 
-    }
-    else {
-        out[0] = out[1] = out[2] = 0.0f;
-        out[3] = 1.0f;
-    } 
+	const float xx = q[0] * q[0];
+	const float yy = q[1] * q[1];
+	const float zz = q[2] * q[2];
+	const float ww = q[3] * q[3];
+
+	const float q_squared = xx + yy + zz + ww;
+
+	math_quat_t q_copy;
+
+	if ( q_squared > 0.0f ) {
+		q_copy[0] = -q[0];
+		q_copy[1] = -q[1];
+		q_copy[2] = -q[2];
+		q_copy[3] = q[3];
+
+		out[0] = q_copy[0] / q_squared;
+		out[1] = q_copy[1] / q_squared;
+		out[2] = q_copy[2] / q_squared;
+		out[3] = q_copy[3] / q_squared;
+	} else {
+		out[0] = out[1] = out[2] = 0.0f;
+		out[3] = 1.0f;
+	}
 }

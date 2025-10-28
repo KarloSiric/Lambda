@@ -30,11 +30,10 @@
 static app_args_t args = { 0 };
 
 int main( int argc, char const *argv[] ) {
-    
 	if ( parse_args( argc, argv, &args ) != APP_INIT_SUCCESS ) {
 		return ( APP_INIT_EXIT_SUCCESS );
 	}
-    
+
 	if ( app_init( &args ) != APP_INIT_SUCCESS ) {
 		return ( APP_INIT_EXIT_SUCCESS );
 	}
@@ -45,10 +44,3 @@ int main( int argc, char const *argv[] ) {
 
 	return ( APP_INIT_SUCCESS );
 }
-
-
-
-
-
-
-
