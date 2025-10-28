@@ -91,16 +91,53 @@ void Math_AngleVectors( const math_vec3_t angles, math_vec3_t *forward, math_vec
 
 void Math_VectorToAngles( const math_vec3_t vec, math_vec3_t angles )
 { 
-     float x = vec[0];
-     float y = vec[1];
-     float z = vec[2];
-     
-     float hyp = sqrtf( x * x + y * y );
-     
-     float yaw = atan2f( y, x ) * MATH_RAD2DEG;
-     
-     float roll = 
+    float x = vec[0];
+    float y = vec[1];
+    float z = vec[2];
     
-                
+    float epsilon = 1e-6f;
+
+    float hyp = sqrtf( x * x + y * y );
+     
+    float yaw_rad, pitch_rad;
+    
+    if ( hyp < epsilon )
+    {
+        yaw_rad = 0.0f;
+        pitch_rad = ( z > 0.0f ) ? glm_rad( -90.0f ) : glm_rad( 90.0f );
+    }
+    else 
+    {
+        
+        yaw_rad = atan2f( y, x );
+        pitch_rad = atan2f( -z, hyp );
+        
+    }
+    
+    angles[0] = pitch_rad * MATH_RAD2DEG;  // pitch -> around z axis
+    angles[1] = yaw_rad * MATH_RAD2DEG;    // yaw   -> around y axis
+    angles[2] = 0.0f;                      // roll is undefined for a single direction vector
+     
+    // we normaliye the degrees now to make it all be proper
+    while( angles[1] < 0.0f ) {
+        angles[1] += 360.0f;
+    }
+    while ( angles[1] >= 360.0f ) {
+        angles[1] -= 360.0f;
+    }
+     
 }
 
+
+void Math_AngleDegToRad( const math_vec3_t degrees, math_vec3_t radians ) {
+    radians[0] = degrees[0] * MATH_DEG2RAD;   // pitch -> z
+    radians[1] = degrees[1] * MATH_DEG2RAD;   // yaw   -> y
+    radians[2] = degrees[2] * MATH_DEG2RAD;   // roll  -> x
+} 
+
+
+void Math_AngleRadToDeg( const math_vec3_t radians, math_vec3_t degrees ) {
+    degrees[0] = radians[0] * MATH_RAD2DEG;
+    degrees[1] = radians[1] * MATH_RAD2DEG;
+    degrees[2] = radians[2] * MATH_RAD2DEG;
+}
