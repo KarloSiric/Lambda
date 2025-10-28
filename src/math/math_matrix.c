@@ -115,23 +115,21 @@ void Math_Mat4_Multiply( const math_mat4_t a, const math_mat4_t b, math_mat4_t o
 }
 
 void Math_Mat3x4_ToMat4( const math_mat3x4_t *mat3x4, math_mat4_t mat4 ) {
-    
-    const float (*A)[4] = mat3x4->mat;
-    
-    memcpy( mat4[0], A[0], 4 * sizeof( float ) );
-    memcpy( mat4[1], A[1], 4 * sizeof( float ) );
-    memcpy( mat4[2], A[2], 4 * sizeof( float ) );
-    
-    mat4[3][0] = mat4[3][1] = mat4[3][2] = 0.0f;
-    mat4[3][3] = 1.0f; 
+	const float ( *A )[4] = mat3x4->mat;
+
+	memcpy( mat4[0], A[0], 4 * sizeof( float ) );
+	memcpy( mat4[1], A[1], 4 * sizeof( float ) );
+	memcpy( mat4[2], A[2], 4 * sizeof( float ) );
+
+	mat4[3][0] = mat4[3][1] = mat4[3][2] = 0.0f;
+	mat4[3][3] = 1.0f;
 }
 
-void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 )
-{
-    // making alias 
-    float (*A)[4] = mat3x4->mat;
-    
-    memcpy( A[0], mat4[0], 4 * sizeof( float ) );
-    memcpy( A[1], mat4[1], 4 * sizeof( float ) );
-    memcpy( A[2], mat4[2], 4 * sizeof( float ) );    
+void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 ) {
+	// making alias
+	float ( *A )[4] = mat3x4->mat;
+
+	memcpy( A[0], mat4[0], 4 * sizeof( float ) );
+	memcpy( A[1], mat4[1], 4 * sizeof( float ) );
+	memcpy( A[2], mat4[2], 4 * sizeof( float ) );
 }
