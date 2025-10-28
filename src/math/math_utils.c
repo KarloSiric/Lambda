@@ -77,3 +77,18 @@ float Math_Lerp( float a, float b, float t ) {
     return ( a + ( t * ( b - a ) ) );
     
 }
+
+void Math_Vec3Lerp( const math_vec3_t a, const math_vec3_t b, float t, math_vec3_t out ) {
+    
+    out[0] = a[0] + ( t * ( b[0] - a[0] ) );
+    out[1] = a[1] + ( t * ( b[1] - a[1] ) );
+    out[2] = a[2] + ( t * ( b[2] - a[2] ) );
+    
+}
+
+bool Math_FloatEqual( float a, float b, float epsilon ) {
+    
+       
+    
+    
+}
