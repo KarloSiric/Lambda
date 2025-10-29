@@ -16,7 +16,6 @@ extern "C" {
 #include "math/math_angles.h"
 #include "math/math_vector.h"
 
-
 typedef struct {         
     math_vec3_t position;
     math_vec3_t angles_deg;       
