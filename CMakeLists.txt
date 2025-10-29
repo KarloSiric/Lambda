@@ -255,8 +255,8 @@ file(GLOB SRC_CL CONFIGURE_DEPENDS "src/cl/*.c")
 file(GLOB SRC_R CONFIGURE_DEPENDS "src/r/*.c")
 file(GLOB SRC_MDL CONFIGURE_DEPENDS "src/mdl/*.c")
 # file(GLOB SRC_SYS CONFIGURE_DEPENDS "src/sys/*.c")
+file(GLOB SRC_MATH CONFIGURE_DEPENDS "src/math/*.c")
 file(GLOB SRC_UTIL CONFIGURE_DEPENDS "src/util/*.c")
-
 file(GLOB SRC_TOP CONFIGURE_DEPENDS "src/*.c")
 
 
@@ -270,6 +270,7 @@ add_executable(${PROJECT_NAME}
   ${SRC_R}
   ${SRC_MDL}
   # ${SRC_SYS}
+  ${SRC_MATH}
   ${SRC_UTIL}
 )
 
