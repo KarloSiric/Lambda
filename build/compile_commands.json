@@ -1,0 +1,134 @@
+[
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/main.c.o -c /Users/karlosiric/ModelViewer/src/main.c",
+  "file": "/Users/karlosiric/ModelViewer/src/main.c",
+  "output": "CMakeFiles/Lambda.dir/src/main.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/cl/cl_app.c.o -c /Users/karlosiric/ModelViewer/src/cl/cl_app.c",
+  "file": "/Users/karlosiric/ModelViewer/src/cl/cl_app.c",
+  "output": "CMakeFiles/Lambda.dir/src/cl/cl_app.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/cl/cl_app_config.c.o -c /Users/karlosiric/ModelViewer/src/cl/cl_app_config.c",
+  "file": "/Users/karlosiric/ModelViewer/src/cl/cl_app_config.c",
+  "output": "CMakeFiles/Lambda.dir/src/cl/cl_app_config.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/cl/cl_app_init.c.o -c /Users/karlosiric/ModelViewer/src/cl/cl_app_init.c",
+  "file": "/Users/karlosiric/ModelViewer/src/cl/cl_app_init.c",
+  "output": "CMakeFiles/Lambda.dir/src/cl/cl_app_init.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/r/r_camera.c.o -c /Users/karlosiric/ModelViewer/src/r/r_camera.c",
+  "file": "/Users/karlosiric/ModelViewer/src/r/r_camera.c",
+  "output": "CMakeFiles/Lambda.dir/src/r/r_camera.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/r/r_draw.c.o -c /Users/karlosiric/ModelViewer/src/r/r_draw.c",
+  "file": "/Users/karlosiric/ModelViewer/src/r/r_draw.c",
+  "output": "CMakeFiles/Lambda.dir/src/r/r_draw.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/r/r_textures.c.o -c /Users/karlosiric/ModelViewer/src/r/r_textures.c",
+  "file": "/Users/karlosiric/ModelViewer/src/r/r_textures.c",
+  "output": "CMakeFiles/Lambda.dir/src/r/r_textures.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/mdl/mdl_animations.c.o -c /Users/karlosiric/ModelViewer/src/mdl/mdl_animations.c",
+  "file": "/Users/karlosiric/ModelViewer/src/mdl/mdl_animations.c",
+  "output": "CMakeFiles/Lambda.dir/src/mdl/mdl_animations.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/mdl/mdl_bodypart.c.o -c /Users/karlosiric/ModelViewer/src/mdl/mdl_bodypart.c",
+  "file": "/Users/karlosiric/ModelViewer/src/mdl/mdl_bodypart.c",
+  "output": "CMakeFiles/Lambda.dir/src/mdl/mdl_bodypart.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/mdl/mdl_bones.c.o -c /Users/karlosiric/ModelViewer/src/mdl/mdl_bones.c",
+  "file": "/Users/karlosiric/ModelViewer/src/mdl/mdl_bones.c",
+  "output": "CMakeFiles/Lambda.dir/src/mdl/mdl_bones.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/mdl/mdl_info.c.o -c /Users/karlosiric/ModelViewer/src/mdl/mdl_info.c",
+  "file": "/Users/karlosiric/ModelViewer/src/mdl/mdl_info.c",
+  "output": "CMakeFiles/Lambda.dir/src/mdl/mdl_info.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/mdl/mdl_loader.c.o -c /Users/karlosiric/ModelViewer/src/mdl/mdl_loader.c",
+  "file": "/Users/karlosiric/ModelViewer/src/mdl/mdl_loader.c",
+  "output": "CMakeFiles/Lambda.dir/src/mdl/mdl_loader.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/mdl/mdl_report.c.o -c /Users/karlosiric/ModelViewer/src/mdl/mdl_report.c",
+  "file": "/Users/karlosiric/ModelViewer/src/mdl/mdl_report.c",
+  "output": "CMakeFiles/Lambda.dir/src/mdl/mdl_report.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/math/math_angles.c.o -c /Users/karlosiric/ModelViewer/src/math/math_angles.c",
+  "file": "/Users/karlosiric/ModelViewer/src/math/math_angles.c",
+  "output": "CMakeFiles/Lambda.dir/src/math/math_angles.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/math/math_matrix.c.o -c /Users/karlosiric/ModelViewer/src/math/math_matrix.c",
+  "file": "/Users/karlosiric/ModelViewer/src/math/math_matrix.c",
+  "output": "CMakeFiles/Lambda.dir/src/math/math_matrix.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/math/math_quaternion.c.o -c /Users/karlosiric/ModelViewer/src/math/math_quaternion.c",
+  "file": "/Users/karlosiric/ModelViewer/src/math/math_quaternion.c",
+  "output": "CMakeFiles/Lambda.dir/src/math/math_quaternion.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/math/math_utils.c.o -c /Users/karlosiric/ModelViewer/src/math/math_utils.c",
+  "file": "/Users/karlosiric/ModelViewer/src/math/math_utils.c",
+  "output": "CMakeFiles/Lambda.dir/src/math/math_utils.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/math/math_vector.c.o -c /Users/karlosiric/ModelViewer/src/math/math_vector.c",
+  "file": "/Users/karlosiric/ModelViewer/src/math/math_vector.c",
+  "output": "CMakeFiles/Lambda.dir/src/math/math_vector.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/util/util_args.c.o -c /Users/karlosiric/ModelViewer/src/util/util_args.c",
+  "file": "/Users/karlosiric/ModelViewer/src/util/util_args.c",
+  "output": "CMakeFiles/Lambda.dir/src/util/util_args.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/util/util_logger.c.o -c /Users/karlosiric/ModelViewer/src/util/util_logger.c",
+  "file": "/Users/karlosiric/ModelViewer/src/util/util_logger.c",
+  "output": "CMakeFiles/Lambda.dir/src/util/util_logger.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/util/util_messages.c.o -c /Users/karlosiric/ModelViewer/src/util/util_messages.c",
+  "file": "/Users/karlosiric/ModelViewer/src/util/util_messages.c",
+  "output": "CMakeFiles/Lambda.dir/src/util/util_messages.c.o"
+},
+{
+  "directory": "/Users/karlosiric/ModelViewer/build",
+  "command": "/usr/bin/cc -DHLMV_GIT_BRANCH=\\\"development\\\" -DHLMV_GIT_COMMIT=\\\"6104ad8\\\" -DHLMV_GIT_TAG=\\\"v0.2.0-alpha.1\\\" -DSHADER_DIR=\\\"/Users/karlosiric/ModelViewer/shaders\\\" -I/Users/karlosiric/ModelViewer/src -I/Users/karlosiric/ModelViewer/src/core -I/Users/karlosiric/ModelViewer/src/cl -I/Users/karlosiric/ModelViewer/src/r -I/Users/karlosiric/ModelViewer/src/mdl -I/Users/karlosiric/ModelViewer/src/util -iframework /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks -isystem /opt/homebrew/include -Wall -Wextra -Wpedantic -O3 -DNDEBUG -std=gnu11 -arch arm64 -F/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/System/Library/Frameworks  -Wall -Wextra -Wpedantic -Wno-unused-function -Wno-c23-extensions -o CMakeFiles/Lambda.dir/src/util/util_utils.c.o -c /Users/karlosiric/ModelViewer/src/util/util_utils.c",
+  "file": "/Users/karlosiric/ModelViewer/src/util/util_utils.c",
+  "output": "CMakeFiles/Lambda.dir/src/util/util_utils.c.o"
+}
+]
