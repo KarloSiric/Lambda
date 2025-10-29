@@ -286,6 +286,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/src/cl
   ${CMAKE_SOURCE_DIR}/src/r
   ${CMAKE_SOURCE_DIR}/src/mdl
+  ${CMAKE_SOURCE_DIR}/src/math
   # ${CMAKE_SOURCE_DIR}/src/sys
   ${CMAKE_SOURCE_DIR}/src/util
 )
