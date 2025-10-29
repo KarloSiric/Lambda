@@ -113,7 +113,22 @@ void Camera_UpdateTransforms( r_camera_t *camera ) {
 
 	// now we convert the camera angles to the direction vectors
 	Math_AngleVectors( camera->angles_deg, &camera->forward, &camera->right, &camera->up );
-    
-    
-    
+
+	camera->position[0] = camera->target[0] - camera->forward[0] * camera->distance;
+	camera->position[1] = camera->target[1] - camera->forward[1] * camera->distance;
+	camera->position[2] = camera->target[2] - camera->forward[2] * camera->distance;
+
+	glm_lookat( camera->position, camera->target, camera->up, camera->view_matrix );
+
+	camera->dirty = false;
+}
+
+const math_mat4_t *Camera_GetViewMatrix( r_camera_t *camera ) {
+	if ( !camera->dirty ) {
+		return &camera->view_matrix;
+	}
+
+	Camera_UpdateTransforms( camera );
+
+	return &camera->view_matrix;
 }
