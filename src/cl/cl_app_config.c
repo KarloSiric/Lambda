@@ -68,6 +68,6 @@ void app_config_setup_logger_options( const app_args_t *args, t_log_options *log
     }
     else 
     {
-        log_opts->file_path = "..logs/viewer.log";   
+        log_opts->file_path = "../logs/viewer.log";   
     }
 }
