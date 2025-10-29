@@ -27,8 +27,8 @@
 #include <stdio.h>
 
 void print_complete_model_analysis(
-    FILE              *output,      // <-- ADD THIS PARAMETER!
-    const char        *filename,
+    FILE                    *output,      // <-- ADD THIS PARAMETER!
+    const char              *filename,
     const studiohdr_t       *main_header,
     const studiohdr_t       *texture_header,
     const unsigned char     *main_data,
