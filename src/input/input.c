@@ -60,14 +60,25 @@ void Input_Init( GLFWwindow *window ) {
     
     g_input_state.window = window;
     
+    // callback functions 
+       
     glfwSetKeyCallback( window, glfw_key_callback );
+    
+    glfwSetCursorPosCallback( window, glfw_cursor_callback );
+    
+    glfwSetMouseButtonCallback( window, glfw_mouse_button_callback );
+    
+    glfwSetScrollCallback( window, glfw_scroll_callback );
+     
     
     glfwGetCursorPos( window, &g_input_state.mouse_x, &g_input_state.mouse_y );
     
-       
+    g_input_state.mouse_prev_x = g_input_state.mouse_x;
+    g_input_state.mouse_prev_y = g_input_state.mouse_y;
     
-     
+    g_input_state.initialized = true;
 }
+
 
 
 
