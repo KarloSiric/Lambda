@@ -27,6 +27,7 @@
 #include "r/r_draw.h"
 #include "mdl/mdl_loader.h"
 #include "mdl/mdl_report.h"
+#include "input/input.h"
 
 #include <stdio.h>
 
@@ -129,6 +130,9 @@ int app_init( const app_args_t *args ) {
 
 	extern GLFWwindow *window;
 	g_app_state.window = window;
+    
+    // registering Input initialization for registering all of the callbacks detection
+    Input_Init( window );
 
 	if ( app_load_model( args->model_path, &g_app_state.model ) != APP_INIT_SUCCESS ) {
 		LOG_ERROR( "app", "Failed to load model" );
@@ -190,6 +194,7 @@ void app_shutdown( void ) {
 	}
 
 	cleanup_renderer();
+    Input_Shutdown();
 
 	g_app_state.initialized = false;
 	g_app_state.running = false;
