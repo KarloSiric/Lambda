@@ -102,24 +102,28 @@ static void glfw_scroll_callback( GLFWwindow *window, double xoffset, double yof
 
 
 static int glfw_key_to_enum( int glfwKey )
-{
-    
+{ 
     switch( glfwKey ) {
-        case GLFW_KEY_W:
-            return KEY_W;
-        case GLFW_KEY_A:
-            return KEY_A;
-        case GLFW_KEY_S:
-            return KEY_S;
-        case GLFW_KEY_D:
-            return KEY_D;
-        case GLFW_KEY_SPACE:
-            return KEY_SPACE;
-        case GLFW_KEY_ESCAPE:
-            return KEY_ESCAPE;
-        default:
-            return -1;
-    } 
+          case GLFW_KEY_W:        return KEY_W;
+          case GLFW_KEY_A:        return KEY_A;
+          case GLFW_KEY_S:        return KEY_S;
+          case GLFW_KEY_D:        return KEY_D;
+          case GLFW_KEY_Q:        return KEY_Q;
+          case GLFW_KEY_E:        return KEY_E;
+          case GLFW_KEY_R:        return KEY_R;
+          case GLFW_KEY_F:        return KEY_F;
+          case GLFW_KEY_P:        return KEY_P;
+          case GLFW_KEY_L:        return KEY_L;
+          case GLFW_KEY_I:        return KEY_I;
+          case GLFW_KEY_SPACE:    return KEY_SPACE;
+          case GLFW_KEY_ESCAPE:   return KEY_ESCAPE;
+          case GLFW_KEY_0:        return KEY_0;
+          case GLFW_KEY_LEFT:     return KEY_LEFT;
+          case GLFW_KEY_RIGHT:    return KEY_RIGHT;
+          case GLFW_KEY_UP:       return KEY_UP;
+          case GLFW_KEY_DOWN:     return KEY_DOWN;
+          default:                return -1;
+    }
 }
 
 
@@ -128,50 +132,42 @@ static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int ac
     ( void )window;
     ( void )scancode;
     ( void )mods;
-    
-    // call our helper function that we need
-    
+
     int our_key = glfw_key_to_enum( key );
-    
-    if ( our_key < 0 || our_key >= MAX_KEYS ) { 
+
+    if ( our_key < 0 || our_key >= MAX_KEYS ) {
         return;
     }
-    
-    // we get here that means we are successful for now
-    
+
     if ( action == GLFW_PRESS ) {
         g_input_state.current_keys[our_key] = true;
     } else if ( action == GLFW_RELEASE ) {
         g_input_state.current_keys[our_key] = false;
-    } 
+    }
 }
 
 
 void Input_Init( GLFWwindow *window ) {
-    
+
     if ( !window ) {
         return;
-    }   
-    
+    }
+
     memset( &g_input_state, 0, sizeof( input_state_t ) );
-    
+
     g_input_state.window = window;
-    
-    // callback functions 
-       
+
+    // Register GLFW callbacks
     glfwSetKeyCallback( window, glfw_key_callback );
-    
     glfwSetCursorPosCallback( window, glfw_cursor_callback );
-    
     glfwSetMouseButtonCallback( window, glfw_mouse_button_callback );
-    
     glfwSetScrollCallback( window, glfw_scroll_callback );
-      
+
+    // Initialize mouse position
     glfwGetCursorPos( window, &g_input_state.mouse_x, &g_input_state.mouse_y );
-    
     g_input_state.mouse_prev_x = g_input_state.mouse_x;
     g_input_state.mouse_prev_y = g_input_state.mouse_y;
-    
+
     g_input_state.initialized = true;
 }
 
@@ -259,16 +255,15 @@ bool Input_IsKeyPressed( input_key_t key ) {
 
 
 bool Input_IsKeyHeld( input_key_t key ) {
-    
+
     // validation
     if ( key < 0 || key >= MAX_KEYS ) {
         return false;
     }
-     
-    bool pressed_now = g_input_state.current_keys[key];
-    bool pressed_before = g_input_state.previous_keys[key];
-     
-    return ( pressed_now && pressed_before );
+
+    // For "held" we just check if it's currently pressed
+    // This gives immediate response for continuous input like WASD
+    return g_input_state.current_keys[key];
 }
 
 

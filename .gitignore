@@ -46,6 +46,7 @@ Thumbs.db
 # IDE and editor files
 .vscode/
 .idea/
+.cache/
 *.swp
 *.swo
 *.sublime-*

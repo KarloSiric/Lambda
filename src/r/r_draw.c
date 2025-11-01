@@ -16,7 +16,7 @@
  *
  * ───────────────────────────────────────────────────────────────────────────
  *   Author: Karlo Siric
- *   Purpose: Command-Line Argument Parser Implementation
+ *   Purpose: Main drawing function responsible for all of the rendering
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -30,6 +30,7 @@
 #include "shaders/shader.h"
 #include "util/util_logger.h"
 #include "input/input.h"
+#include "input/input_handler.h"
 
 #include <OpenGL/gltypes.h>
 #include <cglm/cglm.h>
@@ -131,168 +132,14 @@ static bool is_sequence_available( int seq_index ) {
 	if ( !global_seqgroups || seqgroup >= global_num_seqgroups ) {
 		return false;
 	}
-
+    
 	return ( global_seqgroups[seqgroup].data != NULL );
-}
-
-static void glfw_mouse_callback( GLFWwindow *window, double xpos, double ypos ) {
-	if ( mouse_pressed ) {
-		float xoffset = xpos - last_x;
-		float yoffset = ypos - last_y;
-
-		rotation_y += xoffset * 0.01f;
-		rotation_x -= yoffset * 0.01f;
-	}
-
-	last_x = xpos;
-	last_y = ypos;
-}
-
-static void glfw_mouse_button_callback( GLFWwindow *window, int button, int action, int mods ) {
-	if ( button == GLFW_MOUSE_BUTTON_LEFT ) {
-		mouse_pressed = ( action == GLFW_PRESS );
-	}
-}
-
-static void glfw_scroll_callback( GLFWwindow *window, double xoffset, double yoffset ) {
-	zoom *= ( 1.0f + yoffset * 0.1f );
-	if ( zoom < 0.01f )
-		zoom = 0.01f;
-	if ( zoom > 2.0f )
-		zoom = 2.0f;
 }
 
 static void glfw_error_callback( int error, const char *description ) {
 	fprintf( stderr, "GLFW ERROR %d: %s\n", error, description );
 }
 
-static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int action, int mods ) {
-	(void)scancode; // Suppress unused parameter warning
-	(void)mods; // Suppress unused parameter warning
-
-	if ( key == GLFW_KEY_ESCAPE && action == GLFW_PRESS ) {
-		glfwSetWindowShouldClose( window, GLFW_TRUE );
-	}
-
-	// Camera controls
-	if ( action == GLFW_PRESS || action == GLFW_REPEAT ) {
-		switch ( key ) {
-		case GLFW_KEY_W:
-			rotation_x -= 0.1f;
-			break; // Tilt up
-		case GLFW_KEY_S:
-			rotation_x += 0.1f;
-			break; // Tilt down
-		case GLFW_KEY_A:
-			rotation_y -= 0.1f;
-			break; // Rotate left
-		case GLFW_KEY_D:
-			rotation_y += 0.1f;
-			break; // Rotate right
-		case GLFW_KEY_Q:
-			zoom *= 1.1f;
-			if ( zoom > 2.0f )
-				zoom = 2.0f;
-			break; // Zoom in with limit
-		case GLFW_KEY_E:
-			zoom *= 0.9f;
-			if ( zoom < 0.1f )
-				zoom = 0.1f;
-			break; // Zoom out with limit
-		case GLFW_KEY_R: // Reset view
-			rotation_x = 0.0f;
-			rotation_y = 0.0f;
-			zoom = 0.15f; // Reset to default zoom
-			break;
-		case GLFW_KEY_F: // Toggle wireframe
-			wireframe_enabled = !wireframe_enabled;
-			if ( wireframe_enabled ) {
-				glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-			} else {
-				glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-			}
-			break;
-		case GLFW_KEY_P: // Toggle points
-			glPolygonMode( GL_FRONT_AND_BACK, GL_POINT );
-			break;
-
-			/*
-			 * Adding animations for models to see all of the sequences
-			 * for and every model for easier debugging and all
-			 */
-
-		case GLFW_KEY_SPACE:
-			g_animation_enabled = !g_animation_enabled;
-			break;
-
-		case GLFW_KEY_LEFT:
-			if ( global_header && g_anim_state.current_sequence > 0 ) {
-				// Try to find previous available sequence
-				int target_seq = g_anim_state.current_sequence - 1;
-				int attempts = 0;
-
-				while ( target_seq >= 0 && !is_sequence_available( target_seq ) && attempts < global_header->numseq ) {
-					target_seq--;
-					attempts++;
-				}
-
-				if ( target_seq >= 0 && is_sequence_available( target_seq ) ) {
-					mdl_animation_set_sequence(
-						&g_anim_state, target_seq, global_header, global_data, global_seqgroups );
-				}
-			} else {
-				// At first sequence - do nothing
-			}
-			break;
-		case GLFW_KEY_RIGHT:
-			if ( global_header && g_anim_state.current_sequence < global_header->numseq - 1 ) {
-				// Try to find next available sequence
-				int target_seq = g_anim_state.current_sequence + 1;
-				int attempts = 0;
-
-				while ( target_seq < global_header->numseq && !is_sequence_available( target_seq ) && attempts < global_header->numseq ) {
-					target_seq++;
-					attempts++;
-				}
-
-				if ( target_seq < global_header->numseq && is_sequence_available( target_seq ) ) {
-					mdl_animation_set_sequence(
-						&g_anim_state, target_seq, global_header, global_data, global_seqgroups );
-					model_processed = false; // Force reprocess
-				}
-			} else {
-				// At last sequence - do nothing
-			}
-			break;
-
-		case GLFW_KEY_L: // Toggle looping
-			g_anim_state.is_looping = !g_anim_state.is_looping;
-			break;
-
-		case GLFW_KEY_0: // Reset to first frame
-			g_anim_state.current_frame = 0.0f;
-			model_processed = false;
-			break;
-		case GLFW_KEY_I: // Print animation info
-			if ( global_header && global_header->numseq > 0 ) {
-				mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( global_data + global_header->seqindex );
-				mstudioseqdesc_t *seq = &sequences[g_anim_state.current_sequence];
-
-				printf( "\n═══════════════════════════════════════\n" );
-				printf( "📊 ANIMATION INFO\n" );
-				printf( "═══════════════════════════════════════\n" );
-				printf( "Sequence:       %d/%d\n", g_anim_state.current_sequence, global_header->numseq - 1 );
-				printf( "Name:           %s\n", seq->label );
-				printf( "Current Frame:  %.2f/%d\n", g_anim_state.current_frame, seq->numframes - 1 );
-				printf( "FPS:            %.1f\n", seq->fps );
-				printf( "Looping:        %s\n", g_anim_state.is_looping ? "Yes" : "No" );
-				printf( "Animation:      %s\n", g_animation_enabled ? "ENABLED" : "DISABLED" );
-				printf( "═══════════════════════════════════════\n\n" );
-			}
-			break;
-		}
-	}
-}
 
 float vertices[] = {
 	-0.5f,
@@ -1204,8 +1051,31 @@ void render_loop( void ) {
 
 		LOG_TRACEF( "renderer", "Frame %d: Polling events", frame_count );
 		glfwPollEvents();
-        
-        Input_Update();
+
+		// ═══════════════════════════════════════════════════════════
+		// Process all input BEFORE updating (so previous != current)
+		// ═══════════════════════════════════════════════════════════
+		input_camera_state_t cam_state = {
+			.rotation_x = &rotation_x,
+			.rotation_y = &rotation_y,
+			.zoom = &zoom,
+			.wireframe_enabled = &wireframe_enabled
+		};
+
+		input_animation_state_t anim_state = {
+			.animation_enabled = &g_animation_enabled,
+			.anim_state = &g_anim_state,
+			.header = global_header,
+			.data = global_data,
+			.seqgroups = global_seqgroups,
+			.num_seqgroups = global_num_seqgroups,
+			.model_processed = &model_processed
+		};
+
+		Input_ProcessGameInput( window, &cam_state, &anim_state );
+
+		// Update AFTER processing (copy current → previous for next frame)
+		Input_Update();
 
 		frame_count++;
 
