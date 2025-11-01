@@ -29,6 +29,7 @@
 #include "mdl/mdl_animations.h"
 #include "shaders/shader.h"
 #include "util/util_logger.h"
+#include "input/input.h"
 
 #include <OpenGL/gltypes.h>
 #include <cglm/cglm.h>
@@ -1043,11 +1044,7 @@ int init_renderer( int width, int height, const char *title ) {
 	// ═══════════════════════════════════════════════════════════════
 	// Setup GLFW callbacks
 	// ═══════════════════════════════════════════════════════════════
-	glfwSetKeyCallback( window, glfw_key_callback );
 	glfwSetErrorCallback( glfw_error_callback );
-	glfwSetCursorPosCallback( window, glfw_mouse_callback );
-	glfwSetMouseButtonCallback( window, glfw_mouse_button_callback );
-	glfwSetScrollCallback( window, glfw_scroll_callback );
 
 	// ═══════════════════════════════════════════════════════════════
 	// OpenGL state setup
@@ -1207,6 +1204,8 @@ void render_loop( void ) {
 
 		LOG_TRACEF( "renderer", "Frame %d: Polling events", frame_count );
 		glfwPollEvents();
+        
+        Input_Update();
 
 		frame_count++;
 
