@@ -969,6 +969,10 @@ int init_renderer( int width, int height, const char *title ) {
 }
 
 void cleanup_renderer( void ) {
+    
+    // FIrst we call the input cleaner
+    Input_Shutdown();
+    
 	if ( VAO )
 		glDeleteVertexArrays( 1, &VAO );
 	if ( VBO )
@@ -977,7 +981,6 @@ void cleanup_renderer( void ) {
 		glDeleteBuffers( 1, &EBO );
 	if ( shader_program )
 		glDeleteProgram( shader_program );
-
 	if ( window ) {
 		glfwDestroyWindow( window );
 	}
