@@ -82,16 +82,16 @@ void Math_QuaternionMatrix4x4( const math_quat_t q, math_mat4_t *out ) {
 	const float wx = w * x, wy = w * y, wz = w * z;
 
 	( *out )[0][0] = 1.0f - 2.0f * ( yy + zz );
-	( *out )[0][1] = 2.0f * ( xy - wz );
-	( *out )[0][2] = 2.0f * ( xz + wy );
+	( *out )[0][1] = 2.0f * ( xy + wz );
+	( *out )[0][2] = 2.0f * ( xz - wy );
 	( *out )[0][3] = 0.0f;
 
-	( *out )[1][0] = 2.0f * ( xy + wz );
+	( *out )[1][0] = 2.0f * ( xy - wz );
 	( *out )[1][1] = 1.0f - 2.0f * ( xx + zz );
-	( *out )[1][2] = 2.0f * ( yz - wx );
+	( *out )[1][2] = 2.0f * ( yz + wx );
 	( *out )[1][3] = 0.0f;
 
-	( *out )[2][0] = 2.0f * ( xz - wy );
+	( *out )[2][0] = 2.0f * ( xz + wy );
 	( *out )[2][1] = 2.0f * ( yz - wx );
 	( *out )[2][2] = 1.0f - 2.0f * ( xx + yy );
 	( *out )[2][3] = 0.0f;
@@ -133,6 +133,7 @@ void Math_QuaternionSlerp( const math_quat_t q1, const math_quat_t q2, float t, 
 		q2c[2] = -q2[2];
 		q2c[3] = -q2[3];
 	} else {
+		q2c[0] = q2[0];  // FIX: was missing this line!
 		q2c[1] = q2[1];
 		q2c[2] = q2[2];
 		q2c[3] = q2[3];
@@ -146,7 +147,7 @@ void Math_QuaternionSlerp( const math_quat_t q1, const math_quat_t q2, float t, 
 		out[0] = q1[0] + t * ( q2c[0] - q1[0] );
 		out[1] = q1[1] + t * ( q2c[1] - q1[1] );
 		out[2] = q1[2] + t * ( q2c[2] - q1[2] );
-		out[3] = q1[3] + t * ( q2c[2] - q1[3] );
+		out[3] = q1[3] + t * ( q2c[3] - q1[3] );
 
 		glm_quat_normalize( out );
 		return;
