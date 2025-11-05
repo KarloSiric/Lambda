@@ -28,10 +28,11 @@
 #include "mdl/mdl_loader.h"
 #include "mdl/mdl_report.h"
 #include "input/input.h"
+#include "util_args.h"
 
 #include <stdio.h>
 
-static app_state_t g_app_state = { 0 };
+app_state_t g_app_state = { 0 };
 
 static int handle_dump_mode( const app_args_t *args ) {
 	mdl_model_t *local_model = NULL;
@@ -43,7 +44,7 @@ static int handle_dump_mode( const app_args_t *args ) {
 
 	LOG_INFO( "app", "Starting dump mode..." );
 	if ( app_load_model( args->model_path, &local_model ) != APP_INIT_SUCCESS ) {
-		LOG_ERRORF( "app", "Failed to load model: '%s'", local_model->header->name );
+		LOG_ERROR( "app", "Failed to load model" );
 		logger_shutdown();
 		return ( APP_INIT_ERROR );
 	}
@@ -86,10 +87,11 @@ static int handle_dump_mode( const app_args_t *args ) {
 
 	logger_shutdown();
 
-	return ( APP_INIT_SUCCESS );
+	return ( APP_INIT_EXIT_SUCCESS );
 }
 
-int app_init( const app_args_t *args ) {
+int app_init( app_args_t *args ) {
+     
 	if ( !args ) {
 		LOG_ERROR( "app", "Arguments pointer is NULL" );
 		return ( APP_INIT_ERROR );
@@ -135,7 +137,7 @@ int app_init( const app_args_t *args ) {
     Input_Init( window );
 
 	if ( app_load_model( args->model_path, &g_app_state.model ) != APP_INIT_SUCCESS ) {
-		LOG_ERROR( "app", "Failed to load model" );
+		LOG_ERRORF( "app", "Failed to load model from path: '%s'", args->model_path );
 		cleanup_renderer();
 		logger_shutdown();
 		return ( APP_INIT_ERROR );
@@ -149,12 +151,50 @@ int app_init( const app_args_t *args ) {
 		g_app_state.model->seqgroups,
 		g_app_state.model->num_seqgroups );
 
+	// Print dump if requested (before opening viewer)
+	if ( args->dump_level == DUMP_BASIC ) {
+		LOG_INFO( "app", "Printing model dump (basic)..." );
+		print_complete_model_analysis(
+			stdout,
+			args->model_path,
+			g_app_state.model->header,
+			g_app_state.model->texture_header,
+			g_app_state.model->data,
+			g_app_state.model->texture_data );
+
+		print_sequence_group_info(
+			stdout,
+			g_app_state.model->seqgroups,
+			g_app_state.model->num_seqgroups );
+
+		LOG_INFO( "app", "Dump complete. Starting viewer...\n" );
+	}
+	else if ( args->dump_level == DUMP_EXTENDED ) {
+		LOG_INFO( "app", "Printing model dump (extended)..." );
+		print_extended_model_dump(
+			stdout,
+			args->model_path,
+			g_app_state.model->header,
+			g_app_state.model->texture_header,
+			g_app_state.model->data,
+			g_app_state.model->texture_data );
+
+		print_sequence_group_info(
+			stdout,
+			g_app_state.model->seqgroups,
+			g_app_state.model->num_seqgroups );
+
+		LOG_INFO( "app", "Dump complete. Starting viewer...\n" );
+	}
+
 	g_app_state.current_sequence = 0;
 	g_app_state.current_frame = 0;
 	g_app_state.animation_playing = true;
 
 	g_app_state.running = true;
 	g_app_state.initialized = true;
+
+    g_app_state.args = args;
 
 	LOG_INFO( "app", "Application initialized successfully!\n" );
 

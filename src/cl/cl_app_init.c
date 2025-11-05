@@ -54,7 +54,7 @@ int app_init_logger( const app_args_t *args ) {
 		logger_set_category_level( "seqgroup", LOG_TRACE );
 	}
 
-	return 0;
+	return ( 0 );
 }
 
 int app_load_model( const char *model_path, mdl_model_t **model_out ) {
