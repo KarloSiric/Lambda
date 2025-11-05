@@ -19,6 +19,8 @@ typedef struct {
 	int window_width;
 	int window_height;
 	bool fullscreen;
+    
+    app_args_t *args;
 
 	mdl_model_t *model;
 	char model_path[260]; // Path to loaded model
@@ -73,7 +75,7 @@ typedef struct {
 
 } app_state_t;
 
-int app_init( const app_args_t *args );
+int app_init( app_args_t *args );
 
 int app_run( void );
 

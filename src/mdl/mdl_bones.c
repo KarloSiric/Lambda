@@ -29,36 +29,33 @@
 
 #include <stdio.h>
 
-mat4 g_bonetransformations[MAXSTUDIOBONES];
+math_mat4_t g_bonetransformations[MAXSTUDIOBONES];
 
-static inline void Mat4Copy( mat4 src, mat4 dst ) {
-	glm_mat4_copy( src, dst );
-}
+// ============================================================================
+// OLD FUNCTIONS - Still needed by mdl_animations.c
+// TODO: Remove these once mdl_animations.c is refactored to use Math library
+// ============================================================================
 
 void AngleQuaternion( const vec3 angles, versor q ) {
 	float angle;
 	float sr, sp, sy, cr, cp, cy;
 
-	// Z
 	angle = angles[2] * 0.5f;
 	sy = sinf( angle );
 	cy = cosf( angle );
 
-	// Y
 	angle = angles[1] * 0.5f;
 	sp = sinf( angle );
 	cp = cosf( angle );
 
-	// X
 	angle = angles[0] * 0.5f;
 	sr = sinf( angle );
 	cr = cosf( angle );
 
-	// Build quaternion [X, Y, Z, W]
-	q[0] = sr * cp * cy - cr * sp * sy; // X
-	q[1] = cr * sp * cy + sr * cp * sy; // Y
-	q[2] = cr * cp * sy - sr * sp * cy; // Z
-	q[3] = cr * cp * cy + sr * sp * sy; // W
+	q[0] = sr * cp * cy - cr * sp * sy;
+	q[1] = cr * sp * cy + sr * cp * sy;
+	q[2] = cr * cp * sy - sr * sp * cy;
+	q[3] = cr * cp * cy + sr * sp * sy;
 }
 
 void QuaternionMatrix( const versor q, mat4 out ) {
@@ -85,22 +82,6 @@ void QuaternionMatrix( const versor q, mat4 out ) {
 	out[3][3] = 1.0f;
 }
 
-void QuaternionMultiply( const versor q1, const versor q2, versor out ) {
-	// Quaternion multiplication: out = q1 * q2
-	// This combines two rotations (q1 applied first, then q2)
-	versor temp;
-
-	temp[0] = q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1]; // X
-	temp[1] = q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2]; // Y
-	temp[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0]; // Z
-	temp[3] = q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2]; // W
-
-	out[0] = temp[0];
-	out[1] = temp[1];
-	out[2] = temp[2];
-	out[3] = temp[3];
-}
-
 void QuaternionSlerp( const versor q1, const versor q2, float t, versor out ) {
 	glm_quat_slerp( q1, q2, t, out );
 }
@@ -109,21 +90,16 @@ void R_ConcatTransforms( const mat4 parent, const mat4 local, mat4 out ) {
 	glm_mat4_mul( parent, local, out );
 }
 
-void VectorTransforms( const vec3 in, const mat4 m, vec3 out ) {
-	vec4 v = { in[0], in[1], in[2], 1.0f };
-	vec4 r;
-	glm_mat4_mulv( m, v, r );
-	out[0] = r[0];
-	out[1] = r[1];
-	out[2] = r[2];
-}
-
 void TransformNormalByBone( const mat4 boneAbs, const vec3 in, vec3 out ) {
 	mat3 R;
 	glm_mat4_pick3( boneAbs, R );
 	glm_mat3_mulv( R, in, out );
 	glm_vec3_normalize( out );
 }
+
+// ============================================================================
+// END OLD FUNCTIONS
+// ============================================================================
 
 void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 	LOG_DEBUGF( "bones", "SetUpBones START: %d bones", header->numbones );
@@ -159,22 +135,22 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 
 		math_quat_t q;
 		math_mat3x4_t R;
-        math_mat4_t R_Mat4;
+		math_mat4_t R_Mat4;
 		math_mat4_t local;
-        
+
 		LOG_TRACEF( "bones", "    Converting to quaternion" );
 		// AngleQuaternion( euler_rot, q );
-        Math_AngleQuaternion( euler_rot, q );
+		Math_AngleQuaternion( euler_rot, q );
 
 		LOG_TRACEF( "bones", "    Building rotation matrix" );
 		// QuaternionMatrix( q, &R );
-        Math_QuaternionMatrix3x4( q, &R );
-         
-        Math_Mat3x4_ToMat4( &R, R_Mat4 );
+		Math_QuaternionMatrix3x4( q, &R );
+
+		Math_Mat3x4_ToMat4( &R, R_Mat4 );
 
 		// glm_mat4_copy( &R, local );
-        
-        Math_Mat4_Copy( R_Mat4, local );
+
+		Math_Mat4_Copy( R_Mat4, local );
 
 		local[3][0] = position[0];
 		local[3][1] = position[1];
@@ -191,11 +167,11 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 
 			LOG_TRACEF( "bones", "    Concatenating with parent %d", bones[i].parent );
 			// R_ConcatTransforms( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
-            Math_Mat4_Multiply( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
+			Math_Mat4_Multiply( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
 		} else {
 			LOG_TRACEF( "bones", "    Root bone, copying local transform" );
 			// Mat4Copy( local, g_bonetransformations[i] );
-            Math_Mat4_Copy( local, g_bonetransformations[i] );
+			Math_Mat4_Copy( local, g_bonetransformations[i] );
 		}
 
 		// Log every 5th bone to avoid spam
@@ -219,7 +195,7 @@ void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t
 		if ( bone < 0 || bone >= header->numbones ) {
 			bone = 0;
 		}
-		VectorTransforms( vertices[i], g_bonetransformations[bone], out_vertices[i] );
+        Math_Vec3TransformMat4( vertices[i], g_bonetransformations[bone], out_vertices[i] );
 	}
 }
 

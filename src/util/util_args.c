@@ -21,6 +21,8 @@
  */
 
 #include "util_args.h"
+#include "cl_app.h"
+
 #include "version.h"
 #include <string.h>
 #include <ctype.h>

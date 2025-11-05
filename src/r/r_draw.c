@@ -408,7 +408,6 @@ void ProcessModelForRendering( void ) {
 
 			int s_min = 32767, s_max = -32768;
 			int t_min = 32767, t_max = -32768;
-			int dbg_count = 0;
 
 			int i;
 			while ( ( i = *( ptricmds++ ) ) ) {
