@@ -50,7 +50,7 @@ void Math_Mat3x4_ConcatTransforms( const math_mat3x4_t *in1, const math_mat3x4_t
 	// We are basically rotating the translation into right parent world and adding the offset translation
 	RC[0][3] = RA[0][0] * RB[0][3] + RA[0][1] * RB[1][3] + RA[0][2] * RB[2][3] + RA[0][3];
 	RC[1][3] = RA[1][0] * RB[0][3] + RA[1][1] * RB[1][3] + RA[1][2] * RB[2][3] + RA[1][3];
-	RC[2][3] = RA[2][0] * RB[0][3] + RA[2][1] * RB[1][3] * RA[2][2] * RB[2][3] + RA[2][3];
+	RC[2][3] = RA[2][0] * RB[0][3] + RA[2][1] * RB[1][3] + RA[2][2] * RB[2][3] + RA[2][3];
 }
 
 void Math_Mat3x4_FromQuaternionPosition( const math_quat_t q, const math_vec3_t pos_v, math_mat3x4_t *out ) {
@@ -106,30 +106,61 @@ void Math_Mat4_Copy( const math_mat4_t src, math_mat4_t dst ) {
 }
 
 void Math_Mat4_Multiply( const math_mat4_t a, const math_mat4_t b, math_mat4_t out ) {
-	for ( int i = 0; i < 4; i++ ) {
-		out[i][0] = a[i][0] * b[0][0] + a[i][1] * b[1][0] + a[i][2] * b[2][0] + a[i][3] * b[3][0];
-		out[i][1] = a[i][0] * b[0][1] + a[i][1] * b[1][1] + a[i][2] * b[2][1] + a[i][3] * b[3][1];
-		out[i][2] = a[i][0] * b[0][2] + a[i][1] * b[1][2] + a[i][2] * b[2][2] + a[i][3] * b[3][2];
-		out[i][3] = a[i][0] * b[0][3] + a[i][1] * b[1][3] + a[i][2] * b[2][3] + a[i][3] * b[3][3];
-	}
+	// CGLM uses column-major: mat4[col][row]
+	// Matrix multiplication: out = a * b
+	// For each column j in b: out[j] = a * b[j]
+
+	// Use glm_mat4_mul for correct column-major multiplication
+	glm_mat4_mul( a, b, out );
 }
 
 void Math_Mat3x4_ToMat4( const math_mat3x4_t *mat3x4, math_mat4_t mat4 ) {
+	// mat3x4 is row-major: mat[row][col]
+	// mat4 (CGLM) is column-major: mat[col][row]
+	// We need to TRANSPOSE during conversion
 	const float ( *A )[4] = mat3x4->mat;
 
-	memcpy( mat4[0], A[0], 4 * sizeof( float ) );
-	memcpy( mat4[1], A[1], 4 * sizeof( float ) );
-	memcpy( mat4[2], A[2], 4 * sizeof( float ) );
+	// Transpose: A[row][col] -> mat4[col][row]
+	mat4[0][0] = A[0][0];
+	mat4[0][1] = A[1][0];
+	mat4[0][2] = A[2][0];
+	mat4[0][3] = 0.0f;
 
-	mat4[3][0] = mat4[3][1] = mat4[3][2] = 0.0f;
+	mat4[1][0] = A[0][1];
+	mat4[1][1] = A[1][1];
+	mat4[1][2] = A[2][1];
+	mat4[1][3] = 0.0f;
+
+	mat4[2][0] = A[0][2];
+	mat4[2][1] = A[1][2];
+	mat4[2][2] = A[2][2];
+	mat4[2][3] = 0.0f;
+
+	mat4[3][0] = A[0][3];
+	mat4[3][1] = A[1][3];
+	mat4[3][2] = A[2][3];
 	mat4[3][3] = 1.0f;
 }
 
 void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 ) {
-	// making alias
+	// mat4 (CGLM) is column-major: mat[col][row]
+	// mat3x4 is row-major: mat[row][col]
+	// We need to TRANSPOSE during conversion
 	float ( *A )[4] = mat3x4->mat;
 
-	memcpy( A[0], mat4[0], 4 * sizeof( float ) );
-	memcpy( A[1], mat4[1], 4 * sizeof( float ) );
-	memcpy( A[2], mat4[2], 4 * sizeof( float ) );
+	// Transpose: mat4[col][row] -> A[row][col]
+	A[0][0] = mat4[0][0];
+	A[0][1] = mat4[1][0];
+	A[0][2] = mat4[2][0];
+	A[0][3] = mat4[3][0];
+
+	A[1][0] = mat4[0][1];
+	A[1][1] = mat4[1][1];
+	A[1][2] = mat4[2][1];
+	A[1][3] = mat4[3][1];
+
+	A[2][0] = mat4[0][2];
+	A[2][1] = mat4[1][2];
+	A[2][2] = mat4[2][2];
+	A[2][3] = mat4[3][2];
 }
