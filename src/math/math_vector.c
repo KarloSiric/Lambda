@@ -83,3 +83,23 @@ void Math_Vec3IRotate( math_vec3_t in, const math_mat3x4_t *matrix, math_vec3_t 
 	out[1] = A[0][1] * in[0] + A[1][1] * in[1] + A[2][1] * in[2];
 	out[2] = A[0][2] * in[0] + A[1][2] * in[1] + A[2][2] * in[2];
 }
+
+void Math_Vec3TransformMat4( const math_vec3_t in, const math_mat4_t m, math_vec3_t out ) {
+	// Transform vec3 by mat4: multiply [x, y, z, 1] by matrix
+	// mat4 is column-major: m[column][row]
+	math_vec4_t v = { in[0], in[1], in[2], 1.0f };
+	math_vec4_t r;
+	glm_mat4_mulv( m, v, r );
+	out[0] = r[0];
+	out[1] = r[1];
+	out[2] = r[2];
+}
+
+void Math_Vec3RotateMat4( const math_vec3_t in, const math_mat4_t m, math_vec3_t out ) {
+	// Rotate vec3 by mat4: only use rotation part, no translation
+	// Extract 3x3 rotation matrix and multiply
+	mat3 R;
+	glm_mat4_pick3( m, R );
+	glm_mat3_mulv( R, in, out );
+	glm_vec3_normalize( out );
+}

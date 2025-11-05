@@ -24,22 +24,29 @@
 #include "math_types.h"
 
 void Math_AngleQuaternion( const math_vec3_t angles, math_quat_t q ) {
-	const float rx = angles[0] * MATH_DEG2RAD * 0.5f; // pitch
-	const float ry = angles[1] * MATH_DEG2RAD * 0.5f; // yaw
-	const float rz = angles[2] * MATH_DEG2RAD * 0.5f; // roll
+	float angle;
+	float sr, sp, sy, cr, cp, cy;
 
-	const float sx = sinf( rx ), cx = cosf( rx );
-	const float sy = sinf( ry ), cy = cosf( ry );
-	const float sz = sinf( rz ), cz = cosf( rz );
+	// Z axis (roll)
+	angle = angles[2] * 0.5f;
+	sy = sinf( angle );
+	cy = cosf( angle );
 
-	// Hamilton product to get a quaternion
-	const float x = sx * cy * cz + cx * sy * sz;
-	const float y = cx * sy * cz - sx * cy * sz;
-	const float z = cx * cy * sz + sx * sy * cz;
-	const float w = cx * cy * cz - sx * sy * sz;
+	// Y axis (yaw)
+	angle = angles[1] * 0.5f;
+	sp = sinf( angle );
+	cp = cosf( angle );
 
-	q[0] = x, q[1] = y, q[2] = z, q[3] = w;
-	glm_quat_normalize( q );
+	// X axis (pitch)
+	angle = angles[0] * 0.5f;
+	sr = sinf( angle );
+	cr = cosf( angle );
+
+	// Build quaternion [X, Y, Z, W] - matches original AngleQuaternion formula
+	q[0] = sr * cp * cy - cr * sp * sy; // X
+	q[1] = cr * sp * cy + sr * cp * sy; // Y
+	q[2] = cr * cp * sy - sr * sp * cy; // Z
+	q[3] = cr * cp * cy + sr * sp * sy; // W
 }
 
 void Math_QuaternionMatrix3x4( const float *q, math_mat3x4_t *out ) {

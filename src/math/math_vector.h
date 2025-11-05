@@ -31,4 +31,8 @@ void Math_Vec3Rotate( math_vec3_t in, const math_mat3x4_t *matrix, math_vec3_t o
 
 void Math_Vec3IRotate( math_vec3_t in, const math_mat3x4_t *matrix, math_vec3_t out );
 
+void Math_Vec3TransformMat4( const math_vec3_t in, const math_mat4_t m, math_vec3_t out );
+
+void Math_Vec3RotateMat4( const math_vec3_t in, const math_mat4_t m, math_vec3_t out );
+
 #endif

@@ -21,6 +21,10 @@
  */
 
 #include "mdl_bones.h"
+#include "math_matrix.h"
+#include "math_quaternion.h"
+#include "math_vector.h"
+#include "math_types.h"
 #include "util/util_logger.h"
 
 #include <stdio.h>
@@ -153,17 +157,24 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 		LOG_TRACEF( "bones", "    Position: (%.2f, %.2f, %.2f)", position[0], position[1], position[2] );
 		LOG_TRACEF( "bones", "    Rotation: (%.2f, %.2f, %.2f)", euler_rot[0], euler_rot[1], euler_rot[2] );
 
-		versor q;
-		mat4 R;
-
+		math_quat_t q;
+		math_mat3x4_t R;
+        math_mat4_t R_Mat4;
+		math_mat4_t local;
+        
 		LOG_TRACEF( "bones", "    Converting to quaternion" );
-		AngleQuaternion( euler_rot, q );
+		// AngleQuaternion( euler_rot, q );
+        Math_AngleQuaternion( euler_rot, q );
 
 		LOG_TRACEF( "bones", "    Building rotation matrix" );
-		QuaternionMatrix( q, R );
+		// QuaternionMatrix( q, &R );
+        Math_QuaternionMatrix3x4( q, &R );
+         
+        Math_Mat3x4_ToMat4( &R, R_Mat4 );
 
-		mat4 local;
-		glm_mat4_copy( R, local );
+		// glm_mat4_copy( &R, local );
+        
+        Math_Mat4_Copy( R_Mat4, local );
 
 		local[3][0] = position[0];
 		local[3][1] = position[1];
@@ -179,10 +190,12 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 			}
 
 			LOG_TRACEF( "bones", "    Concatenating with parent %d", bones[i].parent );
-			R_ConcatTransforms( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
+			// R_ConcatTransforms( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
+            Math_Mat4_Multiply( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
 		} else {
 			LOG_TRACEF( "bones", "    Root bone, copying local transform" );
-			Mat4Copy( local, g_bonetransformations[i] );
+			// Mat4Copy( local, g_bonetransformations[i] );
+            Math_Mat4_Copy( local, g_bonetransformations[i] );
 		}
 
 		// Log every 5th bone to avoid spam
