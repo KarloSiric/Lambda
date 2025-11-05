@@ -16,7 +16,7 @@
  *
  * ───────────────────────────────────────────────────────────────────────────
  *   Author: Karlo Siric
- *   Purpose: Command-Line Argument Parser Implementation
+ *   Purpose: Bone System Implementation
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -31,75 +31,12 @@
 
 math_mat4_t g_bonetransformations[MAXSTUDIOBONES];
 
-// ============================================================================
-// OLD FUNCTIONS - Still needed by mdl_animations.c
-// TODO: Remove these once mdl_animations.c is refactored to use Math library
-// ============================================================================
-
-void AngleQuaternion( const vec3 angles, versor q ) {
-	float angle;
-	float sr, sp, sy, cr, cp, cy;
-
-	angle = angles[2] * 0.5f;
-	sy = sinf( angle );
-	cy = cosf( angle );
-
-	angle = angles[1] * 0.5f;
-	sp = sinf( angle );
-	cp = cosf( angle );
-
-	angle = angles[0] * 0.5f;
-	sr = sinf( angle );
-	cr = cosf( angle );
-
-	q[0] = sr * cp * cy - cr * sp * sy;
-	q[1] = cr * sp * cy + sr * cp * sy;
-	q[2] = cr * cp * sy - sr * sp * cy;
-	q[3] = cr * cp * cy + sr * sp * sy;
-}
-
-void QuaternionMatrix( const versor q, mat4 out ) {
-	float x = q[0], y = q[1], z = q[2], w = q[3];
-
-	out[0][0] = 1.0f - 2.0f * ( y * y + z * z );
-	out[0][1] = 2.0f * ( x * y + w * z );
-	out[0][2] = 2.0f * ( x * z - w * y );
-	out[0][3] = 0.0f;
-
-	out[1][0] = 2.0f * ( x * y - w * z );
-	out[1][1] = 1.0f - 2.0f * ( x * x + z * z );
-	out[1][2] = 2.0f * ( y * z + w * x );
-	out[1][3] = 0.0f;
-
-	out[2][0] = 2.0f * ( x * z + w * y );
-	out[2][1] = 2.0f * ( y * z - w * x );
-	out[2][2] = 1.0f - 2.0f * ( x * x + y * y );
-	out[2][3] = 0.0f;
-
-	out[3][0] = 0.0f;
-	out[3][1] = 0.0f;
-	out[3][2] = 0.0f;
-	out[3][3] = 1.0f;
-}
-
-void QuaternionSlerp( const versor q1, const versor q2, float t, versor out ) {
-	glm_quat_slerp( q1, q2, t, out );
-}
-
-void R_ConcatTransforms( const mat4 parent, const mat4 local, mat4 out ) {
-	glm_mat4_mul( parent, local, out );
-}
-
 void TransformNormalByBone( const mat4 boneAbs, const vec3 in, vec3 out ) {
 	mat3 R;
 	glm_mat4_pick3( boneAbs, R );
 	glm_mat3_mulv( R, in, out );
 	glm_vec3_normalize( out );
 }
-
-// ============================================================================
-// END OLD FUNCTIONS
-// ============================================================================
 
 void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 	LOG_DEBUGF( "bones", "SetUpBones START: %d bones", header->numbones );
@@ -139,17 +76,11 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 		math_mat4_t local;
 
 		LOG_TRACEF( "bones", "    Converting to quaternion" );
-		// AngleQuaternion( euler_rot, q );
 		Math_AngleQuaternion( euler_rot, q );
 
 		LOG_TRACEF( "bones", "    Building rotation matrix" );
-		// QuaternionMatrix( q, &R );
 		Math_QuaternionMatrix3x4( q, &R );
-
 		Math_Mat3x4_ToMat4( &R, R_Mat4 );
-
-		// glm_mat4_copy( &R, local );
-
 		Math_Mat4_Copy( R_Mat4, local );
 
 		local[3][0] = position[0];
@@ -166,11 +97,9 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 			}
 
 			LOG_TRACEF( "bones", "    Concatenating with parent %d", bones[i].parent );
-			// R_ConcatTransforms( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
 			Math_Mat4_Multiply( g_bonetransformations[bones[i].parent], local, g_bonetransformations[i] );
 		} else {
 			LOG_TRACEF( "bones", "    Root bone, copying local transform" );
-			// Mat4Copy( local, g_bonetransformations[i] );
 			Math_Mat4_Copy( local, g_bonetransformations[i] );
 		}
 

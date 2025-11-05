@@ -54,7 +54,7 @@
 #define HLMV_VERSION_PATCH          0
 
 // Build number (increment with each build) NOTE(Karlo): [current build is 3 - 2025-10-15]
-#define HLMV_VERSION_BUILD          3
+#define HLMV_VERSION_BUILD          10
 
 // Build timestamp (automatically set by compiler)
 #define HLMV_BUILD_DATE             __DATE__

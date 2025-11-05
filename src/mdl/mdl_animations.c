@@ -16,13 +16,17 @@
  *
  * ───────────────────────────────────────────────────────────────────────────
  *   Author: Karlo Siric
- *   Purpose: Command-Line Argument Parser Implementation
+ *   Purpose: Animation System Implementation
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
 #include "mdl_animations.h"
 #include "mdl_bones.h"
 #include "mdl_loader.h"
+
+#include "math_quaternion.h"
+#include "math_matrix.h"
+#include "math_types.h"
 
 #include <cglm/cglm.h>
 #include <math.h>
@@ -139,18 +143,17 @@ void CalcBoneQuaternion( int frame, float s, const mstudiobone_t *pbone, const m
 	// If angles are different, do SLERP interpolation in quaternion space
 	if ( !glm_vec3_eqv_eps( angle1, angle2 ) ) {
 		versor q1, q2;
-		AngleQuaternion( angle1, q1 );
-		AngleQuaternion( angle2, q2 );
-		QuaternionSlerp( q1, q2, s, q );
+		Math_AngleQuaternion( angle1, q1 );
+		Math_AngleQuaternion( angle2, q2 );
+		Math_QuaternionSlerp( q1, q2, s, q );
 	} else {
 		// Angles are the same, just convert once
-		AngleQuaternion( angle1, q );
+		Math_AngleQuaternion( angle1, q );
 	}
 }
 
 void CalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim,
 					   vec3_t pos ) {
-    
 	// Process all 3 position channels (X, Y, Z)
 	for ( int j = 0; j < 3; j++ ) {
 		pos[j] = pbone->value[j]; // Start with bind pose
@@ -256,7 +259,6 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 	if ( seq->numframes <= 1 ) {
 		state->current_frame = 0.0f;
 	} else {
-        
 		// NOTE(Karlo): CRITICAL: This is Valve's EXACT formula!
 		// It wraps smoothly at (numframes - 1) for ALL frames
 
@@ -283,7 +285,6 @@ mdl_result_t mdl_animation_calculate_bones(
 	unsigned char *data,
 	mdl_seqgroup_blob_t *seqgroups,
 	mat4 *bone_transformations ) {
-    
 	if ( !state || !header || !bone_transformations ) {
 		return MDL_ERROR_INVALID_PARAMETER;
 	}
@@ -374,7 +375,7 @@ mdl_result_t mdl_animation_calculate_bones(
 
 		// Convert quaternion to rotation matrix
 		mat4 local = GLM_MAT4_IDENTITY_INIT;
-		QuaternionMatrix( q, local );
+		Math_QuaternionMatrix4x4( q, &local );
 
 		// Set translation in the 4th column (column-major format)
 		local[3][0] = pos[0];
@@ -383,7 +384,7 @@ mdl_result_t mdl_animation_calculate_bones(
 
 		// Concatenate with parent bone transform
 		if ( bone->parent >= 0 ) {
-			R_ConcatTransforms( bone_transformations[bone->parent], local, bone_transformations[i] );
+			Math_Mat4_Multiply( bone_transformations[bone->parent], local, bone_transformations[i] );
 		} else {
 			glm_mat4_copy( local, bone_transformations[i] );
 		}
