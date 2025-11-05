@@ -194,7 +194,6 @@ void app_shutdown( void ) {
 	}
 
 	cleanup_renderer();
-    Input_Shutdown();
 
 	g_app_state.initialized = false;
 	g_app_state.running = false;
