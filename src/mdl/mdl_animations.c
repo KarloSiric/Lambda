@@ -254,8 +254,6 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 	float frames_to_advance = delta_time * frames_per_second;
 	state->current_frame += frames_to_advance;
 
-	float max_frame = (float)( seq->numframes - 1 );
-
 	if ( seq->numframes <= 1 ) {
 		state->current_frame = 0.0f;
 	} else {

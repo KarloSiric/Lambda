@@ -164,3 +164,31 @@ void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 ) {
 	A[2][2] = mat4[2][2];
 	A[2][3] = mat4[3][2];
 }
+
+// Rotates a matrix around an arbitrary axis
+// This modifies the matrix in-place, applying a rotation transformation
+void Math_Mat4_Rotate( math_mat4_t m, float angle_rad, const math_vec3_t axis ) {
+	// glm_rotate applies rotation to existing matrix: m = m * R(angle, axis)
+	// Used for model rotation (e.g., spinning character on turntable)
+	glm_rotate( m, angle_rad, (vec3){ axis[0], axis[1], axis[2] } );
+}
+
+// Creates a view matrix for camera positioning
+// "Look-at" transformation: camera at 'eye' position, looking at 'center' point
+void Math_Mat4_LookAt( const math_vec3_t eye, const math_vec3_t center, const math_vec3_t up, math_mat4_t dest ) {
+	// Constructs view matrix that transforms world coordinates to camera space
+	// eye: camera position, center: target point, up: up direction (usually {0,1,0})
+	glm_lookat( (vec3){ eye[0], eye[1], eye[2] },
+	            (vec3){ center[0], center[1], center[2] },
+	            (vec3){ up[0], up[1], up[2] },
+	            dest );
+}
+
+// Creates a perspective projection matrix for 3D rendering
+// This gives the "3D depth" effect where far objects appear smaller
+void Math_Mat4_Perspective( float fovy_rad, float aspect, float near_plane, float far_plane, math_mat4_t dest ) {
+	// fovy_rad: vertical field of view in radians (how wide camera sees)
+	// aspect: screen width/height ratio
+	// near/far: clipping planes (only objects between near and far are visible)
+	glm_perspective( fovy_rad, aspect, near_plane, far_plane, dest );
+}
