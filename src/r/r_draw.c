@@ -31,6 +31,9 @@
 #include "util/util_logger.h"
 #include "input/input.h"
 #include "input/input_handler.h"
+#include "math/math_matrix.h"
+#include "math/math_vector.h"
+#include "math/math_types.h"
 
 #include <OpenGL/gltypes.h>
 #include <cglm/cglm.h>
@@ -595,9 +598,9 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 	/* ----- POSITION (your skinning path) ----- */
 	vec3 P;
 	if ( have_skinned_positions ) {
-		glm_vec3_copy( skinned_positions[vertex_index], P );
+		Math_Vec3Copy( skinned_positions[vertex_index], P );
 	} else {
-		glm_vec3_copy( g_current.vertices[vertex_index], P );
+		Math_Vec3Copy( g_current.vertices[vertex_index], P );
 	}
 
 	const float viewer_scale = 0.1f;
@@ -1308,9 +1311,9 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	float aspect = ( fbh > 0 ) ? (float)fbw / (float)fbh : 1.0f;
 
 	mat4 M;
-	glm_mat4_identity( M );
-	glm_rotate( M, rotation_y, (vec3){ 0.0f, 1.0f, 0.0f } );
-	glm_rotate( M, rotation_x, (vec3){ 1.0f, 0.0f, 0.0f } );
+	Math_Mat4_Identity( M );
+	Math_Mat4_Rotate( M, rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
+	Math_Mat4_Rotate( M, rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );
 
 	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
 	vec3 camPos = { 0.0f, 0.0f, camDist };
@@ -1318,9 +1321,9 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	vec3 up = { 0.0f, 2.0f, 0.0f };
 
 	mat4 V;
-	glm_lookat( camPos, target, up, V );
+	Math_Mat4_LookAt( camPos, target, up, V );
 	mat4 P;
-	glm_perspective( glm_rad( 50.0f ), aspect, 0.01f, 1000.0f, P );
+	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
 
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );

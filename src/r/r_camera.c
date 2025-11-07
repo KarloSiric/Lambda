@@ -118,7 +118,7 @@ void Camera_UpdateTransforms( r_camera_t *camera ) {
 	camera->position[1] = camera->target[1] - camera->forward[1] * camera->distance;
 	camera->position[2] = camera->target[2] - camera->forward[2] * camera->distance;
 
-	glm_lookat( camera->position, camera->target, camera->up, camera->view_matrix );
+	Math_Mat4_LookAt( camera->position, camera->target, camera->up, camera->view_matrix );
 
 	camera->dirty = false;
 }

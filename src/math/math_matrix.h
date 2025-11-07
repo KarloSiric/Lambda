@@ -1,5 +1,5 @@
-#define MATH_MATRIX_H
 #ifndef MATH_MATRIX_H
+#define MATH_MATRIX_H
 
 #include "math_types.h"
 
