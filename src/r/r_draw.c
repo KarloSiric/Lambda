@@ -113,8 +113,6 @@ float rotation_x = 0.0f;
 float rotation_y = 0.0f;
 float zoom = 0.15f; // Even more zoomed out for scientist model
 
-static bool mouse_pressed = false;
-static double last_x = 400, last_y = 225;
 
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
@@ -292,66 +290,34 @@ void ProcessModelForRendering( void ) {
 		return;
 	}
 
-	LOG_DEBUGF(
-		"renderer",
-		"  Header: bones=%d, bodyparts=%d, sequences=%d",
-		global_header->numbones,
-		global_header->numbodyparts,
-		global_header->numseq );
-	fflush( stdout ); // Force flush!
-
-	LOG_DEBUGF( "renderer", "  Bodypart index offset: 0x%X", global_header->bodypartindex );
-	fflush( stdout );
-
 	total_render_vertices = 0;
 	g_num_ranges = 0;
 
-	LOG_DEBUGF( "renderer", "  Getting bodyparts pointer..." );
-	fflush( stdout );
 	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
-	LOG_DEBUGF( "renderer", "  Bodyparts pointer obtained: %p", (void *)bodyparts );
-	fflush( stdout );
 
-	LOG_DEBUGF( "renderer", "  Setting up T-pose bones..." );
-	fflush( stdout );
-	/*
-	 * We set the T-Pose initially and then if we want animations that is rendered
-	 * in a seperate function right.
-	 */
-
+	// Set up T-pose bones initially (animations update these per-frame)
 	SetUpBones( global_header, global_data );
-	LOG_DEBUGF( "renderer", "  T-pose bones completed" );
-	fflush( stdout );
 
 	// Iterate through all bodyparts
 	for ( int bp = 0; bp < global_header->numbodyparts; ++bp ) {
-		LOG_TRACEF( "renderer", "  Processing bodypart %d/%d", bp, global_header->numbodyparts - 1 );
-
 		mstudiobodyparts_t *bpRec = &bodyparts[bp];
 		mstudiomodel_t *models = (mstudiomodel_t *)( global_data + bpRec->modelindex );
 
-		LOG_TRACEF( "renderer", "    Bodypart '%s': %d models", bpRec->name, bpRec->nummodels );
-
 		// GET ONLY THE SELECTED MODEL FOR THIS BODYPART
 		int selected_model_index = bodypart_get_model_index( bp );
-
-		LOG_TRACEF( "renderer", "    Selected model index: %d", selected_model_index );
 
 		// Safety check
 		if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels ) {
 			LOG_WARNF(
 				"renderer",
-				"    Invalid model index %d (max: %d), using 0",
-				selected_model_index,
+				"Invalid model index %d for bodypart '%s' (max: %d), using 0",
+				selected_model_index, bpRec->name,
 				bpRec->nummodels - 1 );
 			selected_model_index = 0; // Fallback to first model
 		}
 
 		// Get ONLY the selected model (not all of them!)
 		mstudiomodel_t *model = &models[selected_model_index];
-
-		LOG_TRACEF(
-			"renderer", "    Model '%s': vertices=%d, meshes=%d", model->name, model->numverts, model->nummesh );
 
 		g_current.model = model;
 		g_current.vertices = (vec3_t *)( global_data + model->vertindex );
@@ -360,15 +326,11 @@ void ProcessModelForRendering( void ) {
 		g_current.normal_count = model->numnorms;
 
 		// Skin this model's vertices (fills skinned_positions[])
-		LOG_TRACEF( "renderer", "    Transforming %d vertices", model->numverts );
 		TransformVertices( global_header, global_data, model, skinned_positions );
-		LOG_TRACEF( "renderer", "    Vertices transformed successfully" );
 		have_skinned_positions = true;
 
 		// All meshes for this model
 		mstudiomesh_t *meshes = (mstudiomesh_t *)( global_data + model->meshindex );
-
-		LOG_TRACEF( "renderer", "    Processing %d meshes", model->nummesh );
 
 		// Skin table
 		const short *skin_table = (const short *)( global_data + global_header->skinindex );
@@ -569,24 +531,20 @@ void ProcessModelForRendering( void ) {
 
 	model_processed = true;
 
-	LOG_DEBUGF( "renderer", "  Processing complete:" );
-	LOG_DEBUGF( "renderer", "    Total vertices: %d", total_render_vertices );
-	LOG_DEBUGF( "renderer", "    Draw ranges: %d", g_num_ranges );
-
 	if ( g_num_ranges == 0 ) {
-		LOG_WARNF( "renderer", "  WARNING - No draw ranges created!" );
+		LOG_WARNF( "renderer", "No draw ranges created!" );
 	}
 
 	if ( total_render_vertices == 0 ) {
-		LOG_WARNF( "renderer", "  WARNING - No vertices generated!" );
+		LOG_WARNF( "renderer", "No vertices generated!" );
 	}
 
 	if ( total_render_vertices > MAX_RENDER_VERTICES ) {
 		LOG_ERRORF(
-			"renderer", "  ERROR - Vertex buffer overflow! %d > %d", total_render_vertices, MAX_RENDER_VERTICES );
+			"renderer", "Vertex buffer overflow! %d > %d", total_render_vertices, MAX_RENDER_VERTICES );
 	}
 
-	LOG_INFOF( "renderer", "Model processing COMPLETE" );
+	LOG_INFOF( "renderer", "Model processed: %d vertices, %d draw calls", total_render_vertices, g_num_ranges );
 }
 
 void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, float texW, float texH ) {
@@ -1009,8 +967,6 @@ void render_loop( void ) {
 	g_last_frame_time = glfwGetTime(); // Initialize to current time
 
 	while ( !glfwWindowShouldClose( window ) ) {
-		LOG_TRACEF( "renderer", "=== Frame %d START ===", frame_count );
-
 		// CRITICAL: Check for NULL before ANYTHING
 		if ( !global_header || !global_data ) {
 			LOG_ERRORF(
@@ -1018,7 +974,6 @@ void render_loop( void ) {
 			break;
 		}
 
-		LOG_TRACEF( "renderer", "Frame %d: Getting time", frame_count );
 		// Calculate delta time
 		double current_time = glfwGetTime();
 		float delta_time = (float)( current_time - g_last_frame_time );
@@ -1033,28 +988,19 @@ void render_loop( void ) {
 			delta_time = 0.0f;
 		}
 
-		LOG_TRACEF( "renderer", "Frame %d: Delta time = %.4f", frame_count, delta_time );
-
 		// Update animation state
 		if ( g_animation_enabled && global_header && global_data ) {
-			LOG_TRACEF( "renderer", "Frame %d: Updating animation", frame_count );
 			mdl_animation_update( &g_anim_state, delta_time, global_header, global_data, global_seqgroups );
 		}
 
 		// Clear and render
-		LOG_TRACEF( "renderer", "Frame %d: Clearing screen", frame_count );
 		clear_screen();
 
 		if ( global_header && global_data ) {
-			LOG_TRACEF( "renderer", "Frame %d: Calling render_model", frame_count );
 			render_model( global_header, global_data );
-			LOG_TRACEF( "renderer", "Frame %d: render_model returned", frame_count );
 		}
 
-		LOG_TRACEF( "renderer", "Frame %d: Swapping buffers", frame_count );
 		glfwSwapBuffers( window );
-
-		LOG_TRACEF( "renderer", "Frame %d: Polling events", frame_count );
 		glfwPollEvents();
 
 		// ═══════════════════════════════════════════════════════════
@@ -1083,12 +1029,6 @@ void render_loop( void ) {
 		Input_Update();
 
 		frame_count++;
-
-		if ( frame_count % 60 == 0 ) {
-			LOG_DEBUGF( "renderer", "Rendered %d frames", frame_count );
-		}
-
-		LOG_TRACEF( "renderer", "=== Frame %d END ===", frame_count - 1 );
 	}
 
 	LOG_INFOF( "renderer", "Exiting render loop after %d frames", frame_count );
@@ -1109,30 +1049,18 @@ void set_current_texture( unsigned int texture_id ) {
 }
 
 void render_model( studiohdr_t *header, unsigned char *data ) {
-	LOG_TRACEF( "renderer", "render_model() START" );
-
 	(void)header;
 	(void)data;
 
 	// ONE-TIME: Build mesh topology
 	if ( !model_processed ) {
-		LOG_DEBUGF( "renderer", "First frame - processing model" );
 		ProcessModelForRendering();
-		LOG_DEBUGF(
-			"renderer", "Model processing complete - %d vertices, %d ranges", total_render_vertices, g_num_ranges );
 	}
 
 	if ( total_render_vertices == 0 ) {
 		LOG_WARNF( "renderer", "No vertices to render!" );
 		return;
 	}
-
-	LOG_TRACEF(
-		"renderer",
-		"render_model: animated=%d, vertices=%d, ranges=%d",
-		g_animation_enabled,
-		total_render_vertices,
-		g_num_ranges );
 
 	// EVERY FRAME: Update bones and re-skin vertices if animating
 	if ( g_animation_enabled && global_header && global_data ) {
@@ -1370,16 +1298,13 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	}
 }
 void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data, mdl_seqgroup_blob_t *seqgroups, int num_seqgroups ) {
-	LOG_INFOF( "renderer", "Setting model data" );
-
 	if ( !header || !data ) {
 		LOG_ERRORF( "renderer", "NULL model data passed to renderer!" );
 		return;
 	}
 
-	LOG_DEBUGF( "renderer", "  Bones: %d", header->numbones );
-	LOG_DEBUGF( "renderer", "  Bodyparts: %d", header->numbodyparts );
-	LOG_DEBUGF( "renderer", "  Sequences: %d", header->numseq );
+	LOG_INFOF( "renderer", "Loading model: %d bones, %d bodyparts, %d sequences",
+		header->numbones, header->numbodyparts, header->numseq );
 
 	global_header = header;
 	global_data = data;
@@ -1412,6 +1337,5 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 		g_last_frame_time = glfwGetTime();
 	}
 
-	LOG_DEBUGF( "renderer", "  Textures: %d", tex_header ? tex_header->numtextures : 0 );
-	LOG_INFOF( "renderer", "Model data set successfully" );
+	LOG_INFOF( "renderer", "Model loaded successfully" );
 }

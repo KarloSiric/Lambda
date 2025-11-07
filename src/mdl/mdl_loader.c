@@ -560,9 +560,9 @@ mdl_result_t extract_texture_rgb(
     *width  = tex->width;
     *height = tex->height;
 
-    unsigned char *indexed_pixels = texture_data + texture_header->texturedataindex + tex->index;
+    const unsigned char *indexed_pixels = texture_data + texture_header->texturedataindex + tex->index;
     // Get a palette right after the
-    unsigned char *palette = indexed_pixels + ( tex->width * tex->height );
+    const unsigned char *palette = indexed_pixels + ( tex->width * tex->height );
 
     int pixel_count = tex->width * tex->height;
 
