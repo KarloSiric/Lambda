@@ -99,6 +99,7 @@ void Math_Vec3RotateMat4( const math_vec3_t in, const math_mat4_t m, math_vec3_t
 	// Rotate vec3 by mat4: only use rotation part, no translation
 	// Extract 3x3 rotation matrix and multiply
 	mat3 R;
+    
 	glm_mat4_pick3( m, R );
 	glm_mat3_mulv( R, in, out );
 	glm_vec3_normalize( out );
