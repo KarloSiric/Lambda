@@ -12,9 +12,6 @@
 extern "C" {
 #endif
 #include "math/math_types.h"
-#include "math/math_matrix.h"
-#include "math/math_angles.h"
-#include "math/math_vector.h"
 
 typedef struct {         
     math_vec3_t position;

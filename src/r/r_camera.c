@@ -21,6 +21,10 @@
  */
 
 #include "r_camera.h"
+#include "math/math_matrix.h"
+#include "math/math_angles.h"
+#include "math/math_vector.h"
+
 
 void Camera_Init( r_camera_t *camera, math_vec3_t target_position, float initial_distance ) {
 	Math_Vec3Copy( target_position, camera->target );

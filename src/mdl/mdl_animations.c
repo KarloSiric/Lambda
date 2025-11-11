@@ -21,12 +21,10 @@
  */
 
 #include "mdl_animations.h"
-#include "mdl_bones.h"
 #include "mdl_loader.h"
 
 #include "math_quaternion.h"
 #include "math_matrix.h"
-#include "math_types.h"
 
 #include <cglm/cglm.h>
 #include <math.h>
