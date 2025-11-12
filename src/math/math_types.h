@@ -34,7 +34,7 @@ typedef mat3                math_mat3_t;
 
 typedef struct {
     
-    alignas(16) float mat[3][4];
+    alignas( 16 ) float mat[3][4];
     
 } math_mat3x4_t;
 
