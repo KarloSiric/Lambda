@@ -28,7 +28,6 @@
 #include "util/util_logger.h"
 
 #include <stdio.h>
-#include <string.h>
 
 math_mat4_t g_bonetransformations[MAXSTUDIOBONES];
 

@@ -29,7 +29,7 @@
 
 static app_args_t args = { 0 };
 
-int main( int argc, char const *argv[] ) {
+int main( int argc, char const *argv[] ) { 
 	if ( parse_args( argc, argv, &args ) != APP_INIT_SUCCESS ) {
 		return ( APP_INIT_EXIT_SUCCESS );
 	}
