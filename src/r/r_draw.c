@@ -1252,7 +1252,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	Math_Mat4_LookAt( camPos, target, up, V );
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
-
+    
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );
 	GLint uProj = glGetUniformLocation( shader_program, "projection" );
