@@ -100,7 +100,7 @@ void print_bodypart_info( FILE *output, const studiohdr_t *header, const unsigne
 	}
 
 	fprintf( output, "\nDetailed Bodypart Information:\n" );
-	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( file_data + header->bodypartindex );
+	mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * )( file_data + header->bodypartindex );
 
 	for ( int i = 0; i < header->numbodyparts; i++ ) {
 		fprintf( output, "   [%d] Bodypart: %s (%d models)\n", i, bodyparts[i].name, bodyparts[i].nummodels );
@@ -244,7 +244,7 @@ mdl_result_t parse_bone_hierarchy( const studiohdr_t *header, const unsigned cha
 	return MDL_SUCCESS;
 }
 
-void print_bone_info( FILE *output, const mstudiobone_t *bones, int bone_count ) {
+void print_bone_info( FILE *output, const mstudiobone_t *bones, int bone_count ) { 
 	if ( !bones || bone_count == 0 ) {
 		fprintf( output, "\nBone Information: No bones found\n" );
 		return;
@@ -723,7 +723,7 @@ mdl_result_t load_sequence_groups( const char *model_path, studiohdr_t *header, 
 
 	memset( groups, 0, num_groups * sizeof( mdl_seqgroup_blob_t ) );
 
-	groups[0].data = main_data;  
+	groups[0].data = main_data;
 	groups[0].size = header->length;
 
 	strncpy( groups[0].name, "main", sizeof( groups[0].name ) - 1 );

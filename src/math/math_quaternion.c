@@ -80,7 +80,8 @@ void Math_QuaternionMatrix4x4( const math_quat_t q, math_mat4_t *out ) {
 	const float xx = x * x, yy = y * y, zz = z * z;
 	const float xy = x * y, xz = x * z, yz = y * z;
 	const float wx = w * x, wy = w * y, wz = w * z;
-
+    
+    
 	( *out )[0][0] = 1.0f - 2.0f * ( yy + zz );
 	( *out )[0][1] = 2.0f * ( xy + wz );
 	( *out )[0][2] = 2.0f * ( xz - wy );
