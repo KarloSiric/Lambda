@@ -6373,3 +6373,701 @@ The application initialization module is the **heart of the startup sequence**. 
 - **Graceful degradation:** Clean up on failure
 - **Separation of concerns:** Helper functions for each subsystem
 
+
+---
+
+**Group 1: Lifecycle State**
+
+```c
+bool running;
+bool initialized;
+```
+
+| Field | Purpose | Set By | Checked By |
+|-------|---------|--------|------------|
+| `running` | App is in main loop | `app_init()`, `app_run()` | `app_run()` |
+| `initialized` | Successful initialization | `app_init()` | `app_run()`, `app_shutdown()` |
+
+**State Transitions:**
+```
+Start: initialized=false, running=false
+  ↓
+app_init() success: initialized=true, running=true
+  ↓
+app_run() loop: running=true (while user doesn't close window)
+  ↓
+app_run() exit: running=false
+  ↓
+app_shutdown(): initialized=false, running=false
+```
+
+---
+
+**Group 2: Window State**
+
+```c
+GLFWwindow *window;
+int window_width;
+int window_height;
+bool fullscreen;
+```
+
+| Field | Purpose | Default | Set By |
+|-------|---------|---------|--------|
+| `window` | GLFW window handle | NULL | `app_init()` (from renderer) |
+| `window_width` | Window width in pixels | 1400 | Currently unused (TODO) |
+| `window_height` | Window height in pixels | 900 | Currently unused (TODO) |
+| `fullscreen` | Fullscreen mode active | false | Currently unused (TODO) |
+
+**Current Implementation:**
+- Window dimensions hardcoded in `r_draw.h`: `WIDTH=1400`, `HEIGHT=900`
+- These fields exist for future dynamic resizing
+- `window` pointer obtained from renderer (external global)
+
+---
+
+**Group 3: Configuration**
+
+```c
+app_args_t *args;
+```
+
+| Field | Purpose | Lifetime | Set By |
+|-------|---------|----------|--------|
+| `args` | Pointer to parsed arguments | Entire program | `app_init()` line 197 |
+
+**Why Pointer Instead of Copy?**
+- `app_args_t` lives in `main.c` (static storage)
+- No need to copy - just point to it
+- Allows checking original flags anytime during execution
+
+---
+
+**Group 4: Model Data**
+
+```c
+mdl_model_t *model;
+char model_path[260];
+int bodypart_selections[32];
+int num_bodyparts;
+```
+
+| Field | Purpose | Size | Notes |
+|-------|---------|------|-------|
+| `model` | Pointer to loaded model | 8 bytes | Heap-allocated via `create_mdl_model()` |
+| `model_path` | Path to model file | 260 bytes | Currently unused (TODO) |
+| `bodypart_selections` | Current submodel per bodypart | 128 bytes | Currently unused (for multi-part models) |
+| `num_bodyparts` | Number of bodyparts | 4 bytes | Currently unused |
+
+**Model Ownership:**
+- `model` is **owned** by `g_app_state`
+- Must be freed in `app_shutdown()` via `free_model()`
+- Contains header, geometry, textures, animations
+
+---
+
+**Group 5: Animation State**
+
+```c
+int current_sequence;
+int current_frame;
+float animation_time;
+bool animation_playing;
+bool animation_looping;
+float animation_speed;
+```
+
+| Field | Purpose | Default | Range |
+|-------|---------|---------|-------|
+| `current_sequence` | Active animation sequence | 0 (idle) | 0 to numseq-1 |
+| `current_frame` | Current frame in sequence | 0 | 0 to numframes-1 |
+| `animation_time` | Accumulated time | 0.0 | 0.0 to infinity |
+| `animation_playing` | Animation is playing | true | true/false |
+| `animation_looping` | Loop animation | true (implicit) | true/false |
+| `animation_speed` | Playback speed | 1.0 (implicit) | 0.0 to 10.0 |
+
+**Animation Update (in render loop):**
+```c
+if (animation_playing) {
+    animation_time += delta_time * animation_speed;
+    current_frame = (int)(animation_time * sequence->fps) % sequence->numframes;
+}
+```
+
+**Initialization:**
+```c
+// cl_app.c:190-192
+g_app_state.current_sequence = 0;
+g_app_state.current_frame = 0;
+g_app_state.animation_playing = true;
+```
+
+---
+
+**Group 6: Visualization Flags**
+
+```c
+bool show_bones;
+bool show_hitboxes;
+bool show_attachments;
+bool show_bounding_boxes;
+bool wireframe_mode;
+int wireframe_type;
+int shading_mode;
+int background_mode;
+float background_color[3];
+```
+
+| Field | Purpose | Default | Future Use |
+|-------|---------|---------|------------|
+| `show_bones` | Render skeleton | false | GUI toggle |
+| `show_hitboxes` | Render collision boxes | false | GUI toggle |
+| `show_attachments` | Render attachment points | false | GUI toggle |
+| `show_bounding_boxes` | Render bounding boxes | false | GUI toggle |
+| `wireframe_mode` | Wireframe rendering | false | GUI toggle |
+| `wireframe_type` | Wireframe style | 0 | GUI dropdown |
+| `shading_mode` | Shading algorithm | 0 (smooth) | GUI dropdown |
+| `background_mode` | Background style | 0 (solid) | GUI dropdown |
+| `background_color` | Background RGB | {0,0,0} | GUI color picker |
+
+**Currently Unused:**
+These fields are placeholders for future GUI implementation.
+
+---
+
+**Group 7: Selection State**
+
+```c
+int selected_bone_index;
+int selected_hitbox_index;
+int selected_attachment_index;
+int selected_sequence_index;
+int selected_texture_index;
+int hovered_vertex_index;
+```
+
+All default to -1 (none selected). Used for future GUI selection system.
+
+---
+
+**Group 8: Camera State (TODO)**
+
+```c
+float camera_position[3];
+float camera_target[3];
+float camera_distance;
+float camera_pitch;
+float camera_yaw;
+```
+
+**Current State:**
+Camera is implemented in `r_camera.c` but NOT yet integrated with app_state. These fields are **unused placeholders**.
+
+**Future Refactor:**
+```c
+// Instead of individual fields, will become:
+r_camera_t camera;
+```
+
+---
+
+**Group 9: Input State (TODO)**
+
+```c
+bool keys_pressed[512];
+bool mouse_buttons[8];
+float mouse_x, mouse_y;
+float mouse_delta_x, mouse_delta_y;
+```
+
+**Current State:**
+Input is handled by `input.c` module. These fields are **unused placeholders**.
+
+**Future Refactor:**
+```c
+// Instead of individual fields, will become:
+input_state_t input;
+```
+
+---
+
+**Group 10: UI State**
+
+```c
+bool show_info_panel;
+bool show_debug_overlay;
+bool mouse_over_ui;
+bool edit_mode;
+bool model_modified;
+```
+
+All default to false. Used for future GUI system.
+
+---
+
+#### 7.2.2 Return Code Constants
+
+**Definition (cl_app.h:10-12):**
+```c
+#define APP_INIT_ERROR       -1   // error initialization just stop...
+#define APP_INIT_EXIT_SUCCESS 1   // quick exit but not an error initialization
+#define APP_INIT_SUCCESS      0   // normal successfull initialization
+```
+
+**Usage:**
+
+| Code | Value | Meaning | Example |
+|------|-------|---------|---------|
+| `APP_INIT_SUCCESS` | 0 | Normal success, continue | Model loaded successfully |
+| `APP_INIT_EXIT_SUCCESS` | 1 | Clean early exit | --help/--version shown |
+| `APP_INIT_ERROR` | -1 | Error occurred | File not found, GLFW init failed |
+
+See Section 5.2.4 for detailed explanation of return code logic.
+
+---
+
+
+### 7.3 Functions
+
+#### 7.3.1 app_init() - Main Initialization Function
+
+**Signature (cl_app.h:78):**
+```c
+int app_init( app_args_t *args );
+```
+
+**Purpose:**
+Initialize the entire application. This is the **master orchestrator** - it calls all subsystem initializers in the correct order and handles multiple execution modes.
+
+**Parameters:**
+
+| Parameter | Type | Direction | Description |
+|-----------|------|-----------|-------------|
+| `args` | `app_args_t *` | IN | Pointer to parsed arguments |
+
+**Return Value:**
+
+| Value | Constant | Meaning |
+|-------|----------|---------|
+| 0 | `APP_INIT_SUCCESS` | Initialization successful, ready to run |
+| 1 | `APP_INIT_EXIT_SUCCESS` | Clean early exit (help/version/dump-only) |
+| -1 | `APP_INIT_ERROR` | Initialization failed |
+
+**Execution Flow (cl_app.c:93-202):**
+
+```
+START (line 93)
+ ↓
+NULL check args (95-98)
+ ↓
+Print banner (100)
+ ↓
+Check show_help? ──YES──> print_usage(), return EXIT_SUCCESS (103-106)
+ ↓ NO
+Check show_version? ──YES──> print_version_info(), return EXIT_SUCCESS (109-112)
+ ↓ NO
+Check dump_only? ──YES──> handle_dump_mode(), return result (114-116)
+ ↓ NO
+Initialize logger (120-123)
+ ↓ FAILED? → cleanup, return ERROR
+Initialize renderer (127-131)
+ ↓ FAILED? → cleanup logger, return ERROR
+Register input callbacks (137)
+ ↓
+Load model (139-144)
+ ↓ FAILED? → cleanup renderer+logger, return ERROR
+Set model data in renderer (146-152)
+ ↓
+Optional: Print dump if requested (155-188)
+ ↓
+Initialize animation state (190-192)
+ ↓
+Set lifecycle flags (194-197)
+ ↓
+Log success (199)
+ ↓
+return APP_INIT_SUCCESS (201)
+```
+
+**Key Code Sections:**
+
+**Lines 95-98: Parameter Validation**
+```c
+if ( !args ) {
+    LOG_ERROR( "app", "Arguments pointer is NULL" );
+    return ( APP_INIT_ERROR );
+}
+```
+
+**BUG:** Using LOG_ERROR before logger initialized! Should use `fprintf(stderr, ...)`.
+
+---
+
+**Line 100: Print Banner**
+```c
+print_banner();
+```
+
+Prints copyright/license banner (see Section 6.3.5).
+
+---
+
+**Lines 103-116: Handle Special Modes**
+```c
+if ( args->show_help ) {
+    print_usage( "Half-Life Model Viewer - Lambda" );
+    return ( APP_INIT_EXIT_SUCCESS );
+}
+
+if ( args->show_version ) {
+    print_version_info();
+    return ( APP_INIT_EXIT_SUCCESS );
+}
+
+if ( args->dump_only ) {
+    return handle_dump_mode( args );
+}
+```
+
+**Early Exit Paths:**
+- `--help` → print help, exit
+- `--version` → print version, exit
+- `--dump-only` → dump model info, exit
+- **None initialize full renderer**
+
+---
+
+**Lines 120-123: Initialize Logger**
+```c
+if ( app_init_logger( args ) != APP_INIT_SUCCESS ) {
+    LOG_ERROR( "app", "Failed to initialize logger" );
+    return ( APP_INIT_ERROR );
+}
+```
+
+Sets up logging system. See Section 7.3.2.
+
+---
+
+**Lines 127-131: Initialize Renderer**
+```c
+if ( app_init_renderer( WIDTH, HEIGHT, "Half-Life Model Viewer - Lambda" ) != 0 ) {
+    LOG_ERROR( "app", "Failed to initialize renderer" );
+    logger_shutdown();
+    return ( APP_INIT_ERROR );
+}
+```
+
+Initializes GLFW, creates window, initializes OpenGL. See Section 7.3.4.
+
+**Error Handling:** Cleans up logger before returning.
+
+---
+
+**Lines 133-137: Get Window Handle and Init Input**
+```c
+extern GLFWwindow *window;
+g_app_state.window = window;
+
+Input_Init( window );
+```
+
+**Ugly Coupling:** `window` is global in `r_draw.c`. Should be refactored.
+
+---
+
+**Lines 139-144: Load Model**
+```c
+if ( app_load_model( args->model_path, &g_app_state.model ) != APP_INIT_SUCCESS ) {
+    LOG_ERRORF( "app", "Failed to load model from path: '%s'", args->model_path );
+    cleanup_renderer();
+    logger_shutdown();
+    return ( APP_INIT_ERROR );
+}
+```
+
+Loads MDL file. See Section 7.3.3.
+
+**Error Handling:** Cleans up renderer AND logger (reverse order).
+
+---
+
+**Lines 146-152: Set Model Data**
+```c
+set_model_data(
+    g_app_state.model->header,
+    g_app_state.model->data,
+    g_app_state.model->texture_header,
+    g_app_state.model->texture_data,
+    g_app_state.model->seqgroups,
+    g_app_state.model->num_seqgroups );
+```
+
+Tells renderer about loaded model, uploads to GPU.
+
+---
+
+**Lines 155-188: Optional Dump Output**
+```c
+if ( args->dump_level == DUMP_BASIC ) {
+    LOG_INFO( "app", "Printing model dump (basic)..." );
+    print_complete_model_analysis(...);
+    print_sequence_group_info(...);
+    LOG_INFO( "app", "Dump complete. Starting viewer...\n" );
+}
+else if ( args->dump_level == DUMP_EXTENDED ) {
+    LOG_INFO( "app", "Printing model dump (extended)..." );
+    print_extended_model_dump(...);
+    print_sequence_group_info(...);
+    LOG_INFO( "app", "Dump complete. Starting viewer...\n" );
+}
+```
+
+**Dump AND View Mode:** Prints dump, then opens viewer window.
+
+---
+
+**Lines 190-197: Finalize Initialization**
+```c
+g_app_state.current_sequence = 0;
+g_app_state.current_frame = 0;
+g_app_state.animation_playing = true;
+
+g_app_state.running = true;
+g_app_state.initialized = true;
+
+g_app_state.args = args;
+```
+
+Sets default animation state and lifecycle flags.
+
+---
+
+**Line 201: Return Success**
+```c
+return ( APP_INIT_SUCCESS );
+```
+
+All systems initialized, ready for `app_run()`.
+
+---
+
+**Error Handling Strategy:**
+
+**Progressive Cleanup Pattern:**
+```
+If logger fails     → return ERROR (nothing to cleanup)
+If renderer fails   → cleanup logger, return ERROR
+If model fails      → cleanup renderer + logger, return ERROR
+```
+
+**Cleanup Order = Reverse Init Order:**
+```
+INIT:                CLEANUP:
+1. logger       ←→   3. logger_shutdown()
+2. renderer     ←→   2. cleanup_renderer()
+3. model        ←→   1. free_model()
+```
+
+
+#### 7.3.2 app_init_logger() - Logger Initialization
+
+**Signature (cl_app_init.h:8):**
+```c
+int app_init_logger(const app_args_t *args);
+```
+
+**Purpose:**
+Initialize logging system with user-specified verbosity and output options.
+
+**Implementation (cl_app_init.c:32-58):**
+- Creates `t_log_options` structure
+- Configures console/file output based on `args->log_level` and `args->log_file`
+- Calls `logger_init()` to set up logging
+- Sets category-specific log levels (renderer, mdl, textures, animation, seqgroup)
+
+**Log Level Mapping:**
+
+| User Flag | args->log_level | Category Level |
+|-----------|-----------------|----------------|
+| `--quiet` | LOG_LEVEL_QUIET | ERROR only |
+| (default) | LOG_LEVEL_NORMAL | INFO and above |
+| `--verbose` | LOG_LEVEL_VERBOSE | DEBUG for all categories |
+| `--trace` | LOG_LEVEL_TRACE | TRACE for all categories |
+
+**Example Output Differences:**
+
+**NORMAL:**
+```
+[INFO] [app] Initializing application...
+[INFO] [renderer] Renderer initialized successfully!
+```
+
+**VERBOSE:**
+```
+[INFO] [app] Initializing application...
+[DEBUG] [renderer] Creating GLFW window 1400x900
+[DEBUG] [renderer] Initializing GLEW extensions
+[INFO] [renderer] Renderer initialized successfully!
+```
+
+**TRACE:**
+```
+[TRACE] [renderer] → app_init_renderer(1400, 900, "Lambda")
+[DEBUG] [renderer] Creating GLFW window 1400x900
+[TRACE] [renderer] → glfwCreateWindow()
+[INFO] [renderer] Renderer initialized successfully!
+```
+
+---
+
+#### 7.3.3 app_load_model() - Model Loading
+
+**Signature (cl_app_init.h:11):**
+```c
+int app_load_model(const char *model_path, mdl_model_t **model_out);
+```
+
+**Purpose:**
+Load Half-Life MDL model file from disk and parse into memory.
+
+**Parameters:**
+
+| Parameter | Type | Direction | Description |
+|-----------|------|-----------|-------------|
+| `model_path` | `const char *` | IN | Path to .mdl file |
+| `model_out` | `mdl_model_t **` | OUT | Pointer to pointer (output parameter) |
+
+**Why Double Pointer?**
+
+Classic C pattern for returning allocated data:
+```c
+// Caller:
+mdl_model_t *model = NULL;
+app_load_model("scientist.mdl", &model);
+// model now points to heap-allocated mdl_model_t
+
+// Inside app_load_model():
+*model_out = malloc(...);  // Set caller's pointer
+```
+
+**What create_mdl_model() Does:**
+1. Opens file with `fopen()`
+2. Reads main header (studiohdr_t)
+3. Validates header (magic number, version)
+4. Allocates memory for model structure
+5. Reads texture header (if external T.mdl file)
+6. Parses bones, bodyparts, sequences
+7. Loads sequence groups (01.mdl, 02.mdl, etc.)
+8. Sets `*model_out` to allocated model
+9. Returns MDL_SUCCESS or error code
+
+**Log Output:**
+```
+[INFO] [app] Loading model: 'scientist.mdl'
+[INFO] [mdl] Model loaded successfully!
+[INFO] [mdl]    Bones: 42
+[INFO] [mdl]    Bodyparts: 3
+[INFO] [mdl]    Sequences: 56
+[INFO] [mdl]    Sequence groups: 2
+```
+
+**Memory Ownership:**
+- Caller owns allocated `mdl_model_t *`
+- Must free with `free_model()` in `app_shutdown()`
+
+---
+
+#### 7.3.4 app_init_renderer() - Renderer Initialization
+
+**Signature (cl_app_init.h:14):**
+```c
+int app_init_renderer(int width, int height, const char *title);
+```
+
+**Purpose:**
+Initialize OpenGL renderer (GLFW, GLEW, window, context).
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `width` | `int` | Window width (1400) |
+| `height` | `int` | Window height (900) |
+| `title` | `const char *` | Window title |
+
+**What init_renderer() Does:**
+1. Initialize GLFW (`glfwInit()`)
+2. Set window hints (OpenGL 3.3 Core Profile)
+3. Create window (`glfwCreateWindow()`)
+4. Make context current (`glfwMakeContextCurrent()`)
+5. Initialize GLEW (`glewInit()`)
+6. Set up OpenGL state (depth test, blending, culling)
+7. Compile and link shaders (vertex + fragment)
+8. Create VAOs/VBOs for model rendering
+
+**Log Output:**
+```
+[INFO] [renderer] Initializing OpenGL renderer (1400x900) ...
+[INFO] [renderer] Renderer initialized successfully!
+```
+
+**Possible Failures:**
+- GLFW init failed (no display server)
+- Window creation failed (out of memory)
+- GLEW init failed (OpenGL too old)
+- Shader compilation failed (driver bug)
+
+**Side Effects:**
+- GLFW window opens and becomes visible
+- OpenGL context is active
+- Global `window` variable set (in r_draw.c)
+- Shaders compiled and ready
+- GPU memory allocated
+
+---
+
+#### 7.3.5 handle_dump_mode() - Dump-Only Mode
+
+**Signature (cl_app.c:37, static):**
+```c
+static int handle_dump_mode( const app_args_t *args );
+```
+
+**Purpose:**
+Handle `--dump-only` mode: load model, dump info, exit (no window).
+
+**Execution Flow:**
+1. Initialize logger
+2. Load model (into local variable, not g_app_state)
+3. Print dump based on `args->dump_level`
+4. Free model locally
+5. Shutdown logger
+6. Return APP_INIT_EXIT_SUCCESS
+
+**Key Difference from Normal Mode:**
+
+| Feature | --dump-only | Normal |
+|---------|-------------|--------|
+| Initializes renderer | ✗ | ✓ |
+| Opens window | ✗ | ✓ |
+| Loads model | ✓ | ✓ |
+| Prints dump | ✓ | Optional |
+| Frees model | ✓ (locally) | ✗ (kept in g_app_state) |
+| Runs app_run() | ✗ | ✓ |
+
+**Why Local Model Variable?**
+```c
+mdl_model_t *local_model = NULL;
+```
+- Dump-only doesn't initialize full app state
+- Local variable keeps model separate
+- Freed before function returns
+- Doesn't pollute g_app_state
+
+---
+
+**Section 7 Complete!**
+
+Next: **Section 8 - Main Loop** (`app_run()` and `render_loop()`)
+
