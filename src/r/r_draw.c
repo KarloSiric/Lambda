@@ -28,6 +28,7 @@
 #include "mdl/mdl_bones.h"
 #include "mdl/mdl_animations.h"
 #include "shaders/shader.h"
+#include "studio.h"
 #include "util/util_logger.h"
 #include "input/input.h"
 #include "input/input_handler.h"
@@ -73,21 +74,24 @@ static bool have_skinned_positions = false;
 GLFWwindow *window = NULL;
 static bool wireframe_enabled = false;
 
+static unsigned int bone_index_VBO = 0;                               // @Note: For GPU SKinning to save performance
 static unsigned int VBO = 0;
 static unsigned int VAO = 0;
-static unsigned int EBO = 0; // Element Buffer Object for indices
+static unsigned int EBO = 0;                                          // Element Buffer Object for indices
 static unsigned int shader_program = 0;
-static unsigned int current_texture = 0; // Currently bound texture
+static unsigned int current_texture = 0;                              // Currently bound texture
 
 extern float rotation_x;
 extern float rotation_y;
 extern float zoom;
 
 static bool bone_system_initialized = false;
+static bool t_pose_bones_calculated = false;                          // Track if T-pose bones need recalculation
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
 #define MAX_RENDER_VERTICES 32768
-static float render_vertex_buffer[MAX_RENDER_VERTICES * 8]; // 3 pos + 3 normal + 2 uv
+static float render_vertex_buffer[MAX_RENDER_VERTICES * 8];           // 3 pos + 3 normal + 2 uv
+static int render_bone_indices[MAX_RENDER_VERTICES];                  // new for the GPU Skinning
 static int total_render_vertices = 0;
 static bool model_processed = false;
 
@@ -553,53 +557,30 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 
 	const int base = total_render_vertices * 8;
 
-	/* ----- POSITION (your skinning path) ----- */
+	/* ----- POSITION ----- */
+	// For GPU skinning: Upload rest-pose vertices in ORIGINAL coordinates
+	// Bone transformation, scaling, and axis remapping happen in the shader
 	vec3 P;
-	if ( have_skinned_positions ) {
-		Math_Vec3Copy( skinned_positions[vertex_index], P );
-	} else {
-		Math_Vec3Copy( g_current.vertices[vertex_index], P );
-	}
+    Math_Vec3Copy( g_current.vertices[vertex_index], P );
 
-	const float viewer_scale = 0.1f;
-	P[0] *= viewer_scale;
-	P[1] *= viewer_scale;
-	P[2] *= viewer_scale;
-
-	/* ----- NORMAL (your bone transform) ----- */
+	/* ----- NORMAL ----- */
+	// For GPU skinning: Upload rest-pose normals in ORIGINAL coordinates
 	unsigned char *v2bone = (unsigned char *)( global_data + g_current.model->vertinfoindex );
 	int bone = v2bone ? v2bone[vertex_index] : 0;
 	if ( bone < 0 || bone >= global_header->numbones )
 		bone = 0;
 
-	vec3 Nfile = {
-		g_current.normals[normal_index][0], g_current.normals[normal_index][1], g_current.normals[normal_index][2]
-	};
-	vec3 Nrot;
-	TransformNormalByBone( g_bonetransformations[bone], Nfile, Nrot );
+	vec3 N;
+	Math_Vec3Copy( g_current.normals[normal_index], N );
 
-	/* ----- AXIS REMAP (unchanged) ----- */
-	float x = P[0];
-	float y = P[1];
-	float z = P[2];
-	float nx = Nrot[0];
-	float ny = Nrot[1];
-	float nz = Nrot[2];
+	/* Write position and normal (no transforms applied here!) */
+	render_vertex_buffer[base + 0] = P[0];
+	render_vertex_buffer[base + 1] = P[1];
+	render_vertex_buffer[base + 2] = P[2];
 
-	float Py = z; // Z -> Y
-	float Pz = -y; // -Y -> Z
-	float Ny = nz;
-	float Nz = -ny;
-
-	/* write position */
-	render_vertex_buffer[base + 0] = x;
-	render_vertex_buffer[base + 1] = Py;
-	render_vertex_buffer[base + 2] = Pz;
-
-	/* write normal */
-	render_vertex_buffer[base + 3] = nx;
-	render_vertex_buffer[base + 4] = Ny;
-	render_vertex_buffer[base + 5] = Nz;
+	render_vertex_buffer[base + 3] = N[0];
+	render_vertex_buffer[base + 4] = N[1];
+	render_vertex_buffer[base + 5] = N[2];
 
 	/* s,t are 16-bit *texel* coords for THIS texture */
 	float u = ( (float)s + 0.5f ) / (float)texW;
@@ -619,12 +600,15 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 
 	render_vertex_buffer[base + 6] = u;
 	render_vertex_buffer[base + 7] = v;
+    
+    render_bone_indices[total_render_vertices] = bone;
 
 	total_render_vertices++;
 }
 
 void setup_triangle( void ) {
 	glGenBuffers( 1, &VBO );
+    glGenBuffers( 1 , &bone_index_VBO );
 	glBindBuffer( GL_ARRAY_BUFFER, VBO );
 	glBufferData( GL_ARRAY_BUFFER, sizeof( vertices ), vertices, GL_STATIC_DRAW );
 
@@ -1055,6 +1039,17 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	// ONE-TIME: Build mesh topology
 	if ( !model_processed ) {
 		ProcessModelForRendering();
+        
+        // @Note: Forgot to upload the vertices and the vertex data to the GPU
+        glBindBuffer( GL_ARRAY_BUFFER, VBO );
+        glBufferData( GL_ARRAY_BUFFER,
+                    total_render_vertices * 8 * sizeof(float),
+                    render_vertex_buffer,
+                    GL_STATIC_DRAW );
+        
+        // @Note: Adding NEW for GPU skinning
+        glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
+        glBufferData( GL_ARRAY_BUFFER, total_render_vertices * sizeof( int ), render_bone_indices, GL_STATIC_DRAW ); 
 	}
 
 	if ( total_render_vertices == 0 ) {
@@ -1062,20 +1057,36 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		return;
 	}
 
-	// EVERY FRAME: Update bones and re-skin vertices if animating
+	// EVERY FRAME: Update bone matrices for GPU skinning
 	if ( g_animation_enabled && global_header && global_data ) {
-		// Calculate animated bone transforms directly into g_bonetransformations
+		// Animation enabled: Calculate animated bone transforms EVERY FRAME
 		mdl_result_t anim_result = mdl_animation_calculate_bones(
 			&g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations );
 
+		// Mark T-pose as needing recalculation (since we're animating)
+		t_pose_bones_calculated = false;
+
 		// CRITICAL FIX: If sequence group is missing, fall back to T-pose
 		if ( anim_result == MDL_ERROR_SEQUENCE_GROUP_MISSING ) {
-			// Fallback to T-pose by using static bone setup
 			SetUpBones( global_header, global_data );
-
-			// Don't spam the console - this error was already printed in mdl_animation_calculate_bones
-			// Just continue rendering with T-pose
+			t_pose_bones_calculated = true;
 		}
+	} else if ( global_header && global_data ) {
+		// Animation disabled: Calculate T-pose bones ONCE
+		if ( !t_pose_bones_calculated ) {
+			SetUpBones( global_header, global_data );
+			t_pose_bones_calculated = true;
+		}
+	}
+
+	// Upload bone matrices to shader (ALWAYS, whether animated or T-pose)
+	if ( global_header && global_data ) {
+		GLint bone_matrices_loc = glGetUniformLocation( shader_program, "boneMatrices" );
+		if ( bone_matrices_loc != -1 ) {
+			glUniformMatrix4fv( bone_matrices_loc, global_header->numbones, GL_FALSE,
+			                    ( const float * )g_bonetransformations);
+		}
+	}
 
 		// Re-transform vertices with new bone positions
 		mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
@@ -1228,8 +1239,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 					g_num_ranges++;
 				}
 			}
-		}
-	}
+		}    
 
 	glUseProgram( shader_program );
 
@@ -1273,11 +1283,13 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 
 	glBindVertexArray( VAO );
 	glBindBuffer( GL_ARRAY_BUFFER, VBO );
-	glBufferData(
-		GL_ARRAY_BUFFER,
-		(GLsizeiptr)( total_render_vertices * 8 * sizeof( float ) ),
-		render_vertex_buffer,
-		GL_STATIC_DRAW );
+    
+    // @Note: Removing this because it is already now on the GPU, experimental and testing for now
+	// glBufferData(
+	// 	GL_ARRAY_BUFFER,
+	// 	(GLsizeiptr)( total_render_vertices * 8 * sizeof( float ) ),
+	// 	render_vertex_buffer,
+	// 	GL_STATIC_DRAW );
 
 	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 0 ) );
 	glEnableVertexAttribArray( 0 );
@@ -1285,6 +1297,13 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	glEnableVertexAttribArray( 1 );
 	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 6 * sizeof( float ) ) );
 	glEnableVertexAttribArray( 2 );
+    
+    
+    // @Note: Adding NEW for GPU skinning - Added the bone_index_VBO
+    glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
+    glVertexAttribIPointer( 3, 1, GL_INT, sizeof( int ), ( void * )0 );
+    glEnableVertexAttribArray( 3 );
+    
 
 	GLint uTex = glGetUniformLocation( shader_program, "tex" );
 	if ( uTex != -1 )
@@ -1315,6 +1334,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 
 	model_processed = false;
 	bone_system_initialized = false;
+	t_pose_bones_calculated = false;  // Reset T-pose calculation flag
 	total_render_vertices = 0;
 
 	// Free old textures
