@@ -202,8 +202,9 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
             else
             {
                 // Clamp index to palette size
-                if ( idx >= pal_size )
+                if ( idx >= pal_size ) {
                     idx = 0;
+                }
 
                 rgba[j * 4 + 0] = palette[idx * 3 + 0];    // R
                 rgba[j * 4 + 1] = palette[idx * 3 + 1];    // G

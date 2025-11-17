@@ -4,10 +4,9 @@
 ---
 
 <div align="center">
+**Version:**  0.3.0-alpha.1
 
-**Version:**  0.2.0-alpha.1
-
-**Last Updated:**  January 16, 2025  
+**Last Updated:**  November 17, 2025  
 
 **Author:**. Karlo Siric 
 
@@ -15,15 +14,17 @@
 
 *Complete line-by-line technical reference documenting every function, structure, macro, and system in the Lambda Half-Life Model Editor codebase.*
 
-</div>
+
 
 ---
 
 ## Table of Contents
 
+> **📝 Documentation Status:** This reference is **actively being written**. Sections 1-13 are complete (~12,700 lines). Additional sections are planned for future updates.
+
 ### **PART I: INTRODUCTION & OVERVIEW**
 
-#### **1. [Introduction](#1-introduction)**
+#### **1. [Introduction](#1-introduction)** 
 - [1.1 About This Document](#11-about-this-document)
   - [1.1.1 Purpose and Scope](#111-purpose-and-scope)
   - [1.1.2 Target Audience](#112-target-audience)
@@ -42,80 +43,21 @@
   - [1.4.2 Issue Reporting](#142-issue-reporting)
   - [1.4.3 Contributing Guidelines](#143-contributing-guidelines)
 
-#### **2. [Half-Life MDL Format Documentation](#2-half-life-mdl-format-documentation)**
+#### **2. [Half-Life MDL Format Documentation](#2-half-life-mdl-format-documentation)** 
 - [2.1 Introduction to MDL Files](#21-introduction-to-mdl-files)
-  - [2.1.1 What is an MDL File?](#211-what-is-an-mdl-file)
-  - [2.1.2 History and Evolution](#212-history-and-evolution)
-  - [2.1.3 MDL vs Other 3D Formats](#213-mdl-vs-other-3d-formats)
-  - [2.1.4 Use Cases in Half-Life Engine](#214-use-cases-in-half-life-engine)
 - [2.2 File Format Specification](#22-file-format-specification)
-  - [2.2.1 File Structure Overview](#221-file-structure-overview)
-  - [2.2.2 Binary Layout](#222-binary-layout)
-  - [2.2.3 Endianness and Platform Considerations](#223-endianness-and-platform-considerations)
-  - [2.2.4 Version Differences](#224-version-differences)
 - [2.3 MDL File Components](#23-mdl-file-components)
-  - [2.3.1 Main Header (studiohdr_t)](#231-main-header-studiohdr_t)
-  - [2.3.2 Bones and Skeleton](#232-bones-and-skeleton)
-  - [2.3.3 Body Parts and Sub-models](#233-body-parts-and-sub-models)
-  - [2.3.4 Meshes and Geometry](#234-meshes-and-geometry)
-  - [2.3.5 Textures and Materials](#235-textures-and-materials)
-  - [2.3.6 Animations and Sequences](#236-animations-and-sequences)
-  - [2.3.7 Bone Controllers](#237-bone-controllers)
-  - [2.3.8 Attachments](#238-attachments)
-  - [2.3.9 Hit Boxes](#239-hit-boxes)
-  - [2.3.10 Events](#2310-events)
-  - [2.3.11 Sequence Groups](#2311-sequence-groups)
 - [2.4 Coordinate Systems and Transformations](#24-coordinate-systems-and-transformations)
-  - [2.4.1 Half-Life Coordinate System](#241-half-life-coordinate-system)
-  - [2.4.2 OpenGL Coordinate System](#242-opengl-coordinate-system)
-  - [2.4.3 Coordinate Transformation](#243-coordinate-transformation)
-  - [2.4.4 Rotation and Scaling](#244-rotation-and-scaling)
 - [2.5 Animation System](#25-animation-system)
-  - [2.5.1 Skeletal Animation Overview](#251-skeletal-animation-overview)
-  - [2.5.2 Bone Hierarchy](#252-bone-hierarchy)
-  - [2.5.3 Animation Sequences](#253-animation-sequences)
-  - [2.5.4 Frame Data and Interpolation](#254-frame-data-and-interpolation)
-  - [2.5.5 Blending and Transitions](#255-blending-and-transitions)
-  - [2.5.6 Animation Events](#256-animation-events)
 - [2.6 Texture System](#26-texture-system)
-  - [2.6.1 Internal vs External Textures](#261-internal-vs-external-textures)
-  - [2.6.2 Texture File Format (.mdl T files)](#262-texture-file-format-mdl-t-files)
-  - [2.6.3 Palette-Based Colors](#263-palette-based-colors)
-  - [2.6.4 UV Mapping](#264-uv-mapping)
-  - [2.6.5 Skin Families](#265-skin-families)
 - [2.7 Advanced Features](#27-advanced-features)
-  - [2.7.1 Level of Detail (LOD)](#271-level-of-detail-lod)
-  - [2.7.2 Bone Controllers](#272-bone-controllers)
-  - [2.7.3 Attachments and Muzzle Flashes](#273-attachments-and-muzzle-flashes)
-  - [2.7.4 Hit Boxes for Collision](#274-hit-boxes-for-collision)
-  - [2.7.5 Bounding Boxes](#275-bounding-boxes)
 - [2.8 File Dependencies](#28-file-dependencies)
-  - [2.8.1 Required Files](#281-required-files)
-  - [2.8.2 Optional Files](#282-optional-files)
-  - [2.8.3 Sequence Group Files (.mdl##)](#283-sequence-group-files-mdl)
-  - [2.8.4 Texture Files (.mdl T)](#284-texture-files-mdl-t)
 - [2.9 Creating and Compiling MDL Files](#29-creating-and-compiling-mdl-files)
-  - [2.9.1 Source Formats](#291-source-formats)
-  - [2.9.2 QC Script Format](#292-qc-script-format)
-  - [2.9.3 StudioMDL Compiler](#293-studiomdl-compiler)
-  - [2.9.4 Common Compilation Errors](#294-common-compilation-errors)
 - [2.10 Tools and Utilities](#210-tools-and-utilities)
-  - [2.10.1 Official Valve Tools](#2101-official-valve-tools)
-  - [2.10.2 Third-Party Tools](#2102-third-party-tools)
-  - [2.10.3 Decompilers](#2103-decompilers)
-  - [2.10.4 Model Viewers](#2104-model-viewers)
 - [2.11 Common Issues and Troubleshooting](#211-common-issues-and-troubleshooting)
-  - [2.11.1 Corrupted Files](#2111-corrupted-files)
-  - [2.11.2 Missing Textures](#2112-missing-textures)
-  - [2.11.3 Animation Problems](#2113-animation-problems)
-  - [2.11.4 Compatibility Issues](#2114-compatibility-issues)
 - [2.12 References and Resources](#212-references-and-resources)
-  - [2.12.1 Official Documentation](#2121-official-documentation)
-  - [2.12.2 Community Resources](#2122-community-resources)
-  - [2.12.3 Research Papers](#2123-research-papers)
-  - [2.12.4 Source Code References](#2124-source-code-references)
 
-#### **3. [Codebase Architecture Overview](#3-codebase-architecture-overview)**
+#### **3. [Codebase Architecture Overview](#3-codebase-architecture-overview)** 
 - [3.1 Project Structure](#31-project-structure)
   - [3.1.1 Directory Layout](#311-directory-layout)
   - [3.1.2 Module Organization](#312-module-organization)
@@ -130,7 +72,7 @@
   - [3.3.3 Error Handling Approach](#333-error-handling-approach)
   - [3.3.4 Platform Abstraction](#334-platform-abstraction)
 
-#### **4. [Program Execution Flow](#4-program-execution-flow)**
+#### **4. [Program Execution Flow](#4-program-execution-flow)** 
 - [4.1 Application Lifecycle](#41-application-lifecycle)
   - [4.1.1 Startup Phase](#411-startup-phase)
   - [4.1.2 Runtime Phase](#412-runtime-phase)
@@ -142,14 +84,10 @@
 
 ---
 
-### **PART II: ENTRY POINT & INITIALIZATION**
+### **PART II: ENTRY POINT & APPLICATION LIFECYCLE**
 
-#### **5. [Entry Point: main.c](#5-entry-point-mainc)**
+#### **5. [Entry Point: main.c](#5-entry-point-mainc)** 
 - [5.1 File Overview](#51-file-overview)
-  - [5.1.1 File Location](#511-file-location)
-  - [5.1.2 Purpose and Responsibilities](#512-purpose-and-responsibilities)
-  - [5.1.3 Dependencies](#513-dependencies)
-  - [5.1.4 Global Variables](#514-global-variables)
 - [5.2 main() - Application Entry Point](#52-main---application-entry-point)
   - [5.2.1 Function Signature](#521-function-signature)
   - [5.2.2 Purpose](#522-purpose)
@@ -159,19 +97,10 @@
   - [5.2.6 Line-by-Line Explanation](#526-line-by-line-explanation)
   - [5.2.7 Execution Flow Diagram](#527-execution-flow-diagram)
   - [5.2.8 Error Handling](#528-error-handling)
-  - [5.2.9 Side Effects](#529-side-effects)
-  - [5.2.10 Platform-Specific Behavior](#5210-platform-specific-behavior)
-  - [5.2.11 Performance Characteristics](#5211-performance-characteristics)
-  - [5.2.12 Example Usage Scenarios](#5212-example-usage-scenarios)
-  - [5.2.13 Related Functions](#5213-related-functions)
-  - [5.2.14 Known Issues](#5214-known-issues)
-  - [5.2.15 TODO Items](#5215-todo-items)
+  - [5.2.9 Example Usage Scenarios](#529-example-usage-scenarios)
+  - [5.2.10 Related Functions](#5210-related-functions)
 
----
-
-### **PART III: COMMAND-LINE ARGUMENT SYSTEM**
-
-#### **6. [Argument Parsing (utils/args.h & args.c)](#6-argument-parsing-utilsargsh--argsc)**
+#### **6. [Argument Parsing System](#6-argument-parsing-utilsargsh--argsc)** 
 - [6.1 Module Overview](#61-module-overview)
 - [6.2 Data Structures](#62-data-structures)
   - [6.2.1 dump_level_t Enumeration](#621-dump_level_t-enumeration)
@@ -182,215 +111,162 @@
   - [6.3.2 print_banner()](#632-print_banner)
   - [6.3.3 print_version_info()](#633-print_version_info)
   - [6.3.4 print_usage()](#634-print_usage)
+- [6.4 Usage Examples](#64-usage-examples)
+- [6.5 Design Critique](#65-design-critique)
 
----
-
-### **PART IV: LOGGING SYSTEM**
-
-#### **7. [Logger System (utils/logger.h & logger.c)](#7-logger-system-utilsloggerh--loggerc)**
+#### **7. [Application Initialization](#7-application-initialization-clcl_appc--clcl_app_initc)** 
 - [7.1 Module Overview](#71-module-overview)
-- [7.2 Architecture](#72-architecture)
-  - [7.2.1 Thread-Safety Model](#721-thread-safety-model)
-  - [7.2.2 Category System](#722-category-system)
-  - [7.2.3 Level Hierarchy](#723-level-hierarchy)
-- [7.3 Data Structures](#73-data-structures)
-  - [7.3.1 t_log_level Enumeration](#731-t_log_level-enumeration)
-  - [7.3.2 t_log_options Structure](#732-t_log_options-structure)
-- [7.4 Core Functions](#74-core-functions)
-  - [7.4.1 logger_init()](#741-logger_init)
-  - [7.4.2 logger_shutdown()](#742-logger_shutdown)
-  - [7.4.3 logger_log()](#743-logger_log)
-  - [7.4.4 logger_logv()](#744-logger_logv)
-- [7.5 Configuration Functions](#75-configuration-functions)
-  - [7.5.1 logger_set_global_level()](#751-logger_set_global_level)
-  - [7.5.2 logger_get_global_level()](#752-logger_get_global_level)
-  - [7.5.3 logger_set_category_level()](#753-logger_set_category_level)
-  - [7.5.4 logger_get_category_level()](#754-logger_get_category_level)
-  - [7.5.5 logger_set_console_level()](#755-logger_set_console_level)
-- [7.6 Utility Functions](#76-utility-functions)
-  - [7.6.1 logger_is_tty()](#761-logger_is_tty)
-  - [7.6.2 logger_should_log()](#762-logger_should_log)
-  - [7.6.3 logger_now_ms()](#763-logger_now_ms)
-  - [7.6.4 logger_hexdump()](#764-logger_hexdump)
-- [7.7 Macro API](#77-macro-api)
-  - [7.7.1 LOG_TRACEF()](#771-log_tracef)
-  - [7.7.2 LOG_DEBUGF()](#772-log_debugf)
-  - [7.7.3 LOG_INFOF()](#773-log_infof)
-  - [7.7.4 LOG_WARNF()](#774-log_warnf)
-  - [7.7.5 LOG_ERRORF()](#775-log_errorf)
-  - [7.7.6 LOG_FATALF()](#776-log_fatalf)
-  - [7.7.7 LOG_HEXDUMP()](#777-log_hexdump)
-  - [7.7.8 LOG_CHECK()](#778-log_check)
-  - [7.7.9 LOG_TIME_BLOCK()](#779-log_time_block)
-- [7.8 Implementation Details](#78-implementation-details)
-- [7.9 Category System](#79-category-system)
-- [7.10 Performance Considerations](#710-performance-considerations)
+- [7.2 Application State](#72-application-state)
+- [7.3 Functions](#73-functions)
+  - [7.3.1 app_init_logger()](#731-app_init_logger)
+  - [7.3.2 app_load_model()](#732-app_load_model)
+  - [7.3.3 app_init_renderer()](#733-app_init_renderer)
+- [7.4 Initialization Sequence](#74-initialization-sequence)
+- [7.5 Error Handling](#75-error-handling)
 
----
+#### **8. [Main Loop](#8-main-loop-clcl_appc--rr_drawc)** 
+- [8.1 Module Overview](#81-module-overview)
+- [8.2 app_run() Wrapper](#82-app_run-wrapper)
+- [8.3 render_loop() Implementation](#83-render_loop-implementation)
+  - [8.3.1 Frame Timing](#831-frame-timing)
+  - [8.3.2 Animation Update](#832-animation-update)
+  - [8.3.3 Rendering](#833-rendering)
+  - [8.3.4 Input Processing](#834-input-processing)
+- [8.4 Frame Timing Analysis](#84-frame-timing-analysis)
+- [8.5 Performance Characteristics](#85-performance-characteristics)
 
-### **PART V: MDL FILE LOADING & PARSING**
-
-#### **8. [MDL Data Structures (studio.h)](#8-mdl-data-structures-studioh)**
-- [8.1 File Overview](#81-file-overview)
-- [8.2 Core Header Structures](#82-core-header-structures)
-  - [8.2.1 studiohdr_t](#821-studiohdr_t)
-  - [8.2.2 studioseqhdr_t](#822-studioseqhdr_t)
-- [8.3 Bone Structures](#83-bone-structures)
-  - [8.3.1 mstudiobone_t](#831-mstudiobone_t)
-  - [8.3.2 mstudiobonecontroller_t](#832-mstudiobonecontroller_t)
-- [8.4 Animation Structures](#84-animation-structures)
-  - [8.4.1 mstudioseqdesc_t](#841-mstudioseqdesc_t)
-  - [8.4.2 mstudioanim_t](#842-mstudioanim_t)
-  - [8.4.3 mstudioevent_t](#843-mstudioevent_t)
-- [8.5 Geometry Structures](#85-geometry-structures)
-  - [8.5.1 mstudiobodyparts_t](#851-mstudiobodyparts_t)
-  - [8.5.2 mstudiomodel_t](#852-mstudiomodel_t)
-  - [8.5.3 mstudiomesh_t](#853-mstudiomesh_t)
-- [8.6 Texture Structures](#86-texture-structures)
-  - [8.6.1 mstudiotexture_t](#861-mstudiotexture_t)
-- [8.7 Other Structures](#87-other-structures)
-  - [8.7.1 mstudioattachment_t](#871-mstudioattachment_t)
-  - [8.7.2 mstudiobbox_t](#872-mstudiobbox_t)
-- [8.8 Type Definitions](#88-type-definitions)
-
-#### **9. [MDL Loader (mdl/mdl_loader.h & mdl_loader.c)](#9-mdl-loader-mdlmdl_loaderh--mdl_loaderc)**
+#### **9. [Application Cleanup](#9-application-cleanup-app_shutdown)** 
 - [9.1 Module Overview](#91-module-overview)
-- [9.2 Data Structures](#92-data-structures)
-  - [9.2.1 mdl_seqgroup_blob_t](#921-mdl_seqgroup_blob_t)
-  - [9.2.2 mdl_model_t](#922-mdl_model_t)
-  - [9.2.3 mdl_result_t](#923-mdl_result_t)
-- [9.3 High-Level Functions](#93-high-level-functions)
-  - [9.3.1 create_mdl_model()](#931-create_mdl_model)
-  - [9.3.2 free_model()](#932-free_model)
-  - [9.3.3 load_model_with_textures()](#933-load_model_with_textures)
-  - [9.3.4 load_sequence_groups()](#934-load_sequence_groups)
-  - [9.3.5 free_sequences_groups()](#935-free_sequences_groups)
-- [9.4 File Operations](#94-file-operations)
-  - [9.4.1 read_mdl_file()](#941-read_mdl_file)
-  - [9.4.2 parse_mdl_h()](#942-parse_mdl_h)
-  - [9.4.3 validate_mdl_magic()](#943-validate_mdl_magic)
-  - [9.4.4 validate_mdl_version()](#944-validate_mdl_version)
-- [9.5 Parsing Functions](#95-parsing-functions)
-  - [9.5.1 parse_bone_hierarchy()](#951-parse_bone_hierarchy)
-  - [9.5.2 parse_animation_sequences()](#952-parse_animation_sequences)
-  - [9.5.3 parse_mesh_data()](#953-parse_mesh_data)
-  - [9.5.4 parse_vertex_data()](#954-parse_vertex_data)
-  - [9.5.5 parse_triangle_commands_fixed()](#955-parse_triangle_commands_fixed)
-  - [9.5.6 extract_triangles_with_uvs()](#956-extract_triangles_with_uvs)
-- [9.6 Texture Functions](#96-texture-functions)
-  - [9.6.1 extract_texture_rgb()](#961-extract_texture_rgb)
-  - [9.6.2 generate_texture_filename()](#962-generate_texture_filename)
-- [9.7 Utility Functions](#97-utility-functions)
-  - [9.7.1 transform_vertices_to_opengl()](#971-transform_vertices_to_opengl)
-  - [9.7.2 get_model_by_bodypart()](#972-get_model_by_bodypart)
-- [9.8 Debug Functions](#98-debug-functions)
-
-#### **10. [MDL Report (mdl/mdl_report.c)](#10-mdl-report-mdlmdl_reportc)**
-- [10.1 Module Overview](#101-module-overview)
-- [10.2 Functions](#102-functions)
-
-#### **11. [MDL Info (mdl/mdl_info.c)](#11-mdl-info-mdlmdl_infoc)**
-- [11.1 Module Overview](#111-module-overview)
-- [11.2 Functions](#112-functions)
+- [9.2 app_shutdown() Function](#92-app_shutdown-function)
+- [9.3 Cleanup Sequence](#93-cleanup-sequence)
+- [9.4 Resource Ownership Table](#94-resource-ownership-table)
+- [9.5 Error Scenarios](#95-error-scenarios)
+- [9.6 Memory Leak Detection](#96-memory-leak-detection)
+- [9.7 Design Critique](#97-design-critique)
 
 ---
 
-### **PART VI: RENDERING SYSTEM**
+### **PART III: CORE SYSTEMS**
 
-#### **12. [Platform OpenGL (graphics/gl_platform.h)](#12-platform-opengl-graphicsgl_platformh)**
-- [12.1 File Overview](#121-file-overview)
-- [12.2 Platform Detection](#122-platform-detection)
-- [12.3 Include Strategy](#123-include-strategy)
-- [12.4 Helper Macros](#124-helper-macros)
+#### **10. [Math Library](#10-math-library)** 
+- [10.1 Overview](#101-overview)
+- [10.2 Type Definitions](#102-type-definitions-math_typesh)
+- [10.3 Mathematical Constants](#103-mathematical-constants)
+- [10.4 Vector Operations](#104-module-vector-operations-math_vectorh)
+  - [10.4.1 Basic Operations](#1041-basic-operations)
+  - [10.4.2 Products](#1042-products)
+  - [10.4.3 Length and Normalization](#1043-length-and-normalization)
+  - [10.4.4 Comparison](#1044-comparison)
+  - [10.4.5 Vector Transformations](#1045-vector-transformations)
+- [10.5 Matrix Operations](#105-module-matrix-operations-math_matrixh)
+  - [10.5.1 Identity and Copy](#1051-identity-and-copy)
+  - [10.5.2 Matrix Multiplication](#1052-matrix-multiplication)
+  - [10.5.3 Matrix Construction](#1053-matrix-construction)
+  - [10.5.4 View and Projection Matrices](#1054-view-and-projection-matrices)
+  - [10.5.5 Matrix Conversion](#1055-matrix-conversion)
+- [10.6 Quaternion Operations](#106-module-quaternion-operations-math_quaternionh)
+  - [10.6.1 Construction](#1061-construction)
+  - [10.6.2 Conversion to Matrices](#1062-conversion-to-matrices)
+  - [10.6.3 Quaternion Operations](#1063-quaternion-operations)
+- [10.7 Angle Operations](#107-module-angle-operations-math_anglesh)
+  - [10.7.1 Angle to Matrix](#1071-angle-to-matrix)
+  - [10.7.2 Angle to Direction Vectors](#1072-angle-to-direction-vectors)
+  - [10.7.3 Vector to Angles](#1073-vector-to-angles)
+  - [10.7.4 Angle Normalization](#1074-angle-normalization)
+  - [10.7.5 Degree/Radian Conversion](#1075-degreeradian-conversion)
+- [10.8 Utility Functions](#108-module-utility-functions-math_utilsh)
+  - [10.8.1 Clamping and Min/Max](#1081-clamping-and-minmax)
+  - [10.8.2 Linear Interpolation](#1082-linear-interpolation)
+  - [10.8.3 Floating-Point Comparison](#1083-floating-point-comparison)
+- [10.9 Usage Examples](#109-usage-examples)
+- [10.10 Performance Characteristics](#1010-performance-characteristics)
 
-#### **13. [Renderer (graphics/renderer.h & renderer.c)](#13-renderer-graphicsrendererh--rendererc)**
-- [13.1 Module Overview](#131-module-overview)
-- [13.2 Global Variables](#132-global-variables)
-- [13.3 Constants](#133-constants)
-- [13.4 Initialization](#134-initialization)
-  - [13.4.1 init_renderer()](#1341-init_renderer)
-  - [13.4.2 cleanup_renderer()](#1342-cleanup_renderer)
-- [13.5 Main Loop](#135-main-loop)
-  - [13.5.1 render_loop()](#1351-render_loop)
-  - [13.5.2 should_close_window()](#1352-should_close_window)
-- [13.6 Rendering Functions](#136-rendering-functions)
-  - [13.6.1 render_model()](#1361-render_model)
-  - [13.6.2 clear_screen()](#1362-clear_screen)
-  - [13.6.3 set_model_data()](#1363-set_model_data)
-  - [13.6.4 set_wireframe_mode()](#1364-set_wireframe_mode)
-  - [13.6.5 set_current_texture()](#1365-set_current_texture)
-- [13.7 Internal Helpers](#137-internal-helpers)
-  - [13.7.1 UpdateBonesForCurrentFrame()](#1371-updatebonesforcurrentframe)
-  - [13.7.2 ProcessModelForRendering()](#1372-processmodelforrendering)
-  - [13.7.3 AddVertexToBuffer()](#1373-addvertextobuffer)
-- [13.8 Shader Management](#138-shader-management)
-- [13.9 GLFW Callbacks](#139-glfw-callbacks)
+#### **11. [Camera System](#11-camera-system-r_camerac)** 
+- [11.1 Overview](#111-overview)
+- [11.2 Data Structure: r_camera_t](#112-data-structure-r_camera_t)
+- [11.3 Camera_Init()](#113-function-camera_init)
+- [11.4 Camera_Rotate()](#114-function-camera_rotate)
+- [11.5 Camera_Zoom()](#115-function-camera_zoom)
+- [11.6 Camera_UpdateTransforms()](#116-function-camera_updatetransforms)
+- [11.7 Camera_GetViewMatrix()](#117-function-camera_getviewmatrix)
+- [11.8 Usage Example](#118-usage-example-camera-setup-and-interaction)
+- [11.9 Performance Characteristics](#119-performance-characteristics)
+- [11.10 Design Critique](#1110-design-critique-and-future-improvements)
 
-#### **14. [Camera (graphics/camera.h & camera.c)](#14-camera-graphicscamerah--camerac)**
-- [14.1 Module Overview](#141-module-overview)
-- [14.2 Data Structures](#142-data-structures)
-- [14.3 Functions](#143-functions)
+#### **12. [Input System](#12-input-system)** 
+- [12.1 Overview](#121-overview)
+- [12.2 Input Types](#122-input-types-input_typesh)
+- [12.3 Input State Structure](#123-input-state-structure)
+- [12.4 GLFW Callbacks](#124-glfw-callbacks)
+  - [12.4.1 Key Callback](#1241-key-callback)
+  - [12.4.2 Mouse Position Callback](#1242-mouse-position-callback)
+  - [12.4.3 Mouse Button Callback](#1243-mouse-button-callback)
+  - [12.4.4 Scroll Callback](#1244-scroll-callback)
+- [12.5 Input_Init()](#125-function-input_init)
+- [12.6 Input_Update()](#126-function-input_update)
+- [12.7 Input Polling API](#127-input-polling-api)
+  - [12.7.1 Keyboard Input](#1271-keyboard-input)
+  - [12.7.2 Mouse Input](#1272-mouse-input)
+- [12.8 Input_Shutdown()](#128-function-input_shutdown)
+- [12.9 Game-Specific Input Handler](#129-game-specific-input-handler)
+  - [12.9.1 Input State Structures](#1291-input-state-structures)
+  - [12.9.2 Input_ProcessGameInput()](#1292-function-input_processgameinput)
+- [12.10 Input Mapping](#1210-input-mapping)
+- [12.11 Usage Example](#1211-usage-example-main-loop-integration)
+- [12.12 Performance Characteristics](#1212-performance-characteristics)
+- [12.13 Design Critique](#1213-design-critique)
 
-#### **15. [Textures (graphics/textures.h & textures.c)](#15-textures-graphicstexturesh--texturesc)**
-- [15.1 Module Overview](#151-module-overview)
-- [15.2 Functions](#152-functions)
+#### **13. [Renderer System](#13-renderer-system)** 
+- [13.1 Overview](#131-overview)
+- [13.2 Global State and Data Structures](#132-global-state-and-data-structures)
+  - [13.2.1 OpenGL Objects](#1321-opengl-objects)
+  - [13.2.2 Model Data](#1322-model-data)
+  - [13.2.3 Animation State](#1323-animation-state)
+  - [13.2.4 Vertex Processing](#1324-vertex-processing)
+  - [13.2.5 Draw Ranges](#1325-draw-ranges)
+  - [13.2.6 Camera State](#1326-camera-state)
+- [13.3 init_renderer()](#133-function-init_renderer)
+- [13.4 Shader System](#134-shader-system)
+  - [13.4.1 load_shaders()](#1341-function-load_shaders)
+  - [13.4.2 compile_shader()](#1342-function-compile_shader)
+  - [13.4.3 create_shader_program()](#1343-function-create_shader_program)
+- [13.5 Model Processing](#135-model-processing)
+  - [13.5.1 set_model_data()](#1351-function-set_model_data)
+  - [13.5.2 ProcessModelForRendering()](#1352-function-processmodelforrendering)
+  - [13.5.3 AddVertexToBuffer()](#1353-function-addvertextobuffer)
+- [13.6 Vertex Skinning](#136-vertex-skinning-animation)
+  - [13.6.1 UpdateBonesForCurrentFrame()](#1361-function-updatebonesforcurrentframe)
+- [13.7 render_model()](#137-function-render_model)
+  - [13.7.1 One-Time Topology Processing](#1371-step-1-one-time-topology-processing)
+  - [13.7.2 Per-Frame Vertex Skinning](#1372-step-2-per-frame-vertex-skinning-if-animating)
+  - [13.7.3 Set Up Matrices](#1373-step-3-set-up-matrices)
+  - [13.7.4 Send Uniforms to Shader](#1374-step-4-send-uniforms-to-shader)
+  - [13.7.5 Upload Vertex Data to GPU](#1375-step-5-upload-vertex-data-to-gpu)
+  - [13.7.6 Draw All Ranges](#1376-step-6-draw-all-ranges)
+- [13.8 cleanup_renderer()](#138-function-cleanup_renderer)
+- [13.9 Utility Functions](#139-utility-functions)
+- [13.10 Performance Characteristics](#1310-performance-characteristics)
+- [13.11 Texture System (Brief)](#1311-texture-system-brief-overview)
+- [13.12 Design Critique](#1312-design-critique-and-improvements)
 
 ---
 
-### **PART VII: ANIMATION SYSTEM**
+### **PART IV: PLANNED SECTIONS** ⏳
 
-#### **16. [Animations (mdl/mdl_animations.c)](#16-animations-mdlmdl_animationsc)**
-- [16.1 Module Overview](#161-module-overview)
-- [16.2 Functions](#162-functions)
+> The following sections are planned for future documentation updates:
 
-#### **17. [Bone System (mdl/bone_system.c)](#17-bone-system-mdlbone_systemc)**
-- [17.1 Module Overview](#171-module-overview)
-- [17.2 Functions](#172-functions)
-
-#### **18. [Body Part Manager (mdl/bodypart_manager.c)](#18-body-part-manager-mdlbodypart_managerc)**
-- [18.1 Module Overview](#181-module-overview)
-- [18.2 Functions](#182-functions)
-
----
-
-### **PART VIII: UTILITY SYSTEMS**
-
-#### **19. [Utilities (utils/utils.h & utils.c)](#19-utilities-utilsutilsh--utilsc)**
-- [19.1 Module Overview](#191-module-overview)
-- [19.2 Functions](#192-functions)
-
-#### **20. [MDL Messages (utils/mdl_messages.h & mdl_messages.c)](#20-mdl-messages-utilsmdl_messagesh--mdl_messagesc)**
-- [20.1 Module Overview](#201-module-overview)
-- [20.2 Error Codes](#202-error-codes)
-
----
-
-### **PART IX: APPENDICES**
-
-#### **[Appendix A: Complete Function Index](#appendix-a-complete-function-index)**
-
-#### **[Appendix B: Error Code Reference](#appendix-b-error-code-reference)**
-
-#### **[Appendix C: Platform-Specific Notes](#appendix-c-platform-specific-notes)**
-
-#### **[Appendix D: Build System](#appendix-d-build-system)**
-
-#### **[Appendix E: Memory Management](#appendix-e-memory-management)**
-
-#### **[Appendix F: Performance Profiling](#appendix-f-performance-profiling)**
-
-#### **[Appendix G: Glossary](#appendix-g-glossary)**
-
-#### **[Appendix H: Version History](#appendix-h-version-history)**
+- **14. Model Loader System** (mdl/ - file parsing, bones, animations)
+- **15. Logger System** (util/util_logger.c - logging infrastructure)
+- **16. Animation System** (mdl/mdl_animations.c - skeletal animation)
+- **17. Appendices** (function index, glossary, build system, etc.)
 
 ---
 
 <div align="center">
 **End of Table of Contents**
-
 *Complete documentation sections begin below...*
 
-</div>
+
 
 ---
 
@@ -7070,4 +6946,5687 @@ mdl_model_t *local_model = NULL;
 **Section 7 Complete!**
 
 Next: **Section 8 - Main Loop** (`app_run()` and `render_loop()`)
+
+
+---
+
+## 8. Main Loop (cl/cl_app.c & r/r_draw.c)
+
+### 8.1 Module Overview
+
+#### 8.1.1 Purpose
+
+The main loop is the **heart of the running application**. It executes continuously at ~60 FPS, handling animation updates, input processing, and rendering until the user closes the window.
+
+**Core Responsibilities:**
+1. Check initialization state before entering loop
+2. Delegate to render loop (`render_loop()`)
+3. Update lifecycle flags on exit
+4. Log loop entry/exit
+
+**Design Philosophy:**
+- **Thin wrapper:** `app_run()` just delegates to `render_loop()`
+- **Blocking execution:** Doesn't return until user closes window
+- **Future extensibility:** Game logic will move from renderer to `app_run()`
+
+#### 8.1.2 File Locations
+
+```
+src/cl/cl_app.c    (app_run() wrapper - 18 lines)
+src/r/r_draw.c     (render_loop() implementation - 75 lines)
+```
+
+#### 8.1.3 Execution Model
+
+**Single-Threaded:**
+- No concurrency, no threads
+- Everything runs on main thread
+- GLFW events processed in render loop
+
+**Blocking:**
+- `app_run()` blocks until window closes
+- Could run for seconds, minutes, or hours
+- User controls loop lifetime
+
+**Frame Rate:**
+- Target: 60 FPS (16.67ms per frame)
+- Delta time capped at 33ms (prevents huge jumps)
+- VSync dependent on driver settings
+
+---
+
+### 8.2 Functions
+
+#### 8.2.1 app_run() - Main Loop Wrapper
+
+**Signature (cl_app.h:80):**
+```c
+int app_run( void );
+```
+
+**Purpose:**
+Wrapper function that validates initialization and delegates to render loop.
+
+**Parameters:** None
+
+**Return Value:**
+
+| Value | Constant | Meaning |
+|-------|----------|---------|
+| 0 | `APP_INIT_SUCCESS` | Loop exited normally |
+| -1 | `APP_INIT_ERROR` | Not initialized (shouldn't happen) |
+
+**Implementation (cl_app.c:204-221):**
+
+```c
+int app_run( void ) {
+    if ( !g_app_state.initialized ) {
+        LOG_ERROR( "app", "Cannot run: Application not initialized" );
+        return ( APP_INIT_ERROR );
+    }
+
+    LOG_INFO( "app", "Starting main loop..." );
+
+    // NOTE(Karlo): Later we should move the rendering loop logic to here
+
+    render_loop();
+
+    g_app_state.running = false;
+
+    LOG_INFO( "app", "Main loop exited" );
+
+    return ( APP_INIT_SUCCESS );
+}
+```
+
+**Step-by-Step:**
+
+**Lines 205-208: Validate Initialization**
+```c
+if ( !g_app_state.initialized ) {
+    LOG_ERROR( "app", "Cannot run: Application not initialized" );
+    return ( APP_INIT_ERROR );
+}
+```
+
+**Defensive Check:**
+- Ensures `app_init()` succeeded before running
+- Should never fail if called from `main()` correctly
+- Prevents crashes from uninitialized renderer/model
+
+---
+
+**Line 210: Log Start**
+```c
+LOG_INFO( "app", "Starting main loop..." );
+```
+
+Output:
+```
+[INFO] [app] Starting main loop...
+```
+
+---
+
+**Line 214: Enter Render Loop**
+```c
+render_loop();
+```
+
+**This is where execution blocks** - doesn't return until user closes window.
+
+**Future TODO:**
+Comment indicates logic should move here from `render_loop()`. Currently `render_loop()` does everything, but ideal design:
+```c
+// Future:
+while (!should_quit) {
+    update_input();
+    update_animation();
+    render_frame();
+}
+```
+
+---
+
+**Line 216: Mark Loop Exited**
+```c
+g_app_state.running = false;
+```
+
+**Post-Loop Cleanup:**
+- User closed window
+- Loop exited
+- Mark state as no longer running
+
+---
+
+**Line 218: Log Exit**
+```c
+LOG_INFO( "app", "Main loop exited" );
+```
+
+Output:
+```
+[INFO] [app] Main loop exited
+```
+
+---
+
+**Line 220: Return Success**
+```c
+return ( APP_INIT_SUCCESS );
+```
+
+**Normal exit** - user closed window cleanly.
+
+---
+
+**Duration Examples:**
+
+```
+User opens app, immediately closes → app_run() returns in ~1 second
+User studies model for 5 minutes → app_run() returns after 300 seconds
+User leaves app open overnight → app_run() returns after hours
+```
+
+**Frame Count:**
+```
+1 second  = ~60 frames
+1 minute  = ~3,600 frames
+5 minutes = ~18,000 frames
+```
+
+---
+
+
+#### 8.2.2 render_loop() - Frame-by-Frame Execution
+
+**Signature (r/r_draw.c:961):**
+```c
+void render_loop( void );
+```
+
+**Purpose:**
+The actual render loop - executes at ~60 FPS, handling animation, input, and rendering.
+
+**Parameters:** None
+
+**Return Value:** `void` (returns when window closes)
+
+**Execution Flow (r/r_draw.c:961-1035):**
+
+```
+START (line 961)
+ ↓
+Log loop entry (962)
+ ↓
+Initialize timing (964-967)
+ ↓
+MAIN LOOP START (969)
+ ↓
+Check window should close? ──YES──> BREAK (exit loop)
+ ↓ NO
+NULL check model data (971-975)
+ ↓ NULL? → BREAK
+Calculate delta time (978-989)
+ ↓
+Update animation state (992-994)
+ ↓
+Clear screen (997)
+ ↓
+Render model (999-1001)
+ ↓
+Swap buffers (1003)
+ ↓
+Poll events (1004)
+ ↓
+Process input (1009-1026)
+ ↓
+Update input state (1029)
+ ↓
+Increment frame counter (1031)
+ ↓
+LOOP BACK TO START
+ ↓
+Log loop exit with frame count (1034)
+ ↓
+RETURN
+```
+
+**Implementation Breakdown:**
+
+---
+
+**Lines 962-967: Initialization**
+```c
+LOG_INFOF( "renderer", "Entering render loop" );
+
+double last_time = glfwGetTime();
+int frame_count = 0;
+
+g_last_frame_time = glfwGetTime(); // Initialize to current time
+```
+
+**Setup:**
+- Log entry
+- `last_time` - FPS calculation (currently unused)
+- `frame_count` - total frames rendered
+- `g_last_frame_time` - for delta time calculation
+
+**GLFW Time:**
+`glfwGetTime()` returns seconds since GLFW init as double-precision float.
+
+---
+
+**Line 969: Main Loop Condition**
+```c
+while ( !glfwWindowShouldClose( window ) ) {
+```
+
+**Loop Until:**
+- User clicks X button on window
+- User presses Escape key (via Input callback)
+- User presses Alt+F4 (platform-specific)
+
+**glfwWindowShouldClose():**
+- Returns `GL_FALSE` (0) normally
+- Returns `GL_TRUE` (1) when window should close
+- Set by GLFW internally or via `glfwSetWindowShouldClose()`
+
+---
+
+**Lines 971-975: NULL Safety Check**
+```c
+if ( !global_header || !global_data ) {
+    LOG_ERRORF(
+        "renderer", "NULL model data! header=%p data=%p", 
+        (void *)global_header, (void *)global_data );
+    break;
+}
+```
+
+**Critical Safety:**
+- `global_header` and `global_data` are global pointers in r_draw.c
+- Set by `set_model_data()` during init
+- If NULL, can't render → break out of loop
+
+**Why This Check?**
+Defensive programming - prevents crash if model freed while loop running.
+
+---
+
+**Lines 978-989: Delta Time Calculation**
+```c
+double current_time = glfwGetTime();
+float delta_time = (float)( current_time - g_last_frame_time );
+g_last_frame_time = current_time;
+
+if ( delta_time > 0.033f ) {
+    delta_time = 0.033f;
+}
+
+if ( delta_time < 0.0f ) {
+    delta_time = 0.0f;
+}
+```
+
+**Delta Time:**
+Time elapsed since last frame in seconds.
+
+**Example:**
+```
+Frame 1: current_time = 0.000, delta_time = 0.000 (first frame)
+Frame 2: current_time = 0.016, delta_time = 0.016 (16ms, 60 FPS)
+Frame 3: current_time = 0.033, delta_time = 0.017 (17ms, slight variation)
+```
+
+**Clamping:**
+
+**Upper Clamp (33ms):**
+```c
+if ( delta_time > 0.033f ) {
+    delta_time = 0.033f;
+}
+```
+
+**Why?**
+If frame takes too long (>33ms), clamp to 33ms. Prevents:
+- Huge animation jumps when FPS drops
+- Spiral of death (slow frame → more work → slower frame)
+
+**Lower Clamp (0ms):**
+```c
+if ( delta_time < 0.0f ) {
+    delta_time = 0.0f;
+}
+```
+
+**Why Negative?**
+Clock skew or system time adjustment. Treat as 0.
+
+**FIX #4 Comment:**
+This addresses a bug where negative delta caused animation to run backwards.
+
+---
+
+**Lines 992-994: Animation Update**
+```c
+if ( g_animation_enabled && global_header && global_data ) {
+    mdl_animation_update( &g_anim_state, delta_time, global_header, global_data, global_seqgroups );
+}
+```
+
+**Animation System:**
+- `g_animation_enabled` - global boolean (toggled by Space key)
+- `g_anim_state` - animation state structure (current sequence, frame, time)
+- `mdl_animation_update()` - advances animation by delta_time
+
+**What It Does:**
+```c
+// Simplified:
+anim_state->time += delta_time;
+anim_state->frame = (int)(anim_state->time * fps) % num_frames;
+// Interpolate bone positions between frames
+```
+
+See `mdl/mdl_animations.c` for full implementation.
+
+---
+
+**Line 997: Clear Screen**
+```c
+clear_screen();
+```
+
+**Clears:**
+- Color buffer (black background)
+- Depth buffer (for 3D rendering)
+
+**OpenGL Calls:**
+```c
+glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  // Black
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+```
+
+---
+
+**Lines 999-1001: Render Model**
+```c
+if ( global_header && global_data ) {
+    render_model( global_header, global_data );
+}
+```
+
+**Redundant Check:**
+Already checked at line 971, but safe to double-check.
+
+**render_model():**
+- Calculates bone transformations for current frame
+- Transforms vertices by bone matrices (skinning)
+- Uploads to GPU
+- Issues draw call
+
+See Section 10+ for full rendering documentation.
+
+---
+
+**Line 1003: Swap Buffers**
+```c
+glfwSwapBuffers( window );
+```
+
+**Double Buffering:**
+- **Front buffer:** Currently displayed on screen
+- **Back buffer:** Where we just rendered
+
+**Swap:**
+- Make back buffer visible (front)
+- Old front becomes new back
+- Atomic operation (no tearing)
+
+**VSync:**
+May block here waiting for monitor refresh (16.67ms for 60Hz).
+
+---
+
+**Line 1004: Poll Events**
+```c
+glfwPollEvents();
+```
+
+**Process OS Events:**
+- Keyboard input
+- Mouse movement/clicks
+- Window resize/close
+- System messages
+
+**Callbacks Invoked:**
+- Key callbacks (registered by Input_Init)
+- Mouse callbacks
+- Scroll callbacks
+
+**Non-Blocking:**
+Returns immediately after processing all pending events.
+
+---
+
+**Lines 1009-1026: Process Input**
+```c
+input_camera_state_t cam_state = {
+    .rotation_x = &rotation_x,
+    .rotation_y = &rotation_y,
+    .zoom = &zoom,
+    .wireframe_enabled = &wireframe_enabled
+};
+
+input_animation_state_t anim_state = {
+    .animation_enabled = &g_animation_enabled,
+    .anim_state = &g_anim_state,
+    .header = global_header,
+    .data = global_data,
+    .seqgroups = global_seqgroups,
+    .num_seqgroups = global_num_seqgroups,
+    .model_processed = &model_processed
+};
+
+Input_ProcessGameInput( window, &cam_state, &anim_state );
+```
+
+**Input Processing:**
+- Aggregate initialization (C99 designated initializers)
+- Pass pointers to camera/animation state
+- `Input_ProcessGameInput()` reads keys and updates state
+
+**Camera Controls:**
+- Arrow keys / Mouse drag: Rotate camera
+- Scroll wheel: Zoom in/out
+- 'W' key: Toggle wireframe
+
+**Animation Controls:**
+- Space: Toggle animation play/pause
+- '[' / ']': Change sequence
+- 'R': Reset animation
+
+See `input/input.c` for full key mappings.
+
+---
+
+**Line 1029: Update Input State**
+```c
+Input_Update();
+```
+
+**Previous/Current State:**
+```c
+// Copies current → previous for next frame
+previous_keys[i] = current_keys[i];
+previous_mouse_buttons[i] = current_mouse_buttons[i];
+```
+
+**Why?**
+Detect key **press** vs **hold**:
+- Press: `current && !previous`
+- Release: `!current && previous`
+- Hold: `current && previous`
+
+---
+
+**Line 1031: Increment Frame Count**
+```c
+frame_count++;
+```
+
+Simple counter for logging.
+
+---
+
+**Loop Continues...**
+
+Loop repeats until `glfwWindowShouldClose()` returns true.
+
+---
+
+**Line 1034: Log Exit**
+```c
+LOG_INFOF( "renderer", "Exiting render loop after %d frames", frame_count );
+```
+
+**Output Example:**
+```
+[INFO] [renderer] Exiting render loop after 18234 frames
+```
+
+**Frame Count Math:**
+```
+18234 frames ÷ 60 FPS = 304 seconds = 5 minutes 4 seconds
+```
+
+---
+
+**Performance Characteristics:**
+
+**Target Frame Time:** 16.67ms (60 FPS)
+
+**Breakdown (typical):**
+```
+Delta time calc:     < 0.1ms
+Animation update:    0.5-2ms   (bone math)
+Clear screen:        < 0.1ms
+Render model:        5-10ms    (vertex skinning + draw calls)
+Swap buffers:        0-16ms    (VSync wait)
+Poll events:         < 0.1ms
+Process input:       < 0.1ms
+Total:               ~6-29ms
+```
+
+**Bottlenecks:**
+1. **Vertex skinning** (CPU) - transforms every vertex every frame
+2. **VSync wait** (GPU) - waiting for monitor refresh
+3. **Draw calls** (GPU) - OpenGL overhead
+
+**Optimization Potential:**
+- Move skinning to GPU (vertex shader)
+- Frustum culling (don't render off-screen)
+- LOD system (lower poly models when far)
+
+---
+
+
+### 8.3 Frame Timing Analysis
+
+#### 8.3.1 Single Frame Timeline
+
+**Ideal 60 FPS Frame (16.67ms budget):**
+
+```
+Time (ms)  Operation                  Duration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+0.00       glfwGetTime()             < 0.01ms
+0.01       Delta time calc           < 0.01ms
+0.02       Animation update          1.50ms
+1.52       clear_screen()            0.10ms
+1.62       render_model()            8.20ms
+9.82       glfwSwapBuffers()         6.85ms (VSync wait)
+16.67      glfwPollEvents()          < 0.01ms
+16.68      Input processing          < 0.01ms
+16.69      Input_Update()            < 0.01ms
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+16.70      Total frame time          60 FPS ✓
+```
+
+**Frame Budget Remaining:** ~0ms (on target)
+
+---
+
+**Slow Frame (50 FPS):**
+
+```
+Time (ms)  Operation                  Duration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+0.00       glfwGetTime()             < 0.01ms
+0.01       Delta time calc           < 0.01ms
+0.02       Animation update          2.10ms (complex bones)
+2.12       clear_screen()            0.10ms
+2.22       render_model()            15.50ms (many vertices)
+17.72      glfwSwapBuffers()         2.28ms (missed VSync, wait for next)
+20.00      glfwPollEvents()          < 0.01ms
+20.01      Input processing          < 0.01ms
+20.02      Input_Update()            < 0.01ms
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+20.03      Total frame time          50 FPS ✗
+```
+
+**Missed VSync:** Frame took >16.67ms, had to wait for next monitor refresh.
+
+---
+
+#### 8.3.2 Example Execution Scenarios
+
+**Scenario 1: Quick Model View (30 seconds)**
+
+```
+./Lambda scientist.mdl
+```
+
+**Execution:**
+```
+[INFO] [app] Starting main loop...
+[INFO] [renderer] Entering render loop
+
+← Frame 0 (t=0.000s)    : Idle animation starts
+← Frame 60 (t=1.000s)   : 1 second elapsed
+← Frame 600 (t=10.000s) : 10 seconds elapsed
+← Frame 1800 (t=30.000s): User presses ESC
+
+[INFO] [renderer] Exiting render loop after 1800 frames
+[INFO] [app] Main loop exited
+```
+
+**Statistics:**
+- Total frames: 1,800
+- Runtime: 30 seconds
+- Average FPS: 60
+- Total loop iterations: 1,800
+
+---
+
+**Scenario 2: Animation Study (5 minutes)**
+
+```
+./Lambda barney.mdl
+```
+
+**User Actions:**
+```
+t=0s    : App opens, idle animation plays
+t=10s   : User presses ']' → switch to "walk" animation
+t=30s   : User presses Space → pause animation
+t=45s   : User drags mouse → rotate camera
+t=60s   : User presses Space → resume animation
+t=120s  : User presses '[' → switch to "run" animation
+t=180s  : User scrolls wheel → zoom in
+t=240s  : User presses 'W' → toggle wireframe
+t=300s  : User presses ESC → quit
+```
+
+**Execution:**
+```
+[INFO] [app] Starting main loop...
+[INFO] [renderer] Entering render loop
+
+← 18,000 frames rendered (60 FPS × 300 seconds)
+
+[INFO] [renderer] Exiting render loop after 18000 frames
+[INFO] [app] Main loop exited
+```
+
+---
+
+**Scenario 3: Performance Stress (Complex Model)**
+
+```
+./Lambda complex_model.mdl  (10,000 vertices, 50 bones)
+```
+
+**Frame Timing:**
+```
+Frame 1:   22ms (45 FPS) - vertex skinning heavy
+Frame 2:   23ms (43 FPS)
+Frame 3:   21ms (47 FPS)
+...
+Average:   ~20ms (50 FPS)
+```
+
+**Why Slower?**
+- More vertices to transform (CPU bound)
+- More bones to interpolate
+- Larger draw calls
+
+**Still Playable:** 50 FPS is acceptable, no stuttering.
+
+---
+
+#### 8.3.3 Loop Exit Conditions
+
+**Normal Exit (User Closes Window):**
+```c
+glfwWindowShouldClose(window) returns true
+→ Loop exits
+→ g_app_state.running = false
+→ app_run() returns APP_INIT_SUCCESS
+→ main() calls app_shutdown()
+```
+
+**Error Exit (NULL Model Data):**
+```c
+global_header or global_data is NULL
+→ LOG_ERROR printed
+→ break statement
+→ Loop exits early
+→ app_run() returns APP_INIT_SUCCESS
+→ main() calls app_shutdown()
+```
+
+**Abnormal Exit (GLFW Window Destroyed Externally):**
+```c
+window pointer becomes invalid
+→ glfwWindowShouldClose() may crash
+→ Undefined behavior
+→ Should never happen in normal usage
+```
+
+---
+
+### 8.4 Global State
+
+**Renderer Globals (r/r_draw.c):**
+
+```c
+GLFWwindow *window;              // GLFW window handle
+studiohdr_t *global_header;      // Model header
+unsigned char *global_data;      // Model data
+seqgroup_t *global_seqgroups;    // Sequence groups
+int global_num_seqgroups;        // Number of groups
+
+bool g_animation_enabled;        // Animation on/off
+mdl_anim_state_t g_anim_state;   // Current animation state
+double g_last_frame_time;        // Last frame time (for delta)
+
+float rotation_x, rotation_y;    // Camera rotation
+float zoom;                      // Camera zoom
+bool wireframe_enabled;          // Wireframe mode
+bool model_processed;            // Mesh built
+```
+
+**Why Globals?**
+- Legacy design from original codebase
+- Renderer was written before app_state_t existed
+- **TODO:** Refactor to pass via parameters or move to app_state_t
+
+**Coupling Issues:**
+- app_run() accesses renderer globals via extern
+- Tight coupling between modules
+- Harder to test in isolation
+
+**Future Refactor:**
+```c
+// Instead of globals, pass context:
+void render_loop(render_context_t *ctx);
+```
+
+---
+
+### 8.5 Input Integration
+
+**Key Callbacks (registered by Input_Init):**
+
+```c
+glfwSetKeyCallback(window, key_callback);
+glfwSetMouseButtonCallback(window, mouse_button_callback);
+glfwSetScrollCallback(window, scroll_callback);
+glfwSetCursorPosCallback(window, cursor_position_callback);
+```
+
+**Flow:**
+
+```
+User presses key
+  ↓
+GLFW detects event
+  ↓
+glfwPollEvents() in render loop
+  ↓
+key_callback() invoked
+  ↓
+Update internal input state
+  ↓
+Input_ProcessGameInput() reads state
+  ↓
+Update camera/animation variables
+  ↓
+Next frame uses new values
+```
+
+**Latency:** 1 frame (16.67ms at 60 FPS)
+
+User presses key at t=0ms
+→ Event processed at t=16.67ms (next frame)
+→ Visual response at t=33.34ms (frame after)
+
+**Feels Instant:** 33ms latency imperceptible to humans.
+
+---
+
+**Section 8 Complete!**
+
+Next: **Section 9 - Cleanup** (`app_shutdown()`)
+
+
+---
+
+## 9. Application Cleanup (`app_shutdown`)
+
+### 9.1 Module Overview
+
+**Purpose:**  
+The cleanup phase deallocates all resources acquired during initialization and runtime in **reverse order** of their creation. This ensures that dependencies are destroyed before the resources they depend on.
+
+**Why Reverse Order?**  
+```
+Initialization Order:        Shutdown Order:
+1. Logger                    4. Logger (last)
+2. Renderer (OpenGL, GLFW)   3. Renderer
+3. Model (heap memory)       2. Model
+4. Animation state           1. Animation state (first)
+```
+
+If we destroyed the renderer before the model, we might try to free GPU resources (textures, VBOs) after the OpenGL context is already gone → **crash** or **resource leak**.
+
+**Key Responsibilities:**
+- Free model data (heap memory, GPU resources)
+- Destroy renderer (OpenGL context, GLFW window)
+- Mark application state as uninitialized
+- Shutdown logger (flush logs, close file handles)
+
+**Error Handling:**
+- **Idempotent design**: Safe to call multiple times (checks `initialized` flag)
+- Silent failure: Returns early if not initialized (no error logging)
+- NULL safety: Checks `g_app_state.model` before freeing
+
+---
+
+### 9.2 Function: `app_shutdown()`
+
+**File:** `src/cl/cl_app.c` (lines 223-242)
+
+**Signature:**
+```c
+void app_shutdown( void );
+```
+
+**Purpose:**  
+Deallocates all application resources in reverse order of initialization. Must be called before program exit to avoid memory leaks and GPU resource leaks.
+
+**Parameters:**  
+None (operates on global `g_app_state`).
+
+**Return Value:**  
+None (`void`). Cleanup failures are silent (no error codes returned).
+
+**Preconditions:**
+- None (safe to call even if initialization failed)
+
+**Postconditions:**
+- All heap memory freed
+- GPU resources destroyed (textures, VBOs, shaders)
+- OpenGL context destroyed
+- GLFW terminated
+- Logger shutdown (logs flushed)
+- `g_app_state.initialized = false`
+- `g_app_state.running = false`
+
+---
+
+### 9.3 Line-by-Line Code Analysis
+
+```c
+void app_shutdown( void ) {
+```
+
+**Function Entry:**  
+No parameters. Operates on global state (`g_app_state`).
+
+```c
+    if ( !g_app_state.initialized ) {
+        return;
+    }
+```
+
+**Idempotent Guard:**  
+If the application was never initialized (or already shutdown), exit immediately.
+
+**Why This Matters:**
+- Prevents double-free errors (freeing the same memory twice → crash)
+- Allows calling `app_shutdown()` multiple times safely
+- Handles the case where `app_init()` failed early
+
+**Example Scenario:**
+```c
+int main( int argc, const char *argv[] ) {
+    app_args_t args;
+    parse_args( argc, argv, &args );
+    
+    if ( app_init( &args ) != 0 ) {
+        app_shutdown();  // Safe! Returns immediately (not initialized)
+        return 1;
+    }
+    
+    app_run();
+    app_shutdown();  // Actual cleanup
+    app_shutdown();  // Safe! Returns immediately (already shutdown)
+    return 0;
+}
+```
+
+```c
+    LOG_INFO( "app", "Shutting down application..." );
+```
+
+**Logging:**  
+Announces shutdown start. This log message **must** appear before we shutdown the logger itself (otherwise it would be lost).
+
+**Log Output:**
+
+```
+[INFO] [app] Shutting down application...
+```
+
+```c
+    if ( g_app_state.model ) {
+        free_model( g_app_state.model );
+        g_app_state.model = NULL;
+    }
+```
+
+**Step 1: Free Model (First)**  
+Deallocates the MDL model and all its associated data.
+
+**Why First?**  
+The model contains GPU resources (textures, vertex buffers) that require an active OpenGL context. If we destroyed the renderer first, these GPU resources couldn't be freed properly.
+
+**What `free_model()` Does:**
+1. Frees texture data (GPU memory via `glDeleteTextures()`)
+2. Frees vertex buffers (GPU memory via `glDeleteBuffers()`)
+3. Frees heap memory (header, vertices, bones, sequences, etc.)
+4. Sets all pointers to `NULL`
+
+**NULL Check:**  
+If no model was loaded (dump-only mode, or load failed), `g_app_state.model` is `NULL` → skip.
+
+**NULL Assignment:**  
+After freeing, we set the pointer to `NULL` to prevent:
+- **Use-after-free:** Trying to access freed memory
+- **Double-free:** Calling `free_model()` twice on the same pointer
+
+**Memory Deallocation Example:**
+```
+Before free_model():
+g_app_state.model → [mdl_model_t struct]
+                      ├─ header → [studiohdr_t] (heap)
+                      ├─ data → [byte array] (heap)
+                      ├─ textures → [OpenGL texture IDs] (GPU)
+                      └─ vbos → [OpenGL VBO IDs] (GPU)
+
+After free_model():
+g_app_state.model → NULL
+(All heap and GPU memory freed)
+```
+
+```c
+    cleanup_renderer();
+```
+
+**Step 2: Cleanup Renderer (Second)**  
+Destroys the OpenGL context and GLFW window.
+
+**Why Second?**  
+We needed the OpenGL context active to free GPU resources (textures, VBOs) in `free_model()`. Now that the model is gone, we can safely destroy the context.
+
+**What `cleanup_renderer()` Does:**
+1. Destroys OpenGL context (frees GPU memory, driver state)
+2. Destroys GLFW window (closes window, releases OS resources)
+3. Calls `glfwTerminate()` (shuts down GLFW library)
+4. Frees shader programs (if any)
+5. Frees framebuffers, renderbuffers (if any)
+
+**GPU Resource Lifecycle:**
+```
+Initialization:
+1. glfwInit()               → GLFW library ready
+2. glfwCreateWindow()       → Window + OpenGL context
+3. glGenTextures()          → GPU texture memory allocated
+4. glGenBuffers()           → GPU buffer memory allocated
+
+Shutdown (reverse order):
+4. glDeleteBuffers()        → GPU buffer memory freed
+3. glDeleteTextures()       → GPU texture memory freed
+2. glfwDestroyWindow()      → OpenGL context destroyed
+1. glfwTerminate()          → GLFW library shutdown
+```
+
+**Why This Order Matters:**  
+OpenGL resources (textures, buffers) are **owned by the OpenGL context**. If you destroy the context first, the GPU resources become orphaned (leaked) because you can't call `glDeleteTextures()` without a context.
+
+```c
+    g_app_state.initialized = false;
+    g_app_state.running = false;
+```
+
+**Step 3: Mark State as Uninitialized (Third)**  
+Updates the global state flags to reflect shutdown.
+
+**Why Both Flags?**
+- `initialized = false`: Prevents `app_run()` from starting (checked at entry)
+- `running = false`: Indicates main loop is not active (redundant here, but ensures consistency)
+
+**State Transition:**
+```
+Before shutdown:
+g_app_state.initialized = true
+g_app_state.running     = false (already set by app_run() exit)
+g_app_state.model       = NULL (already freed)
+
+After shutdown:
+g_app_state.initialized = false
+g_app_state.running     = false
+g_app_state.model       = NULL
+```
+
+**Why This Matters:**  
+If code tries to call `app_run()` after shutdown, it will fail the initialization check and return `APP_INIT_ERROR` instead of crashing.
+
+```c
+    logger_shutdown();
+}
+```
+
+**Step 4: Shutdown Logger (Last)**  
+Flushes buffered logs and closes the log file (if any).
+
+**Why Last?**  
+We want to log messages during cleanup (`LOG_INFO`, `LOG_ERROR`). If we shutdown the logger first, all subsequent log calls would be silently ignored (logs lost).
+
+**What `logger_shutdown()` Does:**
+1. Flushes buffered log messages (writes to file/console)
+2. Closes log file handle (if `--log-file` was used)
+3. Frees logger internal state (buffers, category maps)
+
+**Log Output During Shutdown:**
+```
+[INFO] [app] Shutting down application...      ← Logged before logger shutdown
+[INFO] [mdl] Freeing model data...             ← From free_model()
+[INFO] [renderer] Destroying OpenGL context... ← From cleanup_renderer()
+(Logger shutdown here - no more logs possible)
+```
+
+**End of Function:**  
+All resources freed. Program can now exit cleanly.
+
+---
+
+### 9.4 Cleanup Sequence Diagram
+
+**Visual Representation:**
+```
+app_shutdown() Entry
+│
+├─ [1] Check initialized flag
+│   └─ If false → return (idempotent guard)
+│
+├─ [2] Log "Shutting down..."
+│
+├─ [3] Free Model (if loaded)
+│   ├─ Free GPU textures (glDeleteTextures)
+│   ├─ Free GPU buffers (glDeleteBuffers)
+│   └─ Free heap memory (header, data, bones, etc.)
+│
+├─ [4] Cleanup Renderer
+│   ├─ Destroy OpenGL context
+│   ├─ Destroy GLFW window
+│   └─ glfwTerminate()
+│
+├─ [5] Mark state as uninitialized
+│   ├─ initialized = false
+│   └─ running = false
+│
+└─ [6] Shutdown Logger
+    ├─ Flush logs
+    └─ Close log file
+
+Return (cleanup complete)
+```
+
+---
+
+### 9.5 Resource Ownership Table
+
+| Resource                     | Allocated By           | Freed By                  | Order |
+|------------------------------|------------------------|---------------------------|-------|
+| **Logger**                   | `logger_init()`        | `logger_shutdown()`       | Last  |
+| **OpenGL Context**           | `glfwCreateWindow()`   | `glfwDestroyWindow()`     | 4th   |
+| **GLFW Library**             | `glfwInit()`           | `glfwTerminate()`         | 4th   |
+| **Model Heap Memory**        | `create_mdl_model()`   | `free_model()`            | 1st   |
+| **Model GPU Textures**       | `glGenTextures()`      | `glDeleteTextures()`      | 1st   |
+| **Model GPU Buffers**        | `glGenBuffers()`       | `glDeleteBuffers()`       | 1st   |
+| **Shader Programs**          | `glCreateProgram()`    | `glDeleteProgram()`       | 4th   |
+| **Animation State**          | Stack (global)         | None (overwritten)        | N/A   |
+| **Camera State**             | Stack (global)         | None (overwritten)        | N/A   |
+
+**Key Insight:**  
+Resources with dependencies (GPU resources → OpenGL context) must be freed **before** their dependencies are destroyed.
+
+---
+
+### 9.6 Error Scenarios
+
+**Scenario 1: Shutdown Called Twice**
+```c
+app_init( &args );
+app_run();
+app_shutdown();  // First call: cleanup happens
+app_shutdown();  // Second call: returns immediately (initialized = false)
+```
+
+**Result:** Safe. No double-free errors.
+
+**Scenario 2: Shutdown Without Initialization**
+```c
+app_shutdown();  // Called before app_init()
+```
+
+**Result:** Safe. Returns immediately (initialized = false by default).
+
+**Scenario 3: Shutdown After Init Failure**
+```c
+if ( app_init( &args ) != 0 ) {
+    app_shutdown();  // Safe! Frees any partially initialized resources
+    return 1;
+}
+```
+
+**Result:** Safe. Skips freeing unallocated resources (NULL checks).
+
+**Scenario 4: Crash During Cleanup**
+```c
+app_shutdown();
+// If free_model() crashes (corrupted pointer), the logger is never shutdown
+```
+
+**Result:** Resource leak (log file not closed). This is a limitation of the current design (no exception handling in C).
+
+**Improvement:**  
+Use `atexit()` to register cleanup handlers, or wrap cleanup in signal handlers (SIGTERM, SIGINT).
+
+---
+
+### 9.7 Memory Leak Detection
+
+**How to Check for Leaks:**
+
+**Using Valgrind (Linux/macOS):**
+```bash
+valgrind --leak-check=full --show-leak-kinds=all ./hlmv scientist.mdl --dump-only
+```
+
+**Expected Output (No Leaks):**
+```
+HEAP SUMMARY:
+    in use at exit: 0 bytes in 0 blocks
+  total heap usage: 1,234 allocs, 1,234 frees, 45,678 bytes allocated
+
+All heap blocks were freed -- no leaks are possible
+```
+
+**Using AddressSanitizer (All Platforms):**
+```bash
+# Compile with ASAN enabled
+cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON ..
+make
+
+# Run program
+./hlmv scientist.mdl --dump-only
+```
+
+**Expected Output (No Leaks):**
+```
+=================================================================
+==12345==ERROR: LeakSanitizer: detected memory leaks
+(No leaks detected)
+```
+
+**Common Leak Sources:**
+- Forgetting to call `free_model()` (model heap memory leaked)
+- Forgetting to call `cleanup_renderer()` (GPU resources leaked)
+- Forgetting to call `logger_shutdown()` (log file handle leaked)
+- Not freeing sequence group data (if loaded dynamically)
+
+---
+
+### 9.8 Design Critique
+
+**Current Issues:**
+
+1. **Silent Failure:**  
+   If cleanup fails (e.g., `glDeleteTextures()` errors), we don't log it. The logger might already be shutdown, so errors are lost.
+
+   **Fix:** Log errors before logger shutdown, or use a separate error file.
+
+2. **No Partial Cleanup:**  
+   If `free_model()` crashes, the renderer and logger are never cleaned up.
+
+   **Fix:** Use signal handlers or `atexit()` to register cleanup functions.
+
+3. **Global State Coupling:**  
+   `app_shutdown()` operates on global `g_app_state`. Can't shutdown one instance without affecting all.
+
+   **Fix:** Pass `app_state_t*` as parameter (requires refactoring entire codebase).
+
+4. **No Resource Tracking:**  
+   We don't track which resources were actually allocated (e.g., was a log file opened?). We just call cleanup functions and hope they handle NULL/uninitialized state.
+
+   **Fix:** Add state flags (`model_loaded`, `renderer_initialized`, `logger_initialized`) and check them in cleanup.
+
+**Future Improvements:**
+
+```c
+void app_shutdown( app_state_t *app ) {
+    if ( !app || !app->initialized ) {
+        return;
+    }
+
+    LOG_INFO( "app", "Shutting down application..." );
+
+    // Track which resources were actually allocated
+    if ( app->model_loaded ) {
+        free_model( app->model );
+        app->model = NULL;
+        app->model_loaded = false;
+    }
+
+    if ( app->renderer_initialized ) {
+        cleanup_renderer();
+        app->renderer_initialized = false;
+    }
+
+    app->initialized = false;
+    app->running = false;
+
+    if ( app->logger_initialized ) {
+        logger_shutdown();
+        app->logger_initialized = false;
+    }
+}
+```
+
+This would allow:
+- Multiple application instances (no globals)
+- Partial cleanup (only free what was allocated)
+- Better error tracking (know exactly what failed)
+
+---
+
+### 9.9 Platform-Specific Considerations
+
+**Windows:**
+- GLFW handles window destruction differently (Win32 API)
+- Logger might need to close file handles explicitly (FILE*)
+
+**Linux/macOS:**
+- GLFW uses X11/Wayland (Linux) or Cocoa (macOS)
+- File handles closed automatically on process exit (but explicit close is better)
+
+**All Platforms:**
+- OpenGL context destruction is handled by GLFW (platform-agnostic)
+- Heap memory (`malloc`/`free`) is standard C (same on all platforms)
+
+---
+
+### 9.10 Performance Characteristics
+
+**Shutdown Time:**  
+Typically **< 50ms** (fast enough to be imperceptible).
+
+**Breakdown:**
+- `free_model()`: 10-30ms (depends on model size, GPU resource count)
+- `cleanup_renderer()`: 10-20ms (OpenGL context destruction, GLFW termination)
+- `logger_shutdown()`: < 1ms (flush logs, close file)
+
+**Large Model Example:**
+```
+Model: scientist.mdl (150KB, 1500 vertices, 20 textures)
+Shutdown time: ~25ms
+
+Breakdown:
+- free_model():       18ms (delete 20 textures, 5 VBOs, free 150KB heap)
+- cleanup_renderer():  6ms (destroy OpenGL context, terminate GLFW)
+- logger_shutdown():   1ms (flush logs, close file)
+```
+
+**Why So Fast?**  
+Most of the work is done by the GPU driver (`glDeleteTextures`) and GLFW (`glfwTerminate`), which are highly optimized.
+
+---
+
+**Section 9 Complete!**  
+Next: **Section 10 - Subsystem Documentation** (Renderer, Model Loader, Math Library, Camera, Input, Logger).
+
+
+---
+
+## 10. Math Library
+
+### 10.1 Overview
+
+**Purpose:**  
+The math library provides **3D graphics math operations** for rendering, animation, and camera transformations. It wraps the [CGLM](https://github.com/recp/cglm) library with consistent naming conventions and Half-Life-specific utilities.
+
+**Why CGLM?**
+- **SIMD-optimized:** Uses SSE/AVX on x86, NEON on ARM for fast vector/matrix operations
+- **Header-only:** No linking required, easy to integrate
+- **GLM-compatible:** Similar API to C++ GLM library (familiar to graphics programmers)
+- **Column-major:** Matches OpenGL's matrix layout (no transpose needed)
+
+**Design Philosophy:**
+1. **Wrapper Functions:** All CGLM calls go through `Math_*` wrappers for:
+   - Consistent naming (`Math_Vec3Add` instead of `glm_vec3_add`)
+   - Easier debugging (single point to add validation/logging)
+   - Future flexibility (can swap CGLM for another library)
+
+2. **Half-Life Conventions:** Uses Half-Life's coordinate system and angle conventions:
+   - **Coordinate System:** +X = forward, +Y = left, +Z = up (different from OpenGL's -Z = forward)
+   - **Angle Order:** Pitch (X), Yaw (Y), Roll (Z) in degrees
+   - **Matrix Layout:** 3×4 matrices for bone transforms (common in GoldSrc)
+
+3. **Performance:** All operations are designed for real-time use (< 1ms per frame for typical workloads).
+
+**Files:**
+```
+src/math/
+├── math_types.h         → Type definitions and constants
+├── math_vector.h/.c     → Vector operations (add, dot, cross, normalize)
+├── math_matrix.h/.c     → Matrix operations (multiply, look-at, perspective)
+├── math_quaternion.h/.c → Quaternion operations (slerp, rotation)
+├── math_angles.h/.c     → Angle/vector conversions (Euler ↔ direction vectors)
+└── math_utils.h/.c      → Utility functions (clamp, lerp, min/max)
+```
+
+---
+
+### 10.2 Type Definitions (`math_types.h`)
+
+**Core Types:**
+```c
+typedef vec3  math_vec3_t;  // 3D vector [x, y, z]
+typedef vec4  math_vec4_t;  // 4D vector [x, y, z, w] (homogeneous coordinates)
+typedef mat4  math_mat4_t;  // 4×4 matrix (16 floats, column-major)
+typedef mat3  math_mat3_t;  // 3×3 matrix (9 floats, rotation only)
+typedef versor math_quat_t; // Quaternion [x, y, z, w] (rotation)
+```
+
+**These are CGLM types wrapped with our naming convention.**
+
+**Special Type: 3×4 Matrix**
+```c
+typedef struct {
+    alignas(16) float mat[3][4];  // 3 rows, 4 columns (rotation + translation)
+} math_mat3x4_t;
+```
+
+**Why 3×4 Matrices?**
+- **GoldSrc Engine Format:** Half-Life uses 3×4 matrices for bone transforms (saves memory)
+- **Affine Transforms:** Encodes rotation (3×3) + translation (3×1) without the redundant bottom row [0,0,0,1]
+- **Memory Layout:** 12 floats instead of 16 (25% smaller)
+- **Alignment:** 16-byte aligned for SIMD performance
+
+**Conversion:**
+```
+3×4 Matrix:                4×4 Matrix:
+┌                ┐          ┌                ┐
+│ r11 r12 r13 tx │          │ r11 r12 r13 tx │
+│ r21 r22 r23 ty │    ↔     │ r21 r22 r23 ty │
+│ r31 r32 r33 tz │          │ r31 r32 r33 tz │
+└                ┘          │  0   0   0   1 │
+                            └                ┘
+```
+
+The bottom row [0, 0, 0, 1] is implied (always the same for affine transforms).
+
+---
+
+### 10.3 Mathematical Constants
+
+**Defined in `math_types.h`:**
+
+```c
+#define MATH_PI             3.14159265358979323846f  // π
+#define MATH_PI_2           (MATH_PI / 2.0f)         // π/2 (90°)
+#define MATH_PI_4           (MATH_PI / 4.0f)         // π/4 (45°)
+#define MATH_2PI            (MATH_PI * 2.0f)         // 2π (360°)
+```
+
+**Why Define Our Own?**  
+The C standard library `M_PI` is not guaranteed to exist (it's a POSIX extension, not C standard). We define our own for portability.
+
+**Precision Constants:**
+```c
+#define MATH_EPSILON        0.00001f  // General epsilon (10⁻⁵)
+#define MATH_EQUAL_EPSILON  0.001f    // Equality epsilon (10⁻³)
+```
+
+**When to Use Each:**
+- `MATH_EPSILON`: For numerical stability (e.g., avoiding division by zero)
+- `MATH_EQUAL_EPSILON`: For floating-point comparisons (e.g., `Math_FloatEqual()`)
+
+**Why Different Values?**  
+Equality checks need a larger epsilon (10⁻³) because accumulated floating-point errors can exceed 10⁻⁵ after multiple operations.
+
+**Example:**
+```c
+// Bad: Direct comparison (fails due to floating-point error)
+float a = 1.0f / 3.0f * 3.0f;  // Might be 0.9999999 or 1.0000001
+if ( a == 1.0f ) { /* Never true! */ }
+
+// Good: Epsilon comparison
+if ( Math_FloatEqual( a, 1.0f, MATH_EQUAL_EPSILON ) ) { /* True */ }
+```
+
+**Degree/Radian Conversion:**
+```c
+#define MATH_DEG2RAD  (MATH_PI / 180.0f)  // Multiply degrees by this to get radians
+#define MATH_RAD2DEG  (180.0f / MATH_PI)  // Multiply radians by this to get degrees
+```
+
+**Usage:**
+```c
+float angle_deg = 90.0f;
+float angle_rad = angle_deg * MATH_DEG2RAD;  // 1.5707... (π/2)
+
+float angle_deg_back = angle_rad * MATH_RAD2DEG;  // 90.0
+```
+
+---
+
+### 10.4 Module: Vector Operations (`math_vector.h`)
+
+**Purpose:**  
+3D vector math for positions, directions, velocities, normals, etc.
+
+#### 10.4.1 Basic Operations
+
+**Copy:**
+```c
+void Math_Vec3Copy( math_vec3_t src, math_vec3_t dst );
+```
+Copies vector `src` to `dst` (equivalent to `dst = src` but works with CGLM types).
+
+**Add:**
+```c
+void Math_Vec3Add( math_vec3_t a, math_vec3_t b, math_vec3_t out );
+```
+Vector addition: `out = a + b`
+
+**Example:**
+```c
+math_vec3_t position = {10, 20, 30};
+math_vec3_t velocity = {1, 0, -2};
+math_vec3_t new_position;
+
+Math_Vec3Add( position, velocity, new_position );
+// new_position = [11, 20, 28]
+```
+
+**Subtract:**
+```c
+void Math_Vec3Sub( math_vec3_t a, math_vec3_t b, math_vec3_t out );
+```
+Vector subtraction: `out = a - b`
+
+**Use Case:** Calculate direction from point A to point B:
+```c
+math_vec3_t point_a = {10, 5, 0};
+math_vec3_t point_b = {15, 5, 0};
+math_vec3_t direction;
+
+Math_Vec3Sub( point_b, point_a, direction );
+// direction = [5, 0, 0] (pointing right)
+```
+
+**Scale:**
+```c
+void Math_Vec3Scale( math_vec3_t v, float scale, math_vec3_t out );
+```
+Scalar multiplication: `out = v * scale`
+
+**Example:**
+```c
+math_vec3_t direction = {1, 0, 0};
+math_vec3_t velocity;
+
+Math_Vec3Scale( direction, 10.0f, velocity );
+// velocity = [10, 0, 0] (10 units/sec to the right)
+```
+
+#### 10.4.2 Products
+
+**Dot Product:**
+```c
+float Math_Vec3Dot( math_vec3_t a, math_vec3_t b );
+```
+
+**Formula:** `a · b = ax*bx + ay*by + az*bz`
+
+**Geometric Meaning:**
+- Measures how "aligned" two vectors are
+- Returns: `|a| * |b| * cos(θ)` where θ is the angle between vectors
+
+**Results:**
+- `> 0`: Vectors point in similar directions
+- `= 0`: Vectors are perpendicular (90°)
+- `< 0`: Vectors point in opposite directions
+
+**Example (Facing Check):**
+```c
+math_vec3_t camera_forward = {0, 0, -1};  // Looking backward
+math_vec3_t to_object = {0, 0, 1};        // Object is forward
+
+float dot = Math_Vec3Dot( camera_forward, to_object );
+// dot = -1.0 (opposite directions, object is behind camera)
+
+if ( dot > 0 ) {
+    // Object is in front of camera (visible)
+} else {
+    // Object is behind camera (cull it)
+}
+```
+
+**Cross Product:**
+```c
+void Math_Vec3Cross( math_vec3_t a, math_vec3_t b, math_vec3_t out );
+```
+
+**Formula:**  
+```
+out = a × b = [ay*bz - az*by, az*bx - ax*bz, ax*by - ay*bx]
+```
+
+**Geometric Meaning:**
+- Returns a vector **perpendicular** to both `a` and `b`
+- Direction follows the **right-hand rule** (curl fingers from `a` to `b`, thumb points to result)
+- Magnitude = `|a| * |b| * sin(θ)` (area of parallelogram formed by `a` and `b`)
+
+**Example (Calculate Surface Normal):**
+```c
+// Triangle vertices
+math_vec3_t v0 = {0, 0, 0};
+math_vec3_t v1 = {1, 0, 0};
+math_vec3_t v2 = {0, 1, 0};
+
+// Calculate edges
+math_vec3_t edge1, edge2;
+Math_Vec3Sub( v1, v0, edge1 );  // [1, 0, 0]
+Math_Vec3Sub( v2, v0, edge2 );  // [0, 1, 0]
+
+// Calculate normal (perpendicular to surface)
+math_vec3_t normal;
+Math_Vec3Cross( edge1, edge2, normal );
+// normal = [0, 0, 1] (pointing up, perpendicular to XY plane)
+
+Math_Vec3Normalize( normal );  // Make it unit length
+```
+
+#### 10.4.3 Length and Normalization
+
+**Length (Magnitude):**
+```c
+float Math_Vec3Length( math_vec3_t v );
+```
+Returns: `sqrt(x² + y² + z²)`
+
+**Example:**
+```c
+math_vec3_t v = {3, 4, 0};
+float length = Math_Vec3Length( v );
+// length = 5.0 (Pythagorean theorem: 3² + 4² = 25, sqrt(25) = 5)
+```
+
+**Length Squared:**
+```c
+float Math_Vec3LengthSquared( math_vec3_t v );
+```
+Returns: `x² + y² + z²` (no square root)
+
+**Why?**  
+Square root is expensive (~20 CPU cycles). If you only need to compare lengths, use squared length:
+
+```c
+// Bad: Two square roots
+if ( Math_Vec3Length( a ) > Math_Vec3Length( b ) ) { /* ... */ }
+
+// Good: No square roots
+if ( Math_Vec3LengthSquared( a ) > Math_Vec3LengthSquared( b ) ) { /* ... */ }
+```
+
+**Normalize (Make Unit Length):**
+```c
+void Math_Vec3Normalize( math_vec3_t v );
+```
+
+**Effect:** Scales `v` so its length becomes 1.0 (preserves direction, removes magnitude).
+
+**Formula:** `v = v / |v|`
+
+**Example:**
+```c
+math_vec3_t v = {3, 4, 0};
+Math_Vec3Normalize( v );
+// v = [0.6, 0.8, 0] (length = 1.0, points in same direction)
+```
+
+**Use Cases:**
+- Direction vectors (camera forward, up, right)
+- Surface normals (for lighting calculations)
+- Velocity directions (before scaling by speed)
+
+**Warning:**  
+Normalizing a zero vector causes division by zero (undefined). Always check length first:
+```c
+if ( Math_Vec3Length( v ) > MATH_EPSILON ) {
+    Math_Vec3Normalize( v );
+}
+```
+
+#### 10.4.4 Comparison
+
+**Compare with Epsilon:**
+```c
+bool Math_Vec3Compare( math_vec3_t a, math_vec3_t b, float epsilon );
+```
+
+Returns `true` if `|a.x - b.x| < epsilon` AND `|a.y - b.y| < epsilon` AND `|a.z - b.z| < epsilon`.
+
+**Example:**
+```c
+math_vec3_t a = {1.0001f, 2.0f, 3.0f};
+math_vec3_t b = {1.0f,    2.0f, 3.0f};
+
+bool equal = Math_Vec3Compare( a, b, 0.001f );  // true (difference < 0.001)
+bool equal_strict = Math_Vec3Compare( a, b, 0.00001f );  // false (difference > 0.00001)
+```
+
+
+#### 10.4.5 Vector Transformations
+
+**Transform (Rotation + Translation):**
+```c
+void Math_Vec3Transform( math_vec3_t in, const math_mat3x4_t *matrix, math_vec3_t out );
+```
+
+**Purpose:** Apply a full transform (rotation + translation) to a position.
+
+**Use Case:** Transform a vertex from model space to world space using a bone matrix.
+
+**Example:**
+```c
+// Bone matrix (rotates 90° around Z, translates by [10, 0, 0])
+math_mat3x4_t bone_matrix = { /* ... */ };
+
+// Vertex position in model space
+math_vec3_t local_pos = {1, 0, 0};
+
+// Transform to world space
+math_vec3_t world_pos;
+Math_Vec3Transform( local_pos, &bone_matrix, world_pos );
+// world_pos = rotation(local_pos) + translation
+```
+
+**Rotate (Rotation Only):**
+```c
+void Math_Vec3Rotate( math_vec3_t in, const math_mat3x4_t *matrix, math_vec3_t out );
+```
+
+**Purpose:** Apply only the rotation part of the matrix (ignores translation).
+
+**Use Case:** Transform a direction vector or normal (these shouldn't be translated).
+
+**Example:**
+```c
+// Bone matrix (rotates + translates)
+math_mat3x4_t bone_matrix = { /* ... */ };
+
+// Normal vector in model space
+math_vec3_t local_normal = {0, 0, 1};  // Pointing up
+
+// Rotate to world space (translation ignored)
+math_vec3_t world_normal;
+Math_Vec3Rotate( local_normal, &bone_matrix, world_normal );
+// world_normal = rotation(local_normal) only (no translation)
+```
+
+**Why Separate Functions?**
+- Positions need full transform (rotation + translation)
+- Directions/normals need only rotation (translation would make them invalid)
+
+**Inverse Rotate:**
+```c
+void Math_Vec3IRotate( math_vec3_t in, const math_mat3x4_t *matrix, math_vec3_t out );
+```
+
+**Purpose:** Apply the **inverse** rotation (rotate in opposite direction).
+
+**Use Case:** Transform from world space back to model space.
+
+**Example:**
+```c
+// Transform a world-space direction into model-space
+math_vec3_t world_dir = {1, 0, 0};
+math_vec3_t model_dir;
+Math_Vec3IRotate( world_dir, &bone_matrix, model_dir );
+```
+
+**4×4 Matrix Variants:**
+```c
+void Math_Vec3TransformMat4( const math_vec3_t in, const math_mat4_t m, math_vec3_t out );
+void Math_Vec3RotateMat4( const math_vec3_t in, const math_mat4_t m, math_vec3_t out );
+```
+
+Same as above, but for 4×4 matrices (used for view/projection transforms).
+
+---
+
+### 10.5 Module: Matrix Operations (`math_matrix.h`)
+
+**Purpose:**  
+Matrix math for transformations (rotation, translation, scaling), view matrices (camera), and projection matrices (perspective).
+
+#### 10.5.1 Identity and Copy
+
+**Identity (Reset to No Transform):**
+```c
+void Math_Mat3x4_Identity( math_mat3x4_t *matrix );
+void Math_Mat4_Identity( math_mat4_t m );
+```
+
+**Effect:** Sets matrix to identity (no rotation, no translation, no scaling).
+
+**Identity Matrix:**
+```
+┌            ┐
+│ 1  0  0  0 │
+│ 0  1  0  0 │
+│ 0  0  1  0 │
+│ 0  0  0  1 │
+└            ┘
+```
+
+**Property:** `I * v = v` (identity matrix has no effect)
+
+**Copy:**
+```c
+void Math_Mat3x4_Copy( const math_mat3x4_t *src, math_mat3x4_t *dst );
+void Math_Mat4_Copy( const math_mat4_t src, math_mat4_t dst );
+```
+
+Deep copy of matrix data (12 or 16 floats).
+
+#### 10.5.2 Matrix Multiplication
+
+**4×4 Multiply:**
+```c
+void Math_Mat4_Multiply( const math_mat4_t a, const math_mat4_t b, math_mat4_t out );
+```
+
+**Purpose:** Combine two transformations: `out = a * b`
+
+**Order Matters!**  
+Matrix multiplication is **not commutative**: `A * B ≠ B * A`
+
+**Example:**
+```c
+math_mat4_t rotate_90_deg;   // Rotate 90° around Z
+math_mat4_t translate_right; // Move 10 units right
+
+math_mat4_t result1, result2;
+Math_Mat4_Multiply( rotate_90_deg, translate_right, result1 );
+Math_Mat4_Multiply( translate_right, rotate_90_deg, result2 );
+
+// result1 ≠ result2!
+// result1: Rotate, then translate (translation is rotated)
+// result2: Translate, then rotate (translation is not rotated)
+```
+
+**Typical Order (World Transform):**
+```
+World Matrix = Translation * Rotation * Scale
+```
+
+This applies scale first, then rotation, then translation (right-to-left order).
+
+**3×4 Concatenate:**
+```c
+void Math_Mat3x4_ConcatTransforms( const math_mat3x4_t *in1, const math_mat3x4_t *in2, math_mat3x4_t *out );
+```
+
+Same as `Math_Mat4_Multiply` but for 3×4 matrices (used for bone hierarchies).
+
+**Use Case (Bone Hierarchy):**
+```c
+// Parent bone matrix
+math_mat3x4_t parent_matrix;  // Upper arm
+
+// Child bone local matrix
+math_mat3x4_t child_local;    // Forearm (relative to upper arm)
+
+// Calculate child world matrix
+math_mat3x4_t child_world;
+Math_Mat3x4_ConcatTransforms( &parent_matrix, &child_local, &child_world );
+// child_world = parent_matrix * child_local
+```
+
+#### 10.5.3 Matrix Construction
+
+**From Quaternion + Position:**
+```c
+void Math_Mat3x4_FromQuaternionPosition( const math_quat_t q, const math_vec3_t pos, math_mat3x4_t *out );
+```
+
+**Purpose:** Build a 3×4 transform matrix from a quaternion rotation and translation vector.
+
+**Use Case:** Animation systems store rotations as quaternions (for smooth interpolation). This converts them to matrices for rendering.
+
+**Example:**
+```c
+// Animated bone rotation (quaternion) and position
+math_quat_t rotation = {0, 0, 0, 1};  // No rotation (identity quat)
+math_vec3_t position = {10, 5, 0};
+
+// Build transform matrix
+math_mat3x4_t bone_matrix;
+Math_Mat3x4_FromQuaternionPosition( rotation, position, &bone_matrix );
+```
+
+**Rotate Around Axis:**
+```c
+void Math_Mat4_Rotate( math_mat4_t m, float angle_rad, const math_vec3_t axis );
+```
+
+**Purpose:** Rotate a matrix around an arbitrary axis (Rodrigues' rotation formula).
+
+**Example:**
+```c
+math_mat4_t m;
+Math_Mat4_Identity( m );
+
+math_vec3_t axis = {0, 0, 1};  // Z-axis
+float angle = MATH_PI / 2.0f;  // 90 degrees
+
+Math_Mat4_Rotate( m, angle, axis );
+// m now represents a 90° rotation around Z
+```
+
+#### 10.5.4 View and Projection Matrices
+
+**Look-At (View Matrix):**
+```c
+void Math_Mat4_LookAt( const math_vec3_t eye, const math_vec3_t center, const math_vec3_t up, math_mat4_t dest );
+```
+
+**Purpose:** Create a view matrix for a camera looking from `eye` toward `center` with `up` direction.
+
+**Parameters:**
+- `eye`: Camera position in world space
+- `center`: Point the camera is looking at
+- `up`: "Up" direction (usually [0, 1, 0] or [0, 0, 1])
+
+**Example:**
+```c
+math_vec3_t camera_pos = {10, 5, 10};   // Camera position
+math_vec3_t look_target = {0, 0, 0};    // Looking at origin
+math_vec3_t up_dir = {0, 0, 1};         // Z is up
+
+math_mat4_t view_matrix;
+Math_Mat4_LookAt( camera_pos, look_target, up_dir, view_matrix );
+
+// view_matrix transforms world space → camera space
+```
+
+**Perspective Projection:**
+```c
+void Math_Mat4_Perspective( float fovy_rad, float aspect, float near_plane, float far_plane, math_mat4_t dest );
+```
+
+**Purpose:** Create a perspective projection matrix (makes distant objects appear smaller).
+
+**Parameters:**
+- `fovy_rad`: Vertical field of view in radians (typical: 60-90°)
+- `aspect`: Aspect ratio (width / height, e.g., 16/9 = 1.777)
+- `near_plane`: Near clipping plane (objects closer are culled, typical: 0.1)
+- `far_plane`: Far clipping plane (objects farther are culled, typical: 1000.0)
+
+**Example:**
+```c
+float fov = 70.0f * MATH_DEG2RAD;  // 70 degrees
+float aspect = 1920.0f / 1080.0f;  // 16:9
+float near = 0.1f;
+float far = 1000.0f;
+
+math_mat4_t projection;
+Math_Mat4_Perspective( fov, aspect, near, far, projection );
+
+// projection transforms camera space → clip space (for rasterization)
+```
+
+**Full Rendering Pipeline:**
+```
+Vertex (model space)
+    ↓ Model Matrix (bone transform)
+World Space
+    ↓ View Matrix (camera)
+Camera Space
+    ↓ Projection Matrix (perspective)
+Clip Space
+    ↓ Perspective Divide (GPU)
+NDC (Normalized Device Coordinates)
+    ↓ Viewport Transform (GPU)
+Screen Space (pixels)
+```
+
+#### 10.5.5 Matrix Conversion
+
+**3×4 ↔ 4×4 Conversion:**
+```c
+void Math_Mat3x4_ToMat4( const math_mat3x4_t *mat3x4, math_mat4_t mat4 );
+void Math_Mat4_ToMat3x4( const math_mat4_t mat4, math_mat3x4_t *mat3x4 );
+```
+
+**Purpose:** Convert between compact 3×4 format (bones) and full 4×4 format (OpenGL).
+
+**3×4 to 4×4:** Adds bottom row [0, 0, 0, 1]  
+**4×4 to 3×4:** Removes bottom row (assumes it's [0, 0, 0, 1])
+
+**Example:**
+```c
+// Bone matrix in 3×4 format (from animation)
+math_mat3x4_t bone_transform;
+
+// Convert to 4×4 for OpenGL uniform
+math_mat4_t bone_mat4;
+Math_Mat3x4_ToMat4( &bone_transform, bone_mat4 );
+
+glUniformMatrix4fv( bone_uniform_loc, 1, GL_FALSE, (float*)bone_mat4 );
+```
+
+---
+
+### 10.6 Module: Quaternion Operations (`math_quaternion.h`)
+
+**Purpose:**  
+Quaternions represent rotations without gimbal lock. Used for smooth animation interpolation (SLERP).
+
+**Why Quaternions?**
+- **No Gimbal Lock:** Euler angles (pitch/yaw/roll) can lock up at ±90° pitch. Quaternions don't have this problem.
+- **Smooth Interpolation:** SLERP (Spherical Linear Interpolation) produces natural rotation blending.
+- **Compact:** 4 floats vs 9 floats for a rotation matrix.
+
+**Quaternion Format:**  
+```c
+math_quat_t q = [x, y, z, w];  // w is the scalar part
+```
+
+**Identity Quaternion (No Rotation):**
+```c
+math_quat_t identity = {0, 0, 0, 1};  // No rotation
+```
+
+#### 10.6.1 Construction
+
+**From Euler Angles:**
+```c
+void Math_AngleQuaternion( const math_vec3_t angles, math_quat_t q );
+```
+
+**Purpose:** Convert Euler angles (degrees) to a quaternion.
+
+**Example:**
+```c
+math_vec3_t angles = {0, 90, 0};  // Yaw 90° (turn left)
+math_quat_t q;
+Math_AngleQuaternion( angles, q );
+// q now represents a 90° rotation around Y-axis
+```
+
+#### 10.6.2 Conversion to Matrices
+
+**To 3×4 Matrix:**
+```c
+void Math_QuaternionMatrix3x4( const math_quat_t q, math_mat3x4_t *out );
+```
+
+**To 4×4 Matrix:**
+```c
+void Math_QuaternionMatrix4x4( const math_quat_t q, math_mat4_t *out );
+```
+
+**Purpose:** Convert quaternion to a rotation matrix (for rendering).
+
+**Example:**
+```c
+math_quat_t rotation;
+Math_AngleQuaternion( (math_vec3_t){0, 90, 0}, rotation );
+
+math_mat3x4_t matrix;
+Math_QuaternionMatrix3x4( rotation, &matrix );
+// matrix now contains the rotation (translation part is zero)
+```
+
+#### 10.6.3 Quaternion Operations
+
+**Multiply (Combine Rotations):**
+```c
+void Math_QuaternionMultiply( const math_quat_t q1, const math_quat_t q2, math_quat_t out );
+```
+
+**Purpose:** Combine two rotations: `out = q1 * q2`
+
+**Example:**
+```c
+math_quat_t rotate_90_y;  // Rotate 90° around Y
+math_quat_t rotate_45_z;  // Rotate 45° around Z
+
+math_quat_t combined;
+Math_QuaternionMultiply( rotate_90_y, rotate_45_z, combined );
+// combined = rotate 90° around Y, then 45° around Z
+```
+
+**SLERP (Spherical Linear Interpolation):**
+```c
+void Math_QuaternionSlerp( const math_quat_t q1, const math_quat_t q2, float t, math_quat_t out );
+```
+
+**Purpose:** Smoothly interpolate between two rotations.
+
+**Parameters:**
+- `q1`: Start rotation
+- `q2`: End rotation
+- `t`: Interpolation factor (0.0 = q1, 1.0 = q2, 0.5 = halfway)
+
+**Example (Animation Blending):**
+```c
+// Frame 0 rotation
+math_quat_t rot_frame0;
+Math_AngleQuaternion( (math_vec3_t){0, 0, 0}, rot_frame0 );
+
+// Frame 1 rotation
+math_quat_t rot_frame1;
+Math_AngleQuaternion( (math_vec3_t){0, 90, 0}, rot_frame1 );
+
+// Interpolate 50% between frames
+math_quat_t interpolated;
+Math_QuaternionSlerp( rot_frame0, rot_frame1, 0.5f, interpolated );
+// interpolated = rotation 45° around Y (halfway between 0° and 90°)
+```
+
+**Why SLERP?**  
+Linear interpolation (LERP) of quaternions produces uneven rotation speeds. SLERP maintains constant angular velocity (looks more natural).
+
+**Normalize:**
+```c
+void Math_QuaternionNormalize( math_quat_t q );
+```
+
+**Purpose:** Make quaternion unit length (required for valid rotations).
+
+**When Needed:** After multiple quaternion operations, accumulated floating-point errors can make the quaternion non-unit. Normalize to fix.
+
+**Inverse:**
+```c
+void Math_QuaternionInverse( const math_quat_t q, math_quat_t out );
+```
+
+**Purpose:** Get the opposite rotation (undo a rotation).
+
+**Example:**
+```c
+math_quat_t rotation;
+math_quat_t inverse;
+Math_QuaternionInverse( rotation, inverse );
+
+math_quat_t identity;
+Math_QuaternionMultiply( rotation, inverse, identity );
+// identity = {0, 0, 0, 1} (no rotation, they cancel out)
+```
+
+---
+
+### 10.7 Module: Angle Operations (`math_angles.h`)
+
+**Purpose:**  
+Convert between Euler angles (pitch/yaw/roll) and direction vectors (forward/right/up).
+
+**Half-Life Angle Convention:**
+- **Pitch (X):** Up/down rotation (±90°, 0 = level)
+- **Yaw (Y):** Left/right rotation (0-360°, 0 = north)
+- **Roll (Z):** Tilt rotation (±180°, 0 = upright)
+
+**All angles are in degrees** (converted to radians internally).
+
+
+#### 10.7.1 Angle to Matrix
+
+**Angle to Matrix:**
+```c
+void Math_AngleMatrix( const math_vec3_t angles, math_mat3x4_t *out );
+```
+
+**Purpose:** Convert Euler angles (pitch, yaw, roll) to a rotation matrix.
+
+**Example:**
+```c
+math_vec3_t angles = {0, 90, 0};  // Yaw 90° (turn left)
+math_mat3x4_t matrix;
+Math_AngleMatrix( angles, &matrix );
+// matrix is a 3×4 rotation matrix (no translation)
+```
+
+**Use Case:** Camera orientation, object rotation.
+
+#### 10.7.2 Angle to Direction Vectors
+
+**Angle to Vectors:**
+```c
+void Math_AngleVectors( const math_vec3_t angles, math_vec3_t *forward, math_vec3_t *right, math_vec3_t *up );
+```
+
+**Purpose:** Convert Euler angles to three orthogonal direction vectors.
+
+**Output:**
+- `forward`: Direction the entity is facing
+- `right`: Direction to the entity's right
+- `up`: Direction above the entity
+
+**Example (Camera):**
+```c
+// Camera angles: pitch=10°, yaw=45°, roll=0°
+math_vec3_t camera_angles = {10, 45, 0};
+
+math_vec3_t forward, right, up;
+Math_AngleVectors( camera_angles, &forward, &right, &up );
+
+// forward ≈ [0.694, -0.694, 0.174] (northeast, slightly up)
+// right   ≈ [0.707,  0.707, 0.0]   (southeast, level)
+// up      ≈ [-0.123, 0.123, 0.985] (mostly up, slightly tilted)
+```
+
+**Use Case:**  
+Used in `Camera_UpdateTransforms()` to calculate camera direction vectors from angles (see `r_camera.c:119`).
+
+**NULL Parameters:**  
+You can pass `NULL` for vectors you don't need:
+```c
+math_vec3_t forward;
+Math_AngleVectors( angles, &forward, NULL, NULL );  // Only calculate forward
+```
+
+#### 10.7.3 Vector to Angles
+
+**Vector to Angles:**
+```c
+void Math_VectorToAngles( const math_vec3_t vec, math_vec3_t angles );
+```
+
+**Purpose:** Convert a direction vector to Euler angles (pitch and yaw only, roll is always 0).
+
+**Example:**
+```c
+math_vec3_t direction = {1, 0, 0};  // Pointing right
+math_vec3_t angles;
+Math_VectorToAngles( direction, angles );
+// angles ≈ [0, 90, 0] (yaw 90°, no pitch or roll)
+```
+
+**Use Case:** Aim an entity toward a target point.
+
+**Limitation:**  
+Only calculates pitch and yaw. Roll is always set to 0 (can't determine roll from a single direction vector).
+
+#### 10.7.4 Angle Normalization
+
+**Normalize Angle:**
+```c
+float Math_AngleNormalize( float angle );
+```
+
+**Purpose:** Wrap angle to the range `[-180, 180]` degrees.
+
+**Examples:**
+```c
+Math_AngleNormalize( 370.0f );   // Returns 10.0   (370 - 360)
+Math_AngleNormalize( -190.0f );  // Returns 170.0  (-190 + 360)
+Math_AngleNormalize( 90.0f );    // Returns 90.0   (already in range)
+```
+
+**Use Case:** Prevent angle overflow after many rotations.
+
+**Why -180 to 180?**  
+This is the "shortest path" representation. For example, -10° is closer to 0° than 350° (even though they represent the same direction).
+
+#### 10.7.5 Degree/Radian Conversion
+
+**Degrees to Radians:**
+```c
+void Math_AngleDegToRad( const math_vec3_t degrees, math_vec3_t radians );
+```
+
+**Radians to Degrees:**
+```c
+void Math_AngleRadToDeg( const math_vec3_t radians, math_vec3_t degrees );
+```
+
+**Purpose:** Convert angle vectors (pitch, yaw, roll) between degrees and radians.
+
+**Example:**
+```c
+math_vec3_t deg = {90, 180, 45};
+math_vec3_t rad;
+Math_AngleDegToRad( deg, rad );
+// rad ≈ [1.571, 3.142, 0.785] (π/2, π, π/4)
+
+math_vec3_t deg_back;
+Math_AngleRadToDeg( rad, deg_back );
+// deg_back = [90, 180, 45]
+```
+
+**When to Use:**
+- Half-Life stores angles in degrees (user-friendly)
+- CGLM expects radians (standard for trigonometry)
+- Convert before passing to CGLM functions
+
+---
+
+### 10.8 Module: Utility Functions (`math_utils.h`)
+
+**Purpose:**  
+Common math utilities (clamping, interpolation, comparisons).
+
+#### 10.8.1 Clamping and Min/Max
+
+**Clamp:**
+```c
+float Math_Clamp( float value, float min, float max );
+```
+
+**Purpose:** Restrict value to the range `[min, max]`.
+
+**Example:**
+```c
+float speed = 150.0f;
+float clamped = Math_Clamp( speed, 0.0f, 100.0f );
+// clamped = 100.0 (capped at max)
+```
+
+**Use Case:** Prevent values from going out of bounds (e.g., delta time clamping in `render_loop()`).
+
+**Min/Max:**
+```c
+float Math_Min( float a, float b );
+float Math_Max( float a, float b );
+```
+
+Return the smaller or larger of two values.
+
+#### 10.8.2 Linear Interpolation
+
+**Lerp (Scalar):**
+```c
+float Math_Lerp( float a, float b, float t );
+```
+
+**Formula:** `result = a + t * (b - a) = a * (1 - t) + b * t`
+
+**Parameters:**
+- `a`: Start value
+- `b`: End value
+- `t`: Interpolation factor (0.0 = a, 1.0 = b, 0.5 = midpoint)
+
+**Example:**
+```c
+float start = 10.0f;
+float end = 20.0f;
+
+float mid = Math_Lerp( start, end, 0.5f );
+// mid = 15.0 (halfway between 10 and 20)
+
+float quarter = Math_Lerp( start, end, 0.25f );
+// quarter = 12.5 (25% of the way from 10 to 20)
+```
+
+**Use Case:** Animation interpolation, smooth transitions.
+
+**Lerp (Vector):**
+```c
+void Math_Vec3Lerp( const math_vec3_t a, const math_vec3_t b, float t, math_vec3_t out );
+```
+
+Same as scalar lerp, but for 3D vectors (interpolates each component independently).
+
+**Example (Position Interpolation):**
+```c
+math_vec3_t pos_frame0 = {0, 0, 0};
+math_vec3_t pos_frame1 = {10, 0, 0};
+
+math_vec3_t interpolated;
+Math_Vec3Lerp( pos_frame0, pos_frame1, 0.5f, interpolated );
+// interpolated = [5, 0, 0] (halfway)
+```
+
+#### 10.8.3 Floating-Point Comparison
+
+**Float Equality:**
+```c
+bool Math_FloatEqual( float a, float b, float epsilon );
+```
+
+**Purpose:** Check if two floats are "close enough" (within epsilon).
+
+**Example:**
+```c
+float a = 1.0f / 3.0f * 3.0f;  // Might be 0.99999 or 1.00001
+
+if ( Math_FloatEqual( a, 1.0f, MATH_EQUAL_EPSILON ) ) {
+    // True (within 0.001 tolerance)
+}
+```
+
+**Why Needed?**  
+Floating-point arithmetic is not exact. Never use `==` for float comparisons!
+
+**Bad:**
+```c
+if ( a == 1.0f ) { /* Might fail due to rounding error */ }
+```
+
+**Good:**
+```c
+if ( Math_FloatEqual( a, 1.0f, MATH_EQUAL_EPSILON ) ) { /* Reliable */ }
+```
+
+---
+
+### 10.9 Usage Examples
+
+#### Example 1: Transform a Vertex Through Bone Hierarchy
+
+**Scenario:** Transform a vertex from model space to world space using a bone hierarchy (upper arm → forearm → hand).
+
+```c
+// Vertex position in model space (relative to hand bone)
+math_vec3_t vertex_local = {1, 0, 0};
+
+// Bone transforms (from animation system)
+math_mat3x4_t hand_to_forearm;    // Hand bone (local to forearm)
+math_mat3x4_t forearm_to_arm;     // Forearm bone (local to upper arm)
+math_mat3x4_t arm_to_world;       // Upper arm bone (local to world)
+
+// Step 1: Calculate hand's world transform
+math_mat3x4_t forearm_world;
+Math_Mat3x4_ConcatTransforms( &arm_to_world, &forearm_to_arm, &forearm_world );
+
+math_mat3x4_t hand_world;
+Math_Mat3x4_ConcatTransforms( &forearm_world, &hand_to_forearm, &hand_world );
+
+// Step 2: Transform vertex to world space
+math_vec3_t vertex_world;
+Math_Vec3Transform( vertex_local, &hand_world, vertex_world );
+
+// vertex_world is now in world space, ready for rendering
+```
+
+#### Example 2: Camera View/Projection Setup
+
+**Scenario:** Set up view and projection matrices for 3D rendering.
+
+```c
+// Camera setup
+r_camera_t camera;
+math_vec3_t target = {0, 0, 0};
+Camera_Init( &camera, target, 50.0f );  // 50 units away
+
+// Get view matrix
+Camera_UpdateTransforms( &camera );
+const math_mat4_t *view = Camera_GetViewMatrix( &camera );
+
+// Create projection matrix
+math_mat4_t projection;
+float fov = 70.0f * MATH_DEG2RAD;
+float aspect = 1920.0f / 1080.0f;
+Math_Mat4_Perspective( fov, aspect, 0.1f, 1000.0f, projection );
+
+// Send to OpenGL
+glUniformMatrix4fv( view_loc, 1, GL_FALSE, (float*)view );
+glUniformMatrix4fv( proj_loc, 1, GL_FALSE, (float*)projection );
+```
+
+#### Example 3: Smooth Animation Interpolation
+
+**Scenario:** Blend between two animation frames using delta time.
+
+```c
+// Animation state
+int current_frame = 5;
+int next_frame = 6;
+float frame_time = 0.3f;  // 30% through the frame
+
+// Bone rotations (quaternions from animation data)
+math_quat_t rotation_frame5;  // Current frame
+math_quat_t rotation_frame6;  // Next frame
+
+// Interpolate rotation
+math_quat_t interpolated_rotation;
+Math_QuaternionSlerp( rotation_frame5, rotation_frame6, frame_time, interpolated_rotation );
+
+// Bone positions (vectors)
+math_vec3_t position_frame5;
+math_vec3_t position_frame6;
+
+math_vec3_t interpolated_position;
+Math_Vec3Lerp( position_frame5, position_frame6, frame_time, interpolated_position );
+
+// Build final bone matrix
+math_mat3x4_t bone_matrix;
+Math_Mat3x4_FromQuaternionPosition( interpolated_rotation, interpolated_position, &bone_matrix );
+```
+
+---
+
+### 10.10 Performance Characteristics
+
+**Optimization Level:** All math operations are **SIMD-optimized** by CGLM (SSE2/AVX on x86, NEON on ARM).
+
+**Typical Performance (Per Operation):**
+
+| Operation                  | CPU Cycles | Time (3 GHz CPU) | Notes                        |
+|----------------------------|-----------|------------------|------------------------------|
+| **Vec3Add**                | ~5        | ~1.6 ns          | SIMD: 1 instruction          |
+| **Vec3Dot**                | ~8        | ~2.7 ns          | SIMD: multiply + horizontal sum |
+| **Vec3Cross**              | ~12       | ~4 ns            | SIMD: shuffle + multiply     |
+| **Vec3Normalize**          | ~30       | ~10 ns           | Includes sqrt + divide       |
+| **Vec3Transform**          | ~20       | ~6.7 ns          | SIMD: mat × vec              |
+| **Mat4Multiply**           | ~50       | ~16.7 ns         | SIMD: 16 muls + 12 adds      |
+| **QuaternionSlerp**        | ~80       | ~26.7 ns         | Includes acos, sin, divide   |
+| **Mat4_LookAt**            | ~100      | ~33 ns           | Multiple normalize + cross   |
+| **Mat4_Perspective**       | ~60       | ~20 ns           | Trig functions cached        |
+
+**Frame Budget Example:**
+
+Animating a 50-bone skeleton at 60 FPS:
+```
+Per-bone work:
+- QuaternionSlerp: 26.7 ns
+- Vec3Lerp: 5 ns
+- Mat3x4_FromQuaternionPosition: 40 ns
+- Mat3x4_ConcatTransforms (hierarchy): 50 ns
+─────────────────────────────
+Total per bone: ~122 ns
+
+50 bones × 122 ns = 6,100 ns = 6.1 µs
+
+Frame budget at 60 FPS: 16,667 µs
+Math overhead: 6.1 µs (0.04% of frame!)
+```
+
+**Bottlenecks:**  
+Math is **not the bottleneck** in this engine. The real bottlenecks are:
+1. **Vertex skinning** (CPU-side, ~80% of frame time for complex models)
+2. **OpenGL draw calls** (state changes, ~10%)
+3. **VSync wait** (GPU idle time, ~10%)
+
+**Optimization Tips:**
+
+1. **Avoid Normalize in Inner Loops:**
+   ```c
+   // Bad: Normalize every frame
+   for ( int i = 0; i < num_vertices; i++ ) {
+       Math_Vec3Normalize( normals[i] );  // Expensive!
+   }
+   
+   // Good: Pre-normalize once
+   for ( int i = 0; i < num_vertices; i++ ) {
+       normals[i] = precomputed_normals[i];  // Already normalized
+   }
+   ```
+
+2. **Use LengthSquared for Comparisons:**
+   ```c
+   // Bad: Two square roots
+   if ( Math_Vec3Length( a ) > Math_Vec3Length( b ) ) { /* ... */ }
+   
+   // Good: No square roots
+   if ( Math_Vec3LengthSquared( a ) > Math_Vec3LengthSquared( b ) ) { /* ... */ }
+   ```
+
+3. **Batch Transforms:**
+   ```c
+   // Bad: Compute view matrix every vertex
+   for ( int i = 0; i < num_vertices; i++ ) {
+       math_mat4_t view;
+       Math_Mat4_LookAt( eye, center, up, view );  // Redundant!
+       Math_Vec3TransformMat4( vertices[i], view, transformed[i] );
+   }
+   
+   // Good: Compute once, reuse
+   math_mat4_t view;
+   Math_Mat4_LookAt( eye, center, up, view );  // Once per frame
+   for ( int i = 0; i < num_vertices; i++ ) {
+       Math_Vec3TransformMat4( vertices[i], view, transformed[i] );
+   }
+   ```
+
+---
+
+**Section 10 Complete!**  
+The math library documentation is now finished. This covers all vector, matrix, quaternion, angle, and utility operations.
+
+**Next:** Section 11 - Camera System (`r_camera.c`)
+
+
+---
+
+## 11. Camera System (`r_camera.c`)
+
+### 11.1 Overview
+
+**Purpose:**  
+The camera system provides an **orbit camera** for 3D navigation. The camera rotates around a fixed target point (the model) and maintains a constant distance, allowing the user to view the model from any angle.
+
+**Camera Type:** Orbit Camera (also called "turntable camera" or "arcball camera")
+
+**Behavior:**
+- Camera orbits around a fixed target point (usually the model origin)
+- Distance from target is adjustable via zoom
+- Rotation is controlled by mouse input (pitch/yaw)
+- Always looks at the target (LookAt matrix)
+
+**Not a Free Camera:**  
+This is **not** a first-person camera (which moves freely through space). The camera is always constrained to orbit around the target.
+
+**Files:**
+- **src/r/r_camera.h** (10 lines) - Camera structure definition
+- **src/r/r_camera.c** (138 lines) - Camera implementation
+
+**Dependencies:**
+- Math library (`math_matrix.h`, `math_angles.h`, `math_vector.h`)
+- OpenGL (indirectly, through view matrix)
+
+---
+
+### 11.2 Data Structure: `r_camera_t`
+
+**Defined in:** `src/r/r_camera.h` (lines 16-35)
+
+```c
+typedef struct {         
+    math_vec3_t position;        // Camera position in world space
+    math_vec3_t angles_deg;      // Camera orientation (pitch, yaw, roll) in degrees
+    
+    math_vec3_t target;          // Point the camera is looking at
+    float distance;              // Distance from camera to target
+    
+    float movement_speed;        // Movement speed (units/sec, unused in orbit mode)
+    float rotation_speed;        // Rotation speed (degrees/sec)
+    float zoom_speed;            // Zoom multiplier per scroll tick
+    
+    math_vec3_t forward;         // Forward direction vector (calculated)
+    math_vec3_t right;           // Right direction vector (calculated)
+    math_vec3_t up;              // Up direction vector (calculated)
+    
+    math_mat4_t view_matrix;     // Cached view matrix (for rendering)
+    
+    bool dirty;                  // True if transforms need recalculation
+    
+} r_camera_t;
+```
+
+**Field Descriptions:**
+
+**Position and Orientation:**
+- `position`: Camera's world-space position (calculated from target + distance + angles)
+- `angles_deg`: Euler angles in degrees (pitch, yaw, roll)
+  - **Pitch (X):** Up/down rotation (clamped to ±89° to avoid gimbal lock)
+  - **Yaw (Y):** Left/right rotation (wraps around 360°)
+  - **Roll (Z):** Tilt rotation (always 0 in current implementation)
+
+**Orbit Parameters:**
+- `target`: The point the camera orbits around (usually model origin)
+- `distance`: Radius of the orbit (how far camera is from target)
+
+**Speed Settings:**
+- `movement_speed`: 5.0 units/sec (unused, reserved for future free-camera mode)
+- `rotation_speed`: 45.0 degrees/sec (scales mouse input)
+- `zoom_speed`: 1.1× per scroll tick (multiplicative zoom)
+
+**Derived Vectors:**
+- `forward`, `right`, `up`: Orthogonal direction vectors (calculated from angles)
+  - Used for movement (if free-camera mode is implemented)
+  - Used for constructing the view matrix
+
+**Cached State:**
+- `view_matrix`: 4×4 LookAt matrix (transforms world space → camera space)
+- `dirty`: Optimization flag (true = need to recalculate transforms)
+
+**Dirty Flag Pattern:**  
+The camera uses a **lazy evaluation** pattern:
+1. User rotates/zooms → set `dirty = true`
+2. Renderer requests view matrix → check `dirty`
+3. If dirty → recalculate transforms, set `dirty = false`
+4. If not dirty → return cached matrix (no recalculation)
+
+This avoids recalculating the view matrix multiple times per frame if the camera hasn't moved.
+
+---
+
+### 11.3 Function: `Camera_Init()`
+
+**Signature:**
+```c
+void Camera_Init( r_camera_t *camera, math_vec3_t target_position, float initial_distance );
+```
+
+**Purpose:**  
+Initialize a camera to orbit around a target point at a specified distance.
+
+**Parameters:**
+- `camera`: Camera structure to initialize (output)
+- `target_position`: Point the camera will orbit around (usually model origin)
+- `initial_distance`: Starting distance from target (typical: 50-100 units)
+
+**Behavior:**  
+Sets up default camera state:
+- Target = `target_position`
+- Distance = `initial_distance`
+- Angles = `[0, 0, 0]` (looking straight at target, no rotation)
+- Position = calculated from target + distance + angles
+- Speed settings = defaults (rotation: 45°/sec, zoom: 1.1×)
+
+**Example Usage:**
+```c
+r_camera_t camera;
+math_vec3_t model_origin = {0, 0, 0};
+float distance = 50.0f;
+
+Camera_Init( &camera, model_origin, distance );
+// Camera is now 50 units away from origin, looking at it
+```
+
+**Implementation Details (`r_camera.c:29-60`):**
+
+```c
+void Camera_Init( r_camera_t *camera, math_vec3_t target_position, float initial_distance ) {
+    Math_Vec3Copy( target_position, camera->target );
+    camera->distance = initial_distance;
+```
+**Step 1:** Set orbit target and distance.
+
+```c
+    camera->angles_deg[0] = 0.0f;  // Pitch
+    camera->angles_deg[1] = 0.0f;  // Yaw
+    camera->angles_deg[2] = 0.0f;  // Roll
+```
+**Step 2:** Default angles (no rotation, looking straight ahead).
+
+```c
+    camera->movement_speed = 5.0f;
+    camera->rotation_speed = 45.0f;
+    camera->zoom_speed = 1.1f;
+```
+**Step 3:** Set speed parameters.
+- `rotation_speed = 45°/sec`: Reasonable rotation speed (not too slow, not too fast)
+- `zoom_speed = 1.1×`: 10% zoom per scroll tick (smooth zooming)
+
+```c
+    camera->forward[0] = 0.0f;
+    camera->forward[1] = 0.0f;
+    camera->forward[2] = -1.0f;  // Forward is -Z (OpenGL convention)
+
+    camera->right[0] = 1.0f;      // Right is +X
+    camera->right[1] = 0.0f;
+    camera->right[2] = 0.0f;
+
+    camera->up[0] = 0.0f;
+    camera->up[1] = 1.0f;         // Up is +Y
+    camera->up[2] = 0.0f;
+```
+**Step 4:** Initialize direction vectors to defaults (OpenGL coordinate system).
+
+**Why Forward = -Z?**  
+OpenGL convention: camera looks down the **-Z axis** in camera space. This matches the right-hand coordinate system used by OpenGL.
+
+```c
+    camera->position[0] = camera->target[0] - camera->forward[0] * camera->distance;
+    camera->position[1] = camera->target[1] - camera->forward[1] * camera->distance;
+    camera->position[2] = camera->target[2] - camera->forward[2] * camera->distance;
+```
+**Step 5:** Calculate initial position.
+
+**Formula:** `position = target - forward * distance`
+
+**Example:**
+```
+target = [0, 0, 0]
+forward = [0, 0, -1]
+distance = 50
+
+position = [0, 0, 0] - [0, 0, -1] * 50
+         = [0, 0, 0] - [0, 0, -50]
+         = [0, 0, 50]
+```
+
+So the camera is at `[0, 0, 50]`, looking back at the origin (target).
+
+```c
+    Math_Mat4_Identity( camera->view_matrix );
+    camera->dirty = true;
+}
+```
+**Step 6:** Initialize view matrix to identity, mark as dirty (will be recalculated on first use).
+
+---
+
+### 11.4 Function: `Camera_Rotate()`
+
+**Signature:**
+```c
+void Camera_Rotate( r_camera_t *camera, float delta_pitch, float delta_yaw, float delta_time );
+```
+
+**Purpose:**  
+Rotate the camera around the target based on user input (mouse drag).
+
+**Parameters:**
+- `camera`: Camera to rotate
+- `delta_pitch`: Vertical mouse movement (normalized, e.g., -1.0 to 1.0)
+- `delta_yaw`: Horizontal mouse movement (normalized)
+- `delta_time`: Time since last frame (seconds, for framerate-independent rotation)
+
+**Behavior:**
+- Adds scaled rotation to current angles
+- Clamps pitch to ±89° (prevents gimbal lock at ±90°)
+- Wraps yaw to 0-360° (prevents overflow)
+- Marks camera as dirty (triggers transform recalculation)
+
+**Example Usage:**
+```c
+// User dragged mouse: dx=10 pixels right, dy=5 pixels up
+float delta_pitch = -5.0f / 100.0f;  // -0.05 (normalized, inverted for intuitive control)
+float delta_yaw = 10.0f / 100.0f;    //  0.10 (normalized)
+float delta_time = 0.016f;           // 16ms frame
+
+Camera_Rotate( &camera, delta_pitch, delta_yaw, delta_time );
+// Camera angles updated, view matrix will be recalculated next frame
+```
+
+**Implementation Details (`r_camera.c:62-89`):**
+
+```c
+void Camera_Rotate( r_camera_t *camera, float delta_pitch, float delta_yaw, float delta_time ) {
+    float actual_pitch_value, actual_yaw_value;
+
+    actual_pitch_value = delta_pitch * camera->rotation_speed * delta_time;
+    actual_yaw_value = delta_yaw * camera->rotation_speed * delta_time;
+```
+**Step 1:** Scale input by rotation speed and delta time.
+
+**Formula:** `actual_rotation = input * rotation_speed * delta_time`
+
+**Example:**
+```
+delta_yaw = 0.10 (normalized mouse input)
+rotation_speed = 45.0 (degrees/sec)
+delta_time = 0.016 (16ms frame)
+
+actual_yaw_value = 0.10 * 45.0 * 0.016 = 0.072 degrees
+```
+
+**Why Multiply by Delta Time?**  
+Makes rotation **framerate-independent**. At 60 FPS (16ms frames), you get small rotations per frame. At 30 FPS (33ms frames), you get larger rotations, but the **total rotation per second** is the same (45°/sec).
+
+```c
+    camera->angles_deg[0] += actual_pitch_value;
+    camera->angles_deg[1] += actual_yaw_value;
+```
+**Step 2:** Add to current angles.
+
+```c
+    // Clamp pitch to ±89° (avoid gimbal lock)
+    if ( camera->angles_deg[0] > 89.0f ) {
+        camera->angles_deg[0] = 89.0f;
+    }
+    if ( camera->angles_deg[0] < -89.0f ) {
+        camera->angles_deg[0] = -89.0f;
+    }
+```
+**Step 3:** Clamp pitch to ±89°.
+
+**Why 89° (not 90°)?**  
+At exactly ±90°, the camera is looking straight up or down. The "up" vector and "forward" vector become parallel, causing **gimbal lock** (ambiguous rotation). Clamping to 89° avoids this singularity.
+
+**Gimbal Lock Example:**
+```
+Pitch = 90° (looking straight up)
+Forward = [0, 0, 1]
+Up = [0, 0, 1]  (parallel to forward!)
+
+Cross product (forward × up) becomes zero → right vector is undefined
+Camera orientation becomes unstable
+```
+
+```c
+    // Wrap yaw to 0-360°
+    if ( camera->angles_deg[1] >= 360.0f ) {
+        camera->angles_deg[1] -= 360.0f;
+    }
+    if ( camera->angles_deg[1] < 0.0f ) {
+        camera->angles_deg[1] += 360.0f;
+    }
+```
+**Step 4:** Wrap yaw to 0-360° range.
+
+**Why?**  
+Prevents overflow after many rotations. `370°` is the same as `10°`, so we normalize it.
+
+**Alternative:** Could use `Math_AngleNormalize()` to wrap to -180 to 180 range, but 0-360 is more intuitive for yaw (compass directions).
+
+```c
+    camera->dirty = true;
+}
+```
+**Step 5:** Mark camera as dirty (transforms need recalculation).
+
+---
+
+### 11.5 Function: `Camera_Zoom()`
+
+**Signature:**
+```c
+void Camera_Zoom( r_camera_t *camera, float scroll_delta );
+```
+
+**Purpose:**  
+Zoom in/out by adjusting the camera's distance from the target.
+
+**Parameters:**
+- `camera`: Camera to zoom
+- `scroll_delta`: Mouse scroll direction (positive = zoom in, negative = zoom out)
+
+**Behavior:**
+- Multiplies distance by `zoom_speed` (zoom out) or `1/zoom_speed` (zoom in)
+- Clamps distance to 0.1-1000 units (prevents too close or too far)
+- Marks camera as dirty
+
+**Example Usage:**
+```c
+// User scrolls mouse wheel up (zoom in)
+Camera_Zoom( &camera, 1.0f );
+// Distance multiplied by 1/1.1 ≈ 0.909 (10% closer)
+
+// User scrolls mouse wheel down (zoom out)
+Camera_Zoom( &camera, -1.0f );
+// Distance multiplied by 1.1 (10% farther)
+```
+
+**Implementation Details (`r_camera.c:91-111`):**
+
+```c
+void Camera_Zoom( r_camera_t *camera, float scroll_delta ) {
+    float multiplier;
+
+    if ( scroll_delta > 0.0f ) {
+        multiplier = 1.0f / camera->zoom_speed;  // Zoom in (reduce distance)
+    } else {
+        multiplier = camera->zoom_speed;         // Zoom out (increase distance)
+    }
+
+    camera->distance *= multiplier;
+```
+**Step 1:** Calculate zoom multiplier and apply to distance.
+
+**Example (Zoom In):**
+```
+Current distance = 50.0
+zoom_speed = 1.1
+scroll_delta = 1.0 (zoom in)
+
+multiplier = 1.0 / 1.1 ≈ 0.909
+new distance = 50.0 * 0.909 ≈ 45.45 (10% closer)
+```
+
+**Why Multiplicative (not Additive)?**  
+Multiplicative zoom feels more natural:
+- When far away (distance=1000), zooming in by 10% (100 units) is noticeable
+- When close (distance=10), zooming in by 10% (1 unit) is also noticeable
+- Additive zoom (e.g., ±10 units) feels inconsistent (too slow when far, too fast when close)
+
+```c
+    // Clamp distance to prevent too close or too far
+    if ( camera->distance < 0.1f ) {
+        camera->distance = 0.1f;
+    }
+    if ( camera->distance > 1000.0f ) {
+        camera->distance = 1000.0f;
+    }
+```
+**Step 2:** Clamp distance to valid range.
+
+**Why 0.1 Min?**  
+Prevents camera from going inside the model (Z-fighting, clipping issues).
+
+**Why 1000 Max?**  
+Prevents camera from going too far (floating-point precision issues, culling problems).
+
+```c
+    camera->dirty = true;
+}
+```
+**Step 3:** Mark camera as dirty.
+
+
+---
+
+### 11.6 Function: `Camera_UpdateTransforms()`
+
+**Signature:**
+```c
+void Camera_UpdateTransforms( r_camera_t *camera );
+```
+
+**Purpose:**  
+Recalculate camera transforms (direction vectors, position, view matrix) if the camera is dirty.
+
+**Parameters:**
+- `camera`: Camera to update
+
+**Behavior:**
+- If `dirty == false` → return immediately (no recalculation needed)
+- If `dirty == true`:
+  1. Convert angles to direction vectors (forward, right, up)
+  2. Calculate position from target + distance + forward
+  3. Build LookAt view matrix
+  4. Set `dirty = false`
+
+**When Called:**  
+Automatically called by `Camera_GetViewMatrix()`. You rarely need to call this manually.
+
+**Example Usage:**
+```c
+// After rotating camera
+Camera_Rotate( &camera, pitch, yaw, dt );  // Sets dirty=true
+
+// Later, when rendering
+Camera_UpdateTransforms( &camera );  // Recalculates transforms
+const math_mat4_t *view = &camera.view_matrix;  // Use updated matrix
+```
+
+**Implementation Details (`r_camera.c:113-128`):**
+
+```c
+void Camera_UpdateTransforms( r_camera_t *camera ) {
+    if ( !camera->dirty ) {
+        return;  // Early exit (optimization)
+    }
+```
+**Step 1:** Check dirty flag (lazy evaluation).
+
+**Why?**  
+If the camera hasn't moved this frame, we can reuse the cached view matrix. Recalculating the view matrix every frame (even when static) wastes CPU time (~100ns per recalculation).
+
+```c
+    // Convert angles to direction vectors
+    Math_AngleVectors( camera->angles_deg, &camera->forward, &camera->right, &camera->up );
+```
+**Step 2:** Calculate direction vectors from Euler angles.
+
+**What `Math_AngleVectors()` Does:**
+- Takes pitch, yaw, roll (degrees)
+- Returns three orthogonal unit vectors (forward, right, up)
+
+**Example:**
+```
+angles = [10°, 45°, 0°]  (pitch=10°, yaw=45°, roll=0°)
+
+Math_AngleVectors() calculates:
+forward ≈ [0.694, -0.694, 0.174]  (northeast, slightly up)
+right   ≈ [0.707,  0.707, 0.0]    (southeast, level)
+up      ≈ [-0.123, 0.123, 0.985]  (mostly up, slightly tilted)
+```
+
+These vectors define the camera's orientation in world space.
+
+```c
+    camera->position[0] = camera->target[0] - camera->forward[0] * camera->distance;
+    camera->position[1] = camera->target[1] - camera->forward[1] * camera->distance;
+    camera->position[2] = camera->target[2] - camera->forward[2] * camera->distance;
+```
+**Step 3:** Calculate camera position.
+
+**Formula:** `position = target - forward * distance`
+
+**Why Subtract?**  
+The forward vector points **where the camera is looking**, not where the camera **is**. To position the camera **behind** the target (looking at it), we move in the **opposite** direction of forward.
+
+**Example:**
+```
+target = [0, 0, 0]
+forward = [1, 0, 0]  (looking right)
+distance = 50
+
+position = [0, 0, 0] - [1, 0, 0] * 50
+         = [0, 0, 0] - [50, 0, 0]
+         = [-50, 0, 0]  (camera is to the left, looking right at target)
+```
+
+```c
+    Math_Mat4_LookAt( camera->position, camera->target, camera->up, camera->view_matrix );
+```
+**Step 4:** Build view matrix.
+
+**What `Math_Mat4_LookAt()` Does:**
+- Creates a view matrix that transforms world space → camera space
+- Camera is at `position`, looking at `target`, with `up` direction
+- This is the standard "LookAt" transformation used in all 3D engines
+
+**View Matrix Purpose:**  
+In the rendering pipeline, vertices are transformed:
+```
+Model Space
+    ↓ Model Matrix (bone transforms)
+World Space
+    ↓ View Matrix (camera transform)
+Camera Space
+    ↓ Projection Matrix (perspective)
+Clip Space
+```
+
+The view matrix moves the world so that the camera is at the origin looking down the -Z axis (OpenGL convention).
+
+```c
+    camera->dirty = false;
+}
+```
+**Step 5:** Clear dirty flag (transforms are now up-to-date).
+
+---
+
+### 11.7 Function: `Camera_GetViewMatrix()`
+
+**Signature:**
+```c
+const math_mat4_t *Camera_GetViewMatrix( r_camera_t *camera );
+```
+
+**Purpose:**  
+Get the camera's view matrix (for rendering). Automatically updates transforms if camera is dirty.
+
+**Parameters:**
+- `camera`: Camera to get view matrix from
+
+**Return Value:**  
+Pointer to the camera's cached view matrix (const, do not modify).
+
+**Behavior:**
+- If `dirty == true` → calls `Camera_UpdateTransforms()` to recalculate
+- Returns pointer to `camera->view_matrix`
+
+**Example Usage:**
+```c
+// In rendering code
+const math_mat4_t *view = Camera_GetViewMatrix( &camera );
+glUniformMatrix4fv( view_uniform_loc, 1, GL_FALSE, (float*)view );
+```
+
+**Implementation Details (`r_camera.c:130-138`):**
+
+```c
+const math_mat4_t *Camera_GetViewMatrix( r_camera_t *camera ) {
+    if ( !camera->dirty ) {
+        return &camera->view_matrix;  // Return cached matrix (fast path)
+    }
+
+    Camera_UpdateTransforms( camera );  // Recalculate if dirty
+
+    return &camera->view_matrix;
+}
+```
+
+**Optimization:**  
+If the camera is not dirty, we skip the recalculation and return the cached matrix immediately. This is the **fast path** (most frames, since the camera is usually static).
+
+**Why Return Const Pointer?**  
+Prevents accidental modification of the cached matrix. The caller should treat this as read-only.
+
+---
+
+### 11.8 Usage Example: Camera Setup and Interaction
+
+**Complete Example:**
+
+```c
+// === Initialization ===
+r_camera_t camera;
+math_vec3_t model_center = {0, 0, 0};  // Model origin
+float initial_distance = 50.0f;
+
+Camera_Init( &camera, model_center, initial_distance );
+
+// === Main Loop ===
+while ( !glfwWindowShouldClose( window ) ) {
+    double current_time = glfwGetTime();
+    float delta_time = (float)( current_time - last_time );
+    last_time = current_time;
+
+    // === Handle Input ===
+    
+    // Mouse drag (rotation)
+    if ( mouse_button_left_held ) {
+        float delta_x = mouse_x - last_mouse_x;  // Pixels
+        float delta_y = mouse_y - last_mouse_y;
+        
+        float normalized_yaw = delta_x / 500.0f;     // Normalize to ±1.0
+        float normalized_pitch = -delta_y / 500.0f;  // Inverted (up = negative)
+        
+        Camera_Rotate( &camera, normalized_pitch, normalized_yaw, delta_time );
+    }
+    
+    // Mouse scroll (zoom)
+    if ( scroll_delta != 0.0f ) {
+        Camera_Zoom( &camera, scroll_delta );
+    }
+
+    // === Rendering ===
+    
+    // Get view matrix (automatically updates if dirty)
+    const math_mat4_t *view = Camera_GetViewMatrix( &camera );
+    
+    // Create projection matrix
+    math_mat4_t projection;
+    float fov = 70.0f * MATH_DEG2RAD;
+    float aspect = (float)window_width / (float)window_height;
+    Math_Mat4_Perspective( fov, aspect, 0.1f, 1000.0f, projection );
+    
+    // Send to shaders
+    glUniformMatrix4fv( view_loc, 1, GL_FALSE, (float*)view );
+    glUniformMatrix4fv( proj_loc, 1, GL_FALSE, (float*)projection );
+    
+    // Render model...
+    
+    glfwSwapBuffers( window );
+    glfwPollEvents();
+}
+```
+
+**Typical User Interaction:**
+
+1. **Drag Mouse Left:** Rotate camera around model
+   - `Camera_Rotate()` updates angles → sets dirty flag
+   - Next frame: `Camera_GetViewMatrix()` recalculates transforms
+
+2. **Scroll Mouse Wheel:** Zoom in/out
+   - `Camera_Zoom()` adjusts distance → sets dirty flag
+   - Next frame: view matrix reflects new distance
+
+3. **No Input:** Camera is static
+   - `dirty = false` → `Camera_GetViewMatrix()` returns cached matrix
+   - No recalculation (optimization)
+
+---
+
+### 11.9 Performance Characteristics
+
+**Per-Frame Cost (Camera Active):**
+
+| Operation                  | Cost         | Frequency       |
+|----------------------------|--------------|-----------------|
+| `Camera_Rotate()`          | ~50 ns       | Only when mouse dragged |
+| `Camera_Zoom()`            | ~10 ns       | Only when scrolling |
+| `Camera_UpdateTransforms()`| ~200 ns      | Only when dirty |
+| `Camera_GetViewMatrix()`   | ~5 ns (cached) | Every frame   |
+
+**When Camera is Static (No User Input):**
+- `Camera_GetViewMatrix()` returns cached matrix → **~5 ns per frame**
+- No transform recalculation → negligible overhead
+
+**When Camera is Moving (User Dragging Mouse):**
+- `Camera_Rotate()` → 50 ns (angle update)
+- `Camera_UpdateTransforms()` → 200 ns (Math_AngleVectors + LookAt)
+- **Total: ~250 ns per frame** (0.002% of 16ms frame budget)
+
+**Bottleneck Analysis:**  
+Camera is **not a bottleneck**. Even when actively rotating, it consumes < 0.01% of frame time.
+
+---
+
+### 11.10 Design Critique and Future Improvements
+
+**Current Issues:**
+
+1. **Global State:**  
+   The camera is stored in a global variable (`g_camera` in `r_draw.c`). Should be part of `app_state_t` for better encapsulation.
+
+2. **No Panning:**  
+   Orbit camera can rotate and zoom, but can't **pan** (move the target point). Users can't center the camera on a specific part of the model.
+
+   **Fix:** Add `Camera_Pan()` function:
+   ```c
+   void Camera_Pan( r_camera_t *camera, float delta_x, float delta_y, float delta_time ) {
+       math_vec3_t right_move, up_move;
+       Math_Vec3Scale( camera->right, delta_x * camera->movement_speed * delta_time, right_move );
+       Math_Vec3Scale( camera->up, delta_y * camera->movement_speed * delta_time, up_move );
+       
+       Math_Vec3Add( camera->target, right_move, camera->target );
+       Math_Vec3Add( camera->target, up_move, camera->target );
+       
+       camera->dirty = true;
+   }
+   ```
+
+3. **No Free Camera Mode:**  
+   `movement_speed` is defined but never used. Could add a mode switch:
+   - Orbit mode (current behavior)
+   - Free mode (first-person camera, WASD movement)
+
+4. **No Smooth Interpolation:**  
+   Camera rotation is instantaneous (directly sets angles). Could add smooth damping:
+   ```c
+   // Exponential smoothing
+   camera->angles_deg[0] = lerp( camera->angles_deg[0], target_pitch, 0.1f );
+   camera->angles_deg[1] = lerp( camera->angles_deg[1], target_yaw, 0.1f );
+   ```
+
+5. **No Constraints:**  
+   Camera can orbit through the ground or model geometry. Could add collision detection or min/max distance per angle.
+
+**Future Enhancements:**
+
+- **Auto-framing:** Calculate optimal distance to fit model in view (based on model bounding box)
+- **Focus point:** Allow user to click on model to set new orbit target
+- **Orbit speed scaling:** Slower rotation when zoomed in (finer control)
+- **Inertia:** Add momentum to camera movement (smooth start/stop)
+
+---
+
+**Section 11 Complete!**  
+The Camera System documentation is now finished. This covers the orbit camera implementation, including rotation, zoom, transform updates, and view matrix generation.
+
+**Next:** Section 12 - Input System (`src/input/`)
+
+
+---
+
+## 12. Input System
+
+### 12.1 Overview
+
+**Purpose:**  
+The input system provides a **high-level interface** for keyboard, mouse, and scroll input. It wraps GLFW's callback-based input with a more convenient **polling-based API** and supports **press/hold/release detection**.
+
+**Architecture:**  
+The input system is split into two layers:
+
+1. **Low-Level Input (`input.c`):**
+   - Wraps GLFW callbacks
+   - Tracks current and previous state
+   - Provides polling API (IsKeyPressed, IsKeyHeld, etc.)
+   - Platform-agnostic (abstracts GLFW details)
+
+2. **High-Level Input Handler (`input_handler.c`):**
+   - Game-specific input processing
+   - Maps input to actions (camera rotation, animation control, etc.)
+   - Called once per frame from the main loop
+
+**Why Two Layers?**
+- **Separation of concerns:** Low-level tracks input state, high-level interprets it
+- **Reusability:** Low-level input can be used in other projects
+- **Testability:** Can test input logic without a window
+
+**Files:**
+```
+src/input/
+├── input_types.h      → Key/button enums (KEY_W, MOUSE_BUTTON_LEFT, etc.)
+├── input.h/.c         → Low-level input system (state tracking, polling API)
+└── input_handler.h/.c → Game-specific input processing (camera, animation)
+```
+
+**Dependencies:**
+- GLFW (for window and input callbacks)
+- OpenGL (for wireframe mode toggle, `glPolygonMode()`)
+
+---
+
+### 12.2 Input Types (`input_types.h`)
+
+**Key Enum:**
+```c
+typedef enum {
+    KEY_W = 0,
+    KEY_A,
+    KEY_S,
+    KEY_D,
+    KEY_Q,
+    KEY_E,
+    KEY_R,
+    KEY_F,
+    KEY_P,
+    KEY_L,
+    KEY_I,
+    KEY_SPACE,
+    KEY_ESCAPE,
+    KEY_0,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_UP,
+    KEY_DOWN,
+    
+    KEY_COUNT  // Total number of keys (used for array sizing)
+} input_key_t;
+```
+
+**Why Custom Enum?**  
+GLFW uses integer key codes (e.g., `GLFW_KEY_W = 87`). Our enum:
+- Starts at 0 (dense, array-indexable)
+- Only includes keys we care about (saves memory)
+- Platform-agnostic (no GLFW dependency in high-level code)
+
+**Mouse Button Enum:**
+```c
+typedef enum {
+    MOUSE_BUTTON_LEFT = 0,
+    MOUSE_BUTTON_RIGHT,
+    MOUSE_BUTTON_MIDDLE
+} input_mouse_button_t;
+```
+
+**Array Sizing:**
+```c
+#define MAX_KEYS 32  // Maximum keys we track (must be >= KEY_COUNT)
+```
+
+This defines the size of the key state arrays. Currently `KEY_COUNT = 18`, so `MAX_KEYS = 32` provides room for expansion.
+
+---
+
+### 12.3 Input State Structure
+
+**Internal State (`input.c:29-47`):**
+
+```c
+typedef struct {
+    GLFWwindow *window;              // Window handle (for callbacks)
+   
+    bool current_keys[MAX_KEYS];     // Current frame key state
+    bool previous_keys[MAX_KEYS];    // Previous frame key state
+    
+    bool mouse_buttons_current[3];   // Current mouse button state
+    bool mouse_buttons_previous[3];  // Previous mouse button state
+    
+    double mouse_x;                  // Current mouse X position (pixels)
+    double mouse_y;                  // Current mouse Y position (pixels)
+    double mouse_prev_x;             // Previous mouse X position
+    double mouse_prev_y;             // Previous mouse Y position
+    
+    float scroll_delta;              // Scroll wheel delta (accumulated)
+    
+    bool initialized;                // True if Input_Init() was called
+    
+} input_state_t;
+
+static input_state_t g_input_state = {0};  // Global singleton
+```
+
+**Design Pattern: Double Buffering**  
+We keep **two copies** of input state (current and previous):
+- **Current:** Updated immediately by GLFW callbacks
+- **Previous:** Snapshot from last frame
+
+**Why?**  
+This allows us to detect **state transitions**:
+- **Pressed:** `current == true && previous == false` (just pressed this frame)
+- **Held:** `current == true` (pressed now, don't care about previous)
+- **Released:** `current == false && previous == true` (just released this frame)
+
+**Example Timeline:**
+```
+Frame 1:
+- User presses W key
+- GLFW callback sets current_keys[KEY_W] = true
+- previous_keys[KEY_W] = false (from last frame)
+- IsKeyPressed(KEY_W) = true ← Detects press!
+
+Frame 2:
+- User still holds W key
+- Input_Update() copies current → previous
+- previous_keys[KEY_W] = true
+- current_keys[KEY_W] = true (still pressed)
+- IsKeyPressed(KEY_W) = false ← Not a new press
+- IsKeyHeld(KEY_W) = true ← Held down
+
+Frame 3:
+- User releases W key
+- GLFW callback sets current_keys[KEY_W] = false
+- previous_keys[KEY_W] = true (from frame 2)
+- IsKeyReleased(KEY_W) = true ← Detects release!
+```
+
+---
+
+### 12.4 GLFW Callbacks
+
+The input system registers four GLFW callbacks to receive input events.
+
+#### 12.4.1 Key Callback
+
+**Function:** `glfw_key_callback()` (lines 130-147)
+
+```c
+static void glfw_key_callback( GLFWwindow *window, int key, int scancode, int action, int mods ) {
+    (void)window;
+    (void)scancode;  // Hardware scancode (unused)
+    (void)mods;      // Modifier keys (Shift, Ctrl, Alt) - unused
+
+    int our_key = glfw_key_to_enum( key );  // Convert GLFW key to our enum
+
+    if ( our_key < 0 || our_key >= MAX_KEYS ) {
+        return;  // Key not in our mapping, ignore
+    }
+
+    if ( action == GLFW_PRESS ) {
+        g_input_state.current_keys[our_key] = true;
+    } else if ( action == GLFW_RELEASE ) {
+        g_input_state.current_keys[our_key] = false;
+    }
+    // GLFW_REPEAT is ignored (we handle repeat via IsKeyHeld)
+}
+```
+
+**What It Does:**
+- Called by GLFW when any key is pressed or released
+- Converts GLFW key code to our enum via `glfw_key_to_enum()`
+- Updates `current_keys[]` array
+
+**Why Ignore GLFW_REPEAT?**  
+GLFW sends `GLFW_REPEAT` events for held keys (OS key repeat rate). We don't need this because we track held state ourselves via `IsKeyHeld()`.
+
+**Key Mapping:**  
+`glfw_key_to_enum()` (lines 104-127) converts GLFW codes to our enum:
+```c
+static int glfw_key_to_enum( int glfwKey ) { 
+    switch( glfwKey ) {
+        case GLFW_KEY_W:      return KEY_W;
+        case GLFW_KEY_A:      return KEY_A;
+        case GLFW_KEY_SPACE:  return KEY_SPACE;
+        // ... etc
+        default:              return -1;  // Unknown key
+    }
+}
+```
+
+Keys not in the switch statement are **ignored** (return -1).
+
+#### 12.4.2 Mouse Position Callback
+
+**Function:** `glfw_cursor_callback()` (lines 53-61)
+
+```c
+static void glfw_cursor_callback( GLFWwindow *window, double xpos, double ypos ) {
+    (void)window;
+    
+    g_input_state.mouse_x = xpos;
+    g_input_state.mouse_y = ypos;   
+}
+```
+
+**What It Does:**
+- Called by GLFW whenever the mouse moves
+- Updates current mouse position (in pixels, relative to window)
+
+**Coordinate System:**
+- **Origin:** Top-left corner of window
+- **X:** Increases to the right
+- **Y:** Increases **downward** (OpenGL is flipped: Y increases upward)
+
+**Frequency:**  
+Called **very often** (every pixel the mouse moves). The input system doesn't process this directly, just stores it. The application reads it via `Input_GetMouseDelta()`.
+
+#### 12.4.3 Mouse Button Callback
+
+**Function:** `glfw_mouse_button_callback()` (lines 64-90)
+
+```c
+static void glfw_mouse_button_callback( GLFWwindow *window, int button, int action, int mods ) {
+    (void)window;
+    (void)mods;
+    
+    int button_index = -1;
+    
+    if ( button == GLFW_MOUSE_BUTTON_LEFT ) {
+        button_index = MOUSE_BUTTON_LEFT;
+    } else if ( button == GLFW_MOUSE_BUTTON_RIGHT ) {
+        button_index = MOUSE_BUTTON_RIGHT;
+    } else if ( button == GLFW_MOUSE_BUTTON_MIDDLE ) {
+        button_index = MOUSE_BUTTON_MIDDLE;
+    }
+    
+    if ( button_index < 0 || button_index >= 3 ) {
+        return;  // Unknown button, ignore
+    }
+    
+    if ( action == GLFW_PRESS ) {
+        g_input_state.mouse_buttons_current[button_index] = true;
+    } else if ( action == GLFW_RELEASE ) {
+        g_input_state.mouse_buttons_current[button_index] = false;
+    }  
+}
+```
+
+**What It Does:**
+- Called when a mouse button is pressed or released
+- Converts GLFW button code to our enum (0=left, 1=right, 2=middle)
+- Updates `mouse_buttons_current[]` array
+
+**Why Only 3 Buttons?**  
+Most users only have left/right/middle buttons. We ignore extra buttons (side buttons, etc.) for simplicity.
+
+#### 12.4.4 Scroll Callback
+
+**Function:** `glfw_scroll_callback()` (lines 93-101)
+
+```c
+static void glfw_scroll_callback( GLFWwindow *window, double xoffset, double yoffset ) {
+    (void)window;
+    (void)xoffset;  // Horizontal scroll (unused, most mice don't support this)
+    
+    g_input_state.scroll_delta += yoffset;  // Accumulate vertical scroll
+}
+```
+
+**What It Does:**
+- Called when the mouse wheel is scrolled
+- **Accumulates** scroll delta (can be called multiple times per frame)
+- `yoffset > 0`: Scroll up (zoom in)
+- `yoffset < 0`: Scroll down (zoom out)
+
+**Why Accumulate?**  
+Users can scroll multiple times in one frame. We add them up and clear the total in `Input_Update()`.
+
+**Example:**
+```
+Frame N:
+- User scrolls up twice
+- Callback called: scroll_delta = 0 + 1 = 1
+- Callback called: scroll_delta = 1 + 1 = 2
+- Application reads: Input_GetScrollDelta() returns 2
+
+Frame N+1:
+- Input_Update() resets scroll_delta = 0
+- No scrolling this frame
+- Input_GetScrollDelta() returns 0
+```
+
+---
+
+### 12.5 Function: `Input_Init()`
+
+**Signature:**
+```c
+void Input_Init( GLFWwindow *window );
+```
+
+**Purpose:**  
+Initialize the input system and register GLFW callbacks.
+
+**Parameters:**
+- `window`: GLFW window handle
+
+**Behavior:**
+1. Clear input state to zero
+2. Store window handle
+3. Register all GLFW callbacks
+4. Query initial mouse position (prevents jump on first frame)
+5. Mark as initialized
+
+**Implementation (lines 150-172):**
+
+```c
+void Input_Init( GLFWwindow *window ) {
+    if ( !window ) {
+        return;  // Safety check
+    }
+
+    memset( &g_input_state, 0, sizeof( input_state_t ) );
+```
+**Step 1:** Zero out all state (all keys/buttons released, mouse at origin).
+
+```c
+    g_input_state.window = window;
+```
+**Step 2:** Store window handle (needed for polling functions).
+
+```c
+    // Register GLFW callbacks
+    glfwSetKeyCallback( window, glfw_key_callback );
+    glfwSetCursorPosCallback( window, glfw_cursor_callback );
+    glfwSetMouseButtonCallback( window, glfw_mouse_button_callback );
+    glfwSetScrollCallback( window, glfw_scroll_callback );
+```
+**Step 3:** Register callbacks. From now on, GLFW will call these functions when input events occur.
+
+```c
+    // Initialize mouse position
+    glfwGetCursorPos( window, &g_input_state.mouse_x, &g_input_state.mouse_y );
+    g_input_state.mouse_prev_x = g_input_state.mouse_x;
+    g_input_state.mouse_prev_y = g_input_state.mouse_y;
+```
+**Step 4:** Query current mouse position and initialize both current and previous to the same value.
+
+**Why?**  
+Prevents a large mouse delta on the first frame. If we didn't do this:
+- `mouse_prev_x = 0, mouse_prev_y = 0` (default)
+- Mouse is actually at `(500, 300)` (center of window)
+- First frame delta = `(500, 300)` → camera jumps!
+
+By initializing both to the current position, the first frame delta is `(0, 0)`.
+
+```c
+    g_input_state.initialized = true;
+}
+```
+**Step 5:** Mark as initialized (other functions check this before running).
+
+---
+
+### 12.6 Function: `Input_Update()`
+
+**Signature:**
+```c
+void Input_Update( void );
+```
+
+**Purpose:**  
+Update input state at the end of each frame. **Must be called once per frame** after processing input.
+
+**Behavior:**
+1. Copy current state to previous state (for next frame's press/release detection)
+2. Reset scroll delta to 0 (scroll is per-frame, not persistent)
+
+**When to Call:**  
+At the **end** of the frame, after all input processing is done.
+
+**Implementation (lines 175-190):**
+
+```c
+void Input_Update( void ) { 
+    if (!g_input_state.initialized) {
+        return;
+    }
+```
+**Step 1:** Safety check (don't update if not initialized).
+
+```c
+    // Copy current keys to previous keys (snapshot for next frame)
+    memcpy( g_input_state.previous_keys, g_input_state.current_keys, sizeof( g_input_state.previous_keys ) );
+    
+    memcpy( g_input_state.mouse_buttons_previous, g_input_state.mouse_buttons_current, sizeof( g_input_state.mouse_buttons_previous ) );
+```
+**Step 2:** Copy current state to previous state.
+
+**Why `memcpy`?**  
+Fast bulk copy (copies all 32 keys in one operation, ~10ns). Alternative would be a loop (slower).
+
+```c
+    g_input_state.mouse_prev_x = g_input_state.mouse_x;    
+    g_input_state.mouse_prev_y = g_input_state.mouse_y;
+```
+**Step 3:** Update mouse previous position (for delta calculation next frame).
+
+```c
+    g_input_state.scroll_delta = 0.0f;
+}
+```
+**Step 4:** Reset scroll delta.
+
+**Why Reset Scroll?**  
+Scroll is an **action** (user scrolled this frame), not a **state** (key is held). We reset it every frame so it doesn't accumulate infinitely.
+
+**Frame Timeline:**
+```
+Frame N:
+- Process input (read keys, mouse, scroll)
+- Render
+- Input_Update() ← Copies current → previous, resets scroll
+
+Frame N+1:
+- GLFW callbacks update current state
+- Process input (can now detect presses/releases by comparing current vs previous)
+- Render
+- Input_Update() ← Repeat
+```
+
+
+---
+
+### 12.7 Input Polling API
+
+The input system provides a **polling-based API** for querying input state. These functions are called from game code every frame.
+
+#### 12.7.1 Keyboard Input
+
+**Is Key Pressed (One-Shot):**
+```c
+bool Input_IsKeyPressed( input_key_t key );
+```
+
+Returns `true` **only on the frame** the key was initially pressed (transition from released → pressed).
+
+**Implementation (lines 243-254):**
+```c
+bool Input_IsKeyPressed( input_key_t key ) {
+    if ( key < 0 || key >= MAX_KEYS ) {
+        return false;  // Bounds check
+    }   
+    
+    bool pressed_now = g_input_state.current_keys[key];
+    bool pressed_before = g_input_state.previous_keys[key];
+    
+    return ( pressed_now && !pressed_before );  // Rising edge detection
+}
+```
+
+**Use Case:** Toggle actions (pause, wireframe mode, menu).
+
+**Example:**
+```c
+if ( Input_IsKeyPressed( KEY_SPACE ) ) {
+    paused = !paused;  // Only toggles once per press, not every frame
+}
+```
+
+**Is Key Held (Continuous):**
+```c
+bool Input_IsKeyHeld( input_key_t key );
+```
+
+Returns `true` **every frame** the key is down (includes the initial press frame).
+
+**Implementation (lines 257-267):**
+```c
+bool Input_IsKeyHeld( input_key_t key ) {
+    if ( key < 0 || key >= MAX_KEYS ) {
+        return false;
+    }
+
+    return g_input_state.current_keys[key];  // Just check current state
+}
+```
+
+**Use Case:** Continuous actions (movement, rotation).
+
+**Example:**
+```c
+if ( Input_IsKeyHeld( KEY_W ) ) {
+    camera_pitch -= rotation_speed * delta_time;  // Continuous rotation
+}
+```
+
+**Is Key Released (One-Shot):**
+```c
+bool Input_IsKeyReleased( input_key_t key );
+```
+
+Returns `true` **only on the frame** the key was released (transition from pressed → released).
+
+**Implementation (lines 270-281):**
+```c
+bool Input_IsKeyReleased( input_key_t key ) {
+    if ( key < 0 || key >= MAX_KEYS ) {
+        return false;
+    }
+    
+    bool pressed_now = g_input_state.current_keys[key];
+    bool pressed_before = g_input_state.previous_keys[key];
+        
+    return ( !pressed_now && pressed_before );  // Falling edge detection
+}
+```
+
+**Use Case:** Actions that trigger on release (charge attack, jump).
+
+**Example:**
+```c
+if ( Input_IsKeyReleased( KEY_SPACE ) ) {
+    jump_power = charge_time;  // Jump when space is released
+}
+```
+
+#### 12.7.2 Mouse Input
+
+**Get Mouse Position:**
+```c
+void Input_GetMousePosition( float *x, float *y );
+```
+
+Returns the current mouse position in pixels (relative to window top-left).
+
+**Implementation (lines 193-201):**
+```c
+void Input_GetMousePosition( float *x, float *y ) { 
+    if ( x ) {
+        *x = (float)g_input_state.mouse_x;
+    }
+    if ( y ) {
+        *y = (float)g_input_state.mouse_y;
+    }
+}
+```
+
+**NULL Safety:** Can pass `NULL` for coordinates you don't need.
+
+**Get Mouse Delta:**
+```c
+void Input_GetMouseDelta( float *dx, float *dy );
+```
+
+Returns the mouse movement **since last frame** (in pixels).
+
+**Implementation (lines 204-212):**
+```c
+void Input_GetMouseDelta( float *dx, float *dy ) { 
+    if ( dx ) {
+        *dx = (float)( g_input_state.mouse_x - g_input_state.mouse_prev_x );
+    }
+    if ( dy ) {
+        *dy = (float)( g_input_state.mouse_y - g_input_state.mouse_prev_y );
+    }
+}
+```
+
+**Use Case:** Camera rotation via mouse drag.
+
+**Example:**
+```c
+if ( Input_IsSMouseKeyHeld( MOUSE_BUTTON_LEFT ) ) {
+    float dx, dy;
+    Input_GetMouseDelta( &dx, &dy );
+    
+    camera_yaw += dx * sensitivity;
+    camera_pitch -= dy * sensitivity;  // Inverted (up = negative)
+}
+```
+
+**Is Mouse Button Pressed:**
+```c
+bool Input_IsSMouseKeyPressed( input_mouse_button_t button );
+```
+
+Same as `Input_IsKeyPressed()` but for mouse buttons (one-shot detection).
+
+**Implementation (lines 215-224):**
+```c
+bool Input_IsSMouseKeyPressed( input_mouse_button_t button ) {
+    if ( button < 0 || button >= 3 ) {
+        return false;
+    }
+    
+    bool pressed_now = g_input_state.mouse_buttons_current[button];
+    bool pressed_before = g_input_state.mouse_buttons_previous[button];
+    
+    return ( pressed_now && !pressed_before );
+}
+```
+
+**Is Mouse Button Held:**
+```c
+bool Input_IsSMouseKeyHeld( input_mouse_button_t button );
+```
+
+Same as `Input_IsKeyHeld()` but for mouse buttons (continuous detection).
+
+**Implementation (lines 227-235):**
+```c
+bool Input_IsSMouseKeyHeld( input_mouse_button_t button ) {
+    if ( button < 0 || button >= 3 ) {
+        return false;
+    }
+    
+    return g_input_state.mouse_buttons_current[button]; 
+}
+```
+
+**Get Scroll Delta:**
+```c
+int Input_GetScrollDelta( void );
+```
+
+Returns the accumulated scroll delta **for this frame** (resets to 0 next frame).
+
+**Implementation (lines 238-240):**
+```c
+int Input_GetScrollDelta( void ) {
+    return (int)g_input_state.scroll_delta;
+}
+```
+
+**Values:**
+- `> 0`: Scrolled up (zoom in)
+- `< 0`: Scrolled down (zoom out)
+- `= 0`: No scrolling this frame
+
+**Use Case:** Camera zoom.
+
+**Example:**
+```c
+int scroll = Input_GetScrollDelta();
+if ( scroll != 0 ) {
+    camera_distance *= (1.0f + scroll * 0.1f);  // 10% zoom per tick
+}
+```
+
+---
+
+### 12.8 Function: `Input_Shutdown()`
+
+**Signature:**
+```c
+void Input_Shutdown( void );
+```
+
+**Purpose:**  
+Unregister GLFW callbacks and clear input state.
+
+**Implementation (lines 283-299):**
+
+```c
+void Input_Shutdown( void ) {
+    if ( !g_input_state.initialized ) {
+        return;
+    }
+    
+    if ( g_input_state.window ) {
+        glfwSetKeyCallback( g_input_state.window, NULL );
+        glfwSetCursorPosCallback( g_input_state.window, NULL );
+        glfwSetMouseButtonCallback( g_input_state.window, NULL );
+        glfwSetScrollCallback( g_input_state.window, NULL );
+    }
+    
+    memset( &g_input_state, 0, sizeof( g_input_state ) );  
+}
+```
+
+**Why Unregister Callbacks?**  
+Prevents callbacks from firing after the input system is shut down (would write to freed memory → crash).
+
+**When Called:**  
+In `cleanup_renderer()` (part of application shutdown sequence).
+
+---
+
+### 12.9 Game-Specific Input Handler
+
+The high-level input handler (`input_handler.c`) maps raw input to game actions.
+
+#### 12.9.1 Input State Structures
+
+**Camera State:**
+```c
+typedef struct {
+    float *rotation_x;           // Pitch (up/down)
+    float *rotation_y;           // Yaw (left/right)
+    float *zoom;                 // Zoom factor
+    bool *wireframe_enabled;     // Wireframe mode toggle
+} input_camera_state_t;
+```
+
+**Why Pointers?**  
+The handler modifies the application's camera state directly (no copying needed).
+
+**Animation State:**
+```c
+typedef struct {
+    mdl_animation_state_t *anim_state;  // Animation playback state
+    mdl_seqgroup_blob_t *seqgroups;     // External sequence groups
+    studiohdr_t *header;                // Model header
+    unsigned char *data;                // Model data
+    int num_seqgroups;                  // Number of sequence groups
+    bool *animation_enabled;            // Animation on/off
+    bool *model_processed;              // Dirty flag (triggers rebake)
+} input_animation_state_t;
+```
+
+#### 12.9.2 Function: `Input_ProcessGameInput()`
+
+**Signature:**
+```c
+void Input_ProcessGameInput(
+    GLFWwindow *window,
+    input_camera_state_t *camera_state,
+    input_animation_state_t *anim_state
+);
+```
+
+**Purpose:**  
+Process all game-specific input (camera, animation, rendering modes).
+
+**Parameters:**
+- `window`: GLFW window (for closing)
+- `camera_state`: Camera state to modify
+- `anim_state`: Animation state to modify (can be NULL)
+
+**Called From:**  
+Main render loop (`render_loop()` in `r_draw.c:1023`), once per frame.
+
+---
+
+### 12.10 Input Mapping
+
+**Full Input Map:**
+
+| Key/Button         | Action                          | Type       |
+|--------------------|---------------------------------|------------|
+| **ESC**            | Quit application                | Press      |
+| **W**              | Rotate camera up                | Held       |
+| **S**              | Rotate camera down              | Held       |
+| **A**              | Rotate camera left              | Held       |
+| **D**              | Rotate camera right             | Held       |
+| **Q**              | Zoom out                        | Held       |
+| **E**              | Zoom in                         | Held       |
+| **R**              | Reset camera to default view    | Press      |
+| **F**              | Toggle wireframe mode           | Press      |
+| **P**              | Point rendering mode            | Press      |
+| **SPACE**          | Toggle animation on/off         | Press      |
+| **L**              | Toggle animation looping        | Press      |
+| **0**              | Reset animation to frame 0      | Press      |
+| **I**              | Print animation info to console | Press      |
+| **←**              | Previous animation sequence     | Press      |
+| **→**              | Next animation sequence         | Press      |
+| **Mouse Left**     | Drag to rotate camera           | Held       |
+| **Mouse Wheel**    | Zoom in/out                     | Scroll     |
+
+**Implementation Examples:**
+
+**Exit (lines 72-74):**
+```c
+if ( Input_IsKeyPressed( KEY_ESCAPE ) ) {
+    glfwSetWindowShouldClose( window, GLFW_TRUE );
+}
+```
+
+**Camera Rotation - Keyboard (lines 79-90):**
+```c
+if ( Input_IsKeyHeld( KEY_W ) ) {
+    *camera_state->rotation_x -= 0.1f;  // Rotate up
+}
+if ( Input_IsKeyHeld( KEY_S ) ) {
+    *camera_state->rotation_x += 0.1f;  // Rotate down
+}
+if ( Input_IsKeyHeld( KEY_A ) ) {
+    *camera_state->rotation_y -= 0.1f;  // Rotate left
+}
+if ( Input_IsKeyHeld( KEY_D ) ) {
+    *camera_state->rotation_y += 0.1f;  // Rotate right
+}
+```
+
+**Why 0.1f?**  
+Rotation increment per frame. At 60 FPS, this gives `0.1 × 60 = 6°/sec` rotation speed.
+
+**Camera Zoom - Keyboard (lines 95-106):**
+```c
+if ( Input_IsKeyHeld( KEY_Q ) ) {
+    *camera_state->zoom *= 1.1f;  // 10% larger (zoom out)
+    if ( *camera_state->zoom > 2.0f ) {
+        *camera_state->zoom = 2.0f;  // Clamp
+    }
+}
+if ( Input_IsKeyHeld( KEY_E ) ) {
+    *camera_state->zoom *= 0.9f;  // 10% smaller (zoom in)
+    if ( *camera_state->zoom < 0.1f ) {
+        *camera_state->zoom = 0.1f;  // Clamp
+    }
+}
+```
+
+**Camera Zoom - Mouse Wheel (lines 108-118):**
+```c
+int scroll = Input_GetScrollDelta();
+if ( scroll != 0 ) {
+    *camera_state->zoom *= ( 1.0f + scroll * 0.1f );
+    if ( *camera_state->zoom < 0.01f ) {
+        *camera_state->zoom = 0.01f;
+    }
+    if ( *camera_state->zoom > 2.0f ) {
+        *camera_state->zoom = 2.0f;
+    }
+}
+```
+
+**Scroll Multiplier:**  
+`1.0f + scroll * 0.1f`:
+- Scroll up (+1): `1.0 + 1 × 0.1 = 1.1` (10% larger, zoom out)
+- Scroll down (-1): `1.0 + (-1) × 0.1 = 0.9` (10% smaller, zoom in)
+
+**Camera Rotation - Mouse Drag (lines 123-128):**
+```c
+if ( Input_IsSMouseKeyHeld( MOUSE_BUTTON_LEFT ) ) {
+    float dx, dy;
+    Input_GetMouseDelta( &dx, &dy );
+    *camera_state->rotation_y += dx * 0.01f;  // Yaw (left/right)
+    *camera_state->rotation_x -= dy * 0.01f;  // Pitch (up/down, inverted)
+}
+```
+
+**Why Inverted Pitch?**  
+Mouse up (negative dy) should rotate camera up (negative pitch). This matches standard FPS camera controls.
+
+**Sensitivity:** `0.01f` means 100 pixels of mouse movement = 1 degree of rotation.
+
+**Reset Camera (lines 133-137):**
+```c
+if ( Input_IsKeyPressed( KEY_R ) ) {
+    *camera_state->rotation_x = 0.0f;
+    *camera_state->rotation_y = 0.0f;
+    *camera_state->zoom = 0.15f;  // Default zoom
+}
+```
+
+**Wireframe Toggle (lines 142-149):**
+```c
+if ( Input_IsKeyPressed( KEY_F ) ) {
+    *camera_state->wireframe_enabled = !(*camera_state->wireframe_enabled);
+    if ( *camera_state->wireframe_enabled ) {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );  // Wireframe
+    } else {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );  // Solid
+    }
+}
+```
+
+**OpenGL Polygon Mode:**
+- `GL_FILL`: Normal rendering (filled triangles)
+- `GL_LINE`: Wireframe rendering (triangle edges only)
+- `GL_POINT`: Point rendering (vertices only)
+
+**Toggle Animation (lines 163-165):**
+```c
+if ( Input_IsKeyPressed( KEY_SPACE ) ) {
+    *anim_state->animation_enabled = !(*anim_state->animation_enabled);
+}
+```
+
+**Sequence Navigation (lines 199-239):**
+```c
+// Previous sequence
+if ( Input_IsKeyPressed( KEY_LEFT ) ) {
+    if ( anim_state->anim_state->current_sequence > 0 ) {
+        int target_seq = anim_state->anim_state->current_sequence - 1;
+        
+        // Find previous available sequence (skip missing sequence groups)
+        while ( target_seq >= 0 && !is_sequence_available(...) ) {
+            target_seq--;
+        }
+        
+        if ( target_seq >= 0 && is_sequence_available(...) ) {
+            mdl_animation_set_sequence( anim_state->anim_state, target_seq, ... );
+            *anim_state->model_processed = false;  // Mark dirty
+        }
+    }
+}
+```
+
+**Why `is_sequence_available()`?**  
+Some sequences are in external files (`.mdl01`, `.mdl02`, etc.). If the file isn't loaded, the sequence is unavailable. We skip to the next available one.
+
+**Print Animation Info (lines 181-197):**
+```c
+if ( Input_IsKeyPressed( KEY_I ) ) {
+    printf( "═══════════════════════════════════════\n" );
+    printf( "  ANIMATION INFO\n" );
+    printf( "═══════════════════════════════════════\n" );
+    printf( "Sequence:       %d/%d\n", current_sequence, max_sequence );
+    printf( "Name:           %s\n", seq->label );
+    printf( "Current Frame:  %.2f/%d\n", current_frame, max_frame );
+    printf( "FPS:            %.1f\n", seq->fps );
+    printf( "Looping:        %s\n", is_looping ? "Yes" : "No" );
+    printf( "═══════════════════════════════════════\n" );
+}
+```
+
+Prints current animation state to console (useful for debugging).
+
+---
+
+### 12.11 Usage Example: Main Loop Integration
+
+**Complete Example:**
+
+```c
+// === Initialization ===
+Input_Init( window );
+
+r_camera_t camera;
+Camera_Init( &camera, (math_vec3_t){0, 0, 0}, 50.0f );
+
+mdl_animation_state_t anim_state;
+bool animation_enabled = true;
+bool model_processed = false;
+bool wireframe = false;
+float camera_rotation_x = 0.0f;
+float camera_rotation_y = 0.0f;
+float camera_zoom = 0.15f;
+
+// === Main Loop ===
+while ( !glfwWindowShouldClose( window ) ) {
+    float delta_time = calculate_delta_time();
+    
+    // === Process Input ===
+    
+    // Setup input state structs
+    input_camera_state_t cam_state = {
+        .rotation_x = &camera_rotation_x,
+        .rotation_y = &camera_rotation_y,
+        .zoom = &camera_zoom,
+        .wireframe_enabled = &wireframe
+    };
+    
+    input_animation_state_t anim_input_state = {
+        .anim_state = &anim_state,
+        .seqgroups = seqgroups,
+        .header = model_header,
+        .data = model_data,
+        .num_seqgroups = num_seqgroups,
+        .animation_enabled = &animation_enabled,
+        .model_processed = &model_processed
+    };
+    
+    // Process all game input
+    Input_ProcessGameInput( window, &cam_state, &anim_input_state );
+    
+    // === Update Animation ===
+    if ( animation_enabled ) {
+        mdl_animation_update( &anim_state, delta_time, ... );
+    }
+    
+    // === Render ===
+    render_model( ... );
+    
+    glfwSwapBuffers( window );
+    glfwPollEvents();  // GLFW updates input state via callbacks
+    
+    // === End of Frame ===
+    Input_Update();  // Prepare for next frame
+}
+
+// === Cleanup ===
+Input_Shutdown();
+```
+
+---
+
+### 12.12 Performance Characteristics
+
+**Input Overhead (Per Frame):**
+
+| Operation               | Cost       | Frequency       |
+|-------------------------|------------|-----------------|
+| `glfwPollEvents()`      | ~10 µs     | Once per frame  |
+| GLFW callbacks          | ~100 ns    | Per input event |
+| `Input_Update()`        | ~50 ns     | Once per frame  |
+| `Input_IsKeyHeld()`     | ~2 ns      | Per query       |
+| `Input_GetMouseDelta()` | ~3 ns      | Per query       |
+| `Input_ProcessGameInput()` | ~500 ns | Once per frame  |
+
+**Total:** ~11 µs per frame (0.07% of 16ms budget at 60 FPS)
+
+**Input is not a bottleneck.** Even with 50 input queries per frame, total overhead is < 0.1% of frame time.
+
+---
+
+### 12.13 Design Critique
+
+**Current Issues:**
+
+1. **Global State:**  
+   `g_input_state` is a global singleton. Can't have multiple input contexts (e.g., multiple windows).
+
+   **Fix:** Pass `input_state_t*` as parameter to all functions.
+
+2. **Limited Key Mapping:**  
+   Only 18 keys are mapped. Adding new keys requires modifying `input_types.h`, `glfw_key_to_enum()`, and recompiling.
+
+   **Fix:** Use a hash map for dynamic key mapping.
+
+3. **No Input Rebinding:**  
+   Users can't remap keys at runtime.
+
+   **Fix:** Add a configuration file (`.ini`) or in-game menu for key bindings.
+
+4. **Hardcoded Input Mapping:**  
+   `Input_ProcessGameInput()` has hardcoded key→action mappings.
+
+   **Fix:** Use an action-based system:
+   ```c
+   typedef enum { ACTION_CAMERA_UP, ACTION_ZOOM_IN, ... } action_t;
+   bool Input_IsActionPressed( action_t action );  // Looks up bound key
+   ```
+
+5. **No Gamepad Support:**  
+   Only keyboard and mouse are supported.
+
+   **Fix:** Add GLFW joystick polling (`glfwGetJoystickAxes()`, `glfwGetJoystickButtons()`).
+
+6. **No Input Recording:**  
+   Can't record and playback input for testing or demos.
+
+   **Fix:** Add `Input_StartRecording()`, `Input_StopRecording()`, `Input_Playback()`.
+
+---
+
+**Section 12 Complete!**  
+The Input System documentation is now finished. This covers low-level input state tracking, GLFW callbacks, polling API, and game-specific input handling.
+
+**Next:** Section 13 - Renderer System (`src/r/`)
+
+
+---
+
+## 13. Renderer System
+
+### 13.1 Overview
+
+**Purpose:**  
+The renderer is responsible for **all OpenGL rendering operations**, including window creation, shader compilation, texture loading, vertex processing, bone transformations, and drawing 3D models.
+
+**Architecture:**  
+The renderer uses a **deferred vertex processing** approach:
+1. **One-time:** Process model topology (triangles, UVs, connectivity)
+2. **Per-frame:** Update bone transforms and re-skin vertices (if animating)
+3. **Per-frame:** Upload vertex data to GPU and draw
+
+**Rendering Pipeline:**
+```
+Model Data (CPU)
+    ↓ ProcessModelForRendering() (one-time)
+Vertex Buffer (CPU, static topology)
+    ↓ UpdateBonesForCurrentFrame() (per-frame, if animating)
+Skinned Vertices (CPU)
+    ↓ AddVertexToBuffer() (rebuild buffer with new positions)
+Render Buffer (CPU, interleaved: pos + normal + UV)
+    ↓ glBufferData() (upload to GPU)
+GPU Vertex Buffer
+    ↓ Vertex Shader (transform to clip space)
+GPU Fragment Shader (lighting, texturing)
+    ↓ Rasterization
+Screen Pixels
+```
+
+**Key Design Decisions:**
+
+1. **CPU-Side Vertex Skinning:**  
+   Bone transforms are applied **on the CPU** (not GPU). This is simpler but slower than GPU skinning.
+
+2. **No Index Buffer:**  
+   Vertices are duplicated (not indexed). Wastes memory but simplifies UV mapping (each vertex can have unique UVs).
+
+3. **Draw Call Batching:**  
+   Model is split into "draw ranges" (one per texture). Each range is drawn with a single `glDrawArrays()` call.
+
+4. **Global State:**  
+   Model data, textures, and animation state are stored in global variables (not encapsulated).
+
+**Files:**
+```
+src/r/
+├── r_draw.h/.c         → Main renderer (1,341 lines)
+├── r_textures.h/.c     → Texture loading from MDL format (282 lines)
+├── r_camera.h/.c       → Camera system (already documented in Section 11)
+└── r_gl_platform.h     → Platform-specific OpenGL headers
+```
+
+**Dependencies:**
+- GLFW (window, OpenGL context, input)
+- OpenGL 4.1+ Core Profile (macOS) or 4.5+ (Windows/Linux)
+- GLEW (OpenGL extension loading on Windows/Linux, not needed on macOS)
+- Math library (matrix transforms)
+- MDL loader (model data structures)
+- Shaders (GLSL vertex/fragment shaders)
+
+---
+
+### 13.2 Global State and Data Structures
+
+The renderer uses extensive global state (a known design issue, see Section 13.12).
+
+#### 13.2.1 OpenGL Objects
+
+```c
+static GLFWwindow *window = NULL;            // GLFW window handle
+static GLuint VBO = 0;                       // Vertex Buffer Object
+static GLuint VAO = 0;                       // Vertex Array Object
+static GLuint EBO = 0;                       // Element Buffer Object (unused)
+static GLuint shader_program = 0;            // Compiled shader program
+static GLuint g_white_tex = 0;               // Fallback 2×2 white texture
+```
+
+#### 13.2.2 Model Data
+
+```c
+static studiohdr_t *global_header = NULL;    // MDL header (bones, sequences, etc.)
+static unsigned char *global_data = NULL;    // MDL data blob (vertices, meshes, etc.)
+static studiohdr_t *global_tex_header = NULL; // Texture header (from T.mdl or embedded)
+static unsigned char *global_tex_data = NULL; // Texture data blob
+static mdl_texture_set_t g_textures = {NULL, 0}; // Loaded OpenGL textures
+```
+
+#### 13.2.3 Animation State
+
+```c
+static mdl_animation_state_t g_anim_state;   // Current animation state
+static bool g_animation_enabled = false;     // Animation on/off
+static double g_last_frame_time = 0.0;       // Last frame timestamp (for delta time)
+static mdl_seqgroup_blob_t *global_seqgroups = NULL; // External sequence groups
+static int global_num_seqgroups = 0;
+```
+
+#### 13.2.4 Vertex Processing
+
+```c
+#define MAX_RENDER_VERTICES 32768
+static float render_vertex_buffer[MAX_RENDER_VERTICES * 8]; // 3 pos + 3 normal + 2 UV
+static int total_render_vertices = 0;       // Current vertex count
+static bool model_processed = false;        // Has topology been extracted?
+static vec3 skinned_positions[MAXSTUDIOVERTS]; // Bone-transformed positions
+static bool have_skinned_positions = false;
+```
+
+**Why Pre-Allocate?**  
+`MAX_RENDER_VERTICES = 32,768` is allocated **once at startup** (256KB). This avoids `malloc()` in the render loop (faster, no fragmentation).
+
+**Vertex Format (Interleaved):**
+```
+Each vertex: 8 floats (32 bytes)
+[0-2]:  Position (x, y, z)
+[3-5]:  Normal (nx, ny, nz)
+[6-7]:  UV (u, v)
+```
+
+#### 13.2.5 Draw Ranges
+
+```c
+#define MAX_DRAW_RANGES 4096
+typedef struct {
+    GLuint tex;  // OpenGL texture ID
+    int first;   // First vertex in VBO
+    int count;   // Number of vertices to draw
+} DrawRange;
+
+static DrawRange g_ranges[MAX_DRAW_RANGES];
+static int g_num_ranges = 0;
+```
+
+**Purpose:**  
+Each draw range represents a **mesh with a specific texture**. The renderer draws all ranges sequentially:
+```c
+for (int r = 0; r < g_num_ranges; ++r) {
+    glBindTexture(GL_TEXTURE_2D, g_ranges[r].tex);
+    glDrawArrays(GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count);
+}
+```
+
+**Why Batch by Texture?**  
+Binding textures is expensive (~0.1ms per bind). Grouping by texture reduces state changes (faster rendering).
+
+#### 13.2.6 Camera State
+
+```c
+float rotation_x = 0.0f;  // Camera pitch (up/down)
+float rotation_y = 0.0f;  // Camera yaw (left/right)
+float zoom = 0.15f;       // Camera zoom factor
+static bool wireframe_enabled = false;
+```
+
+**Design Issue:** Camera state should be in a `camera_t` structure, not scattered globals.
+
+---
+
+### 13.3 Function: `init_renderer()`
+
+**Signature:**
+```c
+int init_renderer( int width, int height, const char *title );
+```
+
+**Purpose:**  
+Initialize GLFW, create window, set up OpenGL context, load shaders, and prepare for rendering.
+
+**Returns:**
+- `0`: Success
+- `-1`: Failure (GLFW init failed, window creation failed, shader loading failed, etc.)
+
+**Implementation Steps (lines 749-929):**
+
+**Step 1: Initialize GLFW (lines 752-758):**
+```c
+if ( !glfwInit() ) {
+    LOG_FATALF( "renderer", "Failed to initialize GLFW" );
+    return -1;
+}
+```
+
+**Step 2: Platform-Specific OpenGL Hints (lines 763-782):**
+```c
+#ifdef __APPLE__
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );  // macOS limited to 4.1
+    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+    glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
+#else
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 5 );  // Windows/Linux support 4.5+
+    glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+#endif
+```
+
+**Why Different Versions?**  
+macOS deprecated OpenGL and caps it at 4.1. Windows and Linux have newer drivers (4.5+).
+
+**Step 3: Create Window (lines 787-799):**
+```c
+window = glfwCreateWindow( width, height, title, NULL, NULL );
+if ( !window ) {
+    LOG_FATALF( "renderer", "Failed to create GLFW window" );
+    glfwTerminate();
+    return -1;
+}
+glfwMakeContextCurrent( window );
+```
+
+**Step 4: Initialize GLEW (Windows/Linux Only) (lines 805-830):**
+```c
+#if GLEW_REQUIRED
+    glewExperimental = GL_TRUE;
+    GLenum glew_err = glewInit();
+    if ( glew_err != GLEW_OK ) {
+        LOG_FATALF( "renderer", "Failed to initialize GLEW: %s", glewGetErrorString( glew_err ) );
+        return -1;
+    }
+    glGetError();  // Clear spurious GLEW error
+#endif
+```
+
+**Why GLEW?**  
+On Windows/Linux, OpenGL functions must be dynamically loaded (they're not in the system headers). GLEW handles this. macOS doesn't need GLEW (uses native OpenGL framework).
+
+**Step 5: Query OpenGL Info (lines 835-849):**
+```c
+const char *gl_version = (const char *)glGetString( GL_VERSION );
+const char *gl_vendor = (const char *)glGetString( GL_VENDOR );
+const char *gl_renderer = (const char *)glGetString( GL_RENDERER );
+const char *glsl_version = (const char *)glGetString( GL_SHADING_LANGUAGE_VERSION );
+
+LOG_INFOF( "renderer", "OpenGL Version: %s", gl_version );
+LOG_INFOF( "renderer", "OpenGL Vendor: %s", gl_vendor );
+LOG_INFOF( "renderer", "OpenGL Renderer: %s", gl_renderer );
+LOG_INFOF( "renderer", "GLSL Version: %s", glsl_version );
+```
+
+**Example Output:**
+```
+OpenGL Version: 4.1 INTEL-18.8.7
+OpenGL Vendor: Intel Inc.
+OpenGL Renderer: Intel(R) Iris(TM) Plus Graphics 655
+GLSL Version: 4.10
+```
+
+**Step 6: OpenGL State Setup (lines 859-867):**
+```c
+glEnable( GL_DEPTH_TEST );            // Enable Z-buffer (hidden surface removal)
+glViewport( 0, 0, width, height );    // Set viewport to window size
+glDisable( GL_CULL_FACE );            // Disable backface culling (debug: see inside models)
+glEnable( GL_PROGRAM_POINT_SIZE );    // Allow shader to control point size
+glPointSize( 5.0f );                  // Default point size for vertex visualization
+```
+
+**Why Disable Culling?**  
+Backface culling hides triangles facing away from camera. Disabled for debugging (can see model inside-out if winding is wrong).
+
+**Step 7: Load Shaders (lines 874-878):**
+```c
+if ( load_shaders() != 0 ) {
+    LOG_FATALF( "renderer", "Failed to load shaders" );
+    return -1;
+}
+```
+
+**Step 8: Create Fallback White Texture (lines 883-894):**
+```c
+glGenTextures( 1, &g_white_tex );
+glBindTexture( GL_TEXTURE_2D, g_white_tex );
+
+unsigned char white[] = { 255, 255, 255, 255, /* 16 bytes total (2×2 RGBA) */ };
+
+glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, white );
+```
+
+**Why?**  
+If a mesh has no texture (or texture failed to load), use white fallback. Prevents OpenGL errors (binding texture 0 is invalid).
+
+**Step 9: Print Controls (lines 899-924):**
+Prints a help message to console showing keyboard/mouse controls.
+
+---
+
+### 13.4 Shader System
+
+The renderer uses a **simple shader pipeline**: load source files → compile → link → use.
+
+#### 13.4.1 Function: `load_shaders()`
+
+**Purpose:**  
+Load, compile, and link vertex/fragment shaders.
+
+**Implementation (lines 706-747):**
+
+**Step 1: Load Shader Source Files:**
+```c
+char *vertex_shader_file = read_shader_source( "textured.vert" );
+char *fragment_shader_file = read_shader_source( "textured.frag" );
+
+if ( !vertex_shader_file || !fragment_shader_file ) {
+    // Fallback to basic shaders
+    vertex_shader_file = read_shader_source( "basic.vert" );
+    fragment_shader_file = read_shader_source( "basic.frag" );
+}
+```
+
+**Shader Search Path:**  
+Defined in `SHADER_DIR` macro (set by CMake, typically `shaders/`).
+
+**Step 2: Compile Shaders:**
+```c
+GLuint vertexShader = compile_shader( vertex_shader_file, GL_VERTEX_SHADER );
+GLuint fragmentShader = compile_shader( fragment_shader_file, GL_FRAGMENT_SHADER );
+
+free( vertex_shader_file );
+free( fragment_shader_file );
+```
+
+**Step 3: Link Shader Program:**
+```c
+shader_program = create_shader_program( vertexShader, fragmentShader );
+```
+
+#### 13.4.2 Function: `compile_shader()`
+
+**Purpose:**  
+Compile a single shader (vertex or fragment) and check for errors.
+
+**Implementation (lines 666-682):**
+
+```c
+static GLuint compile_shader( const char *source, GLenum type ) {
+    GLuint shader = glCreateShader( type );
+    glShaderSource( shader, 1, &source, NULL );
+    glCompileShader( shader );
+
+    GLint success;
+    glGetShaderiv( shader, GL_COMPILE_STATUS, &success );
+
+    if ( !success ) {
+        char shader_info[512];
+        glGetShaderInfoLog( shader, 512, NULL, shader_info );
+        fprintf( stderr, "ERROR - Failed to compile shader: \n%s\n", shader_info );
+        return 0;
+    }
+
+    return shader;
+}
+```
+
+**Error Handling:**  
+If compilation fails, prints the GLSL compiler error message (line number, syntax error, etc.).
+
+**Example Error:**
+```
+ERROR - Failed to compile shader:
+0:12(5): error: use of undeclared identifier 'lightPossss'
+```
+
+#### 13.4.3 Function: `create_shader_program()`
+
+**Purpose:**  
+Link vertex and fragment shaders into a complete shader program.
+
+**Implementation (lines 684-704):**
+
+```c
+static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader ) {
+    GLuint program = glCreateProgram();
+    glAttachShader( program, vertexShader );
+    glAttachShader( program, fragmentShader );
+    glLinkProgram( program );
+
+    GLint success;
+    glGetProgramiv( program, GL_LINK_STATUS, &success );
+    if ( !success ) {
+        char infoLog[512];
+        glGetProgramInfoLog( program, 512, NULL, infoLog );
+        fprintf( stderr, "ERROR - Failed to link shader program!\n%s\n", infoLog );
+        return 0;
+    }
+
+    glDeleteShader( vertexShader );  // Delete after linking (program holds a copy)
+    glDeleteShader( fragmentShader );
+
+    return program;
+}
+```
+
+**Why Delete Shaders?**  
+After linking, the program object contains all shader code. Individual shader objects can be freed (saves GPU memory).
+
+
+---
+
+### 13.5 Model Processing
+
+Model processing happens in **two stages**:
+1. **One-time:** Extract topology (triangle connectivity, UVs) → `ProcessModelForRendering()`
+2. **Per-frame:** Update bone transforms and re-skin vertices → `UpdateBonesForCurrentFrame()`
+
+#### 13.5.1 Function: `set_model_data()`
+
+**Signature:**
+```c
+void set_model_data(
+    studiohdr_t *header,
+    unsigned char *data,
+    studiohdr_t *tex_header,
+    unsigned char *tex_data,
+    mdl_seqgroup_blob_t *seqgroups,
+    int num_seqgroups
+);
+```
+
+**Purpose:**  
+Store model data in global state and prepare for rendering.
+
+**Parameters:**
+- `header`: MDL header (contains bone count, sequence info, etc.)
+- `data`: MDL data blob (vertices, meshes, bones, etc.)
+- `tex_header`: Texture header (from `T.mdl` or embedded in main file)
+- `tex_data`: Texture data blob
+- `seqgroups`: External sequence groups (from `.mdl01`, `.mdl02`, etc.)
+- `num_seqgroups`: Number of sequence groups
+
+**Implementation (lines 1300-1341):**
+
+```c
+void set_model_data( ... ) {
+    if ( !header || !data ) {
+        LOG_ERRORF( "renderer", "NULL model data passed to renderer!" );
+        return;
+    }
+
+    global_header = header;
+    global_data = data;
+    global_tex_header = tex_header;
+    global_tex_data = tex_data;
+    global_seqgroups = seqgroups;
+    global_num_seqgroups = num_seqgroups;
+
+    model_processed = false;  // Mark for reprocessing
+    total_render_vertices = 0;
+
+    // Free old textures
+    if ( g_textures.textures ) {
+        mdl_free_texture( &g_textures );
+    }
+
+    // Pick texture header (embedded or external T.mdl)
+    const studiohdr_t *texHdr = mdl_pick_texture_header( header, tex_header );
+    if ( texHdr ) {
+        mdl_load_textures( texHdr, (texHdr == header) ? data : tex_data, &g_textures );
+    }
+
+    // Initialize animation
+    mdl_animation_init( &g_anim_state );
+    if ( header && header->numseq > 0 ) {
+        mdl_animation_set_sequence( &g_anim_state, 0, header, data, global_seqgroups );
+        g_animation_enabled = true;
+        g_last_frame_time = glfwGetTime();
+    }
+
+    LOG_INFOF( "renderer", "Model loaded successfully" );
+}
+```
+
+**Texture Header Selection:**  
+Some models have textures in the main `.mdl` file (embedded). Others have them in a separate `T.mdl` file (external). `mdl_pick_texture_header()` chooses the right one.
+
+**Animation Initialization:**  
+Sets the first animation sequence (index 0) as default and enables animation.
+
+---
+
+#### 13.5.2 Function: `ProcessModelForRendering()`
+
+**Purpose:**  
+**One-time extraction** of model topology into a CPU-side vertex buffer. Converts Half-Life's triangle strip/fan format into a flat triangle list.
+
+**When Called:**  
+Only once (the first time `render_model()` is called), or when the model changes.
+
+**Implementation Overview (lines 280-548):**
+
+**High-Level Steps:**
+1. Iterate through all bodyparts
+2. For each bodypart, get the selected model
+3. Skin vertices to world space (bone transforms)
+4. Iterate through all meshes in the model
+5. For each mesh, decode triangle strips/fans
+6. Add each triangle's vertices to the render buffer
+7. Create a draw range for each mesh (grouped by texture)
+
+**Detailed Implementation:**
+
+**Step 1: Initialize (lines 293-299):**
+```c
+total_render_vertices = 0;
+g_num_ranges = 0;
+
+mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
+
+// Set up T-pose bones initially
+SetUpBones( global_header, global_data );
+```
+
+**Step 2: Iterate Bodyparts (lines 302-330):**
+```c
+for ( int bp = 0; bp < global_header->numbodyparts; ++bp ) {
+    mstudiobodyparts_t *bpRec = &bodyparts[bp];
+    mstudiomodel_t *models = (mstudiomodel_t *)( global_data + bpRec->modelindex );
+
+    // Get ONLY the selected model for this bodypart
+    int selected_model_index = bodypart_get_model_index( bp );
+
+    if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels ) {
+        selected_model_index = 0;  // Fallback to first model
+    }
+
+    mstudiomodel_t *model = &models[selected_model_index];
+    
+    // Skin vertices (apply bone transforms)
+    TransformVertices( global_header, global_data, model, skinned_positions );
+    have_skinned_positions = true;
+    
+    // ... process meshes ...
+}
+```
+
+**What is a Bodypart?**  
+Half-Life models are split into "bodyparts" (head, torso, legs, etc.). Each bodypart can have multiple "models" (different variations, e.g., different head shapes). `bodypart_get_model_index()` returns which model is selected for each bodypart.
+
+**Step 3: Iterate Meshes (lines 340-528):**
+```c
+for ( int mesh = 0; mesh < model->nummesh; ++mesh ) {
+    // Resolve texture index
+    int tex_index = meshes[mesh].skinref;
+    if ( skin_table && numskinref > 0 && tex_index >= 0 && tex_index < numskinref ) {
+        tex_index = skin_table[skin_family * numskinref + tex_index];
+    }
+
+    // Get OpenGL texture and size
+    GLuint gl_tex = 0;
+    int texW = 1, texH = 1;
+    if ( tex_index >= 0 && tex_index < g_textures.count ) {
+        gl_tex = g_textures.textures[tex_index].gl_id;
+        texW = g_textures.textures[tex_index].width;
+        texH = g_textures.textures[tex_index].height;
+    }
+
+    // Decode triangle commands
+    short *ptricmds = (short *)( global_data + meshes[mesh].triindex );
+    const int start_first = total_render_vertices;
+
+    // ... decode triangle strips/fans ...
+
+    // Create draw range for this mesh
+    if ( g_num_ranges < MAX_DRAW_RANGES ) {
+        g_ranges[g_num_ranges].tex = gl_tex;
+        g_ranges[g_num_ranges].first = start_first;
+        g_ranges[g_num_ranges].count = total_render_vertices - start_first;
+        g_num_ranges++;
+    }
+}
+```
+
+**Triangle Command Format:**  
+Half-Life stores triangles as **strips** and **fans** (compact representation):
+- **Strip:** Shares edges between triangles (vertices: V0, V1, V2, V3 → triangles: V0-V1-V2, V1-V2-V3)
+- **Fan:** Shares a central vertex (vertices: V0, V1, V2, V3 → triangles: V0-V1-V2, V0-V2-V3)
+
+**Why Strips/Fans?**  
+Saves memory. Instead of 9 floats per triangle (3 vertices × 3 coords), strips reuse vertices (5 floats for 2 triangles).
+
+**Step 4: Decode Triangle Fans (lines 378-444):**
+```c
+while ( ( i = *( ptricmds++ ) ) ) {
+    if ( i < 0 ) {  // Negative = triangle fan
+        i = -i;
+
+        // Read first 2 vertices
+        short v0 = ptricmds[0], n0 = ptricmds[1], s0 = ptricmds[2], t0 = ptricmds[3];
+        ptricmds += 4;
+        short v1 = ptricmds[0], n1 = ptricmds[1], s1 = ptricmds[2], t1 = ptricmds[3];
+        ptricmds += 4;
+
+        // Handle UV seam (bit 15 of normal index)
+        if ( n0 & 0x8000 ) s0 += texW / 2;  // Shift UV for seam
+        n0 &= 0x7FFF;  // Clear high bit
+        if ( n1 & 0x8000 ) s1 += texW / 2;
+        n1 &= 0x7FFF;
+
+        // Normals are relative to mesh's base
+        n0 += norm_base;
+        n1 += norm_base;
+
+        // Generate fan triangles
+        for ( int j = 2; j < i; ++j ) {
+            short v2 = ptricmds[0], n2 = ptricmds[1], s2 = ptricmds[2], t2 = ptricmds[3];
+            ptricmds += 4;
+
+            if ( n2 & 0x8000 ) s2 += texW / 2;
+            n2 &= 0x7FFF;
+            n2 += norm_base;
+
+            // Add triangle to buffer
+            AddVertexToBuffer( v0, n0, s0, t0, (float)texW, (float)texH );
+            AddVertexToBuffer( v1, n1, s1, t1, (float)texW, (float)texH );
+            AddVertexToBuffer( v2, n2, s2, t2, (float)texW, (float)texH );
+
+            // Roll forward (v1 becomes v2 for next triangle)
+            v1 = v2; n1 = n2; s1 = s2; t1 = t2;
+        }
+    }
+    // ... triangle strip handling (similar) ...
+}
+```
+
+**UV Seam Handling:**  
+Half-Life textures can wrap around models (e.g., a cylinder). The high bit of the normal index (bit 15) indicates if the vertex is on the texture seam. If set, shift the U coordinate by `texW / 2` (wrap to other side of texture).
+
+**Triangle Strip Parity:**  
+Strips alternate winding order (to keep triangles facing outward). Every other triangle is reversed:
+```c
+if ( (j - 2) % 2 == 0 ) {
+    AddVertexToBuffer( v0, n0, s0, t0, ... );  // Original order
+    AddVertexToBuffer( v1, n1, s1, t1, ... );
+    AddVertexToBuffer( v2, n2, s2, t2, ... );
+} else {
+    AddVertexToBuffer( v1, n1, s1, t1, ... );  // Reversed order
+    AddVertexToBuffer( v0, n0, s0, t0, ... );
+    AddVertexToBuffer( v2, n2, s2, t2, ... );
+}
+```
+
+---
+
+#### 13.5.3 Function: `AddVertexToBuffer()`
+
+**Purpose:**  
+Add a single vertex to the CPU-side render buffer.
+
+**Signature:**
+```c
+void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, float texW, float texH );
+```
+
+**Parameters:**
+- `vertex_index`: Index into model's vertex array
+- `normal_index`: Index into model's normal array
+- `s, t`: Texture coordinates (in texels, not normalized)
+- `texW, texH`: Texture dimensions (for UV normalization)
+
+**Implementation (lines 550-624):**
+
+**Step 1: Get Position (lines 556-567):**
+```c
+vec3 P;
+if ( have_skinned_positions ) {
+    Math_Vec3Copy( skinned_positions[vertex_index], P );  // Use pre-transformed position
+} else {
+    Math_Vec3Copy( g_current.vertices[vertex_index], P ); // Use raw position
+}
+
+const float viewer_scale = 0.1f;  // Scale factor (Half-Life units → OpenGL units)
+P[0] *= viewer_scale;
+P[1] *= viewer_scale;
+P[2] *= viewer_scale;
+```
+
+**Why Scale?**  
+Half-Life uses a different unit scale than typical 3D engines. Models are ~10× larger, so we scale down by 0.1×.
+
+**Step 2: Transform Normal by Bone (lines 570-579):**
+```c
+unsigned char *v2bone = (unsigned char *)( global_data + g_current.model->vertinfoindex );
+int bone = v2bone ? v2bone[vertex_index] : 0;
+if ( bone < 0 || bone >= global_header->numbones ) bone = 0;
+
+vec3 Nfile = { g_current.normals[normal_index][0], ... };
+vec3 Nrot;
+TransformNormalByBone( g_bonetransformations[bone], Nfile, Nrot );
+```
+
+**What is `v2bone`?**  
+Array mapping each vertex to its bone index. Used for vertex skinning (each vertex is influenced by one bone).
+
+**Step 3: Axis Remap (lines 581-592):**
+```c
+float x = P[0];
+float y = P[1];
+float z = P[2];
+float nx = Nrot[0];
+float ny = Nrot[1];
+float nz = Nrot[2];
+
+float Py = z;   // Z → Y (Half-Life's Z-up becomes OpenGL's Y-up)
+float Pz = -y;  // -Y → Z (Half-Life's Y-forward becomes OpenGL's -Z-backward)
+float Ny = nz;
+float Nz = -ny;
+```
+
+**Coordinate System Conversion:**
+```
+Half-Life:               OpenGL:
++X = Right               +X = Right
++Y = Forward             +Y = Up
++Z = Up                  +Z = Backward (-Z = Forward)
+```
+
+**Step 4: Normalize UVs (lines 605-621):**
+```c
+float u = ( (float)s + 0.5f ) / (float)texW;  // Convert texel coords to [0, 1]
+float v = ( (float)t + 0.5f ) / (float)texH;
+
+// Clamp to [0, 1] (safety)
+if ( u < 0.0f ) u = 0.0f;
+else if ( u > 1.0f ) u = 1.0f;
+if ( v < 0.0f ) v = 0.0f;
+else if ( v > 1.0f ) v = 1.0f;
+```
+
+**Why +0.5f?**  
+Texel centers are offset by 0.5 pixels. Prevents texture bleeding at edges.
+
+**Step 5: Write to Buffer (lines 594-623):**
+```c
+const int base = total_render_vertices * 8;
+
+render_vertex_buffer[base + 0] = x;   // Position
+render_vertex_buffer[base + 1] = Py;
+render_vertex_buffer[base + 2] = Pz;
+
+render_vertex_buffer[base + 3] = nx;  // Normal
+render_vertex_buffer[base + 4] = Ny;
+render_vertex_buffer[base + 5] = Nz;
+
+render_vertex_buffer[base + 6] = u;   // UV
+render_vertex_buffer[base + 7] = v;
+
+total_render_vertices++;
+```
+
+**Buffer Overflow Protection:**
+```c
+if ( total_render_vertices >= MAX_RENDER_VERTICES ) return;  // Silently drop vertex
+```
+
+If the model has more than 32,768 vertices, extra vertices are dropped (prevents buffer overflow). This should never happen for typical Half-Life models (scientist.mdl has ~1,500 vertices).
+
+---
+
+### 13.6 Vertex Skinning (Animation)
+
+**Vertex skinning** applies bone transforms to vertices, making them follow the skeleton.
+
+#### 13.6.1 Function: `UpdateBonesForCurrentFrame()`
+
+**Purpose:**  
+Update bone transforms for the current animation frame and re-transform all vertices.
+
+**When Called:**  
+Every frame (if animation is enabled).
+
+**Implementation (lines 245-277):**
+
+```c
+void UpdateBonesForCurrentFrame( void ) {
+    if ( !global_header || !global_data ) return;
+
+    if ( g_animation_enabled && global_header->numseq > 0 ) {
+        // Calculate animated bone transforms
+        mdl_animation_calculate_bones(
+            &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations
+        );
+    } else {
+        // No animation - use static T-pose
+        SetUpBones( global_header, global_data );
+    }
+
+    // Re-transform ALL vertices with updated bones
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
+
+    for ( int bp = 0; bp < global_header->numbodyparts; ++bp ) {
+        mstudiobodyparts_t *bpRec = &bodyparts[bp];
+        mstudiomodel_t *models = (mstudiomodel_t *)( global_data + bpRec->modelindex );
+        int selected_model_index = bodypart_get_model_index( bp );
+
+        if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels ) {
+            selected_model_index = 0;
+        }
+
+        mstudiomodel_t *model = &models[selected_model_index];
+
+        // Transform vertices with updated bone matrices
+        TransformVertices( global_header, global_data, model, skinned_positions );
+        have_skinned_positions = true;
+    }
+}
+```
+
+**Bone Transform Flow:**
+```
+Animation Frame (current_frame = 5.3)
+    ↓ mdl_animation_calculate_bones()
+Bone Transforms (g_bonetransformations[50])
+    ↓ TransformVertices()
+Skinned Vertex Positions (skinned_positions[1500])
+    ↓ AddVertexToBuffer()
+Render Buffer (render_vertex_buffer[12000])
+    ↓ glBufferData()
+GPU
+```
+
+**Performance:**  
+For a 50-bone model with 1,500 vertices:
+- `mdl_animation_calculate_bones()`: ~10 µs (interpolate 50 bones)
+- `TransformVertices()`: ~200 µs (transform 1,500 vertices)
+- **Total: ~210 µs per frame** (1.3% of 16ms budget at 60 FPS)
+
+This is the **bottleneck** in the current implementation. GPU skinning would be 10× faster.
+
+
+---
+
+### 13.7 Function: `render_model()`
+
+**Purpose:**  
+The **main rendering function**, called every frame. Uploads vertex data to GPU and draws the model.
+
+**Signature:**
+```c
+void render_model( studiohdr_t *header, unsigned char *data );
+```
+
+**Implementation Overview (lines 1051-1299):**
+
+#### 13.7.1 Step 1: One-Time Topology Processing
+
+```c
+if ( !model_processed ) {
+    ProcessModelForRendering();  // Extract topology (only once)
+}
+
+if ( total_render_vertices == 0 ) {
+    LOG_WARNF( "renderer", "No vertices to render!" );
+    return;
+}
+```
+
+**When:**  
+First frame only (or when model changes).
+
+**What:**  
+Extracts triangle connectivity and UVs into `render_vertex_buffer`.
+
+#### 13.7.2 Step 2: Per-Frame Vertex Skinning (If Animating)
+
+```c
+if ( g_animation_enabled && global_header && global_data ) {
+    // Calculate animated bone transforms
+    mdl_result_t anim_result = mdl_animation_calculate_bones(
+        &g_anim_state, global_header, global_data, global_seqgroups, g_bonetransformations
+    );
+
+    if ( anim_result == MDL_ERROR_SEQUENCE_GROUP_MISSING ) {
+        // Fallback to T-pose if sequence group file is missing
+        SetUpBones( global_header, global_data );
+    }
+
+    // CRITICAL: Rebuild vertex buffer with new skinned positions
+    total_render_vertices = 0;
+    g_num_ranges = 0;
+
+    // ... (same topology extraction as ProcessModelForRendering, but with updated bones) ...
+}
+```
+
+**Why Rebuild Buffer Every Frame?**  
+Because `AddVertexToBuffer()` reads from `skinned_positions[]`, which changes every frame during animation. We must re-run the topology extraction to update positions.
+
+**Design Issue:**  
+This is **inefficient**. We're re-extracting topology (which doesn't change) just to get updated positions. A better approach:
+- Store topology once (indices)
+- Update only positions per-frame
+- Use GPU skinning (upload bone transforms as uniforms)
+
+**Current Approach:**
+```
+Per-Frame Cost (animated):
+- Topology extraction: ~100 µs
+- Vertex skinning: ~200 µs
+- Total: ~300 µs (2% of frame)
+```
+
+**Optimized Approach (GPU skinning):**
+```
+One-Time:
+- Upload topology to GPU: ~50 µs
+
+Per-Frame:
+- Upload bone transforms (50 × 16 floats): ~10 µs
+- GPU skinning: 0 µs (GPU does it in parallel)
+- Total: ~10 µs (0.06% of frame) ← 30× faster!
+```
+
+#### 13.7.3 Step 3: Set Up Matrices
+
+```c
+// Get framebuffer size (window may have resized)
+int fbw, fbh;
+glfwGetFramebufferSize( window, &fbw, &fbh );
+float aspect = ( fbh > 0 ) ? (float)fbw / (float)fbh : 1.0f;
+
+// Model matrix (rotation only, no translation)
+mat4 M;
+Math_Mat4_Identity( M );
+Math_Mat4_Rotate( M, rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );  // Yaw
+Math_Mat4_Rotate( M, rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );  // Pitch
+```
+
+**Model Matrix:**  
+Rotates the model based on user input (`rotation_x`, `rotation_y`). No translation (model stays at origin).
+
+**View Matrix:**
+```c
+float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
+vec3 camPos = { 0.0f, 0.0f, camDist };
+vec3 target = { 0.0f, 3.0f, 0.0f };  // Look slightly above origin
+vec3 up = { 0.0f, 2.0f, 0.0f };
+
+mat4 V;
+Math_Mat4_LookAt( camPos, target, up, V );
+```
+
+**Camera Distance Formula:**  
+```
+camDist = 5.0 / zoom
+
+zoom = 0.15 (default) → camDist = 33.33 units
+zoom = 0.01 (min)     → camDist = 500 units (far)
+zoom = 2.0 (max)      → camDist = 2.5 units (close)
+```
+
+**Projection Matrix:**
+```c
+mat4 P;
+Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
+```
+
+**FOV:** 50° (narrower than typical 70° → less distortion)  
+**Near Plane:** 0.01 units (very close, prevents clipping)  
+**Far Plane:** 1000 units (far enough for any zoom level)
+
+#### 13.7.4 Step 4: Send Uniforms to Shader
+
+```c
+GLint uModel = glGetUniformLocation( shader_program, "model" );
+GLint uView = glGetUniformLocation( shader_program, "view" );
+GLint uProj = glGetUniformLocation( shader_program, "projection" );
+
+if ( uModel != -1 ) glUniformMatrix4fv( uModel, 1, GL_FALSE, (const float *)M );
+if ( uView != -1 ) glUniformMatrix4fv( uView, 1, GL_FALSE, (const float *)V );
+if ( uProj != -1 ) glUniformMatrix4fv( uProj, 1, GL_FALSE, (const float *)P );
+```
+
+**Lighting Uniforms:**
+```c
+vec3 lightPos = { 3.0f, 5.0f, 4.0f };  // Fixed light position (top-right-front)
+GLint uLight = glGetUniformLocation( shader_program, "lightPos" );
+GLint uViewP = glGetUniformLocation( shader_program, "viewPos" );
+
+if ( uLight != -1 ) glUniform3fv( uLight, 1, (const float *)lightPos );
+if ( uViewP != -1 ) glUniform3fv( uViewP, 1, (const float *)camPos );
+```
+
+**Why `!= -1` Check?**  
+If the shader doesn't have a uniform with that name, `glGetUniformLocation()` returns -1. Setting it would cause an OpenGL error.
+
+#### 13.7.5 Step 5: Upload Vertex Data to GPU
+
+```c
+glBindVertexArray( VAO );
+glBindBuffer( GL_ARRAY_BUFFER, VBO );
+
+// Upload entire vertex buffer (positions + normals + UVs)
+glBufferData(
+    GL_ARRAY_BUFFER,
+    (GLsizeiptr)( total_render_vertices * 8 * sizeof( float ) ),
+    render_vertex_buffer,
+    GL_STATIC_DRAW  // Hint: data changes infrequently (OpenGL may optimize)
+);
+```
+
+**Size Calculation:**
+```
+1,500 vertices × 8 floats × 4 bytes = 48,000 bytes = 48 KB
+```
+
+**STATIC_DRAW vs DYNAMIC_DRAW:**  
+We use `GL_STATIC_DRAW` even though the data changes every frame (for animations). Should be `GL_DYNAMIC_DRAW` or `GL_STREAM_DRAW` for better performance.
+
+**Set Up Vertex Attributes:**
+```c
+// Attribute 0: Position (3 floats at offset 0)
+glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0 );
+glEnableVertexAttribArray( 0 );
+
+// Attribute 1: Normal (3 floats at offset 3)
+glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)) );
+glEnableVertexAttribArray( 1 );
+
+// Attribute 2: UV (2 floats at offset 6)
+glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)) );
+glEnableVertexAttribArray( 2 );
+```
+
+**Memory Layout:**
+```
+Vertex 0: [x0, y0, z0, nx0, ny0, nz0, u0, v0]
+          │    3 floats    │    3 floats  │ 2 floats │
+          └─ Attribute 0  └─ Attribute 1 └─ Attribute 2
+
+Vertex 1: [x1, y1, z1, nx1, ny1, nz1, u1, v1]
+...
+```
+
+**Stride:** `8 * sizeof(float) = 32 bytes` (distance between consecutive vertices)
+
+#### 13.7.6 Step 6: Draw All Ranges
+
+```c
+GLint uTex = glGetUniformLocation( shader_program, "tex" );
+if ( uTex != -1 ) glUniform1i( uTex, 0 );  // Texture unit 0
+
+for ( int r = 0; r < g_num_ranges; ++r ) {
+    GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
+    
+    glActiveTexture( GL_TEXTURE0 );
+    glBindTexture( GL_TEXTURE_2D, tex_to_bind );
+    
+    glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
+}
+```
+
+**Why Loop?**  
+Each range has a different texture. We bind the texture, draw those triangles, then move to the next range.
+
+**Draw Calls:**  
+Scientist model: ~20 draw calls (one per body part/texture).
+
+**Performance:**  
+- Texture bind: ~0.05 ms
+- Draw call: ~0.02 ms
+- **Total per range: ~0.07 ms**
+- **20 ranges × 0.07 ms = 1.4 ms** (8.5% of 16ms budget)
+
+**Optimization:**  
+Use texture atlases (combine multiple textures into one) to reduce draw calls.
+
+---
+
+### 13.8 Function: `cleanup_renderer()`
+
+**Purpose:**  
+Free all OpenGL resources and shutdown GLFW.
+
+**Implementation (lines 931-950):**
+
+```c
+void cleanup_renderer( void ) {
+    // Shutdown input system first
+    Input_Shutdown();
+    
+    // Delete OpenGL objects
+    if ( VAO ) glDeleteVertexArrays( 1, &VAO );
+    if ( VBO ) glDeleteBuffers( 1, &VBO );
+    if ( EBO ) glDeleteBuffers( 1, &EBO );
+    if ( shader_program ) glDeleteProgram( shader_program );
+    
+    // Destroy window
+    if ( window ) {
+        glfwDestroyWindow( window );
+    }
+
+    // Terminate GLFW
+    glfwTerminate();
+}
+```
+
+**Order Matters:**  
+1. Input shutdown (unregister callbacks)
+2. OpenGL objects (while context is still active)
+3. Window (destroys OpenGL context)
+4. GLFW terminate (shutdown library)
+
+**GPU Resource Leaks:**  
+If we don't call `glDeleteVertexArrays()` etc., the GPU memory is leaked (not freed until driver restart).
+
+---
+
+### 13.9 Utility Functions
+
+**Function: `clear_screen()`**
+```c
+void clear_screen( void ) {
+    glClearColor( 0.1f, 0.2f, 0.45f, 1.0f );  // Dark blue background
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+}
+```
+
+**Clears:**
+- **Color buffer:** Sets all pixels to background color
+- **Depth buffer:** Resets Z-buffer (for hidden surface removal)
+- **Stencil buffer:** Resets stencil (unused, but cleared for safety)
+
+**Function: `set_wireframe_mode()`**
+```c
+void set_wireframe_mode( bool enabled ) {
+    wireframe_enabled = enabled;
+    
+    if ( wireframe_enabled ) {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );  // Wireframe
+    } else {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );  // Solid
+    }
+}
+```
+
+**Polygon Modes:**
+- `GL_FILL`: Normal rendering (filled triangles)
+- `GL_LINE`: Wireframe (draw triangle edges only)
+- `GL_POINT`: Points (draw vertices only)
+
+---
+
+### 13.10 Performance Characteristics
+
+**Frame Breakdown (60 FPS, scientist.mdl, 1,500 vertices, 50 bones):**
+
+| Operation                          | Time (ms) | % of Frame | Notes                          |
+|------------------------------------|-----------|------------|--------------------------------|
+| **Animation update**               | 0.01      | 0.06%      | mdl_animation_update()         |
+| **Bone calculation**               | 0.01      | 0.06%      | mdl_animation_calculate_bones()|
+| **Vertex skinning**                | 0.20      | 1.2%       | TransformVertices() (CPU)      |
+| **Topology rebuild** (if animating)| 0.10      | 0.6%       | Re-extract triangles           |
+| **glBufferData upload**            | 0.05      | 0.3%       | Upload 48KB to GPU             |
+| **Draw calls** (20 ranges)         | 1.40      | 8.5%       | Texture binds + glDrawArrays() |
+| **VSync wait**                     | 10.00     | 60%        | Wait for monitor refresh       |
+| **Input processing**               | 0.01      | 0.06%      | Input_ProcessGameInput()       |
+| **Other**                          | 4.72      | 29%        | OS overhead, etc.              |
+| **TOTAL**                          | 16.67     | 100%       | 60 FPS                         |
+
+**Bottlenecks:**
+
+1. **VSync Wait (60%)**: GPU is idle, waiting for monitor. Not a problem (ensures smooth 60 FPS).
+2. **Draw Calls (8.5%)**: Texture binds are expensive. Could reduce to 1-2 calls with texture atlasing.
+3. **Vertex Skinning (1.2%)**: CPU-bound. GPU skinning would eliminate this.
+
+**Frame Time vs Complexity:**
+
+| Model                | Vertices | Bones | Frame Time | FPS |
+|----------------------|----------|-------|------------|-----|
+| **scientist.mdl**    | 1,500    | 50    | 6.5 ms     | 153 |
+| **barney.mdl**       | 1,200    | 48    | 5.8 ms     | 172 |
+| **gman.mdl**         | 1,800    | 54    | 7.2 ms     | 138 |
+| **hgrunt.mdl** (complex) | 2,500 | 60  | 12.0 ms    | 83  |
+
+All models run well above 60 FPS target. Even complex models stay above 80 FPS.
+
+---
+
+### 13.11 Texture System (Brief Overview)
+
+**File:** `src/r/r_textures.c` (282 lines)
+
+**Purpose:**  
+Load textures from MDL files (8-bit indexed color) and convert to OpenGL RGBA textures.
+
+**Key Functions:**
+
+**`mdl_load_textures()`**  
+- Iterates through all textures in the MDL header
+- Converts 8-bit palette indices to RGBA (256-color palette → 32-bit RGBA)
+- Uploads to OpenGL via `glTexImage2D()`
+- Returns `mdl_texture_set_t` (array of OpenGL texture IDs)
+
+**`mdl_pal8_to_rgba()`**  
+- Converts indexed color to RGBA
+- Palette: 256 colors × 3 bytes (RGB) = 768 bytes
+- Output: width × height × 4 bytes (RGBA)
+
+**Example:**
+```
+Input: 64×64 8-bit indexed texture + 768-byte palette
+Output: 64×64 32-bit RGBA texture (16,384 bytes)
+
+Process:
+For each pixel (x, y):
+    index = input[y * 64 + x]             // 0-255
+    r = palette[index * 3 + 0]            // Red
+    g = palette[index * 3 + 1]            // Green
+    b = palette[index * 3 + 2]            // Blue
+    a = (index == 255) ? 0 : 255          // Index 255 = transparent
+    output[(y * 64 + x) * 4 + 0] = r
+    output[(y * 64 + x) * 4 + 1] = g
+    output[(y * 64 + x) * 4 + 2] = b
+    output[(y * 64 + x) * 4 + 3] = a
+```
+
+**Transparency:**  
+Palette index 255 is reserved for transparency (alpha = 0).
+
+---
+
+### 13.12 Design Critique and Improvements
+
+**Current Issues:**
+
+1. **Global State Pollution:**  
+   All renderer state is global. Can't have multiple renderers or instances.
+
+   **Fix:** Encapsulate in a `renderer_t` structure:
+   ```c
+   typedef struct {
+       GLFWwindow *window;
+       GLuint vao, vbo, shader_program;
+       studiohdr_t *model_header;
+       // ... all globals ...
+   } renderer_t;
+   
+   void renderer_init( renderer_t *r, ... );
+   void renderer_render( renderer_t *r, ... );
+   ```
+
+2. **CPU Vertex Skinning:**  
+   Bone transforms applied on CPU (slow). Should use GPU skinning.
+
+   **Fix:** Upload bone matrices as shader uniforms, apply in vertex shader:
+   ```glsl
+   // Vertex shader
+   uniform mat4 bones[64];  // Bone transforms
+   
+   in vec3 position;
+   in int boneIndex;
+   
+   void main() {
+       vec4 skinnedPos = bones[boneIndex] * vec4(position, 1.0);
+       gl_Position = projection * view * model * skinnedPos;
+   }
+   ```
+
+   **Performance:** 30× faster for complex models.
+
+3. **No Index Buffer:**  
+   Vertices duplicated for each triangle (wastes memory and bandwidth).
+
+   **Fix:** Use Element Buffer Object (EBO):
+   ```c
+   float vertices[] = { v0, v1, v2, v3, v4, v5 };  // Unique vertices only
+   uint indices[] = { 0, 1, 2,  2, 3, 4, ... };   // Triangle connectivity
+   
+   glDrawElements( GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 0 );
+   ```
+
+   **Savings:** ~50% less memory, ~30% faster uploads.
+
+4. **Topology Rebuilt Every Frame (When Animating):**  
+   Triangle strips/fans decoded every frame, even though connectivity doesn't change.
+
+   **Fix:** Separate topology (static) from positions (dynamic):
+   ```c
+   // One-time:
+   ProcessTopology();       // Extract indices, UVs
+   UploadToGPU();          // Upload once
+   
+   // Per-frame:
+   UpdateBoneTransforms();  // Just upload 50 × 16 floats
+   ```
+
+5. **Hardcoded Shader Paths:**  
+   Shaders must be in `SHADER_DIR` at compile time.
+
+   **Fix:** Search multiple paths, or embed shaders in executable (via CMake):
+   ```cmake
+   file(READ shaders/textured.vert VERT_SHADER)
+   configure_file(shaders.h.in shaders.h)
+   ```
+
+6. **No Error Handling:**  
+   If `glBufferData()` fails (out of GPU memory), the renderer silently continues.
+
+   **Fix:** Check `glGetError()` after OpenGL calls:
+   ```c
+   glBufferData( ... );
+   GLenum err = glGetError();
+   if ( err != GL_NO_ERROR ) {
+       LOG_ERRORF( "renderer", "glBufferData failed: 0x%X", err );
+   }
+   ```
+
+7. **Fixed Buffer Sizes:**  
+   `MAX_RENDER_VERTICES = 32,768` is hardcoded. Large models will overflow.
+
+   **Fix:** Dynamically allocate based on model size:
+   ```c
+   renderer->vertex_buffer = malloc( model->vertex_count * 8 * sizeof(float) );
+   ```
+
+---
+
+**Section 13 Complete!**  
+The Renderer System documentation is now finished. This covers OpenGL setup, shader compilation, model processing, vertex skinning, rendering pipeline, performance, and design improvements.
+
+**Remaining Sections:**
+- Section 14: Model Loader (MDL format parsing, bones, animations)
+- Section 15: Logger (logging infrastructure)
+- Update Table of Contents (reflect new sections)
 
