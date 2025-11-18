@@ -120,7 +120,25 @@ void mdl_attachment_dump( const studiohdr_t *header,
 	// TODO: Implement debug dump
 	// Similar to mdl_bonecontroller_dump()
     
+    if ( header == NULL || data == NULL ) {
+        return ;
+    }
     
+    printf( "\n ==== ATTACHMENTS (%d) ====\n", header->numattachments );
+    
+    int numattachments = header->numattachments;
+    mstudioattachment_t *attachments = ( mstudioattachment_t * )( data + header->attachmentindex );
+    
+    for ( int i = 0; i < numattachments; i++ ) {
+        mstudioattachment_t *attachment = &attachments[i];
+        printf( "[%d] '%s'\n", i, attachment->name );
+        printf( "      Bone:     %d\n", attachment->bone );
+        printf( "      Type:     %d\n", attachment->type );
+        printf( "      Position: [%.2f, %.2f, %.2f]\n", attachment->org[0], attachment->org[1], attachment->org[2] );
+        printf( "      Forward:  [%.2f, %.2f, %.2f]\n", attachment->vectors[0][0], attachment->vectors[0][1], attachment->vectors[0][2] );
+        printf( "      Right:    [%.2f, %.2f, %.2f]\n", attachment->vectors[1][0], attachment->vectors[1][1], attachment->vectors[1][2] );
+        printf( "      Up:       [%.2f, %.2f, %.2f]\n", attachment->vectors[2][0], attachment->vectors[2][1], attachment->vectors[2][2] );
+    }
     
     
 }
