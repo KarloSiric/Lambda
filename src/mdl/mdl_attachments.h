@@ -3,7 +3,7 @@
 
 
 #include "studio.h"
-#include "math/math_types.h"
+#include "math_types.h"
 
 
 #pragma once
