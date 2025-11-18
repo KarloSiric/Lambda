@@ -34,25 +34,23 @@ void print_complete_model_analysis(
     const unsigned char     *main_data,
     const unsigned char     *texture_data )
 {
-    /* Pretty rulers */
-    static const char *RULER      = "──────────────────────────────────────────────────────────────────────────────";
-    static const char *RULER_THIN = "────────────────────────────────────────";
-
     // Change ALL printf to fprintf(output, ...)
-    fprintf( output, "\n%s\n", RULER );
-    fprintf( output, " Half-Life MDL Analysis Report\n" );
-    fprintf( output, " File: %s\n", filename );
-    fprintf( output, "%s\n\n", RULER );
+    fprintf( output, "\n" );
+    fprintf( output, "╔═══════════════════════════════════════════════════════════════╗\n" );
+    fprintf( output, "║       Half-Life MDL Analysis Report                           ║\n" );
+    fprintf( output, "╚═══════════════════════════════════════════════════════════════╝\n" );
+    fprintf( output, "\n" );
+    fprintf( output, "File:   %s\n", filename );
+    fprintf( output, "Status: ✓ SUCCESS - Model loaded completely\n" );
+    fprintf( output, "\n" );
 
-    fprintf( output, "STATUS: %-10s  %s\n\n", "SUCCESS", "Model loaded completely" );
-
-    fprintf( output, "MAIN MODEL INFO\n" );
-    fprintf( output, "%s\n", RULER_THIN );
-    fprintf( output, "  %-14s %s\n", "Name:", main_header->name );
-    fprintf( output, "  %-14s %d bytes\n", "File Size:", main_header->length );
-    fprintf( output, "  %-14s %d\n", "Bones:", main_header->numbones );
-    fprintf( output, "  %-14s %d\n", "Bodyparts:", main_header->numbodyparts );
-    fprintf( output, "  %-14s %d\n", "Sequences:", main_header->numseq );
+    fprintf( output, "┌─ MAIN MODEL INFO\n" );
+    fprintf( output, "│  %-14s %s\n", "Name:", main_header->name );
+    fprintf( output, "│  %-14s %d bytes\n", "File Size:", main_header->length );
+    fprintf( output, "│  %-14s %d\n", "Bones:", main_header->numbones );
+    fprintf( output, "│  %-14s %d\n", "Bodyparts:", main_header->numbodyparts );
+    fprintf( output, "│  %-14s %d\n", "Sequences:", main_header->numseq );
+    fprintf( output, "└─────────────────────────────────────────────────────────────────\n" );
     fprintf( output, "\n" );
 
     /* --- Textures (delegated) ------------------------------------------------ */
@@ -68,9 +66,10 @@ void print_complete_model_analysis(
     mdl_result_t   bone_result = parse_bone_hierarchy( main_header, main_data, &bones );
     if ( bone_result == MDL_SUCCESS && bones )
     {
-        fprintf( output, "BONE HIERARCHY (%d bones)\n", main_header->numbones );
-        fprintf( output, "%s\n", RULER_THIN );
+        fprintf( output, "┌─ BONE HIERARCHY (%d bones)\n", main_header->numbones );
+        fprintf( output, "│\n" );
         print_bone_info( output, bones, main_header->numbones );  // Pass output!
+        fprintf( output, "└─────────────────────────────────────────────────────────────────\n" );
         fprintf( output, "\n" );
     }
     else
@@ -83,9 +82,10 @@ void print_complete_model_analysis(
     mdl_result_t      sequence_result = parse_animation_sequences( main_header, main_data, &sequences );
     if ( sequence_result == MDL_SUCCESS && sequences )
     {
-        fprintf( output, "ANIMATION SEQUENCES (%d sequences)\n", main_header->numseq );
-        fprintf( output, "%s\n", RULER_THIN );
+        fprintf( output, "┌─ ANIMATION SEQUENCES (%d sequences)\n", main_header->numseq );
+        fprintf( output, "│\n" );
         print_sequence_info( output, sequences, main_header->numseq );  // Pass output!
+        fprintf( output, "└─────────────────────────────────────────────────────────────────\n" );
         fprintf( output, "\n" );
     }
     else
@@ -94,16 +94,19 @@ void print_complete_model_analysis(
     }
 
     /* --- Deep dive per bodypart/model/mesh ---------------------------------- */
-    fprintf( output, "DETAILED MODEL ANALYSIS\n" );
-    fprintf( output, "%s\n", RULER );
+    fprintf( output, "\n" );
+    fprintf( output, "╔═══════════════════════════════════════════════════════════════╗\n" );
+    fprintf( output, "║         DETAILED MODEL ANALYSIS                               ║\n" );
+    fprintf( output, "╚═══════════════════════════════════════════════════════════════╝\n" );
+    fprintf( output, "\n" );
 
     mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * ) ( main_data + main_header->bodypartindex );
 
     for ( int bp = 0; bp < main_header->numbodyparts; ++bp )
     {
         const mstudiobodyparts_t *B = &bodyparts[bp];
-        fprintf( output, "\n[Bodypart %d] %-20s  (models: %d)\n", bp, B->name, B->nummodels );
-        fprintf( output, "%s\n", RULER_THIN );
+        fprintf( output, "┌─ [Bodypart %d] %s  (models: %d)\n", bp, B->name, B->nummodels );
+        fprintf( output, "│\n" );
 
         mstudiomodel_t *models = ( mstudiomodel_t * ) ( main_data + B->modelindex );
 
@@ -148,9 +151,13 @@ void print_complete_model_analysis(
                 }
             }
         }
+
+        fprintf( output, "└─────────────────────────────────────────────────────────────────\n" );
+        fprintf( output, "\n" );
     }
 
-    fprintf(output, "\n%s\n", RULER);
-    fprintf(output, " Complete model analysis completed\n");
-    fprintf(output, "%s\n\n", RULER);
+    fprintf(output, "╔═══════════════════════════════════════════════════════════════╗\n");
+    fprintf(output, "║         ✓ Complete model analysis finished                    ║\n");
+    fprintf(output, "╚═══════════════════════════════════════════════════════════════╝\n");
+    fprintf(output, "\n");
 }

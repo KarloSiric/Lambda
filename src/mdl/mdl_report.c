@@ -44,14 +44,14 @@
 static const char *RULER      = "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────";
 static const char *RULER_THIN = "────────────────────────────────────────────────────────────────────────────────";
 
-#define DUMP_I32( FP, L, V ) fprintf( (FP), "  %-22s %d (0x%08X)\n", ( L ), ( int ) ( V ), ( unsigned ) ( V ) )
-#define DUMP_HEX( FP, L, V ) fprintf( (FP), "  %-22s 0x%08X\n", ( L ), ( unsigned ) ( V ) )
-#define DUMP_STR( FP, L, V ) fprintf( (FP), "  %-22s %s\n", ( L ), ( V ) )
+#define DUMP_I32( FP, L, V ) fprintf( (FP), "│  %-22s %d (0x%08X)\n", ( L ), ( int ) ( V ), ( unsigned ) ( V ) )
+#define DUMP_HEX( FP, L, V ) fprintf( (FP), "│  %-22s 0x%08X\n", ( L ), ( unsigned ) ( V ) )
+#define DUMP_STR( FP, L, V ) fprintf( (FP), "│  %-22s %s\n", ( L ), ( V ) )
 #define DUMP_V3( FP, L, V )                                                                                                \
-    fprintf( (FP), "  %-22s (%.3f, %.3f, %.3f)\n", ( L ), ( double ) ( V )[0], ( double ) ( V )[1], ( double ) ( V )[2] )
+    fprintf( (FP), "│  %-22s (%.3f, %.3f, %.3f)\n", ( L ), ( double ) ( V )[0], ( double ) ( V )[1], ( double ) ( V )[2] )
 #define DUMP_OFF( FP, L, BASE, OFF )                                                                                       \
     fprintf( (FP),                                                                                                            \
-        "  %-22s 0x%X (abs: %p)\n",                                                                                    \
+        "│  %-22s 0x%X (abs: %p)\n",                                                                                    \
         ( L ),                                                                                                         \
         ( unsigned ) ( OFF ),                                                                                          \
         ( const void * ) ( const unsigned char * ) ( BASE + ( size_t ) ( OFF ) ) )
@@ -75,7 +75,7 @@ static inline int in_range( const void *base, size_t len, const void *p, size_t 
 void print_studio_header_file( FILE *output, const char *title, const studiohdr_t *header )
 {
     if ( !output ) output = stdout;
-    
+
     if ( !header )
     {
         fprintf( output, "%s\n  (null)\n", title ? title : "STUDIO HEADER" );
@@ -84,11 +84,11 @@ void print_studio_header_file( FILE *output, const char *title, const studiohdr_
 
     const unsigned char *base = ( const unsigned char * ) header;
 
-    fprintf( output, "RAW STUDIO HEADER (all fields)\n" );
-    fprintf( output, "%s\n", RULER );
+    // Print title with subsection formatting
     if ( title )
     {
-        fprintf( output, "  %s\n\n", title );
+        fprintf( output, "┌─ %s\n", title );
+        fprintf( output, "│\n" );
     }
 
     DUMP_HEX( output, "id", header->id );
@@ -149,7 +149,7 @@ void print_studio_header_file( FILE *output, const char *title, const studiohdr_
     DUMP_I32( output, "numtransitions", header->numtransitions );
     DUMP_OFF( output, "transitionindex", base, header->transitionindex );
 
-    fprintf( output, "%s\n", RULER );
+    fprintf( output, "└─────────────────────────────────────────────────────────────────\n\n" );
 }
 
 
@@ -163,47 +163,46 @@ void print_sequence_group_info(FILE *output, const mdl_seqgroup_blob_t *groups, 
         return;
     }
     
-    fprintf(output, "\n%s\n", RULER_THIN);
-    fprintf(output, "  SEQUENCE GROUPS (%d total)\n", num_groups);
-    fprintf(output, "%s\n\n", RULER_THIN);
+    fprintf(output, "\n┌─ SEQUENCE GROUPS (%d total)\n", num_groups);
+    fprintf(output, "│\n");
     
     for (int i = 0; i < num_groups; i++)
     {
-        fprintf(output, "  [%d] ", i);
-        
+        fprintf(output, "│  [%d] ", i);
+
         if (i == 0)
         {
             fprintf(output, "MAIN (embedded in model file)\n");
-            fprintf(output, "      Size: %zu bytes\n", groups[i].size);
+            fprintf(output, "│      Size: %zu bytes\n", groups[i].size);
         }
         else if (groups[i].sequence_header)
         {
             fprintf(output, "'%s'\n", groups[i].sequence_header->name);
-            fprintf(output, "      Magic:   0x%08X (IDSQ)\n", groups[i].sequence_header->id);
-            fprintf(output, "      Version: %d\n", groups[i].sequence_header->version);
-            fprintf(output, "      Size:    %d bytes\n", groups[i].sequence_header->length);
-            fprintf(output, "      Status:  ✓ LOADED\n");
+            fprintf(output, "│      Magic:   0x%08X (IDSQ)\n", groups[i].sequence_header->id);
+            fprintf(output, "│      Version: %d\n", groups[i].sequence_header->version);
+            fprintf(output, "│      Size:    %d bytes\n", groups[i].sequence_header->length);
+            fprintf(output, "│      Status:  ✓ LOADED\n");
         }
         else if (groups[i].data)
         {
             fprintf(output, "'%s' (loaded but no header)\n", groups[i].name);
-            fprintf(output, "      Size:   %zu bytes\n", groups[i].size);
-            fprintf(output, "      Status: ⚠ LOADED (no validation)\n");
+            fprintf(output, "│      Size:   %zu bytes\n", groups[i].size);
+            fprintf(output, "│      Status: ⚠ LOADED (no validation)\n");
         }
         else
         {
             fprintf(output, "'%s'\n", groups[i].name);
-            fprintf(output, "      Status: ✗ MISSING\n");
-            fprintf(output, "      Impact: Animations will show T-pose\n");
+            fprintf(output, "│      Status: ✗ MISSING\n");
+            fprintf(output, "│      Impact: Animations will show T-pose\n");
         }
-        
+
         if (i < num_groups - 1)
         {
-            fprintf(output, "\n");
+            fprintf(output, "│\n");
         }
     }
-    
-    fprintf(output, "\n%s\n", RULER_THIN);
+
+    fprintf(output, "\n└─────────────────────────────────────────────────────────────────\n\n");
 }
 
 // Add this function to mdl_report.c
@@ -216,28 +215,29 @@ void print_extended_model_dump(
     const unsigned char *texture_data)
 {
     if (!output) output = stdout;
-    
-    printf("\n═══════════════════════════════════════════════════════════════\n");
-    printf("  EXTENDED MODEL DUMP\n");
-    printf("═══════════════════════════════════════════════════════════════\n\n");
-    
-    // 1. Basic analysis
+
+    fprintf(output, "\n");
+    fprintf(output, "╔═══════════════════════════════════════════════════════════════╗\n");
+    fprintf(output, "║              EXTENDED MODEL DUMP                              ║\n");
+    fprintf(output, "╚═══════════════════════════════════════════════════════════════╝\n\n");
+
+    // 1. Model Analysis
     print_complete_model_analysis(output, model_path, main_header, texture_header, main_data, texture_data);
-    
-    // 2. Raw headers - single section
-    printf("\n═══════════════════════════════════════════════════════════════\n");
-    printf("  RAW HEADER DATA\n");
-    printf("═══════════════════════════════════════════════════════════════\n\n");
-    
+
+    // 2. Raw Header Data
+    fprintf(output, "\n");
+    fprintf(output, "╔═══════════════════════════════════════════════════════════════╗\n");
+    fprintf(output, "║              RAW HEADER DATA                                  ║\n");
+    fprintf(output, "╚═══════════════════════════════════════════════════════════════╝\n\n");
+
     print_studio_header_file(output, "MAIN HEADER", main_header);
-    
+
     if (texture_header) {
-        printf("\n");
         print_studio_header_file(output, "TEXTURE HEADER", texture_header);
     }
-    
-    printf("\n═══════════════════════════════════════════════════════════════\n");
-    printf("  END OF EXTENDED DUMP\n");
-    printf("═══════════════════════════════════════════════════════════════\n\n");
+
+    fprintf(output, "╔═══════════════════════════════════════════════════════════════╗\n");
+    fprintf(output, "║              END OF EXTENDED DUMP                             ║\n");
+    fprintf(output, "╚═══════════════════════════════════════════════════════════════╝\n\n");
 }
 

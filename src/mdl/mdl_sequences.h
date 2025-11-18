@@ -9,27 +9,17 @@
 extern "C" {
 #endif
 
-// PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-//   ACCESS SEQUENCES
-// PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 
 // Get sequence descriptor by index (returns NULL if invalid)
 const mstudioseqdesc_t* mdl_sequence_get_info( const studiohdr_t *header,
                                                 const unsigned char *data,
                                                 int index );
 
-// PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-//   ACCESS EVENTS (within a sequence)
-// PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 
 // Get event from a sequence by event index (returns NULL if invalid)
 const mstudioevent_t* mdl_sequence_get_event( const mstudioseqdesc_t *sequence,
                                                const unsigned char *data,
                                                int event_index );
-
-// PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-//   DEBUG AND DIAGNOSTICS
-// PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 
 /**
  * Print all sequences and their events for debugging
