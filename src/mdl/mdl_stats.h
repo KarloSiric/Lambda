@@ -51,23 +51,50 @@ typedef struct {
 	size_t estimated_vram_bytes;
 
 	// Performance rating
-	int complexity_score;                  // 0-100 scale
-	const char *performance_rating;        // "Low", "Medium", "High", "Very High"
+	int complexity_score; // 0-100 scale
+	const char *performance_rating; // "Low", "Medium", "High", "Very High"
 
 } mdl_stats_t;
 
-
 void mdl_stats_analyze( const studiohdr_t *main_header,
-                          const studiohdr_t *tex_header,
-                          const unsigned char *main_data,
-                          const unsigned char *tex_data,
-                          mdl_stats_t *out_stats );
+						const studiohdr_t *tex_header,
+						const unsigned char *main_data,
+						const unsigned char *tex_data,
+						mdl_stats_t *out_stats );
 
-int mdl_stats_triangles_count( const studiohdr_t *header, const unsigned char *data );
+/* Vertices and part of the geometry counting */
+int mdl_stats_count_triangles( const studiohdr_t *header, const unsigned char *data );
 int mdl_stats_count_vertices( const studiohdr_t *header, const unsigned char *data );
 int mdl_stats_count_meshes( const studiohdr_t *header, const unsigned char *data );
 
+/* Part of the Texture Statistics */
+size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned char *tex_data );
+void mdl_stats_texture_resolutions( const studiohdr_t *tex_header, const unsigned char *tex_data,
+									int *min_res, int *max_res, int *avg_res );
 
+/* Part of the Bones statistics */
+int mdl_stats_bone_hierarchy_depth( const studiohdr_t *header, const unsigned char *data );
+int mdl_stats_count_root_bones( const studiohdr_t *header, const unsigned char *data );
+int mdl_stats_count_leaf_bones( const studiohdr_t *header, const unsigned char *data );
+
+/* Part of the Animations statistics */
+float mdl_stats_total_animation_time( const studiohdr_t *header, const unsigned char *data );
+int mdl_stats_total_frames( const studiohdr_t *header, const unsigned char *data );
+int mdl_stats_count_events( const studiohdr_t *header, const unsigned char *data );
+
+/* Part of the model statistics */
+void mdl_stats_get_dimensions( const studiohdr_t *header, float *width, float *height, float *depth );
+float mdl_stats_get_volume( const studiohdr_t *header );
+
+/* Part of the Memory statistics */
+size_t mdl_stats_estimate_memory( const studiohdr_t *main_header, const studiohdr_t *tex_header,
+								  const unsigned char *main_data, const unsigned char *tex_data );
+
+void mdl_stats_print_report( FILE *output, const mdl_stats_t *stats, const char *model_name );
+
+void mdl_stats_print_summary( FILE *output, const mdl_stats_t *stats );
+
+void mdl_stats_print_performance( FILE *output, const mdl_stats_t *stats );
 
 #ifdef __cplusplus
 }
