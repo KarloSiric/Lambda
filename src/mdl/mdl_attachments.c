@@ -27,9 +27,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// ═══════════════════════════════════════════════════════════════════════════
-//   FIND AND ACCESS ATTACHMENTS
-// ═══════════════════════════════════════════════════════════════════════════
 
 int mdl_attachment_find( const studiohdr_t *header,
                          const unsigned char *data,
@@ -71,9 +68,6 @@ const mstudioattachment_t* mdl_attachment_get_info( const studiohdr_t *header,
 	return &attachments[index];
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//   WORLD SPACE CALCULATIONS
-// ═══════════════════════════════════════════════════════════════════════════
 
 void mdl_attachment_get_world_position( const mstudioattachment_t *attachment,
                                         const math_mat4_t *bone_matrices,
@@ -111,9 +105,6 @@ void mdl_attachment_get_world_orientation( const mstudioattachment_t *attachment
     return ;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//   DEBUG AND DIAGNOSTICS
-// ═══════════════════════════════════════════════════════════════════════════
 
 void mdl_attachment_dump( const studiohdr_t *header,
                           const unsigned char *data ) {
@@ -138,7 +129,5 @@ void mdl_attachment_dump( const studiohdr_t *header,
         printf( "      Forward:  [%.2f, %.2f, %.2f]\n", attachment->vectors[0][0], attachment->vectors[0][1], attachment->vectors[0][2] );
         printf( "      Right:    [%.2f, %.2f, %.2f]\n", attachment->vectors[1][0], attachment->vectors[1][1], attachment->vectors[1][2] );
         printf( "      Up:       [%.2f, %.2f, %.2f]\n", attachment->vectors[2][0], attachment->vectors[2][1], attachment->vectors[2][2] );
-    }
-    
-    
+    }    
 }

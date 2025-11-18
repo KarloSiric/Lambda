@@ -258,6 +258,7 @@ file(GLOB SRC_MDL CONFIGURE_DEPENDS "src/mdl/*.c")
 file(GLOB SRC_MATH CONFIGURE_DEPENDS "src/math/*.c")
 file(GLOB SRC_UTIL CONFIGURE_DEPENDS "src/util/*.c")
 file(GLOB SRC_INPUT CONFIGURE_DEPENDS "src/input/*.c")
+file(GLOB SRC_SHADER CONFIGURE_DEPENDS "src/shader/*.c")
 file(GLOB SRC_TOP CONFIGURE_DEPENDS "src/*.c")
 
 
@@ -275,6 +276,7 @@ add_executable(${PROJECT_NAME}
   ${SRC_MATH}
   ${SRC_UTIL}
   ${SRC_INPUT}
+  ${SRC_SHADER}
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -293,6 +295,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   # ${CMAKE_SOURCE_DIR}/src/sys
   ${CMAKE_SOURCE_DIR}/src/util
   ${CMAKE_SOURCE_DIR}/src/input
+  ${CMAKE_SOURCE_DIR}/src/shaders
+  
 )
 
 # ---------- Warnings ----------

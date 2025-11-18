@@ -24,17 +24,17 @@
 #include "r_gl_platform.h"
 #include "r_textures.h"
 
-#include "mdl/mdl_bodypart.h"
-#include "mdl/mdl_bones.h"
-#include "mdl/mdl_animations.h"
+#include "mdl_bodypart.h"
+#include "mdl_bones.h"
+#include "mdl_animations.h"
 #include "shaders/shader.h"
 #include "studio.h"
-#include "util/util_logger.h"
-#include "input/input.h"
-#include "input/input_handler.h"
-#include "math/math_matrix.h"
-#include "math/math_vector.h"
-#include "math/math_types.h"
+#include "util_logger.h"
+#include "input.h"
+#include "input_handler.h"
+#include "math_matrix.h"
+#include "math_vector.h"
+#include "math_types.h"
 
 #include <OpenGL/gltypes.h>
 #include <cglm/cglm.h>
