@@ -27,7 +27,7 @@
 #include "mdl_bodypart.h"
 #include "mdl_bones.h"
 #include "mdl_animations.h"
-#include "shaders/shader.h"
+#include "shader.h"
 #include "studio.h"
 #include "util_logger.h"
 #include "input.h"
