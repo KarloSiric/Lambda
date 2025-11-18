@@ -49,14 +49,14 @@
       
       // @Note: Adding here for chrome textures UVs
       if ( u_chrome ) {
-        vec3 V = normalize(viewPos - vWorldPos);
-        vec3 N = normalize(vNormal);
-        
-        vec3 R = reflect(-V, N);
-        vUV = R.xy * 0.5 + 0.5;
-      }
+          vec3 N = normalize(vNormal);
+
+          // Half-Life chrome sphere mapping
+          float m = 2.0 * sqrt(N.x*N.x + N.y*N.y + (N.z+1.0)*(N.z+1.0));
+          vUV.x = N.x / m + 0.5;
+          vUV.y = N.y / m + 0.5;      }
       else {
-        vUV = aUV;
+          vUV = aUV;
       }
       
       

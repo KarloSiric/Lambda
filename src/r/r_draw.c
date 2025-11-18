@@ -1325,7 +1325,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
         // @Note(Karlo): THis was wrong and not functioning
         // @Cleanup(Karlo): Had to add safety checking to avid loading garabge data instead of proper flags
         int flags = 0;
-        if ( text_index >= 0 || text_index < g_textures.count ) {
+        if ( text_index >= 0 && text_index < g_textures.count ) {
             flags = g_textures.textures[text_index].flags;
         }       
         
