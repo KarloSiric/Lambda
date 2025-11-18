@@ -11,6 +11,10 @@
   uniform mat4 model;
   uniform mat4 view;
   uniform mat4 projection;
+  
+  // Adding new for chrome
+  uniform bool u_chrome;
+  uniform vec3 viewPos;
 
   // Outputs
   out vec3 vNormal;
@@ -42,6 +46,20 @@
       vec4 world = model * skinnedPos;
       vWorldPos = world.xyz;
       vNormal = mat3(model) * skinnedNormal.xyz;
-      vUV = aUV;
+      
+      // @Note: Adding here for chrome textures UVs
+      if ( u_chrome ) {
+        vec3 V = normalize(viewPos - vWorldPos);
+        vec3 N = normalize(vNormal);
+        
+        vec3 R = reflect(-V, N);
+        vUV = R.xy * 0.5 + 0.5;
+      }
+      else {
+        vUV = aUV;
+      }
+      
+      
+      // vUV = aUV;
       gl_Position = projection * view * world;
   }

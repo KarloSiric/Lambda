@@ -159,8 +159,10 @@ mdl_result_t mdl_load_textures( const studiohdr_t *header, const unsigned char *
 
     for ( int i = 0; i < n_textures; i++ )
     {
-        const mstudiotexture_t *T = &textures[i];
-
+        const mstudiotexture_t *T = &textures[i]; 
+        
+        // const int text_flag = T->flags;
+        
         // T->index is an absolute offset from file start
         const unsigned char *indices = file_data + T->index;
 

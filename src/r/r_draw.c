@@ -74,24 +74,24 @@ static bool have_skinned_positions = false;
 GLFWwindow *window = NULL;
 static bool wireframe_enabled = false;
 
-static unsigned int bone_index_VBO = 0;                               // @Note: For GPU SKinning to save performance
+static unsigned int bone_index_VBO = 0; // @Note: For GPU SKinning to save performance
 static unsigned int VBO = 0;
 static unsigned int VAO = 0;
-static unsigned int EBO = 0;                                          // Element Buffer Object for indices
+static unsigned int EBO = 0; // Element Buffer Object for indices
 static unsigned int shader_program = 0;
-static unsigned int current_texture = 0;                              // Currently bound texture
+static unsigned int current_texture = 0; // Currently bound texture
 
 extern float rotation_x;
 extern float rotation_y;
 extern float zoom;
 
 static bool bone_system_initialized = false;
-static bool t_pose_bones_calculated = false;                          // Track if T-pose bones need recalculation
+static bool t_pose_bones_calculated = false; // Track if T-pose bones need recalculation
 
 // PRE-ALLOCATED BUFFERS (NO MALLOC IN RENDER LOOP)
 #define MAX_RENDER_VERTICES 32768
-static float render_vertex_buffer[MAX_RENDER_VERTICES * 8];           // 3 pos + 3 normal + 2 uv
-static int render_bone_indices[MAX_RENDER_VERTICES];                  // new for the GPU Skinning
+static float render_vertex_buffer[MAX_RENDER_VERTICES * 8]; // 3 pos + 3 normal + 2 uv
+static int render_bone_indices[MAX_RENDER_VERTICES]; // new for the GPU Skinning
 static int total_render_vertices = 0;
 static bool model_processed = false;
 
@@ -117,7 +117,6 @@ float rotation_x = 0.0f;
 float rotation_y = 0.0f;
 float zoom = 0.15f; // Even more zoomed out for scientist model
 
-
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
 	if ( !global_header || !global_data || seq_index < 0 || seq_index >= global_header->numseq ) {
@@ -137,14 +136,13 @@ static bool is_sequence_available( int seq_index ) {
 	if ( !global_seqgroups || seqgroup >= global_num_seqgroups ) {
 		return false;
 	}
-    
+
 	return ( global_seqgroups[seqgroup].data != NULL );
 }
 
 static void glfw_error_callback( int error, const char *description ) {
 	fprintf( stderr, "GLFW ERROR %d: %s\n", error, description );
 }
-
 
 float vertices[] = {
 	-0.5f,
@@ -561,7 +559,7 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 	// For GPU skinning: Upload rest-pose vertices in ORIGINAL coordinates
 	// Bone transformation, scaling, and axis remapping happen in the shader
 	vec3 P;
-    Math_Vec3Copy( g_current.vertices[vertex_index], P );
+	Math_Vec3Copy( g_current.vertices[vertex_index], P );
 
 	/* ----- NORMAL ----- */
 	// For GPU skinning: Upload rest-pose normals in ORIGINAL coordinates
@@ -600,15 +598,15 @@ void AddVertexToBuffer( int vertex_index, int normal_index, short s, short t, fl
 
 	render_vertex_buffer[base + 6] = u;
 	render_vertex_buffer[base + 7] = v;
-    
-    render_bone_indices[total_render_vertices] = bone;
+
+	render_bone_indices[total_render_vertices] = bone;
 
 	total_render_vertices++;
 }
 
 void setup_triangle( void ) {
 	glGenBuffers( 1, &VBO );
-    glGenBuffers( 1 , &bone_index_VBO );
+	glGenBuffers( 1, &bone_index_VBO );
 	glBindBuffer( GL_ARRAY_BUFFER, VBO );
 	glBufferData( GL_ARRAY_BUFFER, sizeof( vertices ), vertices, GL_STATIC_DRAW );
 
@@ -913,10 +911,9 @@ int init_renderer( int width, int height, const char *title ) {
 }
 
 void cleanup_renderer( void ) {
-    
-    // FIrst we call the input cleaner
-    Input_Shutdown();
-    
+	// FIrst we call the input cleaner
+	Input_Shutdown();
+
 	if ( VAO )
 		glDeleteVertexArrays( 1, &VAO );
 	if ( VBO )
@@ -1039,17 +1036,17 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	// ONE-TIME: Build mesh topology
 	if ( !model_processed ) {
 		ProcessModelForRendering();
-        
-        // @Note: Forgot to upload the vertices and the vertex data to the GPU
-        glBindBuffer( GL_ARRAY_BUFFER, VBO );
-        glBufferData( GL_ARRAY_BUFFER,
-                    total_render_vertices * 8 * sizeof(float),
-                    render_vertex_buffer,
-                    GL_STATIC_DRAW );
-        
-        // @Note: Adding NEW for GPU skinning
-        glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
-        glBufferData( GL_ARRAY_BUFFER, total_render_vertices * sizeof( int ), render_bone_indices, GL_STATIC_DRAW ); 
+
+		// @Note: Forgot to upload the vertices and the vertex data to the GPU
+		glBindBuffer( GL_ARRAY_BUFFER, VBO );
+		glBufferData( GL_ARRAY_BUFFER,
+					  total_render_vertices * 8 * sizeof( float ),
+					  render_vertex_buffer,
+					  GL_STATIC_DRAW );
+
+		// @Note: Adding NEW for GPU skinning
+		glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
+		glBufferData( GL_ARRAY_BUFFER, total_render_vertices * sizeof( int ), render_bone_indices, GL_STATIC_DRAW );
 	}
 
 	if ( total_render_vertices == 0 ) {
@@ -1084,162 +1081,162 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		GLint bone_matrices_loc = glGetUniformLocation( shader_program, "boneMatrices" );
 		if ( bone_matrices_loc != -1 ) {
 			glUniformMatrix4fv( bone_matrices_loc, global_header->numbones, GL_FALSE,
-			                    ( const float * )g_bonetransformations);
+								(const float *)g_bonetransformations );
 		}
 	}
 
-		// Re-transform vertices with new bone positions
-		mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
+	// Re-transform vertices with new bone positions
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
 
-		// CRITICAL: Re-build the vertex buffer with new skinned positions
-		// We need to rebuild the render buffer because AddVertexToBuffer reads from skinned_positions
-		total_render_vertices = 0;
-		g_num_ranges = 0;
+	// CRITICAL: Re-build the vertex buffer with new skinned positions
+	// We need to rebuild the render buffer because AddVertexToBuffer reads from skinned_positions
+	total_render_vertices = 0;
+	g_num_ranges = 0;
 
-		// Rebuild vertex data with updated skinned positions
-		for ( int bp = 0; bp < global_header->numbodyparts; ++bp ) {
-			mstudiobodyparts_t *bpRec = &bodyparts[bp];
-			mstudiomodel_t *models = (mstudiomodel_t *)( global_data + bpRec->modelindex );
-			int selected_model_index = bodypart_get_model_index( bp );
+	// Rebuild vertex data with updated skinned positions
+	for ( int bp = 0; bp < global_header->numbodyparts; ++bp ) {
+		mstudiobodyparts_t *bpRec = &bodyparts[bp];
+		mstudiomodel_t *models = (mstudiomodel_t *)( global_data + bpRec->modelindex );
+		int selected_model_index = bodypart_get_model_index( bp );
 
-			if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels ) {
-				selected_model_index = 0;
+		if ( selected_model_index < 0 || selected_model_index >= bpRec->nummodels ) {
+			selected_model_index = 0;
+		}
+
+		mstudiomodel_t *model = &models[selected_model_index];
+
+		TransformVertices( global_header, global_data, model, skinned_positions );
+		have_skinned_positions = true;
+
+		g_current.model = model;
+		g_current.vertices = (vec3_t *)( global_data + model->vertindex );
+		g_current.normals = (vec3_t *)( global_data + model->normindex );
+		g_current.vertex_count = model->numverts;
+		g_current.normal_count = model->numnorms;
+
+		mstudiomesh_t *meshes = (mstudiomesh_t *)( global_data + model->meshindex );
+		const short *skin_table = (const short *)( global_data + global_header->skinindex );
+		const int numskinref = global_header->numskinref;
+		const int skin_family = 0;
+
+		for ( int mesh = 0; mesh < model->nummesh; ++mesh ) {
+			const int norm_base = meshes[mesh].normindex;
+
+			int tex_index = meshes[mesh].skinref;
+			if ( skin_table && numskinref > 0 && tex_index >= 0 && tex_index < numskinref ) {
+				tex_index = skin_table[skin_family * numskinref + tex_index];
 			}
 
-			mstudiomodel_t *model = &models[selected_model_index];
+			GLuint gl_tex = 0;
+			int texW = 1, texH = 1;
+			if ( tex_index >= 0 && tex_index < g_textures.count ) {
+				gl_tex = g_textures.textures[tex_index].gl_id;
+				texW = g_textures.textures[tex_index].width;
+				texH = g_textures.textures[tex_index].height;
+				if ( texW <= 0 )
+					texW = 1;
+				if ( texH <= 0 )
+					texH = 1;
+			}
+			if ( !gl_tex && g_white_tex ) {
+				gl_tex = g_white_tex;
+				texW = 2;
+				texH = 2;
+			}
 
-			TransformVertices( global_header, global_data, model, skinned_positions );
-			have_skinned_positions = true;
+			short *ptricmds = (short *)( global_data + meshes[mesh].triindex );
+			const int start_first = total_render_vertices;
 
-			g_current.model = model;
-			g_current.vertices = (vec3_t *)( global_data + model->vertindex );
-			g_current.normals = (vec3_t *)( global_data + model->normindex );
-			g_current.vertex_count = model->numverts;
-			g_current.normal_count = model->numnorms;
+			int i;
+			while ( ( i = *( ptricmds++ ) ) ) {
+				if ( i < 0 ) {
+					// Triangle fan
+					i = -i;
+					short v0 = ptricmds[0], n0 = ptricmds[1], s0 = ptricmds[2], t0 = ptricmds[3];
+					ptricmds += 4;
+					short v1 = ptricmds[0], n1 = ptricmds[1], s1 = ptricmds[2], t1 = ptricmds[3];
+					ptricmds += 4;
 
-			mstudiomesh_t *meshes = (mstudiomesh_t *)( global_data + model->meshindex );
-			const short *skin_table = (const short *)( global_data + global_header->skinindex );
-			const int numskinref = global_header->numskinref;
-			const int skin_family = 0;
+					if ( n0 & 0x8000 )
+						s0 += texW / 2;
+					n0 &= 0x7FFF;
+					if ( n1 & 0x8000 )
+						s1 += texW / 2;
+					n1 &= 0x7FFF;
+					n0 += norm_base;
+					n1 += norm_base;
 
-			for ( int mesh = 0; mesh < model->nummesh; ++mesh ) {
-				const int norm_base = meshes[mesh].normindex;
-
-				int tex_index = meshes[mesh].skinref;
-				if ( skin_table && numskinref > 0 && tex_index >= 0 && tex_index < numskinref ) {
-					tex_index = skin_table[skin_family * numskinref + tex_index];
-				}
-
-				GLuint gl_tex = 0;
-				int texW = 1, texH = 1;
-				if ( tex_index >= 0 && tex_index < g_textures.count ) {
-					gl_tex = g_textures.textures[tex_index].gl_id;
-					texW = g_textures.textures[tex_index].width;
-					texH = g_textures.textures[tex_index].height;
-					if ( texW <= 0 )
-						texW = 1;
-					if ( texH <= 0 )
-						texH = 1;
-				}
-				if ( !gl_tex && g_white_tex ) {
-					gl_tex = g_white_tex;
-					texW = 2;
-					texH = 2;
-				}
-
-				short *ptricmds = (short *)( global_data + meshes[mesh].triindex );
-				const int start_first = total_render_vertices;
-
-				int i;
-				while ( ( i = *( ptricmds++ ) ) ) {
-					if ( i < 0 ) {
-						// Triangle fan
-						i = -i;
-						short v0 = ptricmds[0], n0 = ptricmds[1], s0 = ptricmds[2], t0 = ptricmds[3];
+					for ( int j = 2; j < i; ++j ) {
+						short v2 = ptricmds[0], n2 = ptricmds[1], s2 = ptricmds[2], t2 = ptricmds[3];
 						ptricmds += 4;
-						short v1 = ptricmds[0], n1 = ptricmds[1], s1 = ptricmds[2], t1 = ptricmds[3];
+						if ( n2 & 0x8000 )
+							s2 += texW / 2;
+						n2 &= 0x7FFF;
+						n2 += norm_base;
+
+						AddVertexToBuffer( v0, n0, s0, t0, (float)texW, (float)texH );
+						AddVertexToBuffer( v1, n1, s1, t1, (float)texW, (float)texH );
+						AddVertexToBuffer( v2, n2, s2, t2, (float)texW, (float)texH );
+
+						v1 = v2;
+						n1 = n2;
+						s1 = s2;
+						t1 = t2;
+					}
+				} else {
+					// Triangle strip
+					short v0 = ptricmds[0], n0 = ptricmds[1], s0 = ptricmds[2], t0 = ptricmds[3];
+					ptricmds += 4;
+					short v1 = ptricmds[0], n1 = ptricmds[1], s1 = ptricmds[2], t1 = ptricmds[3];
+					ptricmds += 4;
+
+					if ( n0 & 0x8000 )
+						s0 += texW / 2;
+					n0 &= 0x7FFF;
+					if ( n1 & 0x8000 )
+						s1 += texW / 2;
+					n1 &= 0x7FFF;
+					n0 += norm_base;
+					n1 += norm_base;
+
+					for ( int j = 2; j < i; ++j ) {
+						short v2 = ptricmds[0], n2 = ptricmds[1], s2 = ptricmds[2], t2 = ptricmds[3];
 						ptricmds += 4;
+						if ( n2 & 0x8000 )
+							s2 += texW / 2;
+						n2 &= 0x7FFF;
+						n2 += norm_base;
 
-						if ( n0 & 0x8000 )
-							s0 += texW / 2;
-						n0 &= 0x7FFF;
-						if ( n1 & 0x8000 )
-							s1 += texW / 2;
-						n1 &= 0x7FFF;
-						n0 += norm_base;
-						n1 += norm_base;
-
-						for ( int j = 2; j < i; ++j ) {
-							short v2 = ptricmds[0], n2 = ptricmds[1], s2 = ptricmds[2], t2 = ptricmds[3];
-							ptricmds += 4;
-							if ( n2 & 0x8000 )
-								s2 += texW / 2;
-							n2 &= 0x7FFF;
-							n2 += norm_base;
-
+						if ( ( j - 2 ) % 2 == 0 ) {
 							AddVertexToBuffer( v0, n0, s0, t0, (float)texW, (float)texH );
 							AddVertexToBuffer( v1, n1, s1, t1, (float)texW, (float)texH );
 							AddVertexToBuffer( v2, n2, s2, t2, (float)texW, (float)texH );
-
-							v1 = v2;
-							n1 = n2;
-							s1 = s2;
-							t1 = t2;
+						} else {
+							AddVertexToBuffer( v1, n1, s1, t1, (float)texW, (float)texH );
+							AddVertexToBuffer( v0, n0, s0, t0, (float)texW, (float)texH );
+							AddVertexToBuffer( v2, n2, s2, t2, (float)texW, (float)texH );
 						}
-					} else {
-						// Triangle strip
-						short v0 = ptricmds[0], n0 = ptricmds[1], s0 = ptricmds[2], t0 = ptricmds[3];
-						ptricmds += 4;
-						short v1 = ptricmds[0], n1 = ptricmds[1], s1 = ptricmds[2], t1 = ptricmds[3];
-						ptricmds += 4;
 
-						if ( n0 & 0x8000 )
-							s0 += texW / 2;
-						n0 &= 0x7FFF;
-						if ( n1 & 0x8000 )
-							s1 += texW / 2;
-						n1 &= 0x7FFF;
-						n0 += norm_base;
-						n1 += norm_base;
-
-						for ( int j = 2; j < i; ++j ) {
-							short v2 = ptricmds[0], n2 = ptricmds[1], s2 = ptricmds[2], t2 = ptricmds[3];
-							ptricmds += 4;
-							if ( n2 & 0x8000 )
-								s2 += texW / 2;
-							n2 &= 0x7FFF;
-							n2 += norm_base;
-
-							if ( ( j - 2 ) % 2 == 0 ) {
-								AddVertexToBuffer( v0, n0, s0, t0, (float)texW, (float)texH );
-								AddVertexToBuffer( v1, n1, s1, t1, (float)texW, (float)texH );
-								AddVertexToBuffer( v2, n2, s2, t2, (float)texW, (float)texH );
-							} else {
-								AddVertexToBuffer( v1, n1, s1, t1, (float)texW, (float)texH );
-								AddVertexToBuffer( v0, n0, s0, t0, (float)texW, (float)texH );
-								AddVertexToBuffer( v2, n2, s2, t2, (float)texW, (float)texH );
-							}
-
-							v0 = v1;
-							n0 = n1;
-							s0 = s1;
-							t0 = t1;
-							v1 = v2;
-							n1 = n2;
-							s1 = s2;
-							t1 = t2;
-						}
+						v0 = v1;
+						n0 = n1;
+						s0 = s1;
+						t0 = t1;
+						v1 = v2;
+						n1 = n2;
+						s1 = s2;
+						t1 = t2;
 					}
 				}
-
-				if ( g_num_ranges < MAX_DRAW_RANGES ) {
-					g_ranges[g_num_ranges].tex = gl_tex;
-					g_ranges[g_num_ranges].first = start_first;
-					g_ranges[g_num_ranges].count = total_render_vertices - start_first;
-					g_num_ranges++;
-				}
 			}
-		}    
+
+			if ( g_num_ranges < MAX_DRAW_RANGES ) {
+				g_ranges[g_num_ranges].tex = gl_tex;
+				g_ranges[g_num_ranges].first = start_first;
+				g_ranges[g_num_ranges].count = total_render_vertices - start_first;
+				g_num_ranges++;
+			}
+		}
+	}
 
 	glUseProgram( shader_program );
 
@@ -1262,7 +1259,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	Math_Mat4_LookAt( camPos, target, up, V );
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
-    
+
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );
 	GLint uProj = glGetUniformLocation( shader_program, "projection" );
@@ -1283,8 +1280,8 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 
 	glBindVertexArray( VAO );
 	glBindBuffer( GL_ARRAY_BUFFER, VBO );
-    
-    // @Note: Removing this because it is already now on the GPU, experimental and testing for now
+
+	// @Note: Removing this because it is already now on the GPU, experimental and testing for now
 	// glBufferData(
 	// 	GL_ARRAY_BUFFER,
 	// 	(GLsizeiptr)( total_render_vertices * 8 * sizeof( float ) ),
@@ -1297,22 +1294,74 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	glEnableVertexAttribArray( 1 );
 	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 6 * sizeof( float ) ) );
 	glEnableVertexAttribArray( 2 );
-    
-    
-    // @Note: Adding NEW for GPU skinning - Added the bone_index_VBO
-    glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
-    glVertexAttribIPointer( 3, 1, GL_INT, sizeof( int ), ( void * )0 );
-    glEnableVertexAttribArray( 3 );
-    
+
+	// @Note: Adding NEW for GPU skinning - Added the bone_index_VBO
+	glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
+	glVertexAttribIPointer( 3, 1, GL_INT, sizeof( int ), (void *)0 );
+	glEnableVertexAttribArray( 3 );
 
 	GLint uTex = glGetUniformLocation( shader_program, "tex" );
-	if ( uTex != -1 )
+	if ( uTex != -1 ) {
 		glUniform1i( uTex, 0 );
+    }
+    
+    glDisable( GL_BLEND );
 
 	for ( int r = 0; r < g_num_ranges; ++r ) {
+        
 		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
 		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, tex_to_bind );
+		glBindTexture( GL_TEXTURE_2D, tex_to_bind ); 
+        
+		// @Note(Karlo): Adding texture flags checkout
+		int text_index = -1;
+		for ( int t1 = 0; t1 < g_textures.count; t1++ ) {
+			if ( g_textures.textures[t1].gl_id == tex_to_bind ) {
+				text_index = t1;
+				break;
+			}
+		}
+        
+        // @Note(Karlo): THis was wrong and not functioning
+        // @Cleanup(Karlo): Had to add safety checking to avid loading garabge data instead of proper flags
+        int flags = 0;
+        if ( text_index >= 0 || text_index < g_textures.count ) {
+            flags = g_textures.textures[text_index].flags;
+        }       
+        
+        if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
+            glEnable( GL_BLEND );
+            
+            if ( flags & STUDIO_NF_ADDITIVE ) {
+                glBlendFunc( GL_SRC_ALPHA, GL_ONE ); // ADITIVE FLAG
+            } else {
+                glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+            }
+        } else {
+            glDisable( GL_BLEND );
+        }
+        
+		// mask
+		glUniform1i( glGetUniformLocation( shader_program, "u_masked" ),
+					 ( flags & STUDIO_NF_MASKED ) != 0 );
+
+		// fullbright
+		glUniform1i( glGetUniformLocation( shader_program, "u_fullbright" ),
+					 ( flags & STUDIO_NF_FULLBRIGHT ) != 0 );
+
+		// additive
+		glUniform1i( glGetUniformLocation( shader_program, "u_additive" ),
+					 ( flags & STUDIO_NF_ADDITIVE ) != 0 );
+
+		// chrome
+		glUniform1i( glGetUniformLocation( shader_program, "u_chrome" ),
+					 ( flags & STUDIO_NF_CHROME ) != 0 );
+
+		// for chrome, vertex shader needs the camera pos
+		glUniform3f( glGetUniformLocation( shader_program, "viewPos" ),
+					 camPos[0], camPos[1], camPos[2] );
+
+
 		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
 	}
 }
@@ -1323,7 +1372,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 	}
 
 	LOG_INFOF( "renderer", "Loading model: %d bones, %d bodyparts, %d sequences",
-		header->numbones, header->numbodyparts, header->numseq );
+			   header->numbones, header->numbodyparts, header->numseq );
 
 	global_header = header;
 	global_data = data;
@@ -1334,7 +1383,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 
 	model_processed = false;
 	bone_system_initialized = false;
-	t_pose_bones_calculated = false;  // Reset T-pose calculation flag
+	t_pose_bones_calculated = false; // Reset T-pose calculation flag
 	total_render_vertices = 0;
 
 	// Free old textures
