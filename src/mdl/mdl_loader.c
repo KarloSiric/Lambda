@@ -283,7 +283,7 @@ mdl_result_t parse_animation_sequences( const studiohdr_t *header, const unsigne
 	return MDL_SUCCESS;
 }
 
-void print_sequence_info( FILE *output, const mstudioseqdesc_t *sequences, int sequence_count ) {
+void print_sequence_info( FILE *output, const mstudioseqdesc_t *sequences, int sequence_count, const unsigned char *data ) {
 	if ( !sequences || sequence_count == 0 ) {
 		fprintf( output, "\nAnimation Sequences: No sequence found\n" );
 		return;
@@ -295,6 +295,23 @@ void print_sequence_info( FILE *output, const mstudioseqdesc_t *sequences, int s
 		fprintf( output, "    Frames: %d @ %.1f fps\n", sequences[i].numframes, sequences[i].fps );
 		fprintf( output, "    Activity: %d (weight: %d)\n", sequences[i].activity, sequences[i].actweight );
 		fprintf( output, "    Events: %d\n", sequences[i].numevents );
+
+		// Print individual events if present
+		if ( sequences[i].numevents > 0 && data ) {
+			mstudioevent_t *events = (mstudioevent_t *)( data + sequences[i].eventindex );
+
+			for ( int j = 0; j < sequences[i].numevents; j++ ) {
+				fprintf( output, "      │  [%d] Frame %d, Event %d", j, events[j].frame, events[j].event );
+
+				// Print options if not empty
+				if ( events[j].options[0] != '\0' ) {
+					fprintf( output, ", Options: '%s'", events[j].options );
+				}
+
+				fprintf( output, "\n" );
+			}
+		}
+
 		fprintf( output, "    Flags: 0x%x", sequences[i].flags );
 
 		if ( sequences[i].flags & 0x01 )

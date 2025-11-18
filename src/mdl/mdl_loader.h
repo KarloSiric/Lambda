@@ -119,7 +119,7 @@ void print_bodypart_info( FILE *output, const studiohdr_t *h, const unsigned cha
 
 void print_bone_info( FILE *output, const mstudiobone_t *bones, int bone_count );
 
-void print_sequence_info( FILE *output, const mstudioseqdesc_t *sequences, int sequence_count );
+void print_sequence_info( FILE *output, const mstudioseqdesc_t *sequences, int sequence_count, const unsigned char *data );
 
 void print_simple_triangle_info( FILE *output, const mstudiomodel_t *model, int bodypart_index, int model_index );
 #endif    // MDL_LOADER_H

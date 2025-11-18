@@ -84,7 +84,7 @@ void print_complete_model_analysis(
     {
         fprintf( output, "┌─ ANIMATION SEQUENCES (%d sequences)\n", main_header->numseq );
         fprintf( output, "│\n" );
-        print_sequence_info( output, sequences, main_header->numseq );  // Pass output!
+        print_sequence_info( output, sequences, main_header->numseq, main_data );
         fprintf( output, "└─────────────────────────────────────────────────────────────────\n" );
         fprintf( output, "\n" );
     }
