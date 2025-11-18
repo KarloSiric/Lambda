@@ -55,14 +55,10 @@ int mdl_attachment_find( const studiohdr_t *header,
 const mstudioattachment_t* mdl_attachment_get_info( const studiohdr_t *header,
                                                      const unsigned char *data,
                                                      int index ) { 
-    if ( header == NULL || data == NULL ) {
+    if ( header == NULL || data == NULL || index < 0 || index >= header->numattachments ) {
         return NULL;
     }
-    
-    if ( index < 0 || index >= header->numattachments ) {
-        return NULL;
-    }
-    
+     
     mstudioattachment_t *attachments = ( mstudioattachment_t * )( data + header->attachmentindex );
     
 	return &attachments[index];
