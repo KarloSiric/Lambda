@@ -57,8 +57,11 @@ int mdl_stats_count_triangles( const studiohdr_t *header, const unsigned char *d
                     // @Note: Number of triangles ir always using the formula (vertex_count - 2)
                     //        Regardless if it's strips or fans ( > 0) or ( < 0);
                     
-                    triangle_count += ( vertex_count - 2 );
-                    
+                    // @Safety Check: Adding safety check if vertex_count is bigger than 3
+                    //                Need atleast 3 vertices to make a triangle
+                    if ( vertex_count >= 3 ) {
+                        triangle_count += ( vertex_count - 2 ); 
+                    } 
                     ptricmds += vertex_count * 4;
                 }
                  
