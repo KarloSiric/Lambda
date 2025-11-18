@@ -27,4 +27,8 @@ void mdl_attachment_get_world_orientation( const mstudioattachment_t *attachment
 void mdl_attachment_dump( const studiohdr_t *header, const unsigned char *data );
 
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif
