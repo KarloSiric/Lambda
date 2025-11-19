@@ -373,6 +373,11 @@ int mdl_stats_total_frames( const studiohdr_t *header, const unsigned char *data
 	if ( header == NULL || data == NULL ) {
 		return ( -1 );
 	}
+    
+    if ( header->numseq <= 0 ) {
+        return ( 0 );
+    }
+
 
 	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( data + header->seqindex );
 	int numseq = header->numseq;
@@ -387,11 +392,15 @@ int mdl_stats_total_frames( const studiohdr_t *header, const unsigned char *data
 	return ( total_frames );
 }
 
-int mdl_stats_count_events( const studiohdr_t *header, const unsigned char *data ) {
+int mdl_stats_count_events( const studiohdr_t *header, const unsigned char *data ) {    
 	if ( header == NULL || data == NULL ) {
 		return ( -1 );
 	}
-
+    
+    if ( header->numseq <= 0 ) {
+        return ( 0 );
+    }
+ 
 	int total_events = 0;
 	int numseq = header->numseq;
 
@@ -405,6 +414,22 @@ int mdl_stats_count_events( const studiohdr_t *header, const unsigned char *data
 
 	return ( total_events );
 }
+
+
+void mdl_stats_get_dimensions( const studiohdr_t *header, float *width, float *height, float *depth ) {
+    
+    if ( header == NULL || width == NULL || height == NULL || depth == NULL ) {
+        return ;        
+    }
+    
+    
+    
+    
+    
+    
+    
+}
+
 
 
 
