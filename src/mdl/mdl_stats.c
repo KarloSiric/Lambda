@@ -175,8 +175,8 @@ size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned c
 		// @Note(Karlo): The return value is in size_t returning bytes so this needs to be 0 for that.
 		return ( 0 );
 	}
-    
-    // @Note: Safety check for if we do not have any textures whatsoever
+
+	// @Note: Safety check for if we do not have any textures whatsoever
 	if ( tex_header->numtextures <= 0 ) {
 		return ( 0 );
 	}
@@ -199,121 +199,212 @@ size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned c
 }
 
 void mdl_stats_texture_resolutions( const studiohdr_t *tex_header, const unsigned char *tex_data, int *min_res, int *max_res, int *avg_res ) {
-    
-    if ( tex_header == NULL || tex_data == NULL || min_res == NULL || max_res == NULL || avg_res == NULL ) {
-        return ;
-    }
-    
-    *min_res = 0;
-    *max_res = 0;
-    *avg_res = 0;
-    
-    
-    // Local variables for tracking the min and max and also avg values
-    int min_area = INT_MAX;
-    int max_area = 0;
-    int avg_area = 0;
-    
-    int total_area = 0;
-    
-    // @Note: Safety check for if we do not have any textures whatsoever
-    if ( tex_header->numtextures <= 0 ) {
-        return ;
-    }
-    
-    int numtextures = tex_header->numtextures;
-    mstudiotexture_t *textures = ( mstudiotexture_t *)( tex_data + tex_header->textureindex );
-    
-    for ( int t_idx = 0; t_idx < numtextures; t_idx++ ) {
-        mstudiotexture_t *tex = &textures[t_idx];
-        
-        int area = tex->width * tex->height;
-        
-        if ( area < min_area ) {
-            min_area = area;
-        }
-        
-        if ( area > max_area ) {
-            max_area = area;
-        }
-            
-        total_area += area;
-    }
-    
-    avg_area = total_area / numtextures;
-    
-    // @Note: FInally we write it to the output pointers dereferenced
-    *min_res = min_area;
-    *max_res = max_area;
-    *avg_res = avg_area;
-     
-    return ;
-    
+	if ( tex_header == NULL || tex_data == NULL || min_res == NULL || max_res == NULL || avg_res == NULL ) {
+		return;
+	}
+
+	*min_res = 0;
+	*max_res = 0;
+	*avg_res = 0;
+
+	// Local variables for tracking the min and max and also avg values
+	int min_area = INT_MAX;
+	int max_area = 0;
+	int avg_area = 0;
+
+	int total_area = 0;
+
+	// @Note: Safety check for if we do not have any textures whatsoever
+	if ( tex_header->numtextures <= 0 ) {
+		return;
+	}
+
+	int numtextures = tex_header->numtextures;
+	mstudiotexture_t *textures = (mstudiotexture_t *)( tex_data + tex_header->textureindex );
+
+	for ( int t_idx = 0; t_idx < numtextures; t_idx++ ) {
+		mstudiotexture_t *tex = &textures[t_idx];
+
+		int area = tex->width * tex->height;
+
+		if ( area < min_area ) {
+			min_area = area;
+		}
+
+		if ( area > max_area ) {
+			max_area = area;
+		}
+
+		total_area += area;
+	}
+
+	avg_area = total_area / numtextures;
+
+	// @Note: FInally we write it to the output pointers dereferenced
+	*min_res = min_area;
+	*max_res = max_area;
+	*avg_res = avg_area;
+
+	return;
 }
 
 int mdl_stats_count_root_bones( const studiohdr_t *header, const unsigned char *data ) {
-    
-    if ( header == NULL || data == NULL ) {
-        return ( -1 );
-    }
-    
-    // @Note: Safety checking is always good make sure to do it!
-    if ( header->numbones <= 0 ) {
-        return ( -1 );
-    }
-    
-    int root_bones = 0;
-    int numbones = header->numbones;
-    mstudiobone_t *bones = ( mstudiobone_t *)( data + header->boneindex );
-     
-    for ( int b_idx = 0; b_idx < numbones; b_idx++ ) {
-        mstudiobone_t *bone = &bones[b_idx];
-        
-        // @Note: -1 in this case indicates that it is a root bone
-        if ( bone->parent == -1 ) {
-            root_bones++;
-        }
-    }
-    
-    return ( root_bones );
-}
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
 
+	// @Note: Safety checking is always good make sure to do it!
+	if ( header->numbones <= 0 ) {
+		return ( -1 );
+	}
+
+	int root_bones = 0;
+	int numbones = header->numbones;
+	mstudiobone_t *bones = (mstudiobone_t *)( data + header->boneindex );
+
+	for ( int b_idx = 0; b_idx < numbones; b_idx++ ) {
+		mstudiobone_t *bone = &bones[b_idx];
+
+		// @Note: -1 in this case indicates that it is a root bone
+		if ( bone->parent == -1 ) {
+			root_bones++;
+		}
+	}
+
+	return ( root_bones );
+}
 
 int mdl_stats_count_leaf_bones( const studiohdr_t *header, const unsigned char *data ) {
-    
-    if ( header == NULL || data == NULL ) {
-        return ( -1 );
-    }
-    
-    if ( header->numbones <= 0 ) {
-        return ( -1 );
-    }
-    
-    // @Note: Those bones that do not have any children because their children to them they are parents
-    int leaf_bones = 0;
-    int numbones = header->numbones;
-    
-    mstudiobone_t *bones = ( mstudiobone_t * )( data + header->boneindex );
-    
-    for ( int i = 0; i < numbones; i++ ) {
-        bool has_children = false;
-        
-        for ( int j = 0; j < numbones; j++ ) { 
-            if ( bones[j].parent == i ) {
-                has_children = true;
-                break;
-            } 
-        }
-        
-        if ( !has_children ) {
-            leaf_bones++;
-        }
-    } 
-    
-    return ( leaf_bones );
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
+
+	if ( header->numbones <= 0 ) {
+		return ( -1 );
+	}
+
+	// @Note: Those bones that do not have any children because their children to them they are parents
+	int leaf_bones = 0;
+	int numbones = header->numbones;
+
+	mstudiobone_t *bones = (mstudiobone_t *)( data + header->boneindex );
+
+	for ( int i = 0; i < numbones; i++ ) {
+		bool has_children = false;
+
+		for ( int j = 0; j < numbones; j++ ) {
+			if ( bones[j].parent == i ) {
+				has_children = true;
+				break;
+			}
+		}
+
+		if ( !has_children ) {
+			leaf_bones++;
+		}
+	}
+
+	return ( leaf_bones );
 }
 
+int mdl_stats_bone_hierarchy_depth( const studiohdr_t *header, const unsigned char *data ) {
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
 
+	if ( header->numbones <= 0 ) {
+		return ( -1 );
+	}
+
+	int max_depth = 0;
+
+	int numbones = header->numbones;
+
+	mstudiobone_t *bones = (mstudiobone_t *)( data + header->boneindex );
+
+	for ( int i = 0; i < numbones; i++ ) {
+		int depth = 0;
+		int current = i;
+
+		while ( bones[current].parent != -1 ) {
+			depth++;
+			current = bones[current].parent;
+
+			if ( depth > numbones ) {
+				break;
+			}
+		}
+
+		if ( depth > max_depth ) {
+			max_depth = depth;
+		}
+	}
+
+	return ( max_depth );
+}
+
+float mdl_stats_total_animation_time( const studiohdr_t *header, const unsigned char *data ) {
+	if ( header == NULL || data == NULL ) {
+		return ( 0.0f );
+	}
+
+	if ( header->numseq <= 0 ) {
+		return ( 0.0f );
+	}
+
+	float total_time = 0.0f;
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( data + header->seqindex );
+
+	int numsequences = header->numseq;
+
+	for ( int i = 0; i < numsequences; i++ ) {
+		mstudioseqdesc_t *sequence = &sequences[i];
+		if ( sequence->fps > 0.0f ) {
+			float duration = (float)sequence->numframes / sequence->fps;
+			total_time += duration;
+		}
+	}
+
+	return ( total_time );
+}
+
+int mdl_stats_total_frames( const studiohdr_t *header, const unsigned char *data ) {
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( data + header->seqindex );
+	int numseq = header->numseq;
+	int total_frames = 0;
+
+	for ( int i = 0; i < numseq; i++ ) {
+		mstudioseqdesc_t *sequence = &sequences[i];
+
+		total_frames += sequence->numframes;
+	}
+
+	return ( total_frames );
+}
+
+int mdl_stats_count_events( const studiohdr_t *header, const unsigned char *data ) {
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
+
+	int total_events = 0;
+	int numseq = header->numseq;
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( data + header->seqindex );
+
+	for ( int i = 0; i < numseq; i++ ) {
+		mstudioseqdesc_t *sequence = &sequences[i];
+
+		total_events += sequence->numevents;
+	}
+
+	return ( total_events );
+}
 
 
 
