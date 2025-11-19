@@ -72,82 +72,111 @@ int mdl_stats_count_vertices( const studiohdr_t *header, const unsigned char *da
 	if ( header == NULL || data == NULL ) {
 		return ( -1 );
 	}
-    
-    int vertex_count = 0;
-    
-    mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t *)( data + header->bodypartindex );
-    int numbodyparts = header->numbodyparts;
-    for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
-        mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
-        int nummodels = bodypart->nummodels;
-        
-        mstudiomodel_t *models = ( mstudiomodel_t *)( data + bodypart->modelindex );
-        for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
-            mstudiomodel_t *model = &models[m_idx];
-            
-            // @Note: Now we add the count of the vertices to the total count
-            vertex_count += model->numverts;
-            
-        }
-        
-    }
-     
-    return ( vertex_count );
-    
+
+	int vertex_count = 0;
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( data + header->bodypartindex );
+	int numbodyparts = header->numbodyparts;
+	for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
+		mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
+		int nummodels = bodypart->nummodels;
+
+		mstudiomodel_t *models = (mstudiomodel_t *)( data + bodypart->modelindex );
+		for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
+			mstudiomodel_t *model = &models[m_idx];
+
+			// @Note: Now we add the count of the vertices to the total count
+			vertex_count += model->numverts;
+		}
+	}
+
+	return ( vertex_count );
 }
 
 int mdl_stats_count_meshes( const studiohdr_t *header, const unsigned char *data ) {
-    
-    if ( header == NULL || data == NULL ) {
-        return ( -1 );
-    }
-    
-    int mesh_count = 0;
-    
-    mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * )( data + header->bodypartindex );
-    int numbodyparts = header->numbodyparts;
-    
-    for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
-        mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
-        int nummodels = bodypart->nummodels;
-        
-        mstudiomodel_t *models = ( mstudiomodel_t *)( data + bodypart->modelindex );
-        
-        for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
-            mstudiomodel_t *model = &models[m_idx];
-            mesh_count += model->nummesh;
-            
-        }
-    }
-     
-    return ( mesh_count );
-    
-}
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
 
+	int mesh_count = 0;
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( data + header->bodypartindex );
+	int numbodyparts = header->numbodyparts;
+
+	for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
+		mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
+		int nummodels = bodypart->nummodels;
+
+		mstudiomodel_t *models = (mstudiomodel_t *)( data + bodypart->modelindex );
+
+		for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
+			mstudiomodel_t *model = &models[m_idx];
+			mesh_count += model->nummesh;
+		}
+	}
+
+	return ( mesh_count );
+}
 
 int mdl_stats_count_normals( const studiohdr_t *header, const unsigned char *data ) {
-    
-   if ( header == NULL || data == NULL ) {
-        return ( -1 );
-    }
-    
-    int normals_count = 0;
-    
-    mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * )( data + header->bodypartindex );
-    int numbodyparts = header->numbodyparts;
-    
-    for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
-        mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
-        int nummodels = bodypart->nummodels;
-        
-        mstudiomodel_t *models = ( mstudiomodel_t *)( data + bodypart->modelindex );
-        
-        for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
-            mstudiomodel_t *model = &models[m_idx];
-            normals_count += model->numnorms;
-            
-        }
-    }
-     
-    return ( normals_count ); 
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
+
+	int normals_count = 0;
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( data + header->bodypartindex );
+	int numbodyparts = header->numbodyparts;
+
+	for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
+		mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
+		int nummodels = bodypart->nummodels;
+
+		mstudiomodel_t *models = (mstudiomodel_t *)( data + bodypart->modelindex );
+
+		for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
+			mstudiomodel_t *model = &models[m_idx];
+			normals_count += model->numnorms;
+		}
+	}
+
+	return ( normals_count );
 }
+
+int mdl_stats_count_groups( const studiohdr_t *header, const unsigned char *data ) {
+	if ( header == NULL || data == NULL ) {
+		return ( -1 );
+	}
+
+	int groups_count = 0;
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( data + header->bodypartindex );
+	int numbodyparts = header->numbodyparts;
+
+	for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
+		mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
+		int nummodels = bodypart->nummodels;
+
+		mstudiomodel_t *models = (mstudiomodel_t *)( data + bodypart->modelindex );
+
+		for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
+			mstudiomodel_t *model = &models[m_idx];
+			groups_count += model->numgroups;
+		}
+	}
+
+	return ( groups_count );
+}
+
+
+size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned char *tex_data ) {
+    
+    if ( tex_header == NULL || tex_data == NULL ) {
+        // @Note(Karlo): The return value is in size_t returning bytes so this needs to be 0 for that.
+        return ( 0 );
+    }
+    
+}
+
+
+
