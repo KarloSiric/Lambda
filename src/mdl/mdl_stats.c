@@ -23,6 +23,7 @@
 #include "mdl_stats.h"
 #include <math_types.h>
 #include <stddef.h>
+#include <limits.h>
 
 int mdl_stats_count_triangles( const studiohdr_t *header, const unsigned char *data ) {
 	if ( header == NULL || data == NULL ) {
@@ -174,7 +175,8 @@ size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned c
 		// @Note(Karlo): The return value is in size_t returning bytes so this needs to be 0 for that.
 		return ( 0 );
 	}
-
+    
+    // @Note: Safety check for if we do not have any textures whatsoever
 	if ( tex_header->numtextures <= 0 ) {
 		return ( 0 );
 	}
@@ -198,7 +200,66 @@ size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned c
 
 void mdl_stats_texture_resolutions( const studiohdr_t *tex_header, const unsigned char *tex_data, int *min_res, int *max_res, int *avg_res ) {
     
+    if ( tex_header == NULL || tex_data == NULL || min_res == NULL || max_res == NULL || avg_res == NULL ) {
+        return ;
+    }
+    
+    *min_res = 0;
+    *max_res = 0;
+    *avg_res = 0;
+    
+    
+    // Local variables for tracking the min and max and also avg values
+    int min_area = INT_MAX;
+    int max_area = 0;
+    int avg_area = 0;
+    
+    int total_area = 0;
+    
+    // @Note: Safety check for if we do not have any textures whatsoever
+    if ( tex_header->numtextures <= 0 ) {
+        return ;
+    }
+    
+    int numtextures = tex_header->numtextures;
+    mstudiotexture_t *textures = ( mstudiotexture_t *)( tex_data + tex_header->textureindex );
+    
+    for ( int t_idx = 0; t_idx < numtextures; t_idx++ ) {
+        mstudiotexture_t *tex = &textures[t_idx];
+        
+        int area = tex->width * tex->height;
+        
+        if ( area < min_area ) {
+            min_area = area;
+        }
+        
+        if ( area > max_area ) {
+            max_area = area;
+        }
+            
+        total_area += area;
+    }
+    
+    avg_area = total_area / numtextures;
+    
+    // @Note: FInally we write it to the output pointers dereferenced
+    *min_res = min_area;
+    *max_res = max_area;
+    *avg_res = avg_area;
+     
+    return ;
+    
+}
+
+int mdl_stats_count_root_bones( const studiohdr_t *header, const unsigned char *data ) {
+    
+    if ( header == NULL || data == NULL ) {
+        return ( -1 );
+    }
     
     
     
 }
+
+
+
