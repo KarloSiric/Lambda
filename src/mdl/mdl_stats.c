@@ -422,13 +422,29 @@ void mdl_stats_get_dimensions( const studiohdr_t *header, float *width, float *h
         return ;        
     }
     
-    
-    
-    
-    
-    
-    
+    // @Note: Now we calculate the dimensions for each model
+    *width  = header->max[0] - header->min[0];
+    *height = header->max[1] - header->min[1];
+    *depth  = header->max[2] - header->min[2]; 
 }
+
+
+float mdl_stats_get_volume( const studiohdr_t *header ) {
+    
+    if ( header == NULL ) {
+        return ( 0.0f );
+    }
+    
+    float width = header->max[0] - header->min[0];
+    float height = header->max[1] - header->min[1];
+    float depth = header->max[2] - header->min[2];
+    
+    return width * height * depth;
+}
+
+
+
+
 
 
 
