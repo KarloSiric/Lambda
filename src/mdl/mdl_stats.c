@@ -257,9 +257,63 @@ int mdl_stats_count_root_bones( const studiohdr_t *header, const unsigned char *
         return ( -1 );
     }
     
+    // @Note: Safety checking is always good make sure to do it!
+    if ( header->numbones <= 0 ) {
+        return ( -1 );
+    }
     
+    int root_bones = 0;
+    int numbones = header->numbones;
+    mstudiobone_t *bones = ( mstudiobone_t *)( data + header->boneindex );
+     
+    for ( int b_idx = 0; b_idx < numbones; b_idx++ ) {
+        mstudiobone_t *bone = &bones[b_idx];
+        
+        // @Note: -1 in this case indicates that it is a root bone
+        if ( bone->parent == -1 ) {
+            root_bones++;
+        }
+    }
     
+    return ( root_bones );
 }
+
+
+int mdl_stats_count_leaf_bones( const studiohdr_t *header, const unsigned char *data ) {
+    
+    if ( header == NULL || data == NULL ) {
+        return ( -1 );
+    }
+    
+    if ( header->numbones <= 0 ) {
+        return ( -1 );
+    }
+    
+    // @Note: Those bones that do not have any children because their children to them they are parents
+    int leaf_bones = 0;
+    int numbones = header->numbones;
+    
+    mstudiobone_t *bones = ( mstudiobone_t * )( data + header->boneindex );
+    
+    for ( int i = 0; i < numbones; i++ ) {
+        bool has_children = false;
+        
+        for ( int j = 0; j < numbones; j++ ) { 
+            if ( bones[j].parent == i ) {
+                has_children = true;
+                break;
+            } 
+        }
+        
+        if ( !has_children ) {
+            leaf_bones++;
+        }
+    } 
+    
+    return ( leaf_bones );
+}
+
+
 
 
 
