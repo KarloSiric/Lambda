@@ -24,6 +24,7 @@
 #include <math_types.h>
 #include <stddef.h>
 #include <limits.h>
+#include <string.h>
 
 int mdl_stats_count_triangles( const studiohdr_t *header, const unsigned char *data ) {
 	if ( header == NULL || data == NULL ) {
@@ -442,6 +443,89 @@ float mdl_stats_get_volume( const studiohdr_t *header ) {
     return width * height * depth;
 }
 
+
+size_t mdl_stats_estimate_memory( const studiohdr_t *main_header, const studiohdr_t *tex_header,
+                                  const unsigned char *main_data, const unsigned char *tex_data ) {
+  
+    if ( main_header == NULL || tex_header == NULL || main_data == NULL || tex_data == NULL ) {
+        return ( 0 );
+    }
+    
+    size_t total_bytes = 0;
+    
+    total_bytes += mdl_stats_texture_memory( tex_header, tex_data );
+    
+    // Note: times 36 because we have from shader: 3 floats for position -> 12 bytes,
+    //       normal is 3 floats so 12 bytes, UV is 2 floats so 8 bytes and bone is 4 bytes
+    if ( main_header && main_data ) {
+        int num_verts = mdl_stats_count_vertices( main_header, main_data );
+        total_bytes += num_verts * 36;
+    }
+    
+    // @Note: times 64 bytes because matrix 4 x 4 has 16 floats which is 64 bytes of size
+    if ( main_header ) {
+        total_bytes += main_header->numbones * 64;
+    }
+    
+    // @Note: 28 bytes because position has 3 floats so 12 bytes and rotation has 4 floats so 16 bytes
+    if ( main_header && main_data ) {
+        int total_frames = mdl_stats_total_frames( main_header, main_data );
+        int num_bones = main_header->numbones;
+        total_bytes += total_frames * num_bones * 28; 
+    }
+    
+    return ( total_bytes );
+}
+
+
+void mdl_stats_analyze( const studiohdr_t *main_header, const studiohdr_t *tex_header, const unsigned char *main_data, const unsigned char *tex_data, mdl_stats_t *out_stats ) {
+    
+    // Safety checking
+    if ( main_header == NULL || tex_header == NULL || main_data == NULL || tex_data == NULL || out_stats == NULL ) {
+        return ;
+    }
+    
+    memset( out_stats, 0, sizeof( mdl_stats_t ) );
+    
+    out_stats->triangles = mdl_stats_count_triangles( main_header, main_data );
+    out_stats->vertices = mdl_stats_count_vertices( main_header, main_data );
+    out_stats->meshes = mdl_stats_count_meshes( main_header, main_data );
+    
+    
+    if ( tex_header ) {
+        out_stats->texture_count = tex_header->numtextures;
+        out_stats->texture_memory_bytes = mdl_stats_texture_memory( tex_header, tex_data );        
+        mdl_stats_texture_resolutions( tex_header, tex_data, &out_stats->min_texture_resolution, &out_stats->max_texture_resolution, &out_stats->avg_texture_resolution );        
+    }
+    
+    
+    if ( main_header ) {
+        out_stats->sequence_count = main_header->numseq;
+        out_stats->total_frames = mdl_stats_total_frames( main_header, main_data );
+        out_stats->total_animation_time = mdl_stats_total_animation_time( main_header, main_data );
+        out_stats->total_events = mdl_stats_count_events( main_header, main_data );
+    }
+    
+    
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+void mdl_stats_print_report( FILE *output, const mdl_stats_t *stats, const char *model_name ) {
+    
+    
+    
+    
+}
 
 
 
