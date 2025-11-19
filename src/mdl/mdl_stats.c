@@ -22,6 +22,7 @@
 
 #include "mdl_stats.h"
 #include <math_types.h>
+#include <stddef.h>
 
 int mdl_stats_count_triangles( const studiohdr_t *header, const unsigned char *data ) {
 	if ( header == NULL || data == NULL ) {
@@ -176,6 +177,25 @@ size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned c
         return ( 0 );
     }
     
+    if ( tex_header->numtextures <= 0 ) {
+        return ( 0 );
+    }
+    
+    int numtextures = tex_header->numtextures;
+    size_t total_bytes_size = 0;
+    
+    // @Note: We use the textureindex and not the texturedataindex! Do not mix them
+    mstudiotexture_t *textures = ( mstudiotexture_t *)( tex_data + tex_header->textureindex );
+    for ( int i = 0; i < numtextures; i++ ) {
+        mstudiotexture_t *tex = &textures[i];
+        
+        // @Brief: we now find the memory accumulated for this particular texture
+        size_t tex_size = ( ( size_t )tex->width * ( size_t )tex->height ) * 4;
+        
+        total_bytes_size += tex_size;
+    }
+    
+    return ( total_bytes_size );
 }
 
 
