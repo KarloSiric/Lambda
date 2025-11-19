@@ -102,6 +102,52 @@ int mdl_stats_count_meshes( const studiohdr_t *header, const unsigned char *data
         return ( -1 );
     }
     
+    int mesh_count = 0;
     
+    mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * )( data + header->bodypartindex );
+    int numbodyparts = header->numbodyparts;
     
+    for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
+        mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
+        int nummodels = bodypart->nummodels;
+        
+        mstudiomodel_t *models = ( mstudiomodel_t *)( data + bodypart->modelindex );
+        
+        for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
+            mstudiomodel_t *model = &models[m_idx];
+            mesh_count += model->nummesh;
+            
+        }
+    }
+     
+    return ( mesh_count );
+    
+}
+
+
+int mdl_stats_count_normals( const studiohdr_t *header, const unsigned char *data ) {
+    
+   if ( header == NULL || data == NULL ) {
+        return ( -1 );
+    }
+    
+    int normals_count = 0;
+    
+    mstudiobodyparts_t *bodyparts = ( mstudiobodyparts_t * )( data + header->bodypartindex );
+    int numbodyparts = header->numbodyparts;
+    
+    for ( int bp_idx = 0; bp_idx < numbodyparts; bp_idx++ ) {
+        mstudiobodyparts_t *bodypart = &bodyparts[bp_idx];
+        int nummodels = bodypart->nummodels;
+        
+        mstudiomodel_t *models = ( mstudiomodel_t *)( data + bodypart->modelindex );
+        
+        for ( int m_idx = 0; m_idx < nummodels; m_idx++ ) {
+            mstudiomodel_t *model = &models[m_idx];
+            normals_count += model->numnorms;
+            
+        }
+    }
+     
+    return ( normals_count ); 
 }

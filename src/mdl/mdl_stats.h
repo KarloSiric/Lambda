@@ -66,6 +66,9 @@ void mdl_stats_analyze( const studiohdr_t *main_header,
 int mdl_stats_count_triangles( const studiohdr_t *header, const unsigned char *data );
 int mdl_stats_count_vertices( const studiohdr_t *header, const unsigned char *data );
 int mdl_stats_count_meshes( const studiohdr_t *header, const unsigned char *data );
+int mdl_stats_count_normals( const studiohdr_t *header, const unsigned char *data );
+int mdl_stats_count_groups( const studiohdr_t *header, const unsigned char *data );
+
 
 /* Part of the Texture Statistics */
 size_t mdl_stats_texture_memory( const studiohdr_t *tex_header, const unsigned char *tex_data );
