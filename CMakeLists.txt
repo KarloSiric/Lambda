@@ -260,6 +260,7 @@ file(GLOB SRC_UTIL CONFIGURE_DEPENDS "src/util/*.c")
 file(GLOB SRC_INPUT CONFIGURE_DEPENDS "src/input/*.c")
 file(GLOB SRC_SHADER CONFIGURE_DEPENDS "src/shader/*.c")
 file(GLOB SRC_TOP CONFIGURE_DEPENDS "src/*.c")
+file(GLOB EXTERNAL CONFIGURE_DEPENDS "external/*.c")
 
 
 
@@ -277,6 +278,7 @@ add_executable(${PROJECT_NAME}
   ${SRC_UTIL}
   ${SRC_INPUT}
   ${SRC_SHADER}
+  ${EXTERNAL}
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -296,6 +298,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/src/util
   ${CMAKE_SOURCE_DIR}/src/input
   ${CMAKE_SOURCE_DIR}/src/shaders
+  ${CMAKE_SOURCE_DIR}/external
   
 )
 
