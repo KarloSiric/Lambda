@@ -490,12 +490,18 @@ void mdl_stats_analyze( const studiohdr_t *main_header, const studiohdr_t *tex_h
     out_stats->triangles = mdl_stats_count_triangles( main_header, main_data );
     out_stats->vertices = mdl_stats_count_vertices( main_header, main_data );
     out_stats->meshes = mdl_stats_count_meshes( main_header, main_data );
-    
-    
+     
     if ( tex_header ) {
         out_stats->texture_count = tex_header->numtextures;
         out_stats->texture_memory_bytes = mdl_stats_texture_memory( tex_header, tex_data );        
         mdl_stats_texture_resolutions( tex_header, tex_data, &out_stats->min_texture_resolution, &out_stats->max_texture_resolution, &out_stats->avg_texture_resolution );        
+    }
+    
+    if ( main_header ) {
+        out_stats->bone_count = main_header->numbones;
+        out_stats->root_bones = mdl_stats_count_root_bones( main_header, main_data );
+        out_stats->hierarchy_depth = mdl_stats_bone_hierarchy_depth( main_header, main_data );
+        out_stats->leaf_bones = mdl_stats_count_leaf_bones( main_header, main_data ); 
     }
     
     
@@ -506,18 +512,24 @@ void mdl_stats_analyze( const studiohdr_t *main_header, const studiohdr_t *tex_h
         out_stats->total_events = mdl_stats_count_events( main_header, main_data );
     }
     
+    if ( main_header ) {
+        out_stats->attachment_count = main_header->numattachments;
+        out_stats->hitbox_count = main_header->numhitboxes;
+    }
     
-    
-    
+    if ( main_header ) {
+        mdl_stats_get_dimensions( main_header, 
+                                  &out_stats->width,
+                                  &out_stats->height,
+                                  &out_stats->depth );
+        out_stats->volume = mdl_stats_get_volume( main_header );
+    }
+     
+    // Memory calculations
+    out_stats->file_size_bytes = 0;
+    out_stats->estimated_ram_bytes = mdl_stats_estimate_memory( main_header, tex_header, main_data, tex_data );
+    out_stats->estimated_vram_bytes = mdl_stats_texture_memory( tex_header, tex_data ); 
 }
-
-
-
-
-
-
-
-
 
 
 void mdl_stats_print_report( FILE *output, const mdl_stats_t *stats, const char *model_name ) {
