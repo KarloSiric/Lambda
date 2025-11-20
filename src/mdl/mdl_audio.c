@@ -32,7 +32,7 @@
 #include "miniaudio.h"
 
 // @Note: Adding some global scope variables needed for work
-static ma_engine g_audio_engine;
+static struct ma_engine g_audio_engine;
 static bool g_audio_initialized = false;
 
 
@@ -93,10 +93,21 @@ static bool mdl_audio_directory_exists( const char *path ) {
 
 // @Note: Need to extract things so -> /path/to/model.mdl -> /path/to
 static void mdl_audio_extract_directory( const char *path, char *out_path, size_t out_size ) {
-    
-    
-    
+     
+     strncpy( out_path, path, out_size - 1 );
+     out_path[out_size - 1] = '\0'; 
+     
+     char *last_slash = strrchr( out_path, '/' );
+     char *last_backslash = strrchr( out_path, '\\' );
+     
+     char *last_sep = ( last_slash > last_backslash ) ? last_slash : last_backslash;
+     
+     if ( last_sep ) {
+        *last_sep = '\0';
+     } 
 }
+
+
 
 
 
