@@ -108,6 +108,78 @@ static void mdl_audio_extract_directory( const char *path, char *out_path, size_
 }
 
 
+bool mdl_audio_is_ready( void ) {
+    // @Note: Just checking whether we have initialized and if sounds are ready
+    
+    return ( g_audio_initialized && g_sounds_available );
+}
+
+
+void mdl_audio_set_sound_directory( const char *sound_dir ) {
+    
+    // @Note: Always need to do a safety checing
+    if ( sound_dir == NULL || sound_dir[0] == '\0' ) {
+        fprintf( stderr, "[AUDIO] Invalid sound directory path\n" );
+        return ;
+    }
+    
+    
+    // Checking if the directory exists
+    if ( !mdl_audio_directory_exists( sound_dir ) ) {
+        fprintf( stderr, "[AUDIO] Directory does not exist: '%s'\n", sound_dir );
+        return ;
+    }
+    
+    
+    // @Note: Important we need to make space for the following paths if user specified his own path
+    
+    for ( int i = g_num_search_paths; i > 0; i-- ) {
+        strcpy( g_sound_search_paths[i], g_sound_search_paths[i - 1] );
+    }
+    
+    // Now we need to insert the following
+    strncpy( g_sound_search_paths[0], sound_dir, sizeof( g_sound_search_paths[0] ) - 1 );
+    
+    g_sound_search_paths[0][sizeof(g_sound_search_paths[0]) - 1] = '\0';
+    
+    g_num_search_paths++;
+    g_sounds_available = true;
+    
+    printf( "[AUDIO] Added sound directory (priority): %s\n", sound_dir );
+}
+
+
+bool mdl_audio_play_event_sound( const char *relative_path ) {
+    
+    
+    // @Note: Bunch of safety checking, this is important
+    if ( relative_path == NULL || relative_path[0] == '\0' ) {
+        return false;
+    }
+    
+    if ( !g_audio_initialized ) {
+        fprintf( stderr, "[AUDIO] Cannot play sound: engine not initialized.\n");
+        return false;
+    }
+    
+    if ( !g_sounds_available ) {
+        return false;
+    }
+    
+    
+    for ( int i = 0; i < g_sound_search_paths; i++ ) {
+        
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+}
+
 
 
 
