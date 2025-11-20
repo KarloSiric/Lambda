@@ -93,11 +93,6 @@ float mdl_stats_get_volume( const studiohdr_t *header );
 size_t mdl_stats_estimate_memory( const studiohdr_t *main_header, const studiohdr_t *tex_header,
 								  const unsigned char *main_data, const unsigned char *tex_data );
 
-void mdl_stats_print_report( FILE *output, const mdl_stats_t *stats, const char *model_name );
-
-void mdl_stats_print_summary( FILE *output, const mdl_stats_t *stats );
-
-void mdl_stats_print_performance( FILE *output, const mdl_stats_t *stats );
 
 #ifdef __cplusplus
 }

@@ -532,16 +532,5 @@ void mdl_stats_analyze( const studiohdr_t *main_header, const studiohdr_t *tex_h
 }
 
 
-void mdl_stats_print_report( FILE *output, const mdl_stats_t *stats, const char *model_name ) {
-    
-    
-    
-    
-}
-
-
-
-
-
 
 
