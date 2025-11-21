@@ -217,6 +217,7 @@ mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, st
 	return MDL_SUCCESS;
 }
 
+// @Note(Karlo - 21.11.2025): Updating it for the events triggering audio engine system testing
 void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studiohdr_t *header, unsigned char *data, mdl_seqgroup_blob_t *seqgroups ) {
 	// safety checking
 	if ( !state || !header || !data ) {
@@ -251,6 +252,9 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 
 	float frames_per_second = seq->fps;
 	float frames_to_advance = delta_time * frames_per_second;
+    
+    // saving frames
+    state->previous_frame = state->current_frame;
 	state->current_frame += frames_to_advance;
 
 	if ( seq->numframes <= 1 ) {
@@ -272,6 +276,9 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 	if ( state->current_frame < 0.0f ) {
 		state->current_frame = 0.0f;
 	}
+    
+    // @Note: Adding the animation playing system at the end
+    mdl_animation_process_events( state, header, data );
 
 	return;
 }
