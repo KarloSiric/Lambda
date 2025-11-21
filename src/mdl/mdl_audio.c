@@ -27,9 +27,11 @@
 #include <string.h>
 #include <sys/stat.h>
 
+
 #define MAX_SEARCH_PATHS                 8
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
+
 
 // @Note: Adding some global scope variables needed for work
 static struct ma_engine g_audio_engine;
@@ -167,18 +169,64 @@ bool mdl_audio_play_event_sound( const char *relative_path ) {
     }
     
     
-    for ( int i = 0; i < g_sound_search_paths; i++ ) {
+    for ( int i = 0; i < g_num_search_paths; i++ ) {
+        char full_path[1024];
+        
+        snprintf( full_path, sizeof( full_path ), "%s/%s", g_sound_search_paths[i], relative_path );
+        
+        ma_result result = ma_engine_play_sound( &g_audio_engine, full_path, NULL );
+        
+        if ( result == MA_SUCCESS ) {
+            printf( "[AUDIO] Playing sound: '%s'\n", full_path );
+            return true;
+        }
+    }
+    
+    // @Note: Not playing anything
+    fprintf( stderr, "[AUDIO] Sound not found: '%s'\n", relative_path );
+    return false;
+}
+
+
+void mdl_audio_configure_for_model( const char *model_path ) {
+    
+    if ( model_path == NULL ) {
+        return ;
+    }
+    
+    g_num_search_paths = 0;
+    g_sounds_available = false;
+    
+    
+    /*
+    // @Note: THe idea here is the following: first we find the directory that contains the .mdl model file
+    //        After that we will use that for seraching the common root dir that contains the models/ sound/ or sounds/
+    //        Then once we have that we do a smart search pattern to try to locate the sound/ and use name of the event for sound
+    //        to find the sound file and call it and play it.
+    */
+    char model_dir[512];
+    mdl_audio_extract_directory( model_path, model_dir, sizeof( model_dir ) );
+    
+    printf( "[AUDIO] Configuring for model: %s\n", model_path );
+    printf( "[AUDIO] Searching algorithm starts from position: %s\n", model_dir );
+    
+    
+    char current_dir[1024];
+    strncpy( current_dir, model_dir, sizeof( current_dir ) - 1 );
+    current_dir[sizeof( current_dir ) -1] = '\0';
+    
+    // @Note: Main loop for doing the algorithm search.
+    // Might not be the best and most effective but it is the best I came up with that time
+    for ( int level = 0; level < 10; level++ ) {
         
     }
     
     
+           
     
     
     
-    
-    
-    
-}
+}   
 
 
 
