@@ -489,6 +489,14 @@ void mdl_animation_process_events( mdl_animation_state_t *state, studiohdr_t *he
             const char *options = events[i].options;
             
             if ( options && options[0] != '\0' ) {
+                
+                // @Fix: Adding for skipping if it is not .wav or .WAV
+                if ( !strstr( options, ".wav" ) && !strstr( options, ".WAV" ) ) {
+                    printf( "[EVENT] Frame %d: Skipping sentence '%s'\n",
+                           event_frame, options );
+                    continue;
+                }
+                
                 printf( "[EVENT] Frame: %d: Type: %d, Sound: '%s'\n",
                                          event_frame, event_type, options );
                 mdl_audio_play_event_sound( options );

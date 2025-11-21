@@ -43,6 +43,25 @@ static int g_num_search_paths = 0;
 
 
 static bool g_sounds_available = false;
+static bool g_random_seed_initialized = false;
+
+
+/* ****************
+ * 
+ * HELPER FUNCTIONS
+ * 
+ * ****************/
+static void extract_sound_base( const char *path, char *base_out, size_t base_size, char *ext_out, size_t ext_size ) {
+    
+    
+    
+    
+}
+
+
+
+
+
 
 
 bool mdl_audio_init( void ) {
@@ -180,8 +199,23 @@ bool mdl_audio_play_event_sound( const char *relative_path ) {
             printf( "[AUDIO] Playing sound: '%s'\n", full_path );
             return true;
         }
+        // @Cleanup fix(Karlo): Adding to try the lowercase in case the sounds dont want to play
+        char full_path_lower[1024];
+        snprintf( full_path_lower, sizeof( full_path_lower ), "%s/%s", g_sound_search_paths[i], relative_path );
+        
+        char *wav_check = strstr( full_path_lower, ".WAV" );
+        if ( wav_check ) {
+            memcpy( wav_check, ".wav", 4 );
+            
+            result = ma_engine_play_sound( &g_audio_engine, full_path_lower, NULL );
+            
+            if ( result == MA_SUCCESS ) {
+                printf( "[AUDIO] Playing sound: '%s'\n", full_path_lower );
+                return true;
+            }
+        }
     }
-    
+     
     // @Note: Not playing anything
     fprintf( stderr, "[AUDIO] Sound not found: '%s'\n", relative_path );
     return false;
