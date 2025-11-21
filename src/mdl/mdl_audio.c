@@ -377,16 +377,8 @@ bool mdl_audio_play_event_sound( const char *relative_path ) {
         return false;  // Silently skip when muted
     }
 
-    // Debouncing: prevent same sound from playing too rapidly
-    clock_t current_time = clock();
-    double elapsed_ms = (double)(current_time - g_last_played_time) * 1000.0 / CLOCKS_PER_SEC;
-
-    if ( g_last_played_sound[0] != '\0' &&
-         strcmp( g_last_played_sound, relative_path ) == 0 &&
-         elapsed_ms < SOUND_COOLDOWN_MS ) {
-        // Same sound played too recently, skip it
-        return false;
-    }
+    // NOTE: Debouncing removed - it was blocking legitimate events at different frames
+    // Sound stopping when switching sequences handles the real spam issue
 
     // Check if this is a random sound (starts with '*')
     if ( relative_path[0] == '*' ) {
