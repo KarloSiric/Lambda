@@ -236,31 +236,55 @@ void mdl_audio_configure_for_model( const char *model_path ) {
        
         if ( has_models && ( has_sound || has_sounds ) ) {
             printf(" [AUDIO] Found root directory: %s\n", current_dir );
+        
+        
+            // Now we need to store that if sound/ exists we store it and increment paths
+            if ( has_sound && g_num_search_paths < MAX_SEARCH_PATHS ) {
+                strncpy( g_sound_search_paths[g_num_search_paths], sound_check, 
+                         sizeof( g_sound_search_paths[g_num_search_paths] ) -1 );
+                g_sound_search_paths[g_num_search_paths][sizeof( g_sound_search_paths[g_num_search_paths]) - 1] = '\0';
+                printf( "[AUDIO] Added: %s\n", sound_check );
+                g_num_search_paths++;
+            }
+            
+            
+            // Adding also sounds/ if it exists, same thing as sound/
+            if ( has_sounds && g_num_search_paths < MAX_SEARCH_PATHS ) {
+                strncpy( g_sound_search_paths[g_num_search_paths], sounds_check, 
+                         sizeof( g_sound_search_paths[g_num_search_paths]) - 1 );
+                g_sound_search_paths[g_num_search_paths][sizeof( g_sound_search_paths[g_num_search_paths]) - 1] = '\0';
+                printf( "[AUDIO] Added: %s\n", sounds_check );
+                g_num_search_paths++;
+            }
+            
+            // Now on success we just stop searching for it all and we are done basically
+            
+            g_sounds_available = true;
+            
+            printf( "[AUDIO] Configured %d sound path(s)\n", g_num_search_paths );
+            return ; // we found it and just exit the function and we are done        
         }
         
-        // Now we need to store that if sound/ exists we store it and increment paths
-        if ( has_sound && g_num_search_paths < MAX_SEARCH_PATHS ) {
-            strncpy( g_sound_search_paths[g_num_search_paths], sound_check, 
-                     sizeof( g_sound_search_paths[g_num_search_paths] ) -1 );
-            g_sound_search_paths[g_num_search_paths][sizeof( g_sound_search_paths[g_num_search_paths]) - 1] = '\0';
-            printf( "[AUDIO] Added: %s\n", sound_check );
-            g_num_search_paths++;
+        // If we didnt find it then we need to move the root one level
+        
+        char *last_slash = strrchr( current_dir, '/' );
+        char *last_backslash = strrchr( current_dir, '\\' );
+        char *last_sep = ( last_slash > last_backslash ) ? last_slash : last_backslash;
+        
+        if ( !last_sep || last_sep == current_dir ) {
+            break;
         }
         
-        
-        
-        
-        
-        
-        
-    }
+        *last_sep = '\0';
+         
+    } // LOOP END
     
+    // If we get here, we didn't find the root
+    fprintf( stderr, "[AUDIO] Could not auto-detect sound directory\n" );
+    fprintf( stderr, "[AUDIO] Searched up to 10 levels from model location\n" );
+    fprintf( stderr, "[AUDIO] Use mdl_audio_set_sound_directory() to specify manually\n" );
+} 
     
-           
-    
-    
-    
-}   
 
 
 
