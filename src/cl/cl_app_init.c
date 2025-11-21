@@ -26,6 +26,7 @@
 #include "util/util_logger.h"
 #include "r/r_draw.h"
 #include "mdl/mdl_loader.h"
+#include "mdl/mdl_audio.h"
 
 #include <stdio.h>
 
@@ -54,6 +55,19 @@ int app_init_logger( const app_args_t *args ) {
 		logger_set_category_level( "seqgroup", LOG_TRACE );
 	}
 
+	return ( 0 );
+}
+
+int app_init_audio( void ) {
+	LOG_INFO( "audio", "Initializing audio system..." );
+
+	if ( !mdl_audio_init() ) {
+		LOG_ERROR( "audio", "Failed to initialize audio engine" );
+		LOG_INFO( "audio", "Continuing without audio support" );
+		return ( -1 );
+	}
+
+	LOG_INFO( "audio", "Audio system initialized successfully!" );
 	return ( 0 );
 }
 
@@ -87,6 +101,9 @@ int app_load_model( const char *model_path, mdl_model_t **model_out ) {
 	LOG_INFOF( "mdl", "   Bodyparts: %d", model->header->numbodyparts );
 	LOG_INFOF( "mdl", "   Sequences: %d", model->header->numseq );
 	LOG_INFOF( "mdl", "   Sequence groups: %d", model->num_seqgroups );
+
+	// Configure audio for this model
+	mdl_audio_configure_for_model( model_path );
 
 	return ( 0 );
 }
