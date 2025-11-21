@@ -26,6 +26,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 
 
 #define MAX_SEARCH_PATHS                 8
@@ -44,18 +45,95 @@ static int g_num_search_paths = 0;
 
 static bool g_sounds_available = false;
 static bool g_random_seed_initialized = false;
+static bool g_audio_enabled = true;  // Can be toggled on/off
 
 
 /* ****************
- * 
+ *
  * HELPER FUNCTIONS
- * 
+ *
  * ****************/
 static void extract_sound_base( const char *path, char *base_out, size_t base_size, char *ext_out, size_t ext_size ) {
-    
-    
-    
-    
+    strncpy( base_out, path, base_size - 1 );
+    base_out[base_size - 1] = '\0';
+
+    // Find the extension
+    char *ext = strrchr( base_out, '.' );
+    if ( ext ) {
+        strncpy( ext_out, ext, ext_size - 1 );
+        ext_out[ext_size - 1] = '\0';
+        *ext = '\0';  // Remove extension from base
+    } else {
+        ext_out[0] = '\0';
+        return;
+    }
+
+    // Find the last digits before extension
+    int len = strlen( base_out );
+    int i = len - 1;
+
+    // Walk backwards to find where digits start
+    while ( i >= 0 && base_out[i] >= '0' && base_out[i] <= '9' ) {
+        i--;
+    }
+
+    // Remove the digits
+    if ( i < len - 1 ) {
+        base_out[i + 1] = '\0';
+    }
+}
+
+static bool mdl_audio_play_random_sound( const char *sound_path ) {
+
+    // Initialize random seed once
+    if ( !g_random_seed_initialized ) {
+        srand( (unsigned int)time( NULL ) );
+        g_random_seed_initialized = true;
+    }
+
+    // Extract base pattern
+    char base[512];
+    char ext[16];
+    extract_sound_base( sound_path, base, sizeof(base), ext, sizeof(ext) );
+
+    printf( "[AUDIO] Searching for random variants of '%s' (base: '%s', ext: '%s')\n",
+           sound_path, base, ext );
+
+    // Try random numbers 1-10
+    int attempts = 10;
+    int random_start = rand() % 10 + 1;
+
+    for ( int try_num = 0; try_num < attempts; try_num++ ) {
+        int num = (random_start + try_num - 1) % 10 + 1;
+
+        for ( int i = 0; i < g_num_search_paths; i++ ) {
+            char full_path[1024];
+            snprintf( full_path, sizeof(full_path), "%s/%s%d%s",
+                     g_sound_search_paths[i], base, num, ext );
+
+            ma_result result = ma_engine_play_sound( &g_audio_engine, full_path, NULL );
+
+            if ( result == MA_SUCCESS ) {
+                printf( "[AUDIO] Playing random variant #%d: '%s'\n", num, full_path );
+                return true;
+            }
+
+            // Try lowercase version of extension
+            char *wav_upper = strstr( full_path, ".WAV" );
+            if ( wav_upper ) {
+                memcpy( wav_upper, ".wav", 4 );
+                result = ma_engine_play_sound( &g_audio_engine, full_path, NULL );
+                if ( result == MA_SUCCESS ) {
+                    printf( "[AUDIO] Playing random variant #%d (lowercase): '%s'\n", num, full_path );
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Fallback: no variants found
+    printf( "[AUDIO] No random variants found for '%s'\n", sound_path );
+    return false;
 }
 
 
@@ -131,8 +209,17 @@ static void mdl_audio_extract_directory( const char *path, char *out_path, size_
 
 bool mdl_audio_is_ready( void ) {
     // @Note: Just checking whether we have initialized and if sounds are ready
-    
+
     return ( g_audio_initialized && g_sounds_available );
+}
+
+void mdl_audio_toggle_enabled( void ) {
+    g_audio_enabled = !g_audio_enabled;
+    printf( "[AUDIO] Event sounds %s\n", g_audio_enabled ? "ENABLED" : "MUTED" );
+}
+
+bool mdl_audio_is_enabled( void ) {
+    return g_audio_enabled;
 }
 
 
@@ -171,23 +258,33 @@ void mdl_audio_set_sound_directory( const char *sound_dir ) {
 
 
 bool mdl_audio_play_event_sound( const char *relative_path ) {
-    
-    
+
+
     // @Note: Bunch of safety checking, this is important
     if ( relative_path == NULL || relative_path[0] == '\0' ) {
         return false;
     }
-    
+
     if ( !g_audio_initialized ) {
         fprintf( stderr, "[AUDIO] Cannot play sound: engine not initialized.\n");
         return false;
     }
-    
+
     if ( !g_sounds_available ) {
         return false;
     }
-    
-    
+
+    // Check if audio is muted
+    if ( !g_audio_enabled ) {
+        return false;  // Silently skip when muted
+    }
+
+    // Check if this is a random sound (starts with '*')
+    if ( relative_path[0] == '*' ) {
+        return mdl_audio_play_random_sound( relative_path + 1 );  // Skip the '*'
+    }
+
+
     for ( int i = 0; i < g_num_search_paths; i++ ) {
         char full_path[1024];
         

@@ -155,6 +155,10 @@ int app_init( app_args_t *args ) {
 		g_app_state.model->seqgroups,
 		g_app_state.model->num_seqgroups );
 
+	// Configure audio AFTER model is fully loaded and set up
+	LOG_INFO( "audio", "Configuring audio for loaded model..." );
+	mdl_audio_configure_for_model( args->model_path );
+
 	// Print dump if requested (before opening viewer)
 	if ( args->dump_level == DUMP_BASIC ) {
 		LOG_INFO( "app", "Printing model dump (basic)..." );

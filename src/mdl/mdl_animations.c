@@ -474,12 +474,14 @@ void mdl_animation_process_events( mdl_animation_state_t *state, studiohdr_t *he
                 crossed = ( event_frame >= ( int )state->previous_frame ) ||
                           ( event_frame <= ( int )state->current_frame );
             } else {
-                crossed = ( event_frame >= ( int )state->previous_frame ) &&
+                // FIXED: SPamming issues
+                crossed = ( event_frame > ( int )state->previous_frame ) &&
                           ( event_frame <= ( int )state->current_frame );
             } 
         } else {
             // Non looping logic handling
-            crossed = ( event_frame >= ( int )state->previous_frame ) &&
+            // @Fix: FIxing spamming issues for this
+            crossed = ( event_frame > ( int )state->previous_frame ) &&
                       ( event_frame <= ( int )state->current_frame );
         }
         

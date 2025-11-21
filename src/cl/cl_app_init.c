@@ -102,9 +102,6 @@ int app_load_model( const char *model_path, mdl_model_t **model_out ) {
 	LOG_INFOF( "mdl", "   Sequences: %d", model->header->numseq );
 	LOG_INFOF( "mdl", "   Sequence groups: %d", model->num_seqgroups );
 
-	// Configure audio for this model
-	mdl_audio_configure_for_model( model_path );
-
 	return ( 0 );
 }
 
