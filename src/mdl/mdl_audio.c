@@ -219,6 +219,40 @@ void mdl_audio_configure_for_model( const char *model_path ) {
     // Might not be the best and most effective but it is the best I came up with that time
     for ( int level = 0; level < 10; level++ ) {
         
+        char models_check[1024];
+        char sound_check[1024];
+        char sounds_check[1024]; // plural version of sound dir path just in case
+        
+        
+        snprintf( models_check, sizeof( models_check ), "%s/models", current_dir );
+        snprintf( sound_check, sizeof( sound_check ), "%s/sound", current_dir );
+        snprintf( sounds_check, sizeof( sounds_check ), "%s/sounds", current_dir );
+        
+        // @Note: if the root contains both the models/ and sound/ or sounds/ then we found the root directory
+        
+        bool has_models = mdl_audio_directory_exists( models_check );
+        bool has_sound = mdl_audio_directory_exists( sound_check );
+        bool has_sounds = mdl_audio_directory_exists( sounds_check );
+       
+        if ( has_models && ( has_sound || has_sounds ) ) {
+            printf(" [AUDIO] Found root directory: %s\n", current_dir );
+        }
+        
+        // Now we need to store that if sound/ exists we store it and increment paths
+        if ( has_sound && g_num_search_paths < MAX_SEARCH_PATHS ) {
+            strncpy( g_sound_search_paths[g_num_search_paths], sound_check, 
+                     sizeof( g_sound_search_paths[g_num_search_paths] ) -1 );
+            g_sound_search_paths[g_num_search_paths][sizeof( g_sound_search_paths[g_num_search_paths]) - 1] = '\0';
+            printf( "[AUDIO] Added: %s\n", sound_check );
+            g_num_search_paths++;
+        }
+        
+        
+        
+        
+        
+        
+        
     }
     
     
