@@ -22,6 +22,7 @@
 
 #include "mdl_animations.h"
 #include "mdl_loader.h"
+#include "mdl_audio.h"
 
 #include "math_quaternion.h"
 #include "math_matrix.h"
@@ -435,4 +436,58 @@ void mdl_animation_transform_all_vertices(
 
 		transform_vertex_by_bone( output_vertices[i], vertices[i], bone_matrices[bone_index] );
 	}
+}
+
+void mdl_animation_process_events( mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data ) {
+    
+    if ( !state || !header || !data ) {
+        return ;
+    }
+    
+    mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * )( data + header->seqindex );
+    
+    mstudioseqdesc_t *seq = &sequences[state->current_sequence];
+    
+    // CHecking if this sequence we are running currently has any whatsoever events if not just exit
+    if ( seq->numevents == 0 ) {
+        return ;
+    }  
+    
+    mstudioevent_t *events = ( mstudioevent_t * )( data + seq->eventindex );
+    
+    for ( int i = 0; i < seq->numevents; i++ ) {
+        int event_frame = events[i].frame;
+        
+        bool crossed = false;
+        
+        if ( state->is_looping ) {
+            
+            // Handle the looping logic
+            if ( state->previous_frame > state->current_frame ) {
+                crossed = ( event_frame >= ( int )state->previous_frame ) ||
+                          ( event_frame <= ( int )state->current_frame );
+            } else {
+                crossed = ( event_frame >= ( int )state->previous_frame ) &&
+                          ( event_frame <= ( int )state->current_frame );
+            } 
+        } else {
+            // Non looping logic handling
+            crossed = ( event_frame >= ( int )state->previous_frame ) &&
+                      ( event_frame <= ( int )state->current_frame );
+        }
+        
+        if ( crossed ) {
+            int event_type = events[i].type;
+            
+            const char *options = events[i].options;
+            
+            if ( options && options[0] != '\0' ) {
+                printf( "[EVENT] Frame: %d: Type: %d, Sound: '%s'\n",
+                                         event_frame, event_type, options );
+                mdl_audio_play_event_sound( options );
+            } 
+        } 
+    } // END LOOP
+    
+    return ;
 }
