@@ -24,6 +24,7 @@
 #include "input.h"
 #include "input_types.h"
 #include "mdl/mdl_animations.h"
+#include "mdl/mdl_audio.h"
 #include "studio.h"
 
 #include <stdio.h>
@@ -209,6 +210,9 @@ void Input_ProcessGameInput(
 			}
 
 			if ( target_seq >= 0 && is_sequence_available( target_seq, anim_state->header, anim_state->data, anim_state->seqgroups, anim_state->num_seqgroups ) ) {
+				// Stop all sounds when switching sequences
+				mdl_audio_stop_all_sounds();
+
 				mdl_animation_set_sequence( anim_state->anim_state, target_seq, anim_state->header, anim_state->data, anim_state->seqgroups );
 				if ( anim_state->model_processed ) {
 					*anim_state->model_processed = false;
@@ -230,6 +234,9 @@ void Input_ProcessGameInput(
 			}
 
 			if ( target_seq < anim_state->header->numseq && is_sequence_available( target_seq, anim_state->header, anim_state->data, anim_state->seqgroups, anim_state->num_seqgroups ) ) {
+				// Stop all sounds when switching sequences
+				mdl_audio_stop_all_sounds();
+
 				mdl_animation_set_sequence( anim_state->anim_state, target_seq, anim_state->header, anim_state->data, anim_state->seqgroups );
 				if ( anim_state->model_processed ) {
 					*anim_state->model_processed = false;
