@@ -170,6 +170,11 @@ void Input_ProcessGameInput(
 		anim_state->anim_state->is_looping = !( anim_state->anim_state->is_looping );
 	}
 
+	// Toggle audio
+	if ( Input_IsKeyPressed( KEY_M ) ) {
+		mdl_audio_toggle_enabled();
+	}
+
 	// Reset to frame 0
 	if ( Input_IsKeyPressed( KEY_0 ) ) {
 		anim_state->anim_state->current_frame = 0.0f;
