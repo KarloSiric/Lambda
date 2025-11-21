@@ -31,5 +31,7 @@ void mdl_audio_toggle_enabled( void );
 
 bool mdl_audio_is_enabled( void );
 
+void mdl_audio_stop_all_sounds( void );
+
 
 #endif
