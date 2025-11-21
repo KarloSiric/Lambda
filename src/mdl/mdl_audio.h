@@ -27,5 +27,9 @@ bool mdl_audio_play_event_sound( const char *relative_path );
 
 bool mdl_audio_is_ready( void );
 
+void mdl_audio_toggle_enabled( void );
+
+bool mdl_audio_is_enabled( void );
+
 
 #endif
