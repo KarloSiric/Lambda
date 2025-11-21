@@ -28,6 +28,7 @@
 #include "mdl/mdl_loader.h"
 #include "mdl/mdl_report.h"
 #include "mdl/mdl_audio.h"
+#include "mdl/mdl_bodypart.h"
 #include "input/input.h"
 #include "util_args.h"
 
@@ -158,6 +159,12 @@ int app_init( app_args_t *args ) {
 	// Configure audio AFTER model is fully loaded and set up
 	LOG_INFO( "audio", "Configuring audio for loaded model..." );
 	mdl_audio_configure_for_model( args->model_path );
+
+	// Initialize bodypart system
+	LOG_INFO( "bodypart", "Initializing bodypart system..." );
+	bodypart_init();
+	bodypart_set_model( g_app_state.model->header, g_app_state.model->data );
+	LOG_INFO( "bodypart", "Bodypart system ready!" );
 
 	// Print dump if requested (before opening viewer)
 	if ( args->dump_level == DUMP_BASIC ) {

@@ -45,7 +45,17 @@ static int g_num_search_paths = 0;
 
 static bool g_sounds_available = false;
 static bool g_random_seed_initialized = false;
-static bool g_audio_enabled = true;  // Can be toggled on/off
+static bool g_audio_enabled = false;  // OFF by default, toggle with key
+
+// Debouncing to prevent sound overlap
+#define SOUND_COOLDOWN_MS 1000  // Minimum time between same sound plays
+static char g_last_played_sound[512] = {0};
+static clock_t g_last_played_time = 0;
+
+// Sound tracking for proper cleanup
+#define MAX_ACTIVE_SOUNDS 16
+static ma_sound g_active_sounds[MAX_ACTIVE_SOUNDS];
+static bool g_sound_slots_active[MAX_ACTIVE_SOUNDS] = {0};
 
 
 /* ****************
@@ -53,6 +63,57 @@ static bool g_audio_enabled = true;  // Can be toggled on/off
  * HELPER FUNCTIONS
  *
  * ****************/
+
+// Find a free sound slot or return -1 if all full
+static int find_free_sound_slot( void ) {
+    for ( int i = 0; i < MAX_ACTIVE_SOUNDS; i++ ) {
+        if ( !g_sound_slots_active[i] ) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// Clean up finished sounds to free slots
+static void cleanup_finished_sounds( void ) {
+    for ( int i = 0; i < MAX_ACTIVE_SOUNDS; i++ ) {
+        if ( g_sound_slots_active[i] ) {
+            if ( !ma_sound_is_playing( &g_active_sounds[i] ) ) {
+                ma_sound_uninit( &g_active_sounds[i] );
+                g_sound_slots_active[i] = false;
+            }
+        }
+    }
+}
+
+// Play a sound and track it
+static bool play_and_track_sound( const char *file_path ) {
+    // Clean up finished sounds first
+    cleanup_finished_sounds();
+
+    // Find a free slot
+    int slot = find_free_sound_slot();
+    if ( slot == -1 ) {
+        fprintf( stderr, "[AUDIO] No free sound slots available\n" );
+        return false;
+    }
+
+    // Initialize and play the sound
+    ma_result result = ma_sound_init_from_file( &g_audio_engine, file_path, 0, NULL, NULL, &g_active_sounds[slot] );
+    if ( result != MA_SUCCESS ) {
+        return false;
+    }
+
+    result = ma_sound_start( &g_active_sounds[slot] );
+    if ( result != MA_SUCCESS ) {
+        ma_sound_uninit( &g_active_sounds[slot] );
+        return false;
+    }
+
+    g_sound_slots_active[slot] = true;
+    return true;
+}
+
 static void extract_sound_base( const char *path, char *base_out, size_t base_size, char *ext_out, size_t ext_size ) {
     strncpy( base_out, path, base_size - 1 );
     base_out[base_size - 1] = '\0';
@@ -111,9 +172,7 @@ static bool mdl_audio_play_random_sound( const char *sound_path ) {
             snprintf( full_path, sizeof(full_path), "%s/%s%d%s",
                      g_sound_search_paths[i], base, num, ext );
 
-            ma_result result = ma_engine_play_sound( &g_audio_engine, full_path, NULL );
-
-            if ( result == MA_SUCCESS ) {
+            if ( play_and_track_sound( full_path ) ) {
                 printf( "[AUDIO] Playing random variant #%d: '%s'\n", num, full_path );
                 return true;
             }
@@ -122,8 +181,7 @@ static bool mdl_audio_play_random_sound( const char *sound_path ) {
             char *wav_upper = strstr( full_path, ".WAV" );
             if ( wav_upper ) {
                 memcpy( wav_upper, ".wav", 4 );
-                result = ma_engine_play_sound( &g_audio_engine, full_path, NULL );
-                if ( result == MA_SUCCESS ) {
+                if ( play_and_track_sound( full_path ) ) {
                     printf( "[AUDIO] Playing random variant #%d (lowercase): '%s'\n", num, full_path );
                     return true;
                 }
@@ -131,8 +189,31 @@ static bool mdl_audio_play_random_sound( const char *sound_path ) {
         }
     }
 
-    // Fallback: no variants found
-    printf( "[AUDIO] No random variants found for '%s'\n", sound_path );
+    // Fallback: try the original filename without number
+    printf( "[AUDIO] No numbered variants found, trying original filename: '%s'\n", sound_path );
+
+    for ( int i = 0; i < g_num_search_paths; i++ ) {
+        char full_path[1024];
+        snprintf( full_path, sizeof(full_path), "%s/%s", g_sound_search_paths[i], sound_path );
+
+        if ( play_and_track_sound( full_path ) ) {
+            printf( "[AUDIO] Playing original file: '%s'\n", full_path );
+            return true;
+        }
+
+        // Try lowercase extension
+        char *wav_upper = strstr( full_path, ".WAV" );
+        if ( wav_upper ) {
+            memcpy( wav_upper, ".wav", 4 );
+            if ( play_and_track_sound( full_path ) ) {
+                printf( "[AUDIO] Playing original file (lowercase): '%s'\n", full_path );
+                return true;
+            }
+        }
+    }
+
+    // Really couldn't find it
+    fprintf( stderr, "[AUDIO] Sound not found: '%s' (tried variants and original)\n", sound_path );
     return false;
 }
 
@@ -222,6 +303,23 @@ bool mdl_audio_is_enabled( void ) {
     return g_audio_enabled;
 }
 
+void mdl_audio_stop_all_sounds( void ) {
+    if ( !g_audio_initialized ) {
+        return;
+    }
+
+    // Stop all playing sounds by stopping then immediately restarting the engine
+    // This kills all active sounds but keeps the engine ready to play new ones
+    ma_engine_stop( &g_audio_engine );
+    ma_engine_start( &g_audio_engine );
+
+    // Reset debouncing tracking
+    g_last_played_sound[0] = '\0';
+    g_last_played_time = 0;
+
+    printf( "[AUDIO] Stopped all sounds\n" );
+}
+
 
 void mdl_audio_set_sound_directory( const char *sound_dir ) {
     
@@ -279,40 +377,60 @@ bool mdl_audio_play_event_sound( const char *relative_path ) {
         return false;  // Silently skip when muted
     }
 
+    // NOTE: Debouncing removed - it was blocking legitimate events at different frames
+    // Sound stopping when switching sequences handles the real spam issue
+
     // Check if this is a random sound (starts with '*')
     if ( relative_path[0] == '*' ) {
-        return mdl_audio_play_random_sound( relative_path + 1 );  // Skip the '*'
+        bool success = mdl_audio_play_random_sound( relative_path + 1 );  // Skip the '*'
+
+        // Update debouncing tracking on success
+        if ( success ) {
+            strncpy( g_last_played_sound, relative_path, sizeof(g_last_played_sound) - 1 );
+            g_last_played_sound[sizeof(g_last_played_sound) - 1] = '\0';
+            g_last_played_time = clock();
+        }
+
+        return success;
     }
 
 
     for ( int i = 0; i < g_num_search_paths; i++ ) {
         char full_path[1024];
-        
+
         snprintf( full_path, sizeof( full_path ), "%s/%s", g_sound_search_paths[i], relative_path );
-        
-        ma_result result = ma_engine_play_sound( &g_audio_engine, full_path, NULL );
-        
-        if ( result == MA_SUCCESS ) {
+
+        if ( play_and_track_sound( full_path ) ) {
             printf( "[AUDIO] Playing sound: '%s'\n", full_path );
+
+            // Update debouncing tracking
+            strncpy( g_last_played_sound, relative_path, sizeof(g_last_played_sound) - 1 );
+            g_last_played_sound[sizeof(g_last_played_sound) - 1] = '\0';
+            g_last_played_time = clock();
+
             return true;
         }
         // @Cleanup fix(Karlo): Adding to try the lowercase in case the sounds dont want to play
         char full_path_lower[1024];
         snprintf( full_path_lower, sizeof( full_path_lower ), "%s/%s", g_sound_search_paths[i], relative_path );
-        
+
         char *wav_check = strstr( full_path_lower, ".WAV" );
         if ( wav_check ) {
             memcpy( wav_check, ".wav", 4 );
-            
-            result = ma_engine_play_sound( &g_audio_engine, full_path_lower, NULL );
-            
-            if ( result == MA_SUCCESS ) {
+
+            if ( play_and_track_sound( full_path_lower ) ) {
                 printf( "[AUDIO] Playing sound: '%s'\n", full_path_lower );
+
+                // Update debouncing tracking
+                strncpy( g_last_played_sound, relative_path, sizeof(g_last_played_sound) - 1 );
+                g_last_played_sound[sizeof(g_last_played_sound) - 1] = '\0';
+                g_last_played_time = clock();
+
                 return true;
             }
         }
     }
-     
+
     // @Note: Not playing anything
     fprintf( stderr, "[AUDIO] Sound not found: '%s'\n", relative_path );
     return false;

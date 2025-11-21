@@ -117,6 +117,9 @@ float rotation_x = 0.0f;
 float rotation_y = 0.0f;
 float zoom = 0.15f; // Even more zoomed out for scientist model
 
+// Skin family (texture set selection)
+static int g_current_skin_family = 0;
+
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
 	if ( !global_header || !global_data || seq_index < 0 || seq_index >= global_header->numseq ) {

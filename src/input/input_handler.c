@@ -24,6 +24,8 @@
 #include "input.h"
 #include "input_types.h"
 #include "mdl/mdl_animations.h"
+#include "mdl/mdl_audio.h"
+#include "mdl/mdl_bodypart.h"
 #include "studio.h"
 
 #include <stdio.h>
@@ -169,6 +171,11 @@ void Input_ProcessGameInput(
 		anim_state->anim_state->is_looping = !( anim_state->anim_state->is_looping );
 	}
 
+	// Toggle audio
+	if ( Input_IsKeyPressed( KEY_M ) ) {
+		mdl_audio_toggle_enabled();
+	}
+
 	// Reset to frame 0
 	if ( Input_IsKeyPressed( KEY_0 ) ) {
 		anim_state->anim_state->current_frame = 0.0f;
@@ -209,6 +216,9 @@ void Input_ProcessGameInput(
 			}
 
 			if ( target_seq >= 0 && is_sequence_available( target_seq, anim_state->header, anim_state->data, anim_state->seqgroups, anim_state->num_seqgroups ) ) {
+				// Stop all sounds when switching sequences
+				mdl_audio_stop_all_sounds();
+
 				mdl_animation_set_sequence( anim_state->anim_state, target_seq, anim_state->header, anim_state->data, anim_state->seqgroups );
 				if ( anim_state->model_processed ) {
 					*anim_state->model_processed = false;
@@ -230,11 +240,63 @@ void Input_ProcessGameInput(
 			}
 
 			if ( target_seq < anim_state->header->numseq && is_sequence_available( target_seq, anim_state->header, anim_state->data, anim_state->seqgroups, anim_state->num_seqgroups ) ) {
+				// Stop all sounds when switching sequences
+				mdl_audio_stop_all_sounds();
+
 				mdl_animation_set_sequence( anim_state->anim_state, target_seq, anim_state->header, anim_state->data, anim_state->seqgroups );
 				if ( anim_state->model_processed ) {
 					*anim_state->model_processed = false;
 				}
 			}
+		}
+	}
+
+	// ═══════════════════════════════════════════════════════════
+	// BODYPART CONTROLS
+	// ═══════════════════════════════════════════════════════════
+
+	// Previous bodypart
+	if ( Input_IsKeyPressed( KEY_LEFT_BRACKET ) ) {
+		bodypart_select_prev();
+		if ( anim_state->model_processed ) {
+			*anim_state->model_processed = false;
+		}
+	}
+
+	// Next bodypart
+	if ( Input_IsKeyPressed( KEY_RIGHT_BRACKET ) ) {
+		bodypart_select_next();
+		if ( anim_state->model_processed ) {
+			*anim_state->model_processed = false;
+		}
+	}
+
+	// Previous submodel
+	if ( Input_IsKeyPressed( KEY_MINUS ) ) {
+		bodypart_prev_submodel();
+		if ( anim_state->model_processed ) {
+			*anim_state->model_processed = false;
+		}
+	}
+
+	// Next submodel
+	if ( Input_IsKeyPressed( KEY_EQUAL ) ) {
+		bodypart_next_submodel();
+		if ( anim_state->model_processed ) {
+			*anim_state->model_processed = false;
+		}
+	}
+
+	// Print bodypart info
+	if ( Input_IsKeyPressed( KEY_B ) ) {
+		bodypart_print_info();
+	}
+
+	// Reset all bodyparts
+	if ( Input_IsKeyPressed( KEY_BACKSPACE ) ) {
+		bodypart_reset_all();
+		if ( anim_state->model_processed ) {
+			*anim_state->model_processed = false;
 		}
 	}
 }

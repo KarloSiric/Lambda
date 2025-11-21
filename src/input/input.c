@@ -104,25 +104,32 @@ static void glfw_scroll_callback( GLFWwindow *window, double xoffset, double yof
 static int glfw_key_to_enum( int glfwKey )
 { 
     switch( glfwKey ) {
-          case GLFW_KEY_W:        return KEY_W;
-          case GLFW_KEY_A:        return KEY_A;
-          case GLFW_KEY_S:        return KEY_S;
-          case GLFW_KEY_D:        return KEY_D;
-          case GLFW_KEY_Q:        return KEY_Q;
-          case GLFW_KEY_E:        return KEY_E;
-          case GLFW_KEY_R:        return KEY_R;
-          case GLFW_KEY_F:        return KEY_F;
-          case GLFW_KEY_P:        return KEY_P;
-          case GLFW_KEY_L:        return KEY_L;
-          case GLFW_KEY_I:        return KEY_I;
-          case GLFW_KEY_SPACE:    return KEY_SPACE;
-          case GLFW_KEY_ESCAPE:   return KEY_ESCAPE;
-          case GLFW_KEY_0:        return KEY_0;
-          case GLFW_KEY_LEFT:     return KEY_LEFT;
-          case GLFW_KEY_RIGHT:    return KEY_RIGHT;
-          case GLFW_KEY_UP:       return KEY_UP;
-          case GLFW_KEY_DOWN:     return KEY_DOWN;
-          default:                return -1;
+          case GLFW_KEY_W:             return KEY_W;
+          case GLFW_KEY_A:             return KEY_A;
+          case GLFW_KEY_S:             return KEY_S;
+          case GLFW_KEY_D:             return KEY_D;
+          case GLFW_KEY_Q:             return KEY_Q;
+          case GLFW_KEY_E:             return KEY_E;
+          case GLFW_KEY_R:             return KEY_R;
+          case GLFW_KEY_F:             return KEY_F;
+          case GLFW_KEY_P:             return KEY_P;
+          case GLFW_KEY_L:             return KEY_L;
+          case GLFW_KEY_I:             return KEY_I;
+          case GLFW_KEY_M:             return KEY_M;
+          case GLFW_KEY_SPACE:         return KEY_SPACE;
+          case GLFW_KEY_ESCAPE:        return KEY_ESCAPE;
+          case GLFW_KEY_0:             return KEY_0;
+          case GLFW_KEY_LEFT:          return KEY_LEFT;
+          case GLFW_KEY_RIGHT:         return KEY_RIGHT;
+          case GLFW_KEY_UP:            return KEY_UP;
+          case GLFW_KEY_DOWN:          return KEY_DOWN;
+          case GLFW_KEY_LEFT_BRACKET:  return KEY_LEFT_BRACKET;
+          case GLFW_KEY_RIGHT_BRACKET: return KEY_RIGHT_BRACKET;
+          case GLFW_KEY_MINUS:         return KEY_MINUS;
+          case GLFW_KEY_EQUAL:         return KEY_EQUAL;
+          case GLFW_KEY_B:             return KEY_B;
+          case GLFW_KEY_BACKSPACE:     return KEY_BACKSPACE;
+          default:                     return -1;
     }
 }
 
