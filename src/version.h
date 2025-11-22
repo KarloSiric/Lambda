@@ -50,11 +50,11 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 #define HLMV_VERSION_MAJOR          0
-#define HLMV_VERSION_MINOR          3
+#define HLMV_VERSION_MINOR          4
 #define HLMV_VERSION_PATCH          0
 
-// Build number (increment with each build) NOTE(Karlo): [current build is 3 - 2025-10-15]
-#define HLMV_VERSION_BUILD          15
+// Build number (increment with each build) NOTE(Karlo): [current build is 4 - 2025-11-22]
+#define HLMV_VERSION_BUILD          16
 
 // Build timestamp (automatically set by compiler)
 #define HLMV_BUILD_DATE             __DATE__
@@ -144,6 +144,7 @@
 #define HLMV_HAS_BONES              1   // Bone system
 #define HLMV_HAS_SEQUENCES          1   // Sequence groups
 #define HLMV_HAS_DUMP               1   // Model dump feature
+#define HLMV_HAS_AUDIO              1   // Audio playback for events
 
 // Features not yet implemented
 #define HLMV_HAS_GUI                0   // Qt GUI interface

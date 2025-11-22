@@ -10,6 +10,132 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.4.0] - 2025-11-22
+
+### Added
+- **Audio System**
+  - Complete audio engine implementation using miniaudio library
+  - Animation event-driven sound playback system
+  - Support for WAV file format playback
+  - Sound fallback system (valve_hd → valve directory search)
+  - Audio toggle control (M key)
+  - Multiple sound search path support
+  - Automatic sound directory detection from model path
+  - Sound variant system (numbered sound files: sound1.wav, sound2.wav, etc.)
+
+- **Skin Family System**
+  - Complete skin family (texture variant) support
+  - Skin family cycling (UP/DOWN arrow keys)
+  - Proper skin reference table lookup
+  - Support for all skin families defined in MDL files
+  - Skin family info display (B key shows current skin)
+
+- **Bodypart Controls**
+  - Enhanced bodypart management system
+  - Bodypart selection ([ and ] keys)
+  - Submodel selection (- and = keys)
+  - Bodypart info display (B key)
+  - Reset all bodyparts (BACKSPACE key)
+
+- **Logger Integration**
+  - Converted all audio printf/fprintf to structured logging
+  - Converted all animation event printf to structured logging
+  - Audio category logging for clean filtering
+  - Animation category logging for event tracking
+  - Proper log levels: DEBUG, INFO, WARN, ERROR
+  - Support for --quiet flag to suppress audio/animation logs
+
+### Changed
+- **Audio System**
+  - Audio messages now use logger instead of printf/fprintf
+  - Event sound playback messages moved to DEBUG level
+  - Audio engine status messages moved to INFO level
+  - Missing sound warnings moved to WARN level
+  - Audio errors properly logged to ERROR level
+
+- **Animation System**
+  - Animation event messages now use logger instead of printf
+  - Event frame processing moved to DEBUG level
+  - Sequence change notifications moved to INFO level
+  - Sequence group errors properly categorized
+
+- **Input System**
+  - Added skin family controls to input handler
+  - Improved bodypart control integration
+  - Audio toggle mapped to M key
+  - Integrated all controls into unified input system
+
+### Fixed
+- **Audio Fallback System**
+  - Fixed missing sounds for valve_hd models
+  - Implemented automatic valve/ directory fallback search
+  - Matches Half-Life engine behavior for sound search paths
+  - Properly handles case-insensitive sound file extensions (.wav/.WAV)
+
+- **Sound Path Detection**
+  - Fixed directory traversal for finding sound directories
+  - Added proper filesystem root detection
+  - Improved path construction for fallback directories
+  - Fixed edge cases with different directory separators (/ and \)
+
+- **Event Processing**
+  - Fixed sentence events being skipped (non-.wav files)
+  - Fixed event spam during looping animations
+  - Improved frame crossing detection for looping/non-looping sequences
+  - Fixed event triggering at animation boundaries
+
+### Technical Details
+- **Modified Files**
+  - `src/mdl/mdl_audio.c` - Added logger integration, fallback system (lines 505-538)
+  - `src/mdl/mdl_audio.h` - Audio API declarations
+  - `src/mdl/mdl_animations.c` - Logger integration for events
+  - `src/r/r_draw.c` - Skin family implementation
+  - `src/r/r_draw.h` - Skin family function declarations (lines 34-38)
+  - `src/input/input_handler.c` - Added skin family and audio controls (lines 176-178, 307-321)
+  - `src/version.h` - Updated to v0.4.0, added HLMV_HAS_AUDIO flag
+
+- **Audio Engine Architecture**
+  - miniaudio backend for cross-platform audio
+  - Multiple search path system (MAX_SEARCH_PATHS: 10)
+  - Automatic directory detection via model path traversal
+  - Sound variant randomization support
+  - Event-driven playback tied to animation frame events
+
+- **Logger Categories**
+  - `audio` - All audio engine messages
+  - `animation` - Animation and event messages
+  - Allows filtering: `./hlmv model.mdl --quiet` suppresses all audio/animation logs
+
+### Performance
+- **Logging Optimization**
+  - Removed printf blocking I/O from audio playback hot path
+  - Moved verbose sound playback messages to DEBUG level
+  - Reduced console spam during animation playback
+  - Logger buffering improves performance vs direct printf
+
+### Code Quality
+- **Logger Coverage**
+  - 100% of audio printf/fprintf converted to logger
+  - 100% of animation event printf converted to logger
+  - Consistent logging levels across audio and animation subsystems
+  - Proper error handling and warning messages
+
+### Breaking Changes
+- None (backward compatible with v0.3.0)
+
+### Known Issues
+- Audio only supports WAV format (no MP3/OGG yet)
+- Sound directory auto-detection limited to 10 parent levels
+- No 3D positional audio (mono playback only)
+
+### Compatibility
+- Fully tested on macOS Tahoe 26.0.1
+- Build system: CMake 3.15+
+- C11 standard compliance maintained
+- New dependency: miniaudio (header-only library)
+
+---
+
 ## [0.3.0] - 2025-11-07
 
 ### Added
@@ -290,6 +416,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Release Date | Milestone |
 |:--------|-------------|:----------|
+| 0.4.0 | 2025-11-22 | Audio system, Skin families, Logger integration |
 | 0.3.0 | 2025-11-07 | Math library complete, Performance optimization |
 | 0.2.0-alpha.1 <br/>0.1.1-alpha.1 | 2025-10-15<br />2025-10-15 | Stable for Linux and MacOS(Alpha)<br />Logging improvements |
 | 0.1.0-alpha.1 | 2025-10-10 | Initial release |
