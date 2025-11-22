@@ -501,16 +501,44 @@ void mdl_audio_configure_for_model( const char *model_path ) {
                 g_num_search_paths++;
             }
             
-            // Now on success we just stop searching for it all and we are done basically
             
-            g_sounds_available = true;
+            // @Note: Adding valve original directory as the fallback in case the valve_hd models
+            //        Sounds are not being found by the program.
             
-            printf( "[AUDIO] Configured %d sound path(s)\n", g_num_search_paths );
-            return ; // we found it and just exit the function and we are done        
+            char parent_dir[1024];
+            strncpy( parent_dir, current_dir, sizeof( parent_dir ) - 1 );
+            parent_dir[sizeof( parent_dir ) -1] = '\0';
+            
+            char *dir_sep = strrchr( parent_dir, '/' );
+            if ( !dir_sep ) {
+                // Fallback checking for Windows OS
+                dir_sep = strrchr( parent_dir, '\\' );
+            }
+            
+            if ( dir_sep && dir_sep != parent_dir ) {
+                *dir_sep = '\0';
+                
+                char fallback_dir[1024];
+                snprintf( fallback_dir, sizeof( fallback_dir ), "%s/valve/sound", parent_dir );
+                
+                // Now we check if valve/sound exists in the first place and we add it
+                if ( mdl_audio_directory_exists( fallback_dir ) && g_num_search_paths < MAX_SEARCH_PATHS ) {
+                    strncpy( g_sound_search_paths[g_num_search_paths], fallback_dir, 
+                            sizeof( g_sound_search_paths[g_num_search_paths]) - 1 );
+                    g_sound_search_paths[g_num_search_paths][sizeof( g_sound_search_paths[g_num_search_paths]) - 1] = '\0';   
+                    printf( "[AUDIO] Added Fallback: %s\n", fallback_dir );
+                    g_num_search_paths++;
+                }
+                
+                // Now on success we just stop searching for it all and we are done basically
+                g_sounds_available = true;
+                
+                printf( "[AUDIO] Configured %d sound path(s)\n", g_num_search_paths );
+                return ; // we found it and just exit the function and we are done                                        
+            }            
         }
         
         // If we didnt find it then we need to move the root one level
-        
         char *last_slash = strrchr( current_dir, '/' );
         char *last_backslash = strrchr( current_dir, '\\' );
         char *last_sep = ( last_slash > last_backslash ) ? last_slash : last_backslash;
