@@ -64,7 +64,6 @@ void Input_ProcessGameInput(
 	GLFWwindow *window,
 	input_camera_state_t *camera_state,
 	input_animation_state_t *anim_state ) {
-
 	if ( !camera_state ) {
 		return;
 	}

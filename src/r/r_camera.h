@@ -13,25 +13,25 @@ extern "C" {
 #endif
 #include "math/math_types.h"
 
-typedef struct {         
-    math_vec3_t position;
-    math_vec3_t angles_deg;       
-    
-    math_vec3_t target;
-    float distance;
-    
-    float movement_speed;
-    float rotation_speed;
-    float zoom_speed;
-    
-    math_vec3_t forward; 
-    math_vec3_t right; 
-    math_vec3_t up; 
-    
-    math_mat4_t view_matrix;
-    
-    bool dirty;
-    
+typedef struct {
+	math_vec3_t position;
+	math_vec3_t angles_deg;
+
+	math_vec3_t target;
+	float distance;
+
+	float movement_speed;
+	float rotation_speed;
+	float zoom_speed;
+
+	math_vec3_t forward;
+	math_vec3_t right;
+	math_vec3_t up;
+
+	math_mat4_t view_matrix;
+
+	bool dirty;
+
 } r_camera_t;
 
 void Camera_Init( r_camera_t *camera, math_vec3_t target_position, float initial_distance );

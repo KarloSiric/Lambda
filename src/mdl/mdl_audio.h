@@ -1,5 +1,5 @@
 #ifndef MDL_AUDIO_H
-#define MDL_AUDIO_H 
+#define MDL_AUDIO_H
 
 #include <stdbool.h>
 
