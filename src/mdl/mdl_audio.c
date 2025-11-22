@@ -218,11 +218,6 @@ static bool mdl_audio_play_random_sound( const char *sound_path ) {
 }
 
 
-
-
-
-
-
 bool mdl_audio_init( void ) {
     
     if ( g_audio_initialized ) {
@@ -534,18 +529,3 @@ void mdl_audio_configure_for_model( const char *model_path ) {
     fprintf( stderr, "[AUDIO] Use mdl_audio_set_sound_directory() to specify manually\n" );
 } 
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

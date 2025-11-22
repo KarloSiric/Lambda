@@ -31,6 +31,12 @@ void render_model(studiohdr_t *header, unsigned char *data);
 void set_wireframe_mode(bool enabled);
 void set_current_texture(unsigned int texture_id);
 
+// Skin family controls
+void next_skin_family(void);
+void prev_skin_family(void);
+int get_current_skin_family(void);
+int get_num_skin_families(void);
+
 void set_model_data(
     studiohdr_t *header,
     unsigned char *data,

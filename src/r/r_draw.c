@@ -340,7 +340,6 @@ void ProcessModelForRendering( void ) {
 		// Skin table
 		const short *skin_table = (const short *)( global_data + global_header->skinindex );
 		const int numskinref = global_header->numskinref;
-		const int skin_family = 0;
 
 		for ( int mesh = 0; mesh < model->nummesh; ++mesh ) {
 			const int norm_base = meshes[mesh].normindex;
@@ -350,7 +349,7 @@ void ProcessModelForRendering( void ) {
 			// Resolve texture index via skin table
 			int tex_index = meshes[mesh].skinref;
 			if ( skin_table && numskinref > 0 && tex_index >= 0 && tex_index < numskinref ) {
-				tex_index = skin_table[skin_family * numskinref + tex_index];
+				tex_index = skin_table[g_current_skin_family * numskinref + tex_index];
 			}
 
 			// GL texture + size
@@ -1120,14 +1119,13 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		mstudiomesh_t *meshes = (mstudiomesh_t *)( global_data + model->meshindex );
 		const short *skin_table = (const short *)( global_data + global_header->skinindex );
 		const int numskinref = global_header->numskinref;
-		const int skin_family = 0;
 
 		for ( int mesh = 0; mesh < model->nummesh; ++mesh ) {
 			const int norm_base = meshes[mesh].normindex;
 
 			int tex_index = meshes[mesh].skinref;
 			if ( skin_table && numskinref > 0 && tex_index >= 0 && tex_index < numskinref ) {
-				tex_index = skin_table[skin_family * numskinref + tex_index];
+				tex_index = skin_table[g_current_skin_family * numskinref + tex_index];
 			}
 
 			GLuint gl_tex = 0;
@@ -1410,4 +1408,53 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 	}
 
 	LOG_INFOF( "renderer", "Model loaded successfully" );
+}
+
+// ═══════════════════════════════════════════════════════════
+// SKIN FAMILY CONTROLS
+// ═══════════════════════════════════════════════════════════
+
+void next_skin_family(void) {
+	if (!global_header || !global_data) {
+		return;
+	}
+
+	int num_families = global_header->numskinfamilies;
+	if (num_families <= 1) {
+		printf("Model only has 1 skin family\n");
+		return;
+	}
+
+	g_current_skin_family = (g_current_skin_family + 1) % num_families;
+	model_processed = false; // Force re-process to use new textures
+
+	printf("Skin family: %d/%d\n", g_current_skin_family + 1, num_families);
+}
+
+void prev_skin_family(void) {
+	if (!global_header || !global_data) {
+		return;
+	}
+
+	int num_families = global_header->numskinfamilies;
+	if (num_families <= 1) {
+		printf("Model only has 1 skin family\n");
+		return;
+	}
+
+	g_current_skin_family = (g_current_skin_family - 1 + num_families) % num_families;
+	model_processed = false; // Force re-process to use new textures
+
+	printf("Skin family: %d/%d\n", g_current_skin_family + 1, num_families);
+}
+
+int get_current_skin_family(void) {
+	return g_current_skin_family;
+}
+
+int get_num_skin_families(void) {
+	if (!global_header) {
+		return 0;
+	}
+	return global_header->numskinfamilies;
 }

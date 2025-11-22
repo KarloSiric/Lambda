@@ -26,6 +26,7 @@
 #include "mdl/mdl_animations.h"
 #include "mdl/mdl_audio.h"
 #include "mdl/mdl_bodypart.h"
+#include "r/r_draw.h"
 #include "studio.h"
 
 #include <stdio.h>
@@ -295,6 +296,26 @@ void Input_ProcessGameInput(
 	// Reset all bodyparts
 	if ( Input_IsKeyPressed( KEY_BACKSPACE ) ) {
 		bodypart_reset_all();
+		if ( anim_state->model_processed ) {
+			*anim_state->model_processed = false;
+		}
+	}
+
+	// ═══════════════════════════════════════════════════════════
+	// SKIN FAMILY CONTROLS
+	// ═══════════════════════════════════════════════════════════
+
+	// Next skin family
+	if ( Input_IsKeyPressed( KEY_UP ) ) {
+		next_skin_family();
+		if ( anim_state->model_processed ) {
+			*anim_state->model_processed = false;
+		}
+	}
+
+	// Previous skin family
+	if ( Input_IsKeyPressed( KEY_DOWN ) ) {
+		prev_skin_family();
 		if ( anim_state->model_processed ) {
 			*anim_state->model_processed = false;
 		}
