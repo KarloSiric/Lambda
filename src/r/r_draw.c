@@ -22,6 +22,7 @@
 
 #include "r_draw.h"
 #include "r_gl_platform.h"
+#include "r_grid.h"
 #include "r_textures.h"
 
 #include "mdl_bodypart.h"
@@ -618,7 +619,7 @@ void setup_triangle( void ) {
 	glEnableVertexAttribArray( 0 );
 }
 
-static char *read_shader_source( const char *filename ) {
+char *read_shader_source( const char *filename ) {
 	char fullpath[512];
 	snprintf( fullpath, sizeof( fullpath ), "%s/%s", SHADER_DIR, filename );
 
@@ -647,7 +648,7 @@ static char *read_shader_source( const char *filename ) {
 	return buffer;
 }
 
-static GLuint compile_shader( const char *source, GLenum type ) {
+GLuint compile_shader( const char *source, GLenum type ) {
 	GLuint shader = glCreateShader( type );
 	glShaderSource( shader, 1, &source, NULL );
 	glCompileShader( shader );
@@ -665,7 +666,7 @@ static GLuint compile_shader( const char *source, GLenum type ) {
 	return shader;
 }
 
-static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader ) {
+GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader ) {
 	GLuint program = glCreateProgram();
 	glAttachShader( program, vertexShader );
 	glAttachShader( program, fragmentShader );
@@ -687,7 +688,7 @@ static GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader 
 	return program;
 }
 
-static int load_shaders( void ) {
+int load_shaders( void ) {
 	char *vertex_shader_file = read_shader_source( "textured.vert" );
 
 	char *fragment_shader_file = read_shader_source( "textured.frag" );
@@ -860,6 +861,9 @@ int init_renderer( int width, int height, const char *title ) {
 		fprintf( stderr, "ERROR - Failed to load shaders!\n" );
 		return -1;
 	}
+     
+    // @Note(Karlo): Initializaing the grid for the grid being drawn
+    grid_init();
 
 	// ═══════════════════════════════════════════════════════════════
 	// Create fallback white texture (so meshes always draw)
@@ -1260,6 +1264,11 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	Math_Mat4_LookAt( camPos, target, up, V );
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
+    
+    // Adding drawing for the grid
+    
+    float ground_z = global_header->bbmin[2];
+    grid_render( V, P, ground_z );
 
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );

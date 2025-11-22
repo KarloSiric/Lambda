@@ -47,8 +47,17 @@ void set_model_data(
 );
 
 
-void clear_screen(void);
+// Adding shader programs that other files can use
+char *read_shader_source( const char *filename );
 
+GLuint compile_shader( const char *source, GLenum type );
+
+GLuint create_shader_program( GLuint vertexShader, GLuint fragmentShader );
+
+int load_shaders( void );
+
+
+void clear_screen(void);
 
 void UpdateBonesForCurrentFrame(void);
 void ProcessModelForRendering(void);
