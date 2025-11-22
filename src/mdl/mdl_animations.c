@@ -26,6 +26,7 @@
 
 #include "math_quaternion.h"
 #include "math_matrix.h"
+#include "util/util_logger.h"
 
 #include <cglm/cglm.h>
 #include <math.h>
@@ -207,8 +208,9 @@ mdl_animation_set_sequence( mdl_animation_state_t *state, int sequence_index, st
 	state->current_frame = 0.0f;
 	state->is_looping = ( seq->flags & 0x01 );
 
-	printf(
-		"Set animation to sequence %d: '%s' (%d frames @ %.1f fps)\n",
+	LOG_INFOF(
+		"animation",
+		"Set animation to sequence %d: '%s' (%d frames @ %.1f fps)",
 		sequence_index,
 		seq->label,
 		seq->numframes,
@@ -252,9 +254,9 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 
 	float frames_per_second = seq->fps;
 	float frames_to_advance = delta_time * frames_per_second;
-    
-    // saving frames
-    state->previous_frame = state->current_frame;
+
+	// saving frames
+	state->previous_frame = state->current_frame;
 	state->current_frame += frames_to_advance;
 
 	if ( seq->numframes <= 1 ) {
@@ -276,9 +278,9 @@ void mdl_animation_update( mdl_animation_state_t *state, float delta_time, studi
 	if ( state->current_frame < 0.0f ) {
 		state->current_frame = 0.0f;
 	}
-    
-    // @Note: Adding the animation playing system at the end
-    mdl_animation_process_events( state, header, data );
+
+	// @Note: Adding the animation playing system at the end
+	mdl_animation_process_events( state, header, data );
 
 	return;
 }
@@ -314,9 +316,9 @@ mdl_result_t mdl_animation_calculate_bones(
 		if ( !seqgroups ) {
 			static bool warned_no_seqgroups = false;
 			if ( !warned_no_seqgroups ) {
-				fprintf( stderr, "ERROR - Sequence group %d required but no seqgroups loaded (sequence %d: '%s')\n",
-						 seqgroup, state->current_sequence, seq->label );
-				fprintf( stderr, "       Falling back to T-pose. External files may be missing!\n" );
+				LOG_ERRORF( "animation", "Sequence group %d required but no seqgroups loaded (sequence %d: '%s')",
+							seqgroup, state->current_sequence, seq->label );
+				LOG_ERROR( "animation", "Falling back to T-pose. External files may be missing!" );
 				warned_no_seqgroups = true;
 			}
 			return MDL_INFO_SEQUENCE_GROUP_FILE;
@@ -326,9 +328,9 @@ mdl_result_t mdl_animation_calculate_bones(
 		if ( seqgroup >= header->numseqgroups || seqgroup < 0 ) {
 			static bool warned_invalid_seqgroup = false;
 			if ( !warned_invalid_seqgroup ) {
-				fprintf( stderr, "ERROR - Invalid sequence group %d (valid range: 0-%d) for sequence %d\n",
-						 seqgroup, header->numseqgroups - 1, state->current_sequence );
-				fprintf( stderr, "       This animation data appears corrupted. Using T-pose.\n" );
+				LOG_ERRORF( "animation", "Invalid sequence group %d (valid range: 0-%d) for sequence %d",
+							seqgroup, header->numseqgroups - 1, state->current_sequence );
+				LOG_ERROR( "animation", "This animation data appears corrupted. Using T-pose." );
 				warned_invalid_seqgroup = true;
 			}
 			return MDL_ERROR_INVALID_PARAMETER;
@@ -338,10 +340,10 @@ mdl_result_t mdl_animation_calculate_bones(
 		if ( !seqgroups[seqgroup].data ) {
 			static bool warned_missing_data = false;
 			if ( !warned_missing_data ) {
-				fprintf( stderr, "WARNING - Sequence group %d not loaded for sequence %d: '%s'\n",
-						 seqgroup, state->current_sequence, seq->label );
-				fprintf( stderr, "          Missing file: %s\n", seqgroups[seqgroup].name );
-				fprintf( stderr, "          Falling back to T-pose\n" );
+				LOG_WARNF( "animation", "Sequence group %d not loaded for sequence %d: '%s'",
+						   seqgroup, state->current_sequence, seq->label );
+				LOG_WARNF( "animation", "Missing file: %s", seqgroups[seqgroup].name );
+				LOG_WARN( "animation", "Falling back to T-pose" );
 				warned_missing_data = true;
 			}
 			return MDL_INFO_SEQUENCE_GROUP_FILE;
@@ -352,9 +354,9 @@ mdl_result_t mdl_animation_calculate_bones(
 
 	if ( seqgroups[seqgroup].sequence_header ) {
 		if ( seqgroups[seqgroup].sequence_header->id != IDSEQGRPHEADER ) {
-			fprintf( stderr, "ERROR - Corrupted sequence groupe %d header!\n",
-					 seqgroup );
-			return MDL_ERROR_INVALID_MAGIC ;
+			LOG_ERRORF( "animation", "Corrupted sequence group %d header!",
+						seqgroup );
+			return MDL_ERROR_INVALID_MAGIC;
 		}
 	}
 
@@ -446,65 +448,59 @@ void mdl_animation_transform_all_vertices(
 }
 
 void mdl_animation_process_events( mdl_animation_state_t *state, studiohdr_t *header, unsigned char *data ) {
-    
-    if ( !state || !header || !data ) {
-        return ;
-    }
-    
-    mstudioseqdesc_t *sequences = ( mstudioseqdesc_t * )( data + header->seqindex );
-    
-    mstudioseqdesc_t *seq = &sequences[state->current_sequence];
-    
-    // CHecking if this sequence we are running currently has any whatsoever events if not just exit
-    if ( seq->numevents == 0 ) {
-        return ;
-    }  
-    
-    mstudioevent_t *events = ( mstudioevent_t * )( data + seq->eventindex );
-    
-    for ( int i = 0; i < seq->numevents; i++ ) {
-        int event_frame = events[i].frame;
-        
-        bool crossed = false;
-        
-        if ( state->is_looping ) {
-            
-            // Handle the looping logic
-            if ( state->previous_frame > state->current_frame ) {
-                crossed = ( event_frame >= ( int )state->previous_frame ) ||
-                          ( event_frame <= ( int )state->current_frame );
-            } else {
-                // FIXED: SPamming issues
-                crossed = ( event_frame > ( int )state->previous_frame ) &&
-                          ( event_frame <= ( int )state->current_frame );
-            } 
-        } else {
-            // Non looping logic handling
-            // @Fix: FIxing spamming issues for this
-            crossed = ( event_frame > ( int )state->previous_frame ) &&
-                      ( event_frame <= ( int )state->current_frame );
-        }
-        
-        if ( crossed ) {
-            int event_type = events[i].type;
-            
-            const char *options = events[i].options;
-            
-            if ( options && options[0] != '\0' ) {
-                
-                // @Fix: Adding for skipping if it is not .wav or .WAV
-                if ( !strstr( options, ".wav" ) && !strstr( options, ".WAV" ) ) {
-                    printf( "[EVENT] Frame %d: Skipping sentence '%s'\n",
-                           event_frame, options );
-                    continue;
-                }
-                
-                printf( "[EVENT] Frame: %d: Type: %d, Sound: '%s'\n",
-                                         event_frame, event_type, options );
-                mdl_audio_play_event_sound( options );
-            } 
-        } 
-    } // END LOOP
-    
-    return ;
+	if ( !state || !header || !data ) {
+		return;
+	}
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( data + header->seqindex );
+
+	mstudioseqdesc_t *seq = &sequences[state->current_sequence];
+
+	// CHecking if this sequence we are running currently has any whatsoever events if not just exit
+	if ( seq->numevents == 0 ) {
+		return;
+	}
+
+	mstudioevent_t *events = (mstudioevent_t *)( data + seq->eventindex );
+
+	for ( int i = 0; i < seq->numevents; i++ ) {
+		int event_frame = events[i].frame;
+
+		bool crossed = false;
+
+		if ( state->is_looping ) {
+			// Handle the looping logic
+			if ( state->previous_frame > state->current_frame ) {
+				crossed = ( event_frame >= (int)state->previous_frame ) || ( event_frame <= (int)state->current_frame );
+			} else {
+				// FIXED: SPamming issues
+				crossed = ( event_frame > (int)state->previous_frame ) && ( event_frame <= (int)state->current_frame );
+			}
+		} else {
+			// Non looping logic handling
+			// @Fix: FIxing spamming issues for this
+			crossed = ( event_frame > (int)state->previous_frame ) && ( event_frame <= (int)state->current_frame );
+		}
+
+		if ( crossed ) {
+			int event_type = events[i].type;
+
+			const char *options = events[i].options;
+
+			if ( options && options[0] != '\0' ) {
+				// @Fix: Adding for skipping if it is not .wav or .WAV
+				if ( !strstr( options, ".wav" ) && !strstr( options, ".WAV" ) ) {
+					LOG_DEBUGF( "animation", "Frame %d: Skipping sentence '%s'",
+								event_frame, options );
+					continue;
+				}
+
+				LOG_DEBUGF( "animation", "Frame: %d: Type: %d, Sound: '%s'",
+							event_frame, event_type, options );
+				mdl_audio_play_event_sound( options );
+			}
+		}
+	} // END LOOP
+
+	return;
 }
