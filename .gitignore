@@ -68,6 +68,7 @@ logs/
 
 # Ignoring unnecessary documentation that is a reference just for us
 docs/DEVELOPMENT_INFO.md
+roadmap.md
 ROADMAP.md
 
 
