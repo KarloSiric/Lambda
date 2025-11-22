@@ -68,8 +68,6 @@ void mdl_bonecontroller_apply( const mdl_bonecontrollers_state_t *ctrl_state,
 							   const studiohdr_t *header,
 							   const unsigned char *data,
 							   math_mat4_t *bone_matrices ) {
-	// @Note(Karlo): Implement apply function
-
 	if ( ctrl_state == NULL || header == NULL || data == NULL || bone_matrices == NULL ) {
 		LOG_ERRORF( "bonecontroller", "ERROR [%d] - Invalid parameter passed\n", MDL_ERROR_INVALID_PARAMETER );
 		return;

@@ -121,6 +121,11 @@ float zoom = 0.15f; // Even more zoomed out for scientist model
 // Skin family (texture set selection)
 static int g_current_skin_family = 0;
 
+// Global variables for bounding box from the actual vertex data
+static vec3_t g_model_bbox_min = { 0 };
+static vec3_t g_model_bbox_max = { 0 };
+static bool g_bbox_calculated = false;
+
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
 	if ( !global_header || !global_data || seq_index < 0 || seq_index >= global_header->numseq ) {
@@ -861,9 +866,9 @@ int init_renderer( int width, int height, const char *title ) {
 		fprintf( stderr, "ERROR - Failed to load shaders!\n" );
 		return -1;
 	}
-     
-    // @Note(Karlo): Initializaing the grid for the grid being drawn
-    grid_init();
+
+	// @Note(Karlo): Initializaing the grid for the grid being drawn
+	grid_init();
 
 	// ═══════════════════════════════════════════════════════════════
 	// Create fallback white texture (so meshes always draw)
@@ -1252,23 +1257,28 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 
 	mat4 M;
 	Math_Mat4_Identity( M );
+
+	float ground_offset = -global_header->bbmin[2];
+
+	glm_translate( M, (vec3){ 0.0f, 0.0f, ground_offset } );
+
 	Math_Mat4_Rotate( M, rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
 	Math_Mat4_Rotate( M, rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );
 
 	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
 	vec3 camPos = { 0.0f, 0.0f, camDist };
-	vec3 target = { 0.0f, 3.0f, 0.0f };
+	vec3 target = { 0.0f, 0.0f, 0.0f };
 	vec3 up = { 0.0f, 2.0f, 0.0f };
 
 	mat4 V;
 	Math_Mat4_LookAt( camPos, target, up, V );
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
-    
-    // Adding drawing for the grid
-    
-    float ground_z = global_header->bbmin[2];
-    grid_render( V, P, ground_z );
+
+	// Adding drawing for the grid
+
+	float ground_z = global_header->bbmin[2];
+	grid_render( V, P, ground_z );
 
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );
@@ -1313,16 +1323,15 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	GLint uTex = glGetUniformLocation( shader_program, "tex" );
 	if ( uTex != -1 ) {
 		glUniform1i( uTex, 0 );
-    }
-    
-    glDisable( GL_BLEND );
+	}
+
+	glDisable( GL_BLEND );
 
 	for ( int r = 0; r < g_num_ranges; ++r ) {
-        
 		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
 		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, tex_to_bind ); 
-        
+		glBindTexture( GL_TEXTURE_2D, tex_to_bind );
+
 		// @Note(Karlo): Adding texture flags checkout
 		int text_index = -1;
 		for ( int t1 = 0; t1 < g_textures.count; t1++ ) {
@@ -1331,26 +1340,26 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 				break;
 			}
 		}
-        
-        // @Note(Karlo): THis was wrong and not functioning
-        // @Cleanup(Karlo): Had to add safety checking to avid loading garabge data instead of proper flags
-        int flags = 0;
-        if ( text_index >= 0 && text_index < g_textures.count ) {
-            flags = g_textures.textures[text_index].flags;
-        }       
-        
-        if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
-            glEnable( GL_BLEND );
-            
-            if ( flags & STUDIO_NF_ADDITIVE ) {
-                glBlendFunc( GL_SRC_ALPHA, GL_ONE ); // ADITIVE FLAG
-            } else {
-                glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-            }
-        } else {
-            glDisable( GL_BLEND );
-        }
-        
+
+		// @Note(Karlo): THis was wrong and not functioning
+		// @Cleanup(Karlo): Had to add safety checking to avid loading garabge data instead of proper flags
+		int flags = 0;
+		if ( text_index >= 0 && text_index < g_textures.count ) {
+			flags = g_textures.textures[text_index].flags;
+		}
+
+		if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
+			glEnable( GL_BLEND );
+
+			if ( flags & STUDIO_NF_ADDITIVE ) {
+				glBlendFunc( GL_SRC_ALPHA, GL_ONE ); // ADITIVE FLAG
+			} else {
+				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			}
+		} else {
+			glDisable( GL_BLEND );
+		}
+
 		// mask
 		glUniform1i( glGetUniformLocation( shader_program, "u_masked" ),
 					 ( flags & STUDIO_NF_MASKED ) != 0 );
@@ -1370,7 +1379,6 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		// for chrome, vertex shader needs the camera pos
 		glUniform3f( glGetUniformLocation( shader_program, "viewPos" ),
 					 camPos[0], camPos[1], camPos[2] );
-
 
 		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
 	}
@@ -1423,46 +1431,46 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 // SKIN FAMILY CONTROLS
 // ═══════════════════════════════════════════════════════════
 
-void next_skin_family(void) {
-	if (!global_header || !global_data) {
+void next_skin_family( void ) {
+	if ( !global_header || !global_data ) {
 		return;
 	}
 
 	int num_families = global_header->numskinfamilies;
-	if (num_families <= 1) {
-		printf("Model only has 1 skin family\n");
+	if ( num_families <= 1 ) {
+		printf( "Model only has 1 skin family\n" );
 		return;
 	}
 
-	g_current_skin_family = (g_current_skin_family + 1) % num_families;
+	g_current_skin_family = ( g_current_skin_family + 1 ) % num_families;
 	model_processed = false; // Force re-process to use new textures
 
-	printf("Skin family: %d/%d\n", g_current_skin_family + 1, num_families);
+	printf( "Skin family: %d/%d\n", g_current_skin_family + 1, num_families );
 }
 
-void prev_skin_family(void) {
-	if (!global_header || !global_data) {
+void prev_skin_family( void ) {
+	if ( !global_header || !global_data ) {
 		return;
 	}
 
 	int num_families = global_header->numskinfamilies;
-	if (num_families <= 1) {
-		printf("Model only has 1 skin family\n");
+	if ( num_families <= 1 ) {
+		printf( "Model only has 1 skin family\n" );
 		return;
 	}
 
-	g_current_skin_family = (g_current_skin_family - 1 + num_families) % num_families;
+	g_current_skin_family = ( g_current_skin_family - 1 + num_families ) % num_families;
 	model_processed = false; // Force re-process to use new textures
 
-	printf("Skin family: %d/%d\n", g_current_skin_family + 1, num_families);
+	printf( "Skin family: %d/%d\n", g_current_skin_family + 1, num_families );
 }
 
-int get_current_skin_family(void) {
+int get_current_skin_family( void ) {
 	return g_current_skin_family;
 }
 
-int get_num_skin_families(void) {
-	if (!global_header) {
+int get_num_skin_families( void ) {
+	if ( !global_header ) {
 		return 0;
 	}
 	return global_header->numskinfamilies;

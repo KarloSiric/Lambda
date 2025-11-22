@@ -304,14 +304,3 @@ void Input_Shutdown( void ) {
     
     memset( &g_input_state, 0, sizeof( g_input_state ) );  
 }
-
-
-
-
-
-
-
-
-
-
-

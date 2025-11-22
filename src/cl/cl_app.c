@@ -93,7 +93,6 @@ static int handle_dump_mode( const app_args_t *args ) {
 }
 
 int app_init( app_args_t *args ) {
-     
 	if ( !args ) {
 		LOG_ERROR( "app", "Arguments pointer is NULL" );
 		return ( APP_INIT_ERROR );
@@ -135,8 +134,8 @@ int app_init( app_args_t *args ) {
 	extern GLFWwindow *window;
 	g_app_state.window = window;
 
-    // registering Input initialization for registering all of the callbacks detection
-    Input_Init( window );
+	// registering Input initialization for registering all of the callbacks detection
+	Input_Init( window );
 
 	// Initialize audio system (non-fatal if it fails)
 	app_init_audio();
@@ -183,8 +182,7 @@ int app_init( app_args_t *args ) {
 			g_app_state.model->num_seqgroups );
 
 		LOG_INFO( "app", "Dump complete. Starting viewer...\n" );
-	}
-	else if ( args->dump_level == DUMP_EXTENDED ) {
+	} else if ( args->dump_level == DUMP_EXTENDED ) {
 		LOG_INFO( "app", "Printing model dump (extended)..." );
 		print_extended_model_dump(
 			stdout,
@@ -209,7 +207,7 @@ int app_init( app_args_t *args ) {
 	g_app_state.running = true;
 	g_app_state.initialized = true;
 
-    g_app_state.args = args;
+	g_app_state.args = args;
 
 	LOG_INFO( "app", "Application initialized successfully!\n" );
 

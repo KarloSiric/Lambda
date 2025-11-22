@@ -520,4 +520,3 @@ void mdl_stats_analyze( const studiohdr_t *main_header, const studiohdr_t *tex_h
 	out_stats->estimated_ram_bytes = mdl_stats_estimate_memory( main_header, tex_header, main_data, tex_data );
 	out_stats->estimated_vram_bytes = mdl_stats_texture_memory( tex_header, tex_data );
 }
-
