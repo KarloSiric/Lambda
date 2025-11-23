@@ -181,6 +181,13 @@ void Math_Mat4_Translate( math_mat4_t m, float x, float y, float z ) {
 }
 
 
+void Math_Mat4_Scale(math_mat4_t m, float sx, float sy, float sz)
+{
+    m[0][0] *= sx;
+    m[1][1] *= sy;
+    m[2][2] *= sz;
+}
+
 // Creates a view matrix for camera positioning
 // "Look-at" transformation: camera at 'eye' position, looking at 'center' point
 void Math_Mat4_LookAt( const math_vec3_t eye, const math_vec3_t center, const math_vec3_t up, math_mat4_t dest ) {

@@ -43,6 +43,9 @@ bool get_camera_orbit_mode(void);
 float *get_model_rotation_x_ptr(void);
 float *get_model_rotation_y_ptr(void);
 
+// Ground offset control
+float *get_ground_offset_ptr(void);
+
 void set_model_data(
     studiohdr_t *header,
     unsigned char *data,

@@ -42,8 +42,10 @@
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> // For strstr
 #include <unistd.h> // For getcwd
 #include <math.h>   // For cosf/sinf in orbit camera
+#include <float.h>  // For FLT_MAX
 
 #define MAX_DRAW_RANGES 4096
 
@@ -118,7 +120,7 @@ static int global_num_seqgroups = 0;
 // Camera controls - Initial camera angle looks down at model from front-right
 float rotation_x = 0.3f;    // Tilt down to look at model (positive = looking down)
 float rotation_y = 0.5f;    // Slight angle to see front-right
-float zoom = 0.15f;
+float zoom = 0.015f;        // Changed from 0.15f to 0.015f (10x less) since we removed 0.1x model scaling
 
 // Model rotation (separate from camera rotation, used when Shift is held)
 static float model_rotation_x = 0.0f;
@@ -136,8 +138,11 @@ static int g_current_skin_family = 0;
 // Model bounding box calculated from actual vertex data
 static mdl_bounds_t g_model_bounds = { 0 };
 
-// Model calculating the ground offset
-static float g_model_origin_y = 0.0f;
+// Model scale (you can tweak this)
+static const float g_model_scale = 0.1f;
+
+// Y offset so model's feet sit on the ground after scaling
+static float g_model_ground_y = 0.0f;
 
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
@@ -1281,16 +1286,24 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	glfwGetFramebufferSize( window, &fbw, &fbh );
 	float aspect = ( fbh > 0 ) ? (float)fbw / (float)fbh : 1.0f;
 
-	mat4 M;
-	Math_Mat4_Identity( M );
+    mat4 M;
+    Math_Mat4_Identity( M );
     
-	// Base model orientation - rotate to face camera (applies to all animations)
-	// Trying -90° (270°) rotation to face camera
-	Math_Mat4_Rotate( M, -MATH_PI * 0.5f, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
+    float min_z = g_model_bounds.min[2];     // HL Z (up)
+    float translate_y = -min_z;
 
-	// Apply user model rotation (used when Shift is held and user drags mouse)
-	Math_Mat4_Rotate( M, model_rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
-	Math_Mat4_Rotate( M, model_rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );
+    // 1) Move model so its feet sit on Y=0 after scaling
+    Math_Mat4_Translate( M, 0.0f, translate_y, 0.0f );
+    
+    
+    Math_Mat4_Scale( M, g_model_scale, g_model_scale, g_model_scale );
+
+    // 3) Base orientation: rotate so model faces camera
+    Math_Mat4_Rotate( M, -MATH_PI * 0.5f, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
+
+    // 4) User-controlled model rotation (shift + mouse)
+    Math_Mat4_Rotate( M, model_rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
+    Math_Mat4_Rotate( M, model_rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );    
     
 	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
 	vec3 camPos;
@@ -1306,8 +1319,8 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	camPos[1] = camDist * sinf(pitch);              // Y
 	camPos[2] = camDist * cosf(pitch) * cosf(yaw);  // Z
 
-	// Clamp camera Y to prevent going below ground
-	float ground_level = (global_header ? global_header->bbmin[1] : 0.0f) + ground_offset;
+	// Clamp camera Y to prevent going below ground (ground is at Y=0 now)
+	float ground_level = 0.0f;
 	float min_camera_height = ground_level + 0.5f; // Stay at least 0.5 units above ground
 	if (camPos[1] < min_camera_height) {
 		camPos[1] = min_camera_height;
@@ -1321,10 +1334,9 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
 
-	// Render ground plane, grid, and axes at model's feet
-	// Use the model header's bbox min Y + user offset
-    
-    float ground_y = g_model_bounds.min[1] * 0.1f;
+	// Render ground plane, grid, and axes at Y=0 (world origin)
+	// This is the standard approach - models are authored with sensible origins
+	float ground_y = 0.0f;
 	r_ground_draw( V, P, ground_y );
 	r_grid_draw( V, P, ground_y );
 	r_axes_draw( V, P, ground_y );
@@ -1436,6 +1448,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
 	}
 }
+
 void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data, mdl_seqgroup_blob_t *seqgroups, int num_seqgroups ) {
 	if ( !header || !data ) {
 		LOG_ERRORF( "renderer", "NULL model data passed to renderer!" );
@@ -1470,6 +1483,20 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 
 	// Calculate bounding box from actual vertex data
 	mdl_bounds_calculate( header, data, &g_model_bounds );
+    
+    if ( g_model_bounds.valid ) {
+        float min_z = g_model_bounds.min[2];   // HL Z (up)
+        g_model_ground_y = -min_z * g_model_scale;
+
+        LOG_INFOF(
+            "renderer",
+            "Ground align: minZ=%.3f -> ground_y=%.3f (scale=%.3f)",
+            min_z, g_model_ground_y, g_model_scale
+        );
+    } else {
+        g_model_ground_y = 0.0f;
+        LOG_WARNF( "renderer", "Bounds not valid, disabling ground alignment" );
+    }
 
 	// Adding animations initializing
 	mdl_animation_init( &g_anim_state );

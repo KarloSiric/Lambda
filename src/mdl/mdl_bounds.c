@@ -43,29 +43,32 @@ void mdl_bounds_calculate( const studiohdr_t *header, const unsigned char *data,
     float max_y = FLT_MIN;
     float max_z = FLT_MIN;
 
-    // CRITICAL: Check sequence bounding boxes FIRST!
-    // This accounts for animated poses (feet going down during walk, etc.)
-    // T-pose vertices alone don't capture the full range of motion
-    mstudioseqdesc_t *sequences = ( mstudioseqdesc_t *)( data + header->seqindex );
-    for ( int seq = 0; seq < header->numseq; seq++ ) {
-        mstudioseqdesc_t *sequence = &sequences[seq];
+    // Calculate bounds from ACTUAL VERTICES (not sequence boxes!)
+    // Sequence bboxes can be inaccurate or in wrong coordinate space
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( data + header->bodypartindex );
 
-        // Update min/max with this sequence's bbox
-        if ( sequence->bbmin[0] < min_x ) min_x = sequence->bbmin[0];
-        if ( sequence->bbmin[1] < min_y ) min_y = sequence->bbmin[1];
-        if ( sequence->bbmin[2] < min_z ) min_z = sequence->bbmin[2];
+    for ( int bp = 0; bp < header->numbodyparts; bp++ ) {
+        mstudiobodyparts_t *bodypart = &bodyparts[bp];
+        mstudiomodel_t *models = (mstudiomodel_t *)( data + bodypart->modelindex );
 
-        if ( sequence->bbmax[0] > max_x ) max_x = sequence->bbmax[0];
-        if ( sequence->bbmax[1] > max_y ) max_y = sequence->bbmax[1];
-        if ( sequence->bbmax[2] > max_z ) max_z = sequence->bbmax[2];
+        for ( int m = 0; m < bodypart->nummodels; m++ ) {
+            mstudiomodel_t *model = &models[m];
+            vec3_t *vertices = (vec3_t *)( data + model->vertindex );
+
+            for ( int v = 0; v < model->numverts; v++ ) {
+                if ( vertices[v][0] < min_x ) min_x = vertices[v][0];
+                if ( vertices[v][1] < min_y ) min_y = vertices[v][1];
+                if ( vertices[v][2] < min_z ) min_z = vertices[v][2];
+
+                if ( vertices[v][0] > max_x ) max_x = vertices[v][0];
+                if ( vertices[v][1] > max_y ) max_y = vertices[v][1];
+                if ( vertices[v][2] > max_z ) max_z = vertices[v][2];
+            }
+        }
     }
 
-    LOG_DEBUGF( "bounds", "Sequence bounds: MIN(%.2f, %.2f, %.2f) MAX(%.2f, %.2f, %.2f)\n",
+    LOG_DEBUGF( "bounds", "Vertex bounds: MIN(%.2f, %.2f, %.2f) MAX(%.2f, %.2f, %.2f)\n",
                min_x, min_y, min_z, max_x, max_y, max_z);
-
-    // DO NOT check vertices! Sequence bboxes already contain the full range.
-    // Checking vertices would make T-pose have different bounds than animations.
-    // This ensures consistent ground positioning for ALL poses.
     
     
     bounds->min[0] = min_x;
