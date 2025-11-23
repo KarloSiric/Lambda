@@ -82,8 +82,9 @@ int bodypart_get_bodygroup( void ) {
 }
 
 void bodypart_set_bodygroup( int bodygroup ) {
-	if ( !g_header || !g_data )
+	if ( !g_header || !g_data ) {
 		return;
+    }
 
 	g_bodypart_state.bodygroup = bodygroup;
 
