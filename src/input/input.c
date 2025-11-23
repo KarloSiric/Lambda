@@ -113,6 +113,7 @@ static int glfw_key_to_enum( int glfwKey )
           case GLFW_KEY_R:             return KEY_R;
           case GLFW_KEY_F:             return KEY_F;
           case GLFW_KEY_P:             return KEY_P;
+          case GLFW_KEY_G:             return KEY_G;
           case GLFW_KEY_L:             return KEY_L;
           case GLFW_KEY_I:             return KEY_I;
           case GLFW_KEY_M:             return KEY_M;
@@ -125,6 +126,8 @@ static int glfw_key_to_enum( int glfwKey )
           case GLFW_KEY_DOWN:          return KEY_DOWN;
           case GLFW_KEY_LEFT_BRACKET:  return KEY_LEFT_BRACKET;
           case GLFW_KEY_RIGHT_BRACKET: return KEY_RIGHT_BRACKET;
+          case GLFW_KEY_LEFT_SHIFT:    return KEY_LEFT_SHIFT;
+          case GLFW_KEY_RIGHT_SHIFT:    return KEY_RIGHT_SHIFT;
           case GLFW_KEY_MINUS:         return KEY_MINUS;
           case GLFW_KEY_EQUAL:         return KEY_EQUAL;
           case GLFW_KEY_B:             return KEY_B;

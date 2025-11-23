@@ -15,6 +15,8 @@ typedef struct {
     float *rotation_y;
     float *zoom;
     bool *wireframe_enabled;
+    float *model_rotation_x;
+    float *model_rotation_y;
 } input_camera_state_t;
 
 

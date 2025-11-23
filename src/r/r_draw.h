@@ -37,6 +37,14 @@ void prev_skin_family(void);
 int get_current_skin_family(void);
 int get_num_skin_families(void);
 
+// Camera mode controls
+void set_camera_orbit_mode(bool orbit);
+bool get_camera_orbit_mode(void);
+
+// Model rotation controls (used when Shift is held)
+float *get_model_rotation_x_ptr(void);
+float *get_model_rotation_y_ptr(void);
+
 void set_model_data(
     studiohdr_t *header,
     unsigned char *data,

@@ -36,32 +36,37 @@ static GLuint grid_shader = 0;
 static bool grid_enabled = true;
 static int grid_vertex_count = 0;
 
-void grid_init( void ) {
+// Ground plane
+static GLuint ground_vao = 0;
+static GLuint ground_vbo = 0;
+static GLuint ground_shader = 0;
+
+void r_grid_init( float size, float spacing ) {
 	// Here we initialize how many lines to draw and so forth
-	int line_count = ( GRID_SIZE * 2 / GRID_SPACING ) + 1;
+	int line_count = ( (int)size * 2 / (int)spacing ) + 1;
 	grid_vertex_count = line_count * 2 * 2;
 
 	float *vertices = malloc( grid_vertex_count * 3 * sizeof( float ) );
 	int index = 0;
 
 	// Lines parallel to Z axis (varying in Z direction)
-	for ( int x = -GRID_SIZE; x <= GRID_SIZE; x += GRID_SPACING ) {
+	for ( float x = -size; x <= size; x += spacing ) {
 		vertices[index++] = x;          // X position varies
 		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
-		vertices[index++] = -GRID_SIZE; // Z start
+		vertices[index++] = -size; // Z start
 
 		vertices[index++] = x;          // X position varies
 		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
-		vertices[index++] = GRID_SIZE;  // Z end
+		vertices[index++] = size;  // Z end
 	}
 
 	// Lines parallel to X axis (varying in X direction)
-	for ( int z = -GRID_SIZE; z <= GRID_SIZE; z += GRID_SPACING ) {
-		vertices[index++] = -GRID_SIZE; // X start
+	for ( float z = -size; z <= size; z += spacing ) {
+		vertices[index++] = -size; // X start
 		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
 		vertices[index++] = z;          // Z position varies
 
-		vertices[index++] = GRID_SIZE;  // X end
+		vertices[index++] = size;  // X end
 		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
 		vertices[index++] = z;          // Z position varies
 	}
@@ -103,7 +108,7 @@ void grid_init( void ) {
 	free( frag_source );
 }
 
-void grid_render( vec4 *view, vec4 *projection, float ground_z ) {
+void r_grid_draw( mat4 view, mat4 projection, float ground_z ) {
 	if ( !grid_enabled || grid_vao == 0 || !grid_shader ) {
 		return;
 	}
@@ -115,8 +120,9 @@ void grid_render( vec4 *view, vec4 *projection, float ground_z ) {
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-	// Grid at Y=0 (ground plane)
+	// Grid at specified Y position (model's feet)
 	mat4 model = GLM_MAT4_IDENTITY_INIT;
+	glm_translate( model, (vec3){ 0.0f, ground_z, 0.0f } );
 
 	GLint model_loc = glGetUniformLocation( grid_shader, "model" );
 	GLint view_loc = glGetUniformLocation( grid_shader, "view" );
@@ -136,5 +142,102 @@ void grid_render( vec4 *view, vec4 *projection, float ground_z ) {
 
 	glBindVertexArray( grid_vao );
 	glDrawArrays( GL_LINES, 0, grid_vertex_count );
+	glBindVertexArray( 0 );
+}
+
+void r_grid_toggle( void ) {
+	grid_enabled = !grid_enabled;
+	LOG_INFOF( "grid", "Grid %s", grid_enabled ? "enabled" : "disabled" );
+}
+
+bool r_grid_is_enabled( void ) {
+	return grid_enabled;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GROUND PLANE - Solid colored rectangle beneath the grid
+// ═══════════════════════════════════════════════════════════
+
+void r_ground_init( float size ) {
+	// Create a simple quad at Y=0
+	float vertices[] = {
+		// Two triangles forming a rectangle
+		// Triangle 1
+		-size, 0.0f, -size,
+		 size, 0.0f, -size,
+		 size, 0.0f,  size,
+		// Triangle 2
+		-size, 0.0f, -size,
+		 size, 0.0f,  size,
+		-size, 0.0f,  size
+	};
+
+	glGenVertexArrays( 1, &ground_vao );
+	glBindVertexArray( ground_vao );
+
+	glGenBuffers( 1, &ground_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, ground_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sizeof( vertices ), vertices, GL_STATIC_DRAW );
+
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof( float ), (void *)0 );
+	glEnableVertexAttribArray( 0 );
+
+	glBindVertexArray( 0 );
+
+	// Load ground plane shader (darker color than grid)
+	char *vert_source = read_shader_source( "grid.vert" ); // Reuse grid vertex shader
+	char *frag_source = read_shader_source( "ground.frag" ); // Use darker fragment shader
+
+	if ( !vert_source || !frag_source ) {
+		LOG_WARNF( "ground", "Failed to load ground shaders, using grid shader instead" );
+		ground_shader = grid_shader;
+		if ( vert_source ) free( vert_source );
+		if ( frag_source ) free( frag_source );
+	} else {
+		GLuint vert_shader = compile_shader( vert_source, GL_VERTEX_SHADER );
+		GLuint frag_shader = compile_shader( frag_source, GL_FRAGMENT_SHADER );
+
+		ground_shader = create_shader_program( vert_shader, frag_shader );
+
+		free( vert_source );
+		free( frag_source );
+	}
+
+	LOG_INFOF( "ground", "Ground plane initialized (size: %.1f)", size );
+}
+
+void r_ground_draw( mat4 view, mat4 projection, float ground_y ) {
+	if ( ground_vao == 0 || !ground_shader ) {
+		return;
+	}
+
+	glUseProgram( ground_shader );
+
+	// Enable blending
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	// Position ground plane at specified Y
+	mat4 model = GLM_MAT4_IDENTITY_INIT;
+	glm_translate( model, (vec3){ 0.0f, ground_y - 0.01f, 0.0f } ); // Slightly below grid to avoid z-fighting
+
+	GLint model_loc = glGetUniformLocation( ground_shader, "model" );
+	GLint view_loc = glGetUniformLocation( ground_shader, "view" );
+	GLint projection_loc = glGetUniformLocation( ground_shader, "projection" );
+
+	if ( model_loc != -1 ) {
+		glUniformMatrix4fv( model_loc, 1, GL_FALSE, (const float *)model );
+	}
+
+	if ( view_loc != -1 ) {
+		glUniformMatrix4fv( view_loc, 1, GL_FALSE, (const float *)view );
+	}
+
+	if ( projection_loc != -1 ) {
+		glUniformMatrix4fv( projection_loc, 1, GL_FALSE, (const float *)projection );
+	}
+
+	glBindVertexArray( ground_vao );
+	glDrawArrays( GL_TRIANGLES, 0, 6 );
 	glBindVertexArray( 0 );
 }

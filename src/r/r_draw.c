@@ -115,10 +115,17 @@ static double g_last_frame_time = 0.0;
 static mdl_seqgroup_blob_t *global_seqgroups = NULL;
 static int global_num_seqgroups = 0;
 
-// Camera controls
-float rotation_x = 0.0f;
-float rotation_y = 0.0f;
-float zoom = 0.12f;
+// Camera controls - Initial camera angle looks down at model from front-right
+float rotation_x = 0.3f;   // Tilt down to look at model (positive = looking down)
+float rotation_y = -0.5f;  // Rotate to see from front-right diagonal
+float zoom = 0.15f;
+
+// Model rotation (separate from camera rotation, used when Shift is held)
+static float model_rotation_x = 0.0f;
+static float model_rotation_y = 0.0f;
+
+// Camera mode: true = orbit camera (default), false = rotate model
+static bool camera_orbit_mode = true;
 
 // Skin family (texture set selection)
 static int g_current_skin_family = 0;
@@ -867,8 +874,9 @@ int init_renderer( int width, int height, const char *title ) {
 		return -1;
 	}
 
-	// @Note(Karlo): Initializaing the grid for the grid being drawn
-	grid_init();
+	// @Note(Karlo): Initializing the grid and ground plane
+	r_grid_init( 200.0f, 10.0f );
+	r_ground_init( 200.0f );
 
 	// ═══════════════════════════════════════════════════════════════
 	// Create fallback white texture (so meshes always draw)
@@ -900,10 +908,12 @@ int init_renderer( int width, int height, const char *title ) {
 	printf( "║   Mouse Drag : Free rotation       ║\n" );
 	printf( "║   Scroll     : Zoom                ║\n" );
 	printf( "║   R          : Reset view          ║\n" );
+	printf( "║   Shift+Move : Rotate model        ║\n" );
 	printf( "╠════════════════════════════════════╣\n" );
 	printf( "║ RENDER MODES                       ║\n" );
 	printf( "║   F          : Toggle wireframe    ║\n" );
 	printf( "║   P          : Points mode         ║\n" );
+	printf( "║   G          : Toggle grid         ║\n" );
 	printf( "╠════════════════════════════════════╣\n" );
 	printf( "║ ANIMATION CONTROLS                 ║\n" );
 	printf( "║   SPACE      : Toggle animation    ║\n" );
@@ -942,7 +952,8 @@ void cleanup_renderer( void ) {
 }
 
 void clear_screen( void ) {
-	glClearColor( 0.1f, 0.2f, 0.45f, 1.0f );
+	// Professional dark grey-blue background (like Blender/Maya)
+	glClearColor( 0.18f, 0.18f, 0.20f, 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 }
 
@@ -1002,7 +1013,9 @@ void render_loop( void ) {
 			.rotation_x = &rotation_x,
 			.rotation_y = &rotation_y,
 			.zoom = &zoom,
-			.wireframe_enabled = &wireframe_enabled
+			.wireframe_enabled = &wireframe_enabled,
+			.model_rotation_x = get_model_rotation_x_ptr(),
+			.model_rotation_y = get_model_rotation_y_ptr()
 		};
 
 		input_animation_state_t anim_state = {
@@ -1258,24 +1271,39 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	mat4 M;
 	Math_Mat4_Identity( M );
 
-	// NO OFFSET - model renders at its origin, period.
-	// Grid is at Y=0. Model position is whatever Valve authored it as.
+	// Rotate model 180 degrees to face camera initially
+	Math_Mat4_Rotate( M, MATH_PI, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
 
-	Math_Mat4_Rotate( M, rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
-	Math_Mat4_Rotate( M, rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );
+	// Apply model rotation (used when Shift is held and user drags mouse)
+	Math_Mat4_Rotate( M, model_rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
+	Math_Mat4_Rotate( M, model_rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );
 
 	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
-	vec3 camPos = { 0.0f, 0.0f, camDist };
+	vec3 camPos;
 	vec3 target = { 0.0f, 0.0f, 0.0f };
-	vec3 up = { 0.0f, 2.0f, 0.0f };
+	vec3 up = { 0.0f, 1.0f, 0.0f };
+
+	// Camera position is always calculated from rotation angles
+	float pitch = rotation_x;
+	float yaw = rotation_y;
+
+	// Convert spherical coordinates to cartesian
+	camPos[0] = camDist * cosf(pitch) * sinf(yaw);  // X
+	camPos[1] = camDist * sinf(pitch);              // Y
+	camPos[2] = camDist * cosf(pitch) * cosf(yaw);  // Z
+
+	// Note: camera_orbit_mode controls whether rotation angles affect camera or model
+	// This is handled in the input system, not here
 
 	mat4 V;
 	Math_Mat4_LookAt( camPos, target, up, V );
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
 
-	// Render grid at Y=0 ground plane
-	grid_render( V, P, 0.0f );
+	// Render ground plane and grid at model's feet
+	float ground_y = -4.0f; // Fine-tuned to match model feet exactly
+	r_ground_draw( V, P, ground_y );
+	r_grid_draw( V, P, ground_y );
 
 	// CRITICAL: Re-activate model shader after grid rendering!
 	glUseProgram( shader_program );
@@ -1290,7 +1318,8 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	if ( uProj != -1 )
 		glUniformMatrix4fv( uProj, 1, GL_FALSE, (const float *)P );
 
-	vec3 lightPos = { 3.0f, 5.0f, 4.0f };
+	// Main light positioned above and in front-right (3-point lighting style)
+	vec3 lightPos = { 5.0f, 8.0f, 5.0f };
 	GLint uLight = glGetUniformLocation( shader_program, "lightPos" );
 	GLint uViewP = glGetUniformLocation( shader_program, "viewPos" );
 	if ( uLight != -1 )
@@ -1477,6 +1506,27 @@ int get_num_skin_families( void ) {
 		return 0;
 	}
 	return global_header->numskinfamilies;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CAMERA MODE CONTROLS
+// ═══════════════════════════════════════════════════════════
+
+void set_camera_orbit_mode( bool orbit ) {
+	camera_orbit_mode = orbit;
+	LOG_INFOF( "camera", "Camera mode: %s", orbit ? "ORBIT (camera moves)" : "MODEL ROTATE (model moves)" );
+}
+
+bool get_camera_orbit_mode( void ) {
+	return camera_orbit_mode;
+}
+
+float *get_model_rotation_x_ptr( void ) {
+	return &model_rotation_x;
+}
+
+float *get_model_rotation_y_ptr( void ) {
+	return &model_rotation_y;
 }
 
 

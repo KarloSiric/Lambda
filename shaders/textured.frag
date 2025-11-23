@@ -35,13 +35,26 @@ void main()
     }
 
     // --------------------------
-    // NORMAL LIGHTING
+    // IMPROVED LIGHTING (Ambient + Diffuse + Specular)
     // --------------------------
     vec3 N = normalize(vNormal);
     vec3 L = normalize(lightPos - vWorldPos);
+    vec3 V = normalize(viewPos - vWorldPos);
+    vec3 H = normalize(L + V); // Half vector for specular
+
+    // Ambient (soft base lighting)
+    float ambient = 0.3;
+
+    // Diffuse (directional light)
     float diff = max(dot(N, L), 0.0);
 
-    vec3 color = texel.rgb * (0.2 + 0.8 * diff);
+    // Specular (shiny highlights)
+    float spec = pow(max(dot(N, H), 0.0), 32.0) * 0.2;
+
+    // Rim light (edge lighting for better shape definition)
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0) * 0.15;
+
+    vec3 color = texel.rgb * (ambient + diff + spec + rim);
 
     // --------------------------
     // ADDITIVE BLENDING
