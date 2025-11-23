@@ -132,6 +132,8 @@ static int glfw_key_to_enum( int glfwKey )
           case GLFW_KEY_EQUAL:         return KEY_EQUAL;
           case GLFW_KEY_B:             return KEY_B;
           case GLFW_KEY_BACKSPACE:     return KEY_BACKSPACE;
+          case GLFW_KEY_PAGE_UP:       return KEY_PAGE_UP;
+          case GLFW_KEY_PAGE_DOWN:     return KEY_PAGE_DOWN;
           default:                     return -1;
     }
 }

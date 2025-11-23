@@ -32,6 +32,8 @@ typedef enum {
 	KEY_EQUAL,
 	KEY_B,
 	KEY_BACKSPACE,
+	KEY_PAGE_UP,
+	KEY_PAGE_DOWN,
 
 	// .. etc adding more later
 

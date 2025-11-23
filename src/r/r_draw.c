@@ -116,8 +116,8 @@ static mdl_seqgroup_blob_t *global_seqgroups = NULL;
 static int global_num_seqgroups = 0;
 
 // Camera controls - Initial camera angle looks down at model from front-right
-float rotation_x = 0.3f;   // Tilt down to look at model (positive = looking down)
-float rotation_y = -0.5f;  // Rotate to see from front-right diagonal
+float rotation_x = 0.3f;    // Tilt down to look at model (positive = looking down)
+float rotation_y = 0.5f;    // Slight angle to see front-right
 float zoom = 0.15f;
 
 // Model rotation (separate from camera rotation, used when Shift is held)
@@ -127,11 +127,17 @@ static float model_rotation_y = 0.0f;
 // Camera mode: true = orbit camera (default), false = rotate model
 static bool camera_orbit_mode = true;
 
+// Ground offset adjustment (user can adjust with keys)
+static float ground_offset = 0.0f;
+
 // Skin family (texture set selection)
 static int g_current_skin_family = 0;
 
 // Model bounding box calculated from actual vertex data
 static mdl_bounds_t g_model_bounds = { 0 };
+
+// Model calculating the ground offset
+static float g_model_origin_y = 0.0f;
 
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
@@ -874,9 +880,10 @@ int init_renderer( int width, int height, const char *title ) {
 		return -1;
 	}
 
-	// @Note(Karlo): Initializing the grid and ground plane
+	// @Note(Karlo): Initializing the grid, ground plane, and origin axes
 	r_grid_init( 200.0f, 10.0f );
 	r_ground_init( 200.0f );
+	r_axes_init( 20.0f );  // Axes extend 20 units from origin
 
 	// ═══════════════════════════════════════════════════════════════
 	// Create fallback white texture (so meshes always draw)
@@ -898,8 +905,14 @@ int init_renderer( int width, int height, const char *title ) {
 	// Print controls help
 	// ═══════════════════════════════════════════════════════════════
 	printf( "\n\n" );
+	printf( "\n\n" );
 	printf( "╔════════════════════════════════════╗\n" );
 	printf( "║         MODEL VIEWER CONTROLS      ║\n" );
+	printf( "╠════════════════════════════════════╣\n" );
+	printf( "║ AXIS ORIENTATION                   ║\n" );
+	printf( "║   X Axis: RED   (Right/Left)       ║\n" );
+	printf( "║   Y Axis: GREEN (Up/Down)          ║\n" );
+	printf( "║   Z Axis: BLUE  (Forward/Back)     ║\n" );
 	printf( "╠════════════════════════════════════╣\n" );
 	printf( "║ CAMERA CONTROLS                    ║\n" );
 	printf( "║   W/S        : Tilt up/down        ║\n" );
@@ -1270,14 +1283,15 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 
 	mat4 M;
 	Math_Mat4_Identity( M );
+    
+	// Base model orientation - rotate to face camera (applies to all animations)
+	// Trying -90° (270°) rotation to face camera
+	Math_Mat4_Rotate( M, -MATH_PI * 0.5f, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
 
-	// Rotate model 180 degrees to face camera initially
-	Math_Mat4_Rotate( M, MATH_PI, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
-
-	// Apply model rotation (used when Shift is held and user drags mouse)
+	// Apply user model rotation (used when Shift is held and user drags mouse)
 	Math_Mat4_Rotate( M, model_rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
 	Math_Mat4_Rotate( M, model_rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );
-
+    
 	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
 	vec3 camPos;
 	vec3 target = { 0.0f, 0.0f, 0.0f };
@@ -1292,6 +1306,13 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	camPos[1] = camDist * sinf(pitch);              // Y
 	camPos[2] = camDist * cosf(pitch) * cosf(yaw);  // Z
 
+	// Clamp camera Y to prevent going below ground
+	float ground_level = (global_header ? global_header->bbmin[1] : 0.0f) + ground_offset;
+	float min_camera_height = ground_level + 0.5f; // Stay at least 0.5 units above ground
+	if (camPos[1] < min_camera_height) {
+		camPos[1] = min_camera_height;
+	}
+
 	// Note: camera_orbit_mode controls whether rotation angles affect camera or model
 	// This is handled in the input system, not here
 
@@ -1300,10 +1321,13 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
 
-	// Render ground plane and grid at model's feet
-	float ground_y = -4.0f; // Fine-tuned to match model feet exactly
+	// Render ground plane, grid, and axes at model's feet
+	// Use the model header's bbox min Y + user offset
+    
+    float ground_y = g_model_bounds.min[1] * 0.1f;
 	r_ground_draw( V, P, ground_y );
 	r_grid_draw( V, P, ground_y );
+	r_axes_draw( V, P, ground_y );
 
 	// CRITICAL: Re-activate model shader after grid rendering!
 	glUseProgram( shader_program );
@@ -1528,6 +1552,7 @@ float *get_model_rotation_x_ptr( void ) {
 float *get_model_rotation_y_ptr( void ) {
 	return &model_rotation_y;
 }
+
 
 
 

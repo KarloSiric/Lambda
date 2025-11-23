@@ -13,4 +13,8 @@ bool r_grid_is_enabled( void );
 void r_ground_init( float size );
 void r_ground_draw( mat4 view, mat4 projection, float ground_y );
 
+// Origin axes (X/Y/Z colored lines)
+void r_axes_init( float size );
+void r_axes_draw( mat4 view, mat4 projection, float ground_y );
+
 #endif

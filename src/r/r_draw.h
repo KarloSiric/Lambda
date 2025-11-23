@@ -11,21 +11,19 @@
 
 extern GLFWwindow *window;
 
+
 #define ASPECT_RATIO ((float)(16.0f / 9.0f))
 #define WIDTH ((int)1400)
 #define HEIGHT ((int)(WIDTH / ASPECT_RATIO))
 
 
-
 int  init_renderer(int width, int height, const char *title);
 void cleanup_renderer(void);
-
-
 
 void render_loop(void);
 bool should_close_window(void);
 
-
+float compute_model_floor_y( void );
 
 void render_model(studiohdr_t *header, unsigned char *data);
 void set_wireframe_mode(bool enabled);

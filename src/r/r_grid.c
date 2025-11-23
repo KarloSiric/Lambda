@@ -41,6 +41,11 @@ static GLuint ground_vao = 0;
 static GLuint ground_vbo = 0;
 static GLuint ground_shader = 0;
 
+// Origin axes
+static GLuint axes_vao = 0;
+static GLuint axes_vbo = 0;
+static GLuint axes_shader = 0;
+
 void r_grid_init( float size, float spacing ) {
 	// Here we initialize how many lines to draw and so forth
 	int line_count = ( (int)size * 2 / (int)spacing ) + 1;
@@ -140,9 +145,15 @@ void r_grid_draw( mat4 view, mat4 projection, float ground_z ) {
 		glUniformMatrix4fv( projection_loc, 1, GL_FALSE, (const float *)projection );
 	}
 
+	// Make grid lines thicker to avoid GPU rendering artifacts
+	glLineWidth( 2.5f );
+
 	glBindVertexArray( grid_vao );
 	glDrawArrays( GL_LINES, 0, grid_vertex_count );
 	glBindVertexArray( 0 );
+
+	// Reset line width
+	glLineWidth( 1.0f );
 }
 
 void r_grid_toggle( void ) {
@@ -240,4 +251,102 @@ void r_ground_draw( mat4 view, mat4 projection, float ground_y ) {
 	glBindVertexArray( ground_vao );
 	glDrawArrays( GL_TRIANGLES, 0, 6 );
 	glBindVertexArray( 0 );
+}
+
+// ═══════════════════════════════════════════════════════════
+// ORIGIN AXES - X/Y/Z colored lines at origin
+// ═══════════════════════════════════════════════════════════
+
+void r_axes_init( float size ) {
+	// 3 lines: X (red), Y (green), Z (blue)
+	// Each line: 2 vertices * (3 pos + 3 color) = 6 floats per vertex
+	float vertices[] = {
+		// X axis - RED
+		0.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // Origin
+		size, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // +X direction
+
+		// Y axis - GREEN
+		0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // Origin
+		0.0f, size, 0.0f,  0.0f, 1.0f, 0.0f,  // +Y direction
+
+		// Z axis - BLUE
+		0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // Origin
+		0.0f, 0.0f, size,  0.0f, 0.0f, 1.0f   // +Z direction
+	};
+
+	glGenVertexArrays( 1, &axes_vao );
+	glBindVertexArray( axes_vao );
+
+	glGenBuffers( 1, &axes_vbo );
+	glBindBuffer( GL_ARRAY_BUFFER, axes_vbo );
+	glBufferData( GL_ARRAY_BUFFER, sizeof( vertices ), vertices, GL_STATIC_DRAW );
+
+	// Position attribute
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof( float ), (void *)0 );
+	glEnableVertexAttribArray( 0 );
+
+	// Color attribute
+	glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof( float ), (void *)( 3 * sizeof( float ) ) );
+	glEnableVertexAttribArray( 1 );
+
+	glBindVertexArray( 0 );
+
+	// Load axes shader
+	char *vert_source = read_shader_source( "axes.vert" );
+	char *frag_source = read_shader_source( "axes.frag" );
+
+	if ( !vert_source || !frag_source ) {
+		LOG_WARNF( "axes", "Failed to load axes shaders" );
+		if ( vert_source ) free( vert_source );
+		if ( frag_source ) free( frag_source );
+		return;
+	}
+
+	GLuint vert_shader = compile_shader( vert_source, GL_VERTEX_SHADER );
+	GLuint frag_shader = compile_shader( frag_source, GL_FRAGMENT_SHADER );
+
+	axes_shader = create_shader_program( vert_shader, frag_shader );
+
+	free( vert_source );
+	free( frag_source );
+
+	LOG_INFOF( "axes", "Origin axes initialized (size: %.1f)", size );
+}
+
+void r_axes_draw( mat4 view, mat4 projection, float ground_y ) {
+	if ( axes_vao == 0 || !axes_shader ) {
+		return;
+	}
+
+	glUseProgram( axes_shader );
+
+	// Position axes at ground level
+	mat4 model = GLM_MAT4_IDENTITY_INIT;
+	glm_translate( model, (vec3){ 0.0f, ground_y, 0.0f } );
+
+	GLint model_loc = glGetUniformLocation( axes_shader, "model" );
+	GLint view_loc = glGetUniformLocation( axes_shader, "view" );
+	GLint projection_loc = glGetUniformLocation( axes_shader, "projection" );
+
+	if ( model_loc != -1 ) {
+		glUniformMatrix4fv( model_loc, 1, GL_FALSE, (const float *)model );
+	}
+
+	if ( view_loc != -1 ) {
+		glUniformMatrix4fv( view_loc, 1, GL_FALSE, (const float *)view );
+	}
+
+	if ( projection_loc != -1 ) {
+		glUniformMatrix4fv( projection_loc, 1, GL_FALSE, (const float *)projection );
+	}
+
+	// Draw axes with much thicker lines
+	glLineWidth( 5.0f );
+
+	glBindVertexArray( axes_vao );
+	glDrawArrays( GL_LINES, 0, 6 ); // 6 vertices (3 lines * 2 points)
+	glBindVertexArray( 0 );
+
+	// Reset line width
+	glLineWidth( 1.0f );
 }

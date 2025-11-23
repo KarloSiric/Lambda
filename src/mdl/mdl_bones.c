@@ -129,7 +129,7 @@ void CenterBonesAtOrigin( studiohdr_t *header, math_mat4_t *bones ) {
     
     for ( int i = 0; i < header->numbones; i++ ) {
         bones[i][3][0] -= root[0];
-        // bones[i][3][1] -= root[1]; // we can remove this if we want to lock y as well
+        bones[i][3][1] -= root[1]; // we can remove this if we want to lock y as well
         bones[i][3][2] -= root[2];
     }
 }
