@@ -26,8 +26,8 @@
 #include "util_logger.h"
 #include <stdlib.h>
 
-#define GRID_SIZE 100
-#define GRID_SPACING 1.0f
+#define GRID_SIZE 50         // Grid extends 50 units in each direction
+#define GRID_SPACING 1.0f    // 1 unit between grid lines
 
 static GLuint grid_vao = 0;
 static GLuint grid_vbo = 0;
@@ -44,24 +44,26 @@ void grid_init( void ) {
 	float *vertices = malloc( grid_vertex_count * 3 * sizeof( float ) );
 	int index = 0;
 
+	// Lines parallel to Z axis (varying in Z direction)
 	for ( int x = -GRID_SIZE; x <= GRID_SIZE; x += GRID_SPACING ) {
-		vertices[index++] = x; // X varies
-		vertices[index++] = -GRID_SIZE; // Y fixed (depth)
-		vertices[index++] = 0.0f; // Z = 0 (on ground!)
+		vertices[index++] = x;          // X position varies
+		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
+		vertices[index++] = -GRID_SIZE; // Z start
 
-		vertices[index++] = x; // X varies
-		vertices[index++] = GRID_SIZE; // Y fixed (depth)
-		vertices[index++] = 0.0f; // Z = 0 (on ground!)
+		vertices[index++] = x;          // X position varies
+		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
+		vertices[index++] = GRID_SIZE;  // Z end
 	}
 
-	for ( int y = -GRID_SIZE; y <= GRID_SIZE; y += GRID_SPACING ) {
-		vertices[index++] = -GRID_SIZE; // X fixed
-		vertices[index++] = y; // Y varies
-		vertices[index++] = 0.0f; // Z = 0 (on ground!)
+	// Lines parallel to X axis (varying in X direction)
+	for ( int z = -GRID_SIZE; z <= GRID_SIZE; z += GRID_SPACING ) {
+		vertices[index++] = -GRID_SIZE; // X start
+		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
+		vertices[index++] = z;          // Z position varies
 
-		vertices[index++] = GRID_SIZE; // X fixed
-		vertices[index++] = y; // Y varies
-		vertices[index++] = 0.0f; // Z = 0 (on ground!)
+		vertices[index++] = GRID_SIZE;  // X end
+		vertices[index++] = 0.0f;       // Y = 0 (GROUND PLANE!)
+		vertices[index++] = z;          // Z position varies
 	}
 
 	glGenVertexArrays( 1, &grid_vao );
@@ -106,10 +108,15 @@ void grid_render( vec4 *view, vec4 *projection, float ground_z ) {
 		return;
 	}
 
-	// @Note: We will pass the view and the projection from the ones we are using in draw.c
+	// CRITICAL: Activate grid shader BEFORE setting uniforms!
+	glUseProgram( grid_shader );
 
+	// Enable blending for transparent grid
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	// Grid at Y=0 (ground plane)
 	mat4 model = GLM_MAT4_IDENTITY_INIT;
-	glm_translate( model, (vec3){ 0.0f, 0.0f, ground_z } );
 
 	GLint model_loc = glGetUniformLocation( grid_shader, "model" );
 	GLint view_loc = glGetUniformLocation( grid_shader, "view" );

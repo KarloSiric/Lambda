@@ -28,6 +28,7 @@
 #include "mdl_bodypart.h"
 #include "mdl_bones.h"
 #include "mdl_animations.h"
+#include "mdl_bounds.h"
 #include "shader.h"
 #include "studio.h"
 #include "util_logger.h"
@@ -42,6 +43,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> // For getcwd
+#include <math.h>   // For cosf/sinf in orbit camera
 
 #define MAX_DRAW_RANGES 4096
 
@@ -105,7 +107,7 @@ static unsigned char *global_tex_data = NULL;
 static mdl_texture_set_t g_textures = { NULL, 0 };
 
 // ANIMATIONS
-static mdl_animation_state_t g_anim_state;
+mdl_animation_state_t g_anim_state;
 static bool g_animation_enabled = false;
 static double g_last_frame_time = 0.0;
 
@@ -116,15 +118,13 @@ static int global_num_seqgroups = 0;
 // Camera controls
 float rotation_x = 0.0f;
 float rotation_y = 0.0f;
-float zoom = 0.15f; // Even more zoomed out for scientist model
+float zoom = 0.12f;
 
 // Skin family (texture set selection)
 static int g_current_skin_family = 0;
 
-// Global variables for bounding box from the actual vertex data
-static vec3_t g_model_bbox_min = { 0 };
-static vec3_t g_model_bbox_max = { 0 };
-static bool g_bbox_calculated = false;
+// Model bounding box calculated from actual vertex data
+static mdl_bounds_t g_model_bounds = { 0 };
 
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
@@ -1258,9 +1258,8 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	mat4 M;
 	Math_Mat4_Identity( M );
 
-	float ground_offset = -global_header->bbmin[2];
-
-	glm_translate( M, (vec3){ 0.0f, 0.0f, ground_offset } );
+	// NO OFFSET - model renders at its origin, period.
+	// Grid is at Y=0. Model position is whatever Valve authored it as.
 
 	Math_Mat4_Rotate( M, rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
 	Math_Mat4_Rotate( M, rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );
@@ -1275,10 +1274,11 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
 
-	// Adding drawing for the grid
+	// Render grid at Y=0 ground plane
+	grid_render( V, P, 0.0f );
 
-	float ground_z = global_header->bbmin[2];
-	grid_render( V, P, ground_z );
+	// CRITICAL: Re-activate model shader after grid rendering!
+	glUseProgram( shader_program );
 
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );
@@ -1414,6 +1414,9 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 	if ( texHdr ) {
 		mdl_load_textures( texHdr, ( texHdr == header ) ? data : tex_data, &g_textures );
 	}
+
+	// Calculate bounding box from actual vertex data
+	mdl_bounds_calculate( header, data, &g_model_bounds );
 
 	// Adding animations initializing
 	mdl_animation_init( &g_anim_state );

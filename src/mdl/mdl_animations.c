@@ -21,6 +21,7 @@
  */
 
 #include "mdl_animations.h"
+#include "mdl_bones.h"
 #include "mdl_loader.h"
 #include "mdl_audio.h"
 
@@ -395,6 +396,9 @@ mdl_result_t mdl_animation_calculate_bones(
 			glm_mat4_copy( local, bone_transformations[i] );
 		}
 	}
+    
+    //@Note: Adding for centering the model
+    CenterBonesAtOrigin( header, bone_transformations );
 
 	return MDL_SUCCESS;
 }

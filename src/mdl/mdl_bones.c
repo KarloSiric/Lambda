@@ -25,9 +25,13 @@
 #include "math_quaternion.h"
 #include "math_vector.h"
 #include "math_types.h"
+#include "mdl_animations.h"
+#include "mdl_bonecontrollers.h"
 #include "util/util_logger.h"
 
 #include <stdio.h>
+
+extern mdl_animation_state_t g_anim_state;
 
 math_mat4_t g_bonetransformations[MAXSTUDIOBONES];
 
@@ -84,13 +88,15 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 			Math_Mat4_Copy( local, g_bonetransformations[i] );
 		}
 	}
+    
+    // Use to center the models
+    CenterBonesAtOrigin( header, g_bonetransformations );
 
 	LOG_INFOF( "bones", "T-pose setup complete" );
 }
 
 void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t *model, vec3 *out_vertices ) {
 	vec3 *vertices = (vec3 *)( data + model->vertindex );
-
 	unsigned char *v2bone = (unsigned char *)( data + model->vertinfoindex );
 
 	for ( int i = 0; i < model->numverts; i++ ) {
@@ -98,10 +104,33 @@ void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t
 		if ( bone < 0 || bone >= header->numbones ) {
 			bone = 0;
 		}
-        Math_Vec3TransformMat4( vertices[i], g_bonetransformations[bone], out_vertices[i] );
+        Math_Vec3TransformMat4( vertices[i], g_bonetransformations[bone], out_vertices[i] );    
 	}
 }
 
 // NOTE: SetUpBonesFromAnimation was removed because it had incorrect matrix conversion logic.
 // Use mdl_animation_calculate_bones() from mdl_animations.c instead, which correctly
 // handles bone transformations using quaternions.
+
+
+// HELPER FUNCTION for aligning the models to the center at one particular position
+// Otherwise the models sometimes drift apart when doing animations and when being in a static T Pose
+
+
+void CenterBonesAtOrigin( studiohdr_t *header, math_mat4_t *bones ) {
+    if ( !header || !bones || header->numbones <= 0 ) {
+        return ;
+    }
+    
+    vec3 root;
+    root[0] = bones[0][3][0];
+    root[1] = bones[0][3][1];
+    root[2] = bones[0][3][2];
+    
+    for ( int i = 0; i < header->numbones; i++ ) {
+        bones[i][3][0] -= root[0];
+        // bones[i][3][1] -= root[1]; // we can remove this if we want to lock y as well
+        bones[i][3][2] -= root[2];
+    }
+}
+
