@@ -13,6 +13,7 @@ typedef enum {
 	KEY_R,
 	KEY_F,
 	KEY_P,
+    KEY_G,
 	KEY_L,
 	KEY_I,
     KEY_M,
@@ -25,10 +26,14 @@ typedef enum {
 	KEY_DOWN,
 	KEY_LEFT_BRACKET,
 	KEY_RIGHT_BRACKET,
+    KEY_LEFT_SHIFT,
+    KEY_RIGHT_SHIFT,
 	KEY_MINUS,
 	KEY_EQUAL,
 	KEY_B,
 	KEY_BACKSPACE,
+	KEY_PAGE_UP,
+	KEY_PAGE_DOWN,
 
 	// .. etc adding more later
 

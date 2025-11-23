@@ -173,6 +173,14 @@ void Math_Mat4_Rotate( math_mat4_t m, float angle_rad, const math_vec3_t axis ) 
 	glm_rotate( m, angle_rad, (vec3){ axis[0], axis[1], axis[2] } );
 }
 
+
+void Math_Mat4_Translate( math_mat4_t m, float x, float y, float z ) {
+    mat4 T = GLM_MAT4_IDENTITY_INIT;
+    glm_translate(T, (vec3){ x, y, z });  // build translation matrix
+    glm_mat4_mul(T, m, m); 
+}
+
+
 // Creates a view matrix for camera positioning
 // "Look-at" transformation: camera at 'eye' position, looking at 'center' point
 void Math_Mat4_LookAt( const math_vec3_t eye, const math_vec3_t center, const math_vec3_t up, math_mat4_t dest ) {

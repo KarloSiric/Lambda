@@ -27,6 +27,7 @@
 #include "mdl/mdl_audio.h"
 #include "mdl/mdl_bodypart.h"
 #include "r/r_draw.h"
+#include "r/r_grid.h"
 #include "studio.h"
 
 #include <stdio.h>
@@ -76,6 +77,12 @@ void Input_ProcessGameInput(
 	}
 
 	// ═══════════════════════════════════════════════════════════
+	// CAMERA MODE - Shift toggles between orbit/model-rotate
+	// ═══════════════════════════════════════════════════════════
+	bool shift_held = Input_IsKeyHeld( KEY_LEFT_SHIFT ) || Input_IsKeyHeld( KEY_RIGHT_SHIFT );
+	set_camera_orbit_mode( !shift_held );  // Orbit when NOT holding Shift
+
+	// ═══════════════════════════════════════════════════════════
 	// CAMERA - Keyboard rotation
 	// ═══════════════════════════════════════════════════════════
 	if ( Input_IsKeyHeld( KEY_W ) ) {
@@ -120,13 +127,21 @@ void Input_ProcessGameInput(
 	}
 
 	// ═══════════════════════════════════════════════════════════
-	// CAMERA - Mouse drag rotation
+	// MOUSE DRAG - Rotate camera OR model depending on Shift
 	// ═══════════════════════════════════════════════════════════
 	if ( Input_IsSMouseKeyHeld( MOUSE_BUTTON_LEFT ) ) {
 		float dx, dy;
 		Input_GetMouseDelta( &dx, &dy );
-		*camera_state->rotation_y += dx * 0.01f;
-		*camera_state->rotation_x -= dy * 0.01f;
+
+		if ( shift_held ) {
+			// MODEL ROTATE MODE: Rotate the model
+			*camera_state->model_rotation_y += dx * 0.01f;
+			*camera_state->model_rotation_x -= dy * 0.01f;
+		} else {
+			// ORBIT MODE: Rotate the camera
+			*camera_state->rotation_y += dx * 0.01f;
+			*camera_state->rotation_x -= dy * 0.01f;
+		}
 	}
 
 	// ═══════════════════════════════════════════════════════════
@@ -152,6 +167,13 @@ void Input_ProcessGameInput(
 
 	if ( Input_IsKeyPressed( KEY_P ) ) {
 		glPolygonMode( GL_FRONT_AND_BACK, GL_POINT );
+	}
+
+	// ═══════════════════════════════════════════════════════════
+	// GRID TOGGLE
+	// ═══════════════════════════════════════════════════════════
+	if ( Input_IsKeyPressed( KEY_G ) ) {
+		r_grid_toggle();
 	}
 
 	// ═══════════════════════════════════════════════════════════

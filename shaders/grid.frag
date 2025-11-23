@@ -3,6 +3,6 @@
 out vec4 FragColor;
 
 void main() {
-    // Lighter gray grid so it's more visible
-    FragColor = vec4(0.4, 0.4, 0.4, 0.8);
+    // Light grey grid lines (professional editor style)
+    FragColor = vec4(0.4, 0.4, 0.42, 0.6);
 }

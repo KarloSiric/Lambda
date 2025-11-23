@@ -6,6 +6,7 @@
 #include <cglm/vec3.h>
 #include <cglm/mat3x4.h>
 #include <cglm/mat4.h>
+#include <cglm/common.h>
 #include <stdbool.h>
 #include <math.h>
 #include <stdalign.h>
