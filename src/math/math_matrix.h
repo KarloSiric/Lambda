@@ -26,6 +26,8 @@ void Math_Mat4_Rotate( math_mat4_t m, float angle_rad, const math_vec3_t axis );
 
 void Math_Mat4_Translate( math_mat4_t m, float x, float y, float z );
 
+void Math_Mat4_Scale( math_mat4_t m, float sx, float sy, float sz );
+
 // Creates a view matrix for camera (look-at transformation)
 void Math_Mat4_LookAt( const math_vec3_t eye, const math_vec3_t center, const math_vec3_t up, math_mat4_t dest );
 

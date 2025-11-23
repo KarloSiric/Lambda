@@ -26,8 +26,8 @@
       vec4 skinnedPos = boneMatrices[aBoneIndex] * vec4(aPos, 1.0);
       vec4 skinnedNormal = boneMatrices[aBoneIndex] * vec4(aNormal, 0.0);
 
-      // Apply viewer scale (0.1x)
-      skinnedPos.xyz *= 0.1;
+      // TESTING: Remove 0.1x scale to match Sam's viewer (renders at original size)
+      // skinnedPos.xyz *= 0.1;
 
       // Apply axis remap (Half-Life → OpenGL coordinates)
       // Half-Life: X=right, Y=forward, Z=up
