@@ -129,9 +129,6 @@ static float model_rotation_y = 0.0f;
 // Camera mode: true = orbit camera (default), false = rotate model
 static bool camera_orbit_mode = true;
 
-// Ground offset adjustment (user can adjust with keys)
-static float ground_offset = 0.0f;
-
 // Skin family (texture set selection)
 static int g_current_skin_family = 0;
 

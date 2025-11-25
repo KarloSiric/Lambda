@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <QtCore/qobject.h>
-#include <QtWidgets/qwidget.h>
-#include <QtCore/qtmetamacros.h>
-#include <QtWidgets/qmainwindow.h>
 #include <QMainWindow>
+
+
+#define MW_WIDTH               1600
+#define MW_HEIGHT              900
 
 class MainWindow : public QMainWindow 
 {
@@ -19,11 +19,11 @@ public:
     
 private:
     
-    void setupMenus();
-    void setupToolbars();
-    void setupLeftToolbox();
-    void setupRightInspector();
-    void setupViewports();
+    void setupMenus( );
+    void setupToolbars( );
+    void setupLeftToolbox( );
+    void setupRightInspector( );
+    void setupViewports( );
     
 };
 

@@ -20,3 +20,57 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
+
+
+
+#include "MainWindow.h"
+#include <QLabel>
+#include <QMenu>
+#include <QMenuBar>
+#include <QVBoxLayout>
+#include <QToolBar>
+#include <QWidget>
+#include <QDockWidget>
+#include <QOpenGLWidget>
+
+
+
+MainWindow::MainWindow( QWidget *parent ) 
+    : QMainWindow( parent ) 
+{
+    
+    setWindowTitle( "Lambda MDL Editor" );
+    resize( MW_WIDTH, MW_HEIGHT );
+    
+    setupMenus( );
+    setupToolbars( );
+    setupLeftToolbox( );
+    setupRightInspector( );
+    setupViewports( ); 
+    
+}
+
+
+void MainWindow::setupMenus( ) 
+{
+    
+    QMenu *fileMenu = menuBar()->addMenu("File");
+    
+    fileMenu->addAction( tr( "New" ) );
+    fileMenu->addAction( tr( "Open..." ) );
+    fileMenu->addAction( tr( "Save" ) );
+    fileMenu->addAction( tr( "Save as" ) );
+    fileMenu->addSeparator();
+    fileMenu->addAction( tr( "Exit" ) );
+    
+    
+    QMenu *editMenu = menuBar()->addMenu("Edit");
+    editMenu->addAction( tr( "" ) );
+    
+    
+    
+    
+    
+    
+}
+
