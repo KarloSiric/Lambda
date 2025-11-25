@@ -177,7 +177,7 @@ void Math_Mat4_Rotate( math_mat4_t m, float angle_rad, const math_vec3_t axis ) 
 void Math_Mat4_Translate( math_mat4_t m, float x, float y, float z ) {
     mat4 T = GLM_MAT4_IDENTITY_INIT;
     glm_translate(T, (vec3){ x, y, z });  // build translation matrix
-    glm_mat4_mul(T, m, m); 
+    glm_mat4_mul(m, T, m);  // m = m * T (apply translation AFTER existing transforms)
 }
 
 

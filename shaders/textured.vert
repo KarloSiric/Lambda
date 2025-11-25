@@ -11,7 +11,8 @@
   uniform mat4 model;
   uniform mat4 view;
   uniform mat4 projection;
-  
+
+
   // Adding new for chrome
   uniform bool u_chrome;
   uniform vec3 viewPos;
@@ -25,9 +26,6 @@
       // Transform vertex by its bone (in original Half-Life coordinates)
       vec4 skinnedPos = boneMatrices[aBoneIndex] * vec4(aPos, 1.0);
       vec4 skinnedNormal = boneMatrices[aBoneIndex] * vec4(aNormal, 0.0);
-
-      // TESTING: Remove 0.1x scale to match Sam's viewer (renders at original size)
-      // skinnedPos.xyz *= 0.1;
 
       // Apply axis remap (Half-Life → OpenGL coordinates)
       // Half-Life: X=right, Y=forward, Z=up
