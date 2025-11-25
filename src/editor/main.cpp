@@ -23,9 +23,12 @@
 
 
 #include "MainWindow.h"
+#include "theme/ThemeManager.h"
 #include <QApplication>
+#include <QWidget>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmainwindow.h>
+
 
 
 int main(int argc, char *argv[])
@@ -35,10 +38,9 @@ int main(int argc, char *argv[])
     
     MainWindow window;
     
-    window.show();
+    ThemeManager::applyThemeLight( app );
     
- 
- 
+    window.show(); 
  
     return ( app.exec() );
 }
