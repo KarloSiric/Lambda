@@ -42,11 +42,15 @@ endif()
 #   Project Definition
 # ═══════════════════════════════════════════════════════════════════════════
 
-project(Lambda VERSION 0.3.0 LANGUAGES C)
+project(Lambda VERSION 0.3.0 LANGUAGES C CXX)
 
 # Set C standard
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+
+# Set C++ standard (for Qt GUI)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -213,6 +217,25 @@ else()
     else()
         message(WARNING "GLEW not found and pkg-config unavailable")
     endif()
+endif()
+
+# ─────────────────────────────────────
+# Qt6 (for GUI Editor)
+# ─────────────────────────────────────
+message(STATUS "Searching for Qt6...")
+
+if(PLATFORM_MACOS)
+    set(CMAKE_PREFIX_PATH "/opt/homebrew/Cellar/qt/6.9.2")
+endif()
+
+find_package(Qt6 COMPONENTS Core Widgets Gui OpenGL OpenGLWidgets QUIET)
+
+if(Qt6_FOUND)
+    message(STATUS "✓ Qt6 found (version ${Qt6_VERSION})")
+    # Note: AUTOMOC/AUTORCC/AUTOUIC will be set per-target for LambdaEditor only
+else()
+    message(STATUS "  Qt6 not found - GUI editor will not be built")
+    message(STATUS "  Install: brew install qt (macOS)")
 endif()
 
 message(STATUS "═══════════════════════════════════════════════════════════")
@@ -391,3 +414,78 @@ add_custom_target(version
     DEPENDS ${PROJECT_NAME}
     COMMENT "Showing version information"
 )
+
+# ═══════════════════════════════════════════════════════════════════════════
+#   Qt GUI Editor Application (C++)
+# ═══════════════════════════════════════════════════════════════════════════
+
+if(Qt6_FOUND)
+    message(STATUS "Configuring LambdaEditor GUI...")
+
+    # Define C++ source files explicitly (add more as you create them)
+    set(EDITOR_SOURCES
+        src/editor/main.cpp
+    )
+
+    # Define header files explicitly (add more as you create them)
+    set(EDITOR_HEADERS
+        # src/editor/MainWindow.h  (add when created)
+    )
+
+    message(STATUS "Editor sources: ${EDITOR_SOURCES}")
+
+    # Create LambdaEditor executable
+    add_executable(LambdaEditor
+        ${EDITOR_SOURCES}
+        ${EDITOR_HEADERS}
+    )
+
+    # Include directories for editor
+    target_include_directories(LambdaEditor PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/editor
+        ${CMAKE_SOURCE_DIR}/src/editor/panels
+        ${CMAKE_SOURCE_DIR}/src/editor/widgets
+        ${CMAKE_SOURCE_DIR}/src/editor/dialogs
+        ${CMAKE_SOURCE_DIR}/src/bridge
+    )
+
+    # Link Qt6 libraries
+    target_link_libraries(LambdaEditor PRIVATE
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Gui
+        Qt6::OpenGL
+        Qt6::OpenGLWidgets
+    )
+
+    # Compiler flags (C++ only for this target)
+    target_compile_options(LambdaEditor PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -O2>
+    )
+
+    # Debug flags for debug builds
+    target_compile_options(LambdaEditor PRIVATE
+        $<$<CONFIG:Debug>:-g -DDEBUG>
+    )
+
+    # Set target properties
+    set_target_properties(LambdaEditor PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        AUTOMOC ON
+        AUTORCC ON
+        AUTOUIC ON
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    message(STATUS "✓ LambdaEditor GUI target created")
+
+    # Run target for editor
+    add_custom_target(run-editor
+        COMMAND ${CMAKE_BINARY_DIR}/bin/LambdaEditor
+        DEPENDS LambdaEditor
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running LambdaEditor GUI..."
+    )
+endif()

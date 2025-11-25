@@ -120,7 +120,7 @@ static int global_num_seqgroups = 0;
 // Camera controls - Initial camera angle looks down at model from front-right
 float rotation_x = 0.3f;    // Tilt down to look at model (positive = looking down)
 float rotation_y = 0.5f;    // Slight angle to see front-right
-float zoom = 0.015f;        // Changed from 0.15f to 0.015f (10x less) since we removed 0.1x model scaling
+float zoom = 0.1f;        // Changed from 0.15f to 0.015f (10x less) since we removed 0.1x model scaling
 
 // Model rotation (separate from camera rotation, used when Shift is held)
 static float model_rotation_x = 0.0f;
@@ -142,7 +142,8 @@ static mdl_bounds_t g_model_bounds = { 0 };
 static const float g_model_scale = 0.1f;
 
 // Y offset so model's feet sit on the ground after scaling
-static float g_model_ground_y = 0.0f;
+static float g_model_ground_y = 0.0f;  // For animated sequences
+static float g_model_ground_y_tpose = 0.0f;  // For T-pose
 
 // Helper function to check if a sequence is available (has loaded sequence group data)
 static bool is_sequence_available( int seq_index ) {
@@ -886,7 +887,7 @@ int init_renderer( int width, int height, const char *title ) {
 	}
 
 	// @Note(Karlo): Initializing the grid, ground plane, and origin axes
-	r_grid_init( 200.0f, 10.0f );
+	r_grid_init( 200.0f, 5.0f );
 	r_ground_init( 200.0f );
 	r_axes_init( 20.0f );  // Axes extend 20 units from origin
 
@@ -1125,6 +1126,19 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 			glUniformMatrix4fv( bone_matrices_loc, global_header->numbones, GL_FALSE,
 								(const float *)g_bonetransformations );
 		}
+
+		// DEBUG: Print root bone matrix (bone 0) to see if there's unexpected translation
+		static bool printed_bones = false;
+		if (!printed_bones) {
+			printf("\n=== ROOT BONE MATRIX (Bone 0) ===\n");
+			mat4 *bone0 = (mat4 *)g_bonetransformations;
+			for (int i = 0; i < 4; i++) {
+				printf("  [%.4f %.4f %.4f %.4f]\n", bone0[0][0][i], bone0[0][1][i], bone0[0][2][i], bone0[0][3][i]);
+			}
+			printf("Translation in bone 0: X=%.4f, Y=%.4f, Z=%.4f\n", bone0[0][3][0], bone0[0][3][1], bone0[0][3][2]);
+			printf("==================================\n\n");
+			printed_bones = true;
+		}
 	}
 
 	// Re-transform vertices with new bone positions
@@ -1286,25 +1300,46 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	glfwGetFramebufferSize( window, &fbw, &fbh );
 	float aspect = ( fbh > 0 ) ? (float)fbw / (float)fbh : 1.0f;
 
+    // Build model matrix following Sam Vanheer's approach:
+    // In OpenGL fixed pipeline: translate → rotate → scale (applied in REVERSE!)
+    // Actual transform order: Scale FIRST, then Rotate, then Translate
     mat4 M;
     Math_Mat4_Identity( M );
-    
-    float min_z = g_model_bounds.min[2];     // HL Z (up)
-    float translate_y = -min_z;
 
-    // 1) Move model so its feet sit on Y=0 after scaling
-    Math_Mat4_Translate( M, 0.0f, translate_y, 0.0f );
-    
-    
-    Math_Mat4_Scale( M, g_model_scale, g_model_scale, g_model_scale );
+    // GROUND ALIGNMENT - Use different offsets for T-pose vs animation
+    // Animation: Use sequence bbox (Sam Vanheer's method)
+    // T-pose: Use vertex bounds (because T-pose bones have different root position)
+    float ground_offset_y = g_animation_enabled ? g_model_ground_y : g_model_ground_y_tpose;
 
-    // 3) Base orientation: rotate so model faces camera
-    Math_Mat4_Rotate( M, -MATH_PI * 0.5f, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
+    // Build matrix with CGLM functions directly
+    // We want: vertices transformed as Scale → Rotate → Translate
 
-    // 4) User-controlled model rotation (shift + mouse)
-    Math_Mat4_Rotate( M, model_rotation_y, (math_vec3_t){ 0.0f, 1.0f, 0.0f } );
-    Math_Mat4_Rotate( M, model_rotation_x, (math_vec3_t){ 1.0f, 0.0f, 0.0f } );    
-    
+    // 1) translate model so feet land on ground
+    glm_translate(M, (vec3){0.0f, ground_offset_y, 0.0f});
+
+    // 2) apply user rotations
+    mat4 Rx = GLM_MAT4_IDENTITY_INIT;
+    glm_rotate(Rx, model_rotation_x, (vec3){1,0,0});
+    glm_mat4_mul(M, Rx, M);
+
+    mat4 Ry = GLM_MAT4_IDENTITY_INIT;
+    glm_rotate(Ry, model_rotation_y, (vec3){0,1,0});
+    glm_mat4_mul(M, Ry, M);
+
+    // 3) rotate HL forward → GL forward (face camera fix)
+    mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
+    glm_rotate(RyFace, -MATH_PI * 0.5f, (vec3){0,1,0});
+    glm_mat4_mul(M, RyFace, M);
+
+    // 4) scale LAST because HL units are large
+    mat4 S = GLM_MAT4_IDENTITY_INIT;
+    glm_scale(S, (vec3){g_model_scale, g_model_scale, g_model_scale});
+    glm_mat4_mul(M, S, M);
+
+    // Final result: M = T * Rx * Ry * RyFace * S
+    // Applied to vertices: v' = T * Rx * Ry * RyFace * S * v
+    // Order: Scale → Face camera → User rotations → Translate
+
 	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
 	vec3 camPos;
 	vec3 target = { 0.0f, 0.0f, 0.0f };
@@ -1326,6 +1361,25 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		camPos[1] = min_camera_height;
 	}
 
+    static bool printed_once = false;
+    if (!printed_once && g_model_bounds.valid) {
+        printf("\n=== GROUND ALIGNMENT ===\n");
+        printf("Model feet at HL Z: %.2f\n", g_model_bounds.min[2]);
+        printf("After 0.1x scale: %.4f\n", g_model_bounds.min[2] * g_model_scale);
+        printf("Ground offset (translate UP): +%.4f\n", ground_offset_y);
+
+        printf("\nFinal Model Matrix:\n");
+        for (int i = 0; i < 4; i++) {
+            printf("  [%.4f %.4f %.4f %.4f]\n", M[0][i], M[1][i], M[2][i], M[3][i]);
+        }
+        printf("Translation column (last column): X=%.4f, Y=%.4f, Z=%.4f\n", M[3][0], M[3][1], M[3][2]);
+
+        printf("\nCamera: pos=(%.2f, %.2f, %.2f), looking at (0,0,0)\n", camPos[0], camPos[1], camPos[2]);
+        printf("Initial pitch=%.3f, yaw=%.3f, zoom=%.3f, camDist=%.2f\n", rotation_x, rotation_y, zoom, camDist);
+        printf("=========================\n\n");
+        printed_once = true;
+    }
+
 	// Note: camera_orbit_mode controls whether rotation angles affect camera or model
 	// This is handled in the input system, not here
 
@@ -1334,8 +1388,8 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	mat4 P;
 	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
 
-	// Render ground plane, grid, and axes at Y=0 (world origin)
-	// This is the standard approach - models are authored with sensible origins
+	// Ground plane at Y=0 (world origin)
+	// Model has been translated so its feet are at Y=0
 	float ground_y = 0.0f;
 	r_ground_draw( V, P, ground_y );
 	r_grid_draw( V, P, ground_y );
@@ -1362,6 +1416,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		glUniform3fv( uLight, 1, (const float *)lightPos );
 	if ( uViewP != -1 )
 		glUniform3fv( uViewP, 1, (const float *)camPos );
+
 
 	glBindVertexArray( VAO );
 	glBindBuffer( GL_ARRAY_BUFFER, VBO );
@@ -1481,23 +1536,81 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 		mdl_load_textures( texHdr, ( texHdr == header ) ? data : tex_data, &g_textures );
 	}
 
-	// Calculate bounding box from actual vertex data
+	// Calculate bounding box from actual vertex data (for debug/display purposes)
 	mdl_bounds_calculate( header, data, &g_model_bounds );
-    
-    if ( g_model_bounds.valid ) {
-        float min_z = g_model_bounds.min[2];   // HL Z (up)
-        g_model_ground_y = -min_z * g_model_scale;
 
-        LOG_INFOF(
-            "renderer",
-            "Ground align: minZ=%.3f -> ground_y=%.3f (scale=%.3f)",
-            min_z, g_model_ground_y, g_model_scale
-        );
-    } else {
-        g_model_ground_y = 0.0f;
-        LOG_WARNF( "renderer", "Bounds not valid, disabling ground alignment" );
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GROUND ALIGNMENT - Sam Vanheer's Method
+    // Use SEQUENCE bounding box (NOT vertex iteration!)
+    // Formula: origin.z = -sequence->bbmin.z
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    mstudioseqdesc_t* sequences = (mstudioseqdesc_t*)(data + header->seqindex);
+    mstudioseqdesc_t* chosen_sequence = NULL;
+
+    // 1. First try finding the "idle" sequence (Sam's priority)
+    for (int i = 0; i < header->numseq; i++) {
+        if (strcmp(sequences[i].label, "idle") == 0) {
+            chosen_sequence = &sequences[i];
+            printf("Ground alignment: Using 'idle' sequence (index %d)\n", i);
+            break;
+        }
     }
 
+    // 2. Fall back to sequence 0 if no "idle" found
+    if (!chosen_sequence && header->numseq > 0) {
+        chosen_sequence = &sequences[0];
+        printf("Ground alignment: Using sequence 0 ('%s') as fallback\n", chosen_sequence->label);
+    }
+
+    // 3. Calculate ground offset using Sam's formula (for animated sequences)
+    if (chosen_sequence) {
+        // Sam's formula: origin.z = -sequence->bbmin.z
+        // In our system: we need to account for scale and axis remap (HL Z → GL Y)
+        g_model_ground_y = -chosen_sequence->bbmin[2] * g_model_scale;
+
+        printf("Ground alignment (animated): sequence '%s' bbmin.z=%.2f → offset=%.4f (scale=%.3f)\n",
+               chosen_sequence->label, chosen_sequence->bbmin[2], g_model_ground_y, g_model_scale);
+    } else {
+        // No sequences available - shouldn't happen for valid models
+        g_model_ground_y = 0.0f;
+        printf("WARNING: No sequences found, ground offset = 0\n");
+    }
+
+    // 4. Calculate SEPARATE ground offset for T-pose using TRANSFORMED vertex bounds
+    //    T-pose uses rest-pose bones, so we need to transform vertices with T-pose bones
+    //    to get the actual bounds after transformation
+
+    // First, calculate T-pose bones
+    SetUpBones(header, data);
+
+    float minZ_tpose = FLT_MAX;
+    mstudiobodyparts_t* bps = (mstudiobodyparts_t*)(data + header->bodypartindex);
+
+    for (int bp = 0; bp < header->numbodyparts; bp++) {
+        mstudiomodel_t* models = (mstudiomodel_t*)(data + bps[bp].modelindex);
+        mstudiomodel_t* model = &models[0];
+
+        // Transform vertices with T-pose bones to get actual positions
+        vec3 transformed_verts[MAXSTUDIOVERTS];
+        TransformVertices(header, data, model, transformed_verts);
+
+        // Find minimum Z of transformed vertices
+        for (int v = 0; v < model->numverts; v++) {
+            if (transformed_verts[v][2] < minZ_tpose)
+                minZ_tpose = transformed_verts[v][2];
+        }
+    }
+
+    // Convert HL Z to OpenGL Y after scaling
+    g_model_ground_y_tpose = -minZ_tpose * g_model_scale;
+
+    printf("Ground alignment (T-pose):    transformed minZ=%.2f → offset=%.4f (scale=%.3f)\n",
+           minZ_tpose, g_model_ground_y_tpose, g_model_scale);
+    
+    
+    
+    
 	// Adding animations initializing
 	mdl_animation_init( &g_anim_state );
 

@@ -30,6 +30,7 @@
 #include "util/util_logger.h"
 
 #include <stdio.h>
+#include <string.h>
 
 extern mdl_animation_state_t g_anim_state;
 
@@ -88,9 +89,6 @@ void SetUpBones( studiohdr_t *header, unsigned char *data ) {
 			Math_Mat4_Copy( local, g_bonetransformations[i] );
 		}
 	}
-    
-    // Use to center the models
-    CenterBonesAtOrigin( header, g_bonetransformations );
 
 	LOG_INFOF( "bones", "T-pose setup complete" );
 }
@@ -112,25 +110,4 @@ void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t
 // Use mdl_animation_calculate_bones() from mdl_animations.c instead, which correctly
 // handles bone transformations using quaternions.
 
-
-// HELPER FUNCTION for aligning the models to the center at one particular position
-// Otherwise the models sometimes drift apart when doing animations and when being in a static T Pose
-
-
-void CenterBonesAtOrigin( studiohdr_t *header, math_mat4_t *bones ) {
-    if ( !header || !bones || header->numbones <= 0 ) {
-        return ;
-    }
-    
-    vec3 root;
-    root[0] = bones[0][3][0];
-    root[1] = bones[0][3][1];
-    root[2] = bones[0][3][2];
-    
-    for ( int i = 0; i < header->numbones; i++ ) {
-        bones[i][3][0] -= root[0];
-        bones[i][3][1] -= root[1]; // we can remove this if we want to lock y as well
-        bones[i][3][2] -= root[2];
-    }
-}
 

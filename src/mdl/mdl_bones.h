@@ -14,6 +14,4 @@ void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t
 
 void TransformNormalByBone( const mat4 boneAbs, const vec3 in, vec3 out );
 
-void CenterBonesAtOrigin( studiohdr_t *header, math_mat4_t *bones );
-
 #endif
