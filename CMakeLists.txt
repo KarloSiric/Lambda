@@ -286,6 +286,20 @@ file(GLOB SRC_TOP CONFIGURE_DEPENDS "src/*.c")
 file(GLOB EXTERNAL CONFIGURE_DEPENDS "external/*.c")
 
 
+# C++
+# Editor source files
+file(GLOB SRC_EDITOR CONFIGURE_DEPENDS 
+    "${CMAKE_SOURCE_DIR}/src/editor/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/editor/panels/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/editor/widgets/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/editor/dialogs/*.cpp"
+)
+
+file(GLOB SRC_EDITOR_THEME CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/src/editor/theme/*.cpp"
+)
+
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #   Executable
@@ -425,6 +439,8 @@ if(Qt6_FOUND)
     # Define C++ source files explicitly (add more as you create them)
     set(EDITOR_SOURCES
         src/editor/main.cpp
+        src/editor/MainWindow.cpp
+        # src/
     )
 
     # Define header files explicitly (add more as you create them)
@@ -436,10 +452,21 @@ if(Qt6_FOUND)
 
     # Create LambdaEditor executable
     add_executable(LambdaEditor
-        ${EDITOR_SOURCES}
-        ${EDITOR_HEADERS}
+        ${SRC_EDITOR} 
+        ${SRC_EDITOR_THEME} 
+    )
+    
+    # ───────────────────────────────────────────────
+    # Qt Resource System
+    # ───────────────────────────────────────────────
+
+    qt_add_resources(LAMBDA_RESOURCES
+        ${CMAKE_SOURCE_DIR}/resources/resources.qrc
     )
 
+    target_sources(LambdaEditor PRIVATE
+        ${LAMBDA_RESOURCES}
+    )
     # Include directories for editor
     target_include_directories(LambdaEditor PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -473,11 +500,12 @@ if(Qt6_FOUND)
     set_target_properties(LambdaEditor PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         AUTOMOC ON
-        AUTORCC ON
+        AUTORCC OFF
         AUTOUIC ON
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
     )
+    
 
     message(STATUS "✓ LambdaEditor GUI target created")
 
