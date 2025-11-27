@@ -1,4 +1,5 @@
 <RCC>
     <qresource prefix="/">
+        <file>icons/open_folder.png</file>
     </qresource>
 </RCC>

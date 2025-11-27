@@ -33,6 +33,7 @@
 #include <QtCore/qnamespace.h>
 #include <QtGui/qicon.h>
 #include <QtWidgets/qboxlayout.h>
+#include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qtoolbar.h>
 
 MainWindow::MainWindow( QWidget *parent )
@@ -59,58 +60,69 @@ void MainWindow::setupMenus() {
 }
 void MainWindow::setupToolbars() {
 	QToolBar *toolBar = addToolBar( "Main Toolbar" );
-    toolBar->setMovable( false );
-    // FILE
-    toolBar->addAction("New");
-    toolBar->addAction("Open");
-    toolBar->addAction("Save");
-    toolBar->addSeparator();
+	toolBar->setMovable( false );
 
-    // UNDO / REDO
-    toolBar->addAction("Undo");
-    toolBar->addAction("Redo");
-    toolBar->addSeparator();
+	QAction *action = toolBar->addAction( QIcon( ":/icons/open_folder.png" ), "Open Folder" );
+	toolBar->setIconSize( QSize( 18, 18 ) );
 
-    // CAMERA 
-    toolBar->addAction("Orbit");
-    toolBar->addAction("Pan");
-    toolBar->addAction("Zoom");
-    toolBar->addAction("Reset Camera");
-    toolBar->addSeparator();
+	// FILE
+	toolBar->addAction( "New" );
+	toolBar->addAction( "Open" );
+	toolBar->addAction( "Save" );
+	toolBar->addSeparator();
 
-    // VIEW
-    toolBar->addAction("Wireframe");
-    toolBar->addAction("Flat");
-    toolBar->addAction("Textured");
-    toolBar->addAction("Fullbright");
-    toolBar->addAction("Bones");
-    toolBar->addAction("Hitboxes");
-    toolBar->addAction("Grid");
-    toolBar->addSeparator();
+	// UNDO / REDO
+	toolBar->addAction( "Undo" );
+	toolBar->addAction( "Redo" );
+	toolBar->addSeparator();
 
-    // MODEL EDIT
-    toolBar->addAction("Scale");
-    toolBar->addAction("Rotate");
-    toolBar->addAction("Translate");
-    toolBar->addAction("Mirror");
-    toolBar->addAction("Reset Pose");
-    toolBar->addSeparator();
+	// CAMERA
+	toolBar->addAction( "Orbit" );
+	toolBar->addAction( "Pan" );
+	toolBar->addAction( "Zoom" );
+	toolBar->addAction( "Reset Camera" );
+	toolBar->addSeparator();
 
-    // ANIMATION
-    toolBar->addAction("Play");
-    toolBar->addAction("Pause");
-    toolBar->addAction("Stop");
-    toolBar->addAction("Prev Frame");
-    toolBar->addAction("Next Frame");
-    toolBar->addAction("Loop");
-    toolBar->addSeparator();
+	// VIEW
+	toolBar->addAction( "Wireframe" );
+	toolBar->addAction( "Flat" );
+	toolBar->addAction( "Textured" );
+	toolBar->addAction( "Fullbright" );
+	toolBar->addAction( "Bones" );
+	toolBar->addAction( "Hitboxes" );
+	toolBar->addAction( "Grid" );
+	toolBar->addSeparator();
 
-    // COMPILER
-    toolBar->addAction("Compile");
-    toolBar->addAction("Decompile");
+	// MODEL EDIT
+	toolBar->addAction( "Scale" );
+	toolBar->addAction( "Rotate" );
+	toolBar->addAction( "Translate" );
+	toolBar->addAction( "Mirror" );
+	toolBar->addAction( "Reset Pose" );
+	toolBar->addSeparator();
 
+	// ANIMATION
+	toolBar->addAction( "Play" );
+	toolBar->addAction( "Pause" );
+	toolBar->addAction( "Stop" );
+	toolBar->addAction( "Prev Frame" );
+	toolBar->addAction( "Next Frame" );
+	toolBar->addAction( "Loop" );
+	toolBar->addSeparator();
+
+	// COMPILER
+	toolBar->addAction( "Compile" );
+	toolBar->addAction( "Decompile" );
+
+	// @Note: Adding second toolbar
+	QToolBar *secondary = addToolBar( "Secondary" );
+	secondary->setMovable( false );
+	secondary->setIconSize( QSize( 20, 20 ) );
+
+	secondary->setObjectName( "Secondary" );
 }
 void MainWindow::createFileMenu() {
+    
 	QMenu *fileMenu = menuBar()->addMenu( tr( "&File" ) );
 
 	fileMenu->addAction( "New Project" );
@@ -220,29 +232,12 @@ void MainWindow::createViewportContainer() {
 	viewportContainer = new QWidget( this );
 	viewportContainer->setStyleSheet( "background-color: #1e1e1e;" );
 
+	viewportContainer->setObjectName( "ViewportContainer" );
+
 	setCentralWidget( viewportContainer );
 }
 
 void MainWindow::createDocks() {
-	// @Note: Added the left panel, going to style it with icons like Hammer Editor
-	//        For that we need to add the icons, resize it to some amount that later can
-	//        be adjusted in the settings menu right and also make it resizeable
-	leftDock = new QDockWidget( "Tools", this );
-	leftDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
-
-	leftDock->setMinimumWidth( 60 );
-	leftDock->setMaximumWidth( 200 );
-	leftDock->resize( 80, leftDock->height() );
-
-	QWidget *toolsPanel = new QWidget();
-	QVBoxLayout *toolsLayout = new QVBoxLayout( toolsPanel );
-
-	toolsLayout->addWidget( new QLabel( "Tools Panel Placeholder" ) );
-	toolsPanel->setLayout( toolsLayout );
-
-	leftDock->setWidget( toolsPanel );
-	addDockWidget( Qt::LeftDockWidgetArea, leftDock );
-
 	// @Note: Adding the right panel, this is teh main inspector panel, loads anything
 	//        from tree view of the proejct/.pak, to sequences, animations, model info, model
 	//        and so forth. It has to be broken into multiple different panels
@@ -258,6 +253,8 @@ void MainWindow::createDocks() {
 
 	inspLayout->addWidget( new QLabel( "Inspector Panel Placeholder, will fill more panels" ) );
 	inspectorPanel->setLayout( inspLayout );
+    inspectorPanel->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
+    inspectorPanel->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
 
 	rightDock->setWidget( inspectorPanel );
 	addDockWidget( Qt::RightDockWidgetArea, rightDock );
@@ -272,19 +269,34 @@ void MainWindow::createDocks() {
 
 	bottomDock = new QDockWidget( "Console", this );
 	bottomDock->setAllowedAreas( Qt::BottomDockWidgetArea );
+    bottomDock->setObjectName( "BottomDock" );
+    
+    
 	QWidget *consolePanel = new QWidget();
 	QVBoxLayout *consoleLayout = new QVBoxLayout( new QLabel( "Console Panel TODO" ) );
 
 	consolePanel->setLayout( consoleLayout );
+    consolePanel->setMinimumHeight( MW_CONSOLE_MIN_HEIGHT );
+    consolePanel->setMaximumHeight( MW_CONSOLE_MAX_HEIGHT );
+
+	consolePanel->setObjectName( "Console" );
 
 	bottomDock->setWidget( consolePanel );
 	addDockWidget( Qt::BottomDockWidgetArea, bottomDock );
+
+	// Make the docks non deattachable
+	rightDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
+	bottomDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
+    
+    // removes height-reduction
+    rightDock->setTitleBarWidget(new QWidget());
+    
+    
+    // @Note: Adding status bar
+    
+    
+    
 }
 
-
-void MainWindow::setTheme()
-{
-    
-    
-       
+void MainWindow::setTheme() {
 }
