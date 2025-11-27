@@ -432,42 +432,37 @@ add_custom_target(version
 # ═══════════════════════════════════════════════════════════════════════════
 #   Qt GUI Editor Application (C++)
 # ═══════════════════════════════════════════════════════════════════════════
-
 if(Qt6_FOUND)
     message(STATUS "Configuring LambdaEditor GUI...")
 
-    # Define C++ source files explicitly (add more as you create them)
     set(EDITOR_SOURCES
         src/editor/main.cpp
         src/editor/MainWindow.cpp
-        # src/
     )
 
-    # Define header files explicitly (add more as you create them)
     set(EDITOR_HEADERS
-        # src/editor/MainWindow.h  (add when created)
+        src/editor/MainWindow.h
     )
 
-    message(STATUS "Editor sources: ${EDITOR_SOURCES}")
-
-    # Create LambdaEditor executable
-    add_executable(LambdaEditor
-        ${SRC_EDITOR} 
-        ${SRC_EDITOR_THEME} 
-    )
-    
-    # ───────────────────────────────────────────────
-    # Qt Resource System
-    # ───────────────────────────────────────────────
-
+    #
+    # 1) Generate Qt resources BEFORE the executable
+    #
     qt_add_resources(LAMBDA_RESOURCES
         ${CMAKE_SOURCE_DIR}/resources/resources.qrc
     )
 
-    target_sources(LambdaEditor PRIVATE
+    #
+    # 2) Editor target
+    #
+    add_executable(LambdaEditor
+        ${EDITOR_SOURCES}
+        ${SRC_EDITOR_THEME}
         ${LAMBDA_RESOURCES}
     )
-    # Include directories for editor
+
+    #
+    # Includes
+    #
     target_include_directories(LambdaEditor PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/editor
@@ -477,7 +472,9 @@ if(Qt6_FOUND)
         ${CMAKE_SOURCE_DIR}/src/bridge
     )
 
-    # Link Qt6 libraries
+    #
+    # Qt libraries
+    #
     target_link_libraries(LambdaEditor PRIVATE
         Qt6::Core
         Qt6::Widgets
@@ -486,34 +483,15 @@ if(Qt6_FOUND)
         Qt6::OpenGLWidgets
     )
 
-    # Compiler flags (C++ only for this target)
-    target_compile_options(LambdaEditor PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -O2>
-    )
-
-    # Debug flags for debug builds
-    target_compile_options(LambdaEditor PRIVATE
-        $<$<CONFIG:Debug>:-g -DDEBUG>
-    )
-
-    # Set target properties
+    #
+    # Qt MOC / RCC / UIC
+    #
     set_target_properties(LambdaEditor PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         AUTOMOC ON
-        AUTORCC OFF
+        AUTORCC ON
         AUTOUIC ON
-        CXX_STANDARD 17
-        CXX_STANDARD_REQUIRED ON
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
-    
 
     message(STATUS "✓ LambdaEditor GUI target created")
-
-    # Run target for editor
-    add_custom_target(run-editor
-        COMMAND ${CMAKE_BINARY_DIR}/bin/LambdaEditor
-        DEPENDS LambdaEditor
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Running LambdaEditor GUI..."
-    )
 endif()
