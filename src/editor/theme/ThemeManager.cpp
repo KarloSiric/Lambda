@@ -34,7 +34,7 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
     
 	app.setStyle( QStyleFactory::create( "Fusion" ) );
 
-	app.setFont( QFont( "SF Pro", 13 ) );
+	app.setFont( QFont( "SF Pro", 16 ) );
 
 	// ----------------------------
 	// CUSTOM PALETTE
