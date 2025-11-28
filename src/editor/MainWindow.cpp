@@ -21,6 +21,7 @@
  */
 
 #include "MainWindow.h"
+#include "theme/ThemeManager.h"
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -32,6 +33,7 @@
 #include <QOpenGLWidget>
 #include <QtCore/qnamespace.h>
 #include <QtGui/qicon.h>
+#include <QtWidgets/qapplication.h>
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qtoolbar.h>
@@ -46,8 +48,8 @@ MainWindow::MainWindow( QWidget *parent )
 	setupToolbars();
 
 	// Setting up the docks and the main window for viewing things
-	createDocks();
-	createViewportContainer();
+	setupDocks();
+    setupViewports();
 }
 void MainWindow::setupMenus() {
 	createFileMenu();
@@ -58,15 +60,17 @@ void MainWindow::setupMenus() {
 	createWindowMenu();
 	createHelpMenu();
 }
-void MainWindow::setupToolbars() {
+void MainWindow::createToolbarUpper() {
+    
 	QToolBar *toolBar = addToolBar( "Main Toolbar" );
 	toolBar->setMovable( false );
-
-	QAction *action = toolBar->addAction( QIcon( ":/icons/open_folder.png" ), "Open Folder" );
 	toolBar->setIconSize( QSize( 18, 18 ) );
 
+	QAction *actionOpen = toolBar->addAction( QIcon( ":/icons/open_folder.png" ), "Open Folder" );
+
 	// FILE
-	toolBar->addAction( "New" );
+    QAction *actionNew = toolBar->addAction( QIcon( ":/icons/new_file.png" ), "New File" ); 
+	// toolBar->addAction( "New" );
 	toolBar->addAction( "Open" );
 	toolBar->addAction( "Save" );
 	toolBar->addSeparator();
@@ -121,32 +125,100 @@ void MainWindow::setupToolbars() {
 
 	secondary->setObjectName( "Secondary" );
 }
+
+void MainWindow::createModelMenu() {
+    
+    
+    
+    
+}
+
+
 void MainWindow::createFileMenu() {
     
-	QMenu *fileMenu = menuBar()->addMenu( tr( "&File" ) );
-
-	fileMenu->addAction( "New Project" );
-	fileMenu->addAction( "Open Model..." );
-	fileMenu->addAction( "Open Recent" );
-
-	fileMenu->addSeparator();
-
-	fileMenu->addAction( "Save Project" );
-	fileMenu->addAction( "Save Project As..." );
-
-	fileMenu->addSeparator();
-
-	QMenu *exportMenu = fileMenu->addMenu( "Export" );
-
-	exportMenu->addAction( "Export QC Script" );
-	exportMenu->addAction( "Export SMD" );
-	exportMenu->addAction( "Export OBJ Mesh" );
-	exportMenu->addAction( "Export Textures" );
-
-	fileMenu->addSeparator();
-
-	fileMenu->addAction( "Exit" );
+    QMenu *fileMenu = menuBar()->addMenu( tr( "&File" ) );
+    
+    // ==================================
+    // OPEN SECTION   
+    // ==================================
+     
+    fileMenu->addAction( "Open Model..." );
+    QMenu *recentMenu = fileMenu->addMenu( "Open recent" );
+    recentMenu->addAction( "barney.mdl" );
+    recentMenu->addAction( "player.mdl" );
+    recentMenu->addAction( "scientist.mdl" );
+    
+    fileMenu->addAction( "Open project (.pak)" );
+    
+    fileMenu->addSeparator();
+     
+    // ==================================
+    // CLOSE SECTION   
+    // ==================================
+    
+    fileMenu->addAction( "Close Model" );
+    fileMenu->addAction( "Close Window" );
+    fileMenu->addAction( "New Window" );
+    
+    fileMenu->addSeparator();
+    
+    // ==================================
+    // SAVE SECTION   
+    // ==================================
+    fileMenu->addAction( "Save Model" );
+    fileMenu->addAction( "Save Copy..." );
+    
+    fileMenu->addSeparator();
+     
+    // ==================================
+    // RELOAD SECTION   
+    // ==================================
+    
+    fileMenu->addAction( "Reload Model" );
+    fileMenu->addAction( "Reload Textures" );
+    
+    fileMenu->addSeparator();
+    
+    
+    // ==================================
+    // IMPORT/EXPORT SECTION   
+    // ==================================
+    
+    QMenu *importMenu = fileMenu->addMenu( "Import" );
+    importMenu->addAction( "Import SMD Reference" );
+    importMenu->addAction( "Import SMD Sequence" );
+    importMenu->addAction( "Import OBJ Mesh..." );
+    importMenu->addAction( "Import Textures..." );
+    importMenu->addAction( "Import QC Script..." );
+    
+    QMenu *exportMenu = fileMenu->addMenu( "Export" );
+    exportMenu->addAction( "Export QC Script..." );
+    exportMenu->addAction( "Export SMD (Reference)" );
+    exportMenu->addAction( "Export SMD (Sequence)" );
+    exportMenu->addAction( "Export SMD (All Sequences)" );
+    exportMenu->addAction( "Export OBJ Mesh..." );
+    exportMenu->addAction( "Export All Textures" );
+    
+    fileMenu->addSeparator();
+    
+    // ==================================
+    // PROPERTIES SECTION   
+    // ==================================
+    
+    // @Note(Karlo): this will go to the ModelMenuBar when I add it, because it makes more sense there
+    fileMenu->addAction( "Model Properties..." );
+    
+    fileMenu->addSeparator();
+    
+    
+    // ==================================
+    // EXIT SECTION   
+    // ==================================
+    
+    QAction *actionExit = fileMenu->addAction( "Exit" );
+    connect( actionExit, &QAction::triggered, qApp, &QApplication::exit );
 }
+
 
 void MainWindow::createEditMenu() {
 	QMenu *editMenu = menuBar()->addMenu( tr( "&Edit" ) );
@@ -298,5 +370,25 @@ void MainWindow::createDocks() {
     
 }
 
-void MainWindow::setTheme() {
+void MainWindow::setupTheme( void ) {
+    
+    // here we will add the app reference instead of in the main
+}
+
+void MainWindow::setupViewports( void )
+{
+    createViewportContainer();
+}
+
+
+void MainWindow::setupDocks( void )
+{
+    createDocks();
+}
+
+
+void MainWindow::setupToolbars( void )
+{
+    
+    createToolbarUpper();
 }
