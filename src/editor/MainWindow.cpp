@@ -29,9 +29,11 @@
 #include <QToolBar>
 #include <QWidget>
 #include <QWindow>
+#include <QActionGroup>
 #include <QDockWidget>
 #include <QOpenGLWidget>
 #include <QtCore/qnamespace.h>
+#include <QtGui/qaction.h>
 #include <QtGui/qicon.h>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qboxlayout.h>
@@ -128,8 +130,7 @@ void MainWindow::createToolbarUpper() {
 
 void MainWindow::createModelMenu() {
     
-    
-    
+      
     
 }
 
@@ -209,8 +210,7 @@ void MainWindow::createFileMenu() {
     fileMenu->addAction( "Model Properties..." );
     
     fileMenu->addSeparator();
-    
-    
+       
     // ==================================
     // EXIT SECTION   
     // ==================================
@@ -218,56 +218,133 @@ void MainWindow::createFileMenu() {
     QAction *actionExit = fileMenu->addAction( "Exit" );
     connect( actionExit, &QAction::triggered, qApp, &QApplication::exit );
 }
-
-
 void MainWindow::createEditMenu() {
-	QMenu *editMenu = menuBar()->addMenu( tr( "&Edit" ) );
+    
+    QMenu *editMenu = menuBar()->addMenu( tr( "&Edit" ) );
+    
+    // @Note: We will grey it out for starters
+    QAction *actionUndo = editMenu->addAction( "Undo" );
+    actionUndo->setEnabled( false );      
+    
+    QAction *actionRedo = editMenu->addAction( "Redo" );
+    actionRedo->setEnabled( false );
+    
+    editMenu->addAction( "History..." );
+    editMenu->addSeparator();
+    
+    // ==================================
+    // CLIPOARD
+    // ==================================
+    
+    editMenu->addAction( "Cut" );
+    editMenu->addAction( "Copy" );
+    editMenu->addAction( "Paste" );
+    editMenu->addAction( "Duplicate" );
+    editMenu->addAction( "Delete" );
+    
+    editMenu->addSeparator();
+     
+    // ==================================
+    // TRANSFORM
+    // ==================================
+           
+    QMenu *transformMenu = editMenu->addMenu( "Transform" );
+    transformMenu->addAction("Scale Model...");
+    transformMenu->addAction("Scale Uniformly...");
+    transformMenu->addAction("Scale Bones...");
+    transformMenu->addSeparator();
+    transformMenu->addAction("Rotate Model...");
+    transformMenu->addAction("Rotate 90° CW");
+    transformMenu->addAction("Rotate 90° CCW");
+    transformMenu->addAction("Rotate 180°");
+    transformMenu->addSeparator();
+    transformMenu->addAction("Flip Horizontally");
+    transformMenu->addAction("Flip Vertically");
+    transformMenu->addSeparator();
+    transformMenu->addAction("Translate Model...");
+    
+    // ==================================
+    // MESH OPERATIONS
+    // ==================================
+    
+    QMenu *meshMenu = editMenu->addMenu("Mesh Operations");
+    meshMenu->addAction("Optimize Mesh...");
+    meshMenu->addAction("Smooth Normals...");
+    meshMenu->addAction("Recalculate Normals");
+    meshMenu->addAction("Triangulate");
+    meshMenu->addAction("Merge Vertices...");
+    meshMenu->addAction("Remove Duplicates");
+    
+    // ==================================
+    // RESET
+    // ==================================
+    
+    editMenu->addAction("Reset Pose");
+    editMenu->addAction("Reset Camera");
+    editMenu->addAction("Reset All Transforms");
 
-	editMenu->addAction( "Undo" );
-	editMenu->addAction( "Redo" );
+    editMenu->addSeparator();
 
-	editMenu->addSeparator();
+    // ═══════════════════════════════════════════════════════
+    // SELECTION
+    // ═══════════════════════════════════════════════════════
 
-	editMenu->addAction( "Scale Model" );
-	editMenu->addAction( "Scale Mesh" );
-	editMenu->addAction( "Translate Model" );
-
-	editMenu->addSeparator();
-
-	editMenu->addAction( "Reset Pose" );
-	editMenu->addAction( "Reset Model Camera" );
-
-	editMenu->addSeparator();
-
-	editMenu->addAction( "Preferences" );
+    editMenu->addAction("Select All");
+    editMenu->addAction("Select None");
+    editMenu->addAction("Invert Selection");
 }
 void MainWindow::createViewMenu() {
-	QMenu *viewMenu = menuBar()->addMenu( tr( "&View" ) );
-
-	QMenu *renderMode = viewMenu->addMenu( "Render Mode" );
-	renderMode->addAction( "Wireframe" );
-	renderMode->addAction( "Flat Shaded" );
-	renderMode->addAction( "Solid" );
-	renderMode->addAction( "Textured" );
-	renderMode->addAction( "Fullbright" );
-
-	viewMenu->addSeparator();
-
-	viewMenu->addAction( "Show Bones" );
-	viewMenu->addAction( "Show Hitboxes" );
-	viewMenu->addAction( "Show Attachments" );
-	viewMenu->addAction( "Show Grid" );
-	viewMenu->addAction( "Show Ground" );
-
-	viewMenu->addSeparator();
-
-	QMenu *layoutMenu = viewMenu->addMenu( "Layout" );
-	layoutMenu->addAction( "Single View" );
-	layoutMenu->addAction( "Split View" );
-	layoutMenu->addAction( "Quad View" );
-
-	viewMenu->addSeparator();
-	viewMenu->addAction( "Reset View" );
+    
+    QMenu *viewMenu = menuBar()->addMenu( tr( "&View" ) );   
+    
+    // ═══════════════════════════════════════════════════════
+    // RENDER MODE
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *renderModeMenu = viewMenu->addMenu( "Render Mode" );
+    QActionGroup *renderModeGroup = new QActionGroup( this );
+    
+    QAction *actionWireframe = renderModeMenu->addAction( "Wireframe" );
+    actionWireframe->setCheckable( true );
+    renderModeGroup->addAction( actionWireframe );
+    
+    QAction *actionFlat = renderModeMenu->addAction( "Flat Shaded" );
+    actionFlat->setCheckable( true );
+    renderModeGroup->addAction( actionFlat );
+    
+    QAction *actionSmooth = renderModeMenu->addAction( "Smooth Shaded" );
+    actionSmooth->setCheckable( true );
+    renderModeGroup->addAction( actionSmooth );
+    
+    QAction *actionTextured = renderModeMenu->addAction( "Textured" );
+    actionTextured->setCheckable( true );
+    actionTextured->setChecked( true );
+    renderModeGroup->addAction( actionTextured );
+    
+    QAction *actionTexturedWireframe = renderModeMenu->addAction( "Textured & Wireframe" );
+    actionTexturedWireframe->setCheckable( true );
+    renderModeGroup->addAction( actionTexturedWireframe );
+    
+    QAction *actionFullbright = renderModeMenu->addAction( "Fullbright" );
+    actionFullbright->setCheckable( true );
+    renderModeGroup->addAction( actionFullbright );
+    
+    // ═══════════════════════════════════════════════════════
+    // SHADING OPTIONS
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *shadingMenu = menuBar()->addMenu( "Shading" );
+    QAction *actionSmoothShading = shadingMenu->addAction( "Smooth Shading" );
+    
+    actionSmoothShading->setCheckable( true );
+    actionSmoothShading->setChecked( true );
+    
+    
+    
+    
+    
+    
+    
 }
 void MainWindow::createToolsMenu() {
 	QMenu *toolsMenu = menuBar()->addMenu( "&Tools" );
