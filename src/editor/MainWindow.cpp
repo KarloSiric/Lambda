@@ -32,12 +32,16 @@
 #include <QActionGroup>
 #include <QDockWidget>
 #include <QOpenGLWidget>
+#include <QtCore/qcontainerfwd.h>
 #include <QtCore/qnamespace.h>
+#include <QtCore/qobject.h>
 #include <QtGui/qaction.h>
+#include <QtGui/qactiongroup.h>
 #include <QtGui/qicon.h>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qmainwindow.h>
+#include <QtWidgets/qmenu.h>
 #include <QtWidgets/qtoolbar.h>
 
 MainWindow::MainWindow( QWidget *parent )
@@ -329,20 +333,227 @@ void MainWindow::createViewMenu() {
     actionFullbright->setCheckable( true );
     renderModeGroup->addAction( actionFullbright );
     
+    viewMenu->addSeparator();
+    
     // ═══════════════════════════════════════════════════════
     // SHADING OPTIONS
     // ═══════════════════════════════════════════════════════
     
-    QMenu *shadingMenu = menuBar()->addMenu( "Shading" );
+    QMenu *shadingMenu = viewMenu->addMenu( "Shading" );
     QAction *actionSmoothShading = shadingMenu->addAction( "Smooth Shading" );
     
     actionSmoothShading->setCheckable( true );
     actionSmoothShading->setChecked( true );
     
+    QAction *actionBackfaceCull = shadingMenu->addAction( "Backface Culling" );
+    actionBackfaceCull->setCheckable( true );
+    actionBackfaceCull->setChecked( true );
+    
+    QAction *actionTwoSidedLight = shadingMenu->addAction( "Two-Sided Lighting" );
+    actionTwoSidedLight->setCheckable( true );
+    
+    QAction *actionVertexColors = shadingMenu->addAction( "Vertex Colors" );
+    actionVertexColors->setCheckable( true );
+    
+    viewMenu->addSeparator();
+    
+    // ═══════════════════════════════════════════════════════
+    // SHOW SUBMENU ( Visibility Toggling )
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *showMenu = viewMenu->addMenu( "Show" );
+    
+    QAction *actionBones = showMenu->addAction( "Show Bones" );
+    actionBones->setCheckable( true );
+    
+    QAction *actionBoneNames = showMenu->addAction( "Bone Names" );
+    actionBoneNames->setCheckable( true );
+    
+    QAction *actionHitboxes = showMenu->addAction( "Show Hitboxes" );
+    actionHitboxes->setCheckable( true );
+    
+    QAction *actionHitboxesNames = showMenu->addAction( "Hitboxes Names" );
+    actionHitboxesNames->setCheckable( true );
+    
+    QAction *actionAttachments = showMenu->addAction( "Show Attachments" );
+    actionAttachments->setCheckable( true );
+    
+    QAction *actionAttachmentNames = showMenu->addAction( "Attachment Names" );
+    actionAttachmentNames->setCheckable( true );
+    
+    showMenu->addSeparator();
+    
+    QAction *actionNormals = showMenu->addAction( "Normals" );
+    actionNormals->setCheckable( true );
+    
+    QAction *actionTangents = showMenu->addAction( "Tangents" );
+    actionTangents->setCheckable( true ); 
+    
+    QAction *actionUV = showMenu->addAction( "UV Coordinates" );
+    actionUV->setCheckable( true );
+    
+    QAction *actionVertexID = showMenu->addAction( "Vertex IDs" );
+    actionVertexID->setCheckable( true );
+    
+    showMenu->addSeparator();
+    
+    QAction *actionGround = showMenu->addAction( "Ground" );
+    actionGround->setCheckable( true );
+    actionGround->setChecked( true );
+    
+    QAction *actionGroundReflect = showMenu->addAction( "Ground Reflection" );
+    actionGroundReflect->setCheckable( true );
+    
+    QAction *actionGrid = showMenu->addAction( "Grid" );
+    actionGrid->setCheckable( true );
+    actionGrid->setChecked( true );
+    
+    QAction *actionAxis = showMenu->addAction( "Axis" );
+    actionAxis->setCheckable( true );
+    
+    QAction *actionOrigin = showMenu->addAction( "Origin" );
+    actionOrigin->setCheckable( true );
+    
+    showMenu->addSeparator();
+    
+    QAction *actionBBox = showMenu->addAction( "Bounding Box" );
+    actionBBox->setCheckable( true );   
+    
+    QAction *actionCollisionHull = showMenu->addAction( "Collision Hull" );
+    actionCollisionHull->setCheckable( true );
+    
+    QAction* showSeqBBox = showMenu->addAction("Sequence Bounding Box");
+    showSeqBBox->setCheckable(true);
+
+    QAction* showEyePos = showMenu->addAction("Eye Position");
+    showEyePos->setCheckable(true);
+
+    viewMenu->addSeparator();
+    
+    // ═══════════════════════════════════════════════════════
+    // VIEWPORT LAYOUT
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *layoutMenu = viewMenu->addMenu( "Viewport Layout" );
+    QActionGroup *layoutGroup = new QActionGroup( this );
+    
+    QAction *actionLayoutSingle = layoutMenu->addAction( "Single View" );
+    actionLayoutSingle->setCheckable( true );
+    actionLayoutSingle->setChecked( true );
+    layoutGroup->addAction( actionLayoutSingle );
+    
+    QAction *actionLayoutDualH = layoutMenu->addAction( "Dual View (Horizontally)" );
+    actionLayoutDualH->setCheckable( true );
+    layoutGroup->addAction( actionLayoutDualH );
+    
+    QAction* layoutDualV = layoutMenu->addAction("Dual View (Vertical)");
+    layoutDualV->setCheckable(true);
+    layoutGroup->addAction(layoutDualV);
+
+    QAction* layoutQuad = layoutMenu->addAction("Quad View");
+    layoutQuad->setCheckable(true);
+    layoutGroup->addAction(layoutQuad);
+
+    viewMenu->addSeparator();
+    
+    // ═══════════════════════════════════════════════════════
+    // CAMERA
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *cameraMenu = viewMenu->addMenu( "Camera" );
+    QActionGroup *cameraProjGroup = new QActionGroup( this );
+    
+    QAction *actionCameraPerspective = cameraMenu->addAction( "Perspective" );
+    actionCameraPerspective->setCheckable( true );
+    actionCameraPerspective->setChecked( true );
+    cameraProjGroup->addAction( actionCameraPerspective );
+    
+    QAction *actionCameraOrtho = cameraMenu->addAction( "Orthographic" );
+    actionCameraOrtho->setCheckable( true );
+    cameraProjGroup->addAction( actionCameraOrtho );
+    
+    cameraMenu->addSeparator();
+    
+    cameraMenu->addAction("Front View");
+    cameraMenu->addAction("Back View");
+    cameraMenu->addAction("Right View");
+    cameraMenu->addAction("Left View");
+    cameraMenu->addAction("Top View");
+    cameraMenu->addAction("Bottom View");
+
+    cameraMenu->addSeparator();
+
+    cameraMenu->addAction("Frame Selected");
+    cameraMenu->addAction("Frame All");
+    cameraMenu->addAction("Reset View");
+
+    viewMenu->addSeparator();
+
+    // ═══════════════════════════════════════════════════════
+    // GRID SIZE
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *gridSizeMenu = viewMenu->addMenu( "Grid Size" );
+    QActionGroup *gridSizeGroup = new QActionGroup( this );
+    
+    QStringList gridSizes = { "1", "2", "4", "8", "16", "32", "64", "128", "256", "512" };
+    for ( const QString &size : gridSizes ) {
+        QAction *gridAction = gridSizeMenu->addAction( size + " units" );
+        gridAction->setCheckable( true );
+        if ( size == "64" ) {
+            gridAction->setChecked( true );
+        }
+        gridSizeGroup->addAction( gridAction );
+    }
+    
+    gridSizeMenu->addSeparator();
+    gridSizeMenu->addAction( "Custom..." );
+    
+    viewMenu->addSeparator();
     
     
+    // ═══════════════════════════════════════════════════════
+    // COLORS
+    // ═══════════════════════════════════════════════════════
     
+    viewMenu->addAction( "Background Color..." );
+    viewMenu->addAction( "Grid Color..." );
+    viewMenu->addAction( "Ground Color..." );
     
+    viewMenu->addSeparator();
+    
+    // ═══════════════════════════════════════════════════════
+    // SCREENSHOTS
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *screenshotMenu = viewMenu->addMenu( "Screenshot" );
+    screenshotMenu->addAction( "Capture Viewport" );
+    screenshotMenu->addAction( "Capture Viewport (4K)" );
+    screenshotMenu->addAction( "Capture All Sequences" );
+    screenshotMenu->addAction( "Capture Thumbnail..." );
+    
+    viewMenu->addSeparator();
+    
+    // ═══════════════════════════════════════════════════════
+    // FULLSCREEN
+    // ═══════════════════════════════════════════════════════
+     
+    QMenu *screenMenu = viewMenu->addMenu( "Screen" );
+    QAction *actionFullscreen = screenMenu->addAction( "Fullscreen" );
+    actionFullscreen->setCheckable( true );
+    
+    QAction *actionToggleUI = screenMenu->addAction( "Toggle UI" );
+    actionToggleUI->setCheckable( true );
+    actionToggleUI->setChecked( true );
+    
+    QAction *actionToggleConsole = screenMenu->addAction( "Toggle Console" );
+    actionToggleConsole->setCheckable( true );
+    
+    QAction *actionToggleSidePanel = screenMenu->addAction( "Toggle Inspector Panel" );
+    actionToggleSidePanel->setCheckable( true );
+    
+    QAction *actionToggleStatusBar = screenMenu->addAction( "Toggle Status Bar" );
+    actionToggleStatusBar->setCheckable( true );
     
     
 }
