@@ -62,6 +62,7 @@ void MainWindow::setupMenus() {
 	createEditMenu();
 	createViewMenu();
 	createToolsMenu();
+    createModelMenu();
 	createDebugMenu();
 	createWindowMenu();
 	createHelpMenu();
@@ -134,10 +135,62 @@ void MainWindow::createToolbarUpper() {
 
 void MainWindow::createModelMenu() {
     
-      
-    
-}
+    QMenu* modelMenu = menuBar()->addMenu(tr("&Model"));
 
+    // ═══════════════════════════════════════════════════════
+    // MODEL INFO
+    // ═══════════════════════════════════════════════════════
+
+    modelMenu->addAction("Model Properties...");     // Opens dialog
+    modelMenu->addAction("Model Statistics...");     // Vertex/tri count, etc.
+
+    modelMenu->addSeparator();
+
+    // ═══════════════════════════════════════════════════════
+    // MODEL OPERATIONS
+    // ═══════════════════════════════════════════════════════
+
+    modelMenu->addAction("Validate Model...");       // Check for errors
+    modelMenu->addAction("Optimize Model...");       // Reduce poly count
+    modelMenu->addAction("Fix Issues...");           // Auto-fix common problems
+
+    modelMenu->addSeparator();
+
+    // ═══════════════════════════════════════════════════════
+    // MODEL METADATA
+    // ═══════════════════════════════════════════════════════
+
+    modelMenu->addAction("Set Eye Position...");
+    modelMenu->addAction("Set Bounding Box...");
+    modelMenu->addAction("Set Collision Hull...");
+
+    modelMenu->addSeparator();
+
+    // ═══════════════════════════════════════════════════════
+    // LIST SUBMENUS (Browse model contents)
+    // ═══════════════════════════════════════════════════════
+
+    QMenu* listMenu = modelMenu->addMenu("List");
+    listMenu->addAction("List Bones...");            // Opens dialog with all bones
+    listMenu->addAction("List Sequences...");
+    listMenu->addAction("List Bodyparts...");
+    listMenu->addAction("List Textures...");
+    listMenu->addAction("List Hitboxes...");
+    listMenu->addAction("List Attachments...");
+    listMenu->addAction("List Events...");
+
+    modelMenu->addSeparator();
+
+    // ═══════════════════════════════════════════════════════
+    // ADVANCED
+    // ═══════════════════════════════════════════════════════
+
+    modelMenu->addAction("Generate LODs...");        // Level of Detail models
+    modelMenu->addAction("Bake Vertex Colors...");
+    modelMenu->addAction("Convert to Source 2...");  // Future feature 
+    
+       
+}
 
 void MainWindow::createFileMenu() {
     
