@@ -14,7 +14,6 @@ class ThemeManager : public QObject
     
 public:
     
-    
     static void applyThemeLight( QApplication &app );
     static void applyThemeDark( QApplication &app );
 };

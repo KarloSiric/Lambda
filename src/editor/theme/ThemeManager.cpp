@@ -193,9 +193,6 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
             background: #1E1E1E; /* dark viewport */
         }
         
-        
-        
-        
 
         QSplitter::handle {
             background: #C6C6C6;       /* separator color */
