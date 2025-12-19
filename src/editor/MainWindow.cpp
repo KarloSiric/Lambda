@@ -21,7 +21,6 @@
  */
 
 #include "MainWindow.h"
-#include "theme/ThemeManager.h"
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -63,11 +62,11 @@ void MainWindow::setupMenus() {
 	createViewMenu();
 	createToolsMenu();
 	createModelMenu();
-    createBodypartMenu();
-    createBonesMenu();
-    createSequencesMenu();
-    createTexturesMenu();
-    // createToolsMenu();
+	createBodypartMenu();
+	createBonesMenu();
+	createSequencesMenu();
+	createTexturesMenu();
+	// createToolsMenu();
 	createDebugMenu();
 	createWindowMenu();
 	createHelpMenu();
@@ -221,851 +220,845 @@ void MainWindow::createBodypartMenu() {
 	QActionGroup *submodelGroup = new QActionGroup( this );
 
 	QAction *submodel0 = submodelMenu->addAction( "Submodel 0 (Default)" );
-    submodel0->setCheckable( true );
-    submodel0->setChecked( true );
-    submodelGroup->addAction(submodel0);
-    
-    QAction *submodel1 = submodelMenu->addAction("Submodel 1");
-    submodel1->setCheckable( true );
-    submodelGroup->addAction( submodel1 );
-    
-    QAction *submodel2 = submodelMenu->addAction("Submodel 2");
-    submodel2->setCheckable( true );
-    submodelGroup->addAction( submodel2 );
-    
-    submodelMenu->addSeparator();
-    submodelMenu->addAction("Randomize");
-    submodelMenu->addAction("Reset to Default");
-    
-    bodypartMenu->addSeparator();
-    
-    // ═══════════════════════════════════════════════════════
-    // VISIBILITY OPTIONS
-    // ═══════════════════════════════════════════════════════
+	submodel0->setCheckable( true );
+	submodel0->setChecked( true );
+	submodelGroup->addAction( submodel0 );
 
-    QAction *showBodyparts = bodypartMenu->addAction("Show All Bodyparts");
-    showBodyparts->setCheckable(true);
-    showBodyparts->setChecked(true);
+	QAction *submodel1 = submodelMenu->addAction( "Submodel 1" );
+	submodel1->setCheckable( true );
+	submodelGroup->addAction( submodel1 );
 
-    QAction *showBodypartNames = bodypartMenu->addAction("Show Bodypart Names");
-    showBodypartNames->setCheckable(true);
+	QAction *submodel2 = submodelMenu->addAction( "Submodel 2" );
+	submodel2->setCheckable( true );
+	submodelGroup->addAction( submodel2 );
 
-    QAction *showSubmodelBounds = bodypartMenu->addAction("Show Submodel Bounds");
-    showSubmodelBounds->setCheckable(true);
+	submodelMenu->addSeparator();
+	submodelMenu->addAction( "Randomize" );
+	submodelMenu->addAction( "Reset to Default" );
 
-    QAction *highlightSelected = bodypartMenu->addAction("Highlight Selected");
-    highlightSelected->setCheckable(true);
+	bodypartMenu->addSeparator();
 
-    bodypartMenu->addSeparator();    
-    
-    // ═══════════════════════════════════════════════════════
-    // BODYGROUP PRESETS (Common combinations)
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// VISIBILITY OPTIONS
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *presetsMenu = bodypartMenu->addMenu("Bodygroup Presets");
-    presetsMenu->addAction("Default Loadout");
-    presetsMenu->addAction("All Variants Visible");
-    presetsMenu->addAction("Custom Preset 1...");
-    presetsMenu->addAction("Custom Preset 2...");
-    presetsMenu->addSeparator();
-    presetsMenu->addAction("Save Current as Preset...");
+	QAction *showBodyparts = bodypartMenu->addAction( "Show All Bodyparts" );
+	showBodyparts->setCheckable( true );
+	showBodyparts->setChecked( true );
 
-    bodypartMenu->addSeparator();    
-    
-    // ═══════════════════════════════════════════════════════
-    // IMPORT/EXPORT BODYPARTS
-    // ═══════════════════════════════════════════════════════
+	QAction *showBodypartNames = bodypartMenu->addAction( "Show Bodypart Names" );
+	showBodypartNames->setCheckable( true );
 
-    QMenu *importBodypartMenu = bodypartMenu->addMenu("Import Bodypart");
-    importBodypartMenu->addAction("Import from SMD...");
-    importBodypartMenu->addAction("Import from OBJ...");
-    importBodypartMenu->addAction("Import from FBX...");
+	QAction *showSubmodelBounds = bodypartMenu->addAction( "Show Submodel Bounds" );
+	showSubmodelBounds->setCheckable( true );
 
-    QMenu *exportBodypartMenu = bodypartMenu->addMenu("Export Bodypart");
-    exportBodypartMenu->addAction("Export Selected to SMD...");
-    exportBodypartMenu->addAction("Export Selected to OBJ...");
-    exportBodypartMenu->addAction("Export All Bodyparts...");
+	QAction *highlightSelected = bodypartMenu->addAction( "Highlight Selected" );
+	highlightSelected->setCheckable( true );
 
-    bodypartMenu->addSeparator();
+	bodypartMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // BODYPART INFORMATION
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// BODYGROUP PRESETS (Common combinations)
+	// ═══════════════════════════════════════════════════════
 
-    bodypartMenu->addAction("List All Bodyparts...");      // Opens dialog
-    bodypartMenu->addAction("Bodypart Properties...");     // Shows selected bodypart info    
-    
+	QMenu *presetsMenu = bodypartMenu->addMenu( "Bodygroup Presets" );
+	presetsMenu->addAction( "Default Loadout" );
+	presetsMenu->addAction( "All Variants Visible" );
+	presetsMenu->addAction( "Custom Preset 1..." );
+	presetsMenu->addAction( "Custom Preset 2..." );
+	presetsMenu->addSeparator();
+	presetsMenu->addAction( "Save Current as Preset..." );
+
+	bodypartMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// IMPORT/EXPORT BODYPARTS
+	// ═══════════════════════════════════════════════════════
+
+	QMenu *importBodypartMenu = bodypartMenu->addMenu( "Import Bodypart" );
+	importBodypartMenu->addAction( "Import from SMD..." );
+	importBodypartMenu->addAction( "Import from OBJ..." );
+	importBodypartMenu->addAction( "Import from FBX..." );
+
+	QMenu *exportBodypartMenu = bodypartMenu->addMenu( "Export Bodypart" );
+	exportBodypartMenu->addAction( "Export Selected to SMD..." );
+	exportBodypartMenu->addAction( "Export Selected to OBJ..." );
+	exportBodypartMenu->addAction( "Export All Bodyparts..." );
+
+	bodypartMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// BODYPART INFORMATION
+	// ═══════════════════════════════════════════════════════
+
+	bodypartMenu->addAction( "List All Bodyparts..." ); // Opens dialog
+	bodypartMenu->addAction( "Bodypart Properties..." ); // Shows selected bodypart info
 }
 
 void MainWindow::createBonesMenu() {
-    
-    QMenu *bonesMenu = menuBar()->addMenu( tr("&Bones") );
-    
-    // ═══════════════════════════════════════════════════════
-    // BONE VISIBILITY
-    // ═══════════════════════════════════════════════════════
+	QMenu *bonesMenu = menuBar()->addMenu( tr( "&Bones" ) );
 
-    QAction *showBones = bonesMenu->addAction("Show Bones");
-    showBones->setCheckable(true);
-    showBones->setChecked(true);  // Usually want to see bones by default
+	// ═══════════════════════════════════════════════════════
+	// BONE VISIBILITY
+	// ═══════════════════════════════════════════════════════
 
-    QAction *showBoneNames = bonesMenu->addAction("Show Bone Names");
-    showBoneNames->setCheckable(true);
+	QAction *showBones = bonesMenu->addAction( "Show Bones" );
+	showBones->setCheckable( true );
+	showBones->setChecked( true ); // Usually want to see bones by default
 
-    QAction *showBoneWeights = bonesMenu->addAction("Show Bone Weights");
-    showBoneWeights->setCheckable(true);
-    // NOTE: Shows color-coded vertex weight painting
+	QAction *showBoneNames = bonesMenu->addAction( "Show Bone Names" );
+	showBoneNames->setCheckable( true );
 
-    QAction *highlightSelectedBone = bonesMenu->addAction("Highlight Selected Bone");
-    highlightSelectedBone->setCheckable(true);
+	QAction *showBoneWeights = bonesMenu->addAction( "Show Bone Weights" );
+	showBoneWeights->setCheckable( true );
+	// NOTE: Shows color-coded vertex weight painting
 
-    bonesMenu->addSeparator();    
-    
-    // ═══════════════════════════════════════════════════════
-    // SELECT BONE (Hierarchical bone list)
-    // ═══════════════════════════════════════════════════════
+	QAction *highlightSelectedBone = bonesMenu->addAction( "Highlight Selected Bone" );
+	highlightSelectedBone->setCheckable( true );
 
-    QMenu *selectBoneMenu = bonesMenu->addMenu("Select Bone");
-    // @NOTE: This will be populated from the model's bone hierarchy
-    // @NOTE(Karlo): This is being hardcoded at the moment will be populated later
-    // Showing example hierarchy with indentation
-    selectBoneMenu->addAction("Root");
-    selectBoneMenu->addAction("  └─ Pelvis");
-    selectBoneMenu->addAction("      ├─ Spine1");
-    selectBoneMenu->addAction("      │   └─ Spine2");
-    selectBoneMenu->addAction("      │       └─ Neck");
-    selectBoneMenu->addAction("      │           └─ Head");
-    selectBoneMenu->addAction("      ├─ L_Thigh");
-    selectBoneMenu->addAction("      │   └─ L_Calf");
-    selectBoneMenu->addAction("      │       └─ L_Foot");
-    selectBoneMenu->addAction("      └─ R_Thigh");
-    selectBoneMenu->addAction("          └─ R_Calf");
-    selectBoneMenu->addAction("              └─ R_Foot");
-    selectBoneMenu->addSeparator();
-    selectBoneMenu->addAction("Expand All");
-    selectBoneMenu->addAction("Collapse All");
-    selectBoneMenu->addAction("Refresh Hierarchy");
+	bonesMenu->addSeparator();
 
-    bonesMenu->addSeparator(); 
-    
-    // ═══════════════════════════════════════════════════════
-    // BONE DISPLAY OPTIONS
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// SELECT BONE (Hierarchical bone list)
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *displayModeMenu = bonesMenu->addMenu("Bone Display Mode");
-    QActionGroup *displayModeGroup = new QActionGroup(this);
+	QMenu *selectBoneMenu = bonesMenu->addMenu( "Select Bone" );
+	// @NOTE: This will be populated from the model's bone hierarchy
+	// @NOTE(Karlo): This is being hardcoded at the moment will be populated later
+	// Showing example hierarchy with indentation
+	selectBoneMenu->addAction( "Root" );
+	selectBoneMenu->addAction( "  └─ Pelvis" );
+	selectBoneMenu->addAction( "      ├─ Spine1" );
+	selectBoneMenu->addAction( "      │   └─ Spine2" );
+	selectBoneMenu->addAction( "      │       └─ Neck" );
+	selectBoneMenu->addAction( "      │           └─ Head" );
+	selectBoneMenu->addAction( "      ├─ L_Thigh" );
+	selectBoneMenu->addAction( "      │   └─ L_Calf" );
+	selectBoneMenu->addAction( "      │       └─ L_Foot" );
+	selectBoneMenu->addAction( "      └─ R_Thigh" );
+	selectBoneMenu->addAction( "          └─ R_Calf" );
+	selectBoneMenu->addAction( "              └─ R_Foot" );
+	selectBoneMenu->addSeparator();
+	selectBoneMenu->addAction( "Expand All" );
+	selectBoneMenu->addAction( "Collapse All" );
+	selectBoneMenu->addAction( "Refresh Hierarchy" );
 
-    QAction *displayLines = displayModeMenu->addAction("Lines");
-    displayLines->setCheckable(true);
-    displayLines->setChecked(true);  // Default: simple line skeleton
-    displayModeGroup->addAction(displayLines);
+	bonesMenu->addSeparator();
 
-    QAction *displayBones = displayModeMenu->addAction("Bones (3D)");
-    displayBones->setCheckable(true);
-    displayModeGroup->addAction(displayBones);
+	// ═══════════════════════════════════════════════════════
+	// BONE DISPLAY OPTIONS
+	// ═══════════════════════════════════════════════════════
 
-    QAction *displayWireframe = displayModeMenu->addAction("Wireframe with Vertices");
-    displayWireframe->setCheckable(true);
-    displayModeGroup->addAction(displayWireframe);
+	QMenu *displayModeMenu = bonesMenu->addMenu( "Bone Display Mode" );
+	QActionGroup *displayModeGroup = new QActionGroup( this );
 
-    displayModeMenu->addSeparator();
+	QAction *displayLines = displayModeMenu->addAction( "Lines" );
+	displayLines->setCheckable( true );
+	displayLines->setChecked( true ); // Default: simple line skeleton
+	displayModeGroup->addAction( displayLines );
 
-    QAction *showBoneAxes = displayModeMenu->addAction("Show Bone Axes");
-    showBoneAxes->setCheckable(true);
-    // Shows X, Y, Z axes at each bone
+	QAction *displayBones = displayModeMenu->addAction( "Bones (3D)" );
+	displayBones->setCheckable( true );
+	displayModeGroup->addAction( displayBones );
 
-    QAction *showBoneOrigins = displayModeMenu->addAction("Show Bone Origins");
-    showBoneOrigins->setCheckable(true);
-    // Shows pivot point of each bone
+	QAction *displayWireframe = displayModeMenu->addAction( "Wireframe with Vertices" );
+	displayWireframe->setCheckable( true );
+	displayModeGroup->addAction( displayWireframe );
 
-    displayModeMenu->addSeparator();
-    displayModeMenu->addAction("Bone Size...");  // Opens slider/input dialog
+	displayModeMenu->addSeparator();
 
-    bonesMenu->addSeparator(); 
-    
-    // ═══════════════════════════════════════════════════════
-    // HITBOX MANAGEMENT
-    // ═══════════════════════════════════════════════════════
+	QAction *showBoneAxes = displayModeMenu->addAction( "Show Bone Axes" );
+	showBoneAxes->setCheckable( true );
+	// Shows X, Y, Z axes at each bone
 
-    QMenu *hitboxMenu = bonesMenu->addMenu("Hitboxes");
+	QAction *showBoneOrigins = displayModeMenu->addAction( "Show Bone Origins" );
+	showBoneOrigins->setCheckable( true );
+	// Shows pivot point of each bone
 
-    QAction *showHitboxes = hitboxMenu->addAction("Show Hitboxes");
-    showHitboxes->setCheckable(true);
+	displayModeMenu->addSeparator();
+	displayModeMenu->addAction( "Bone Size..." ); // Opens slider/input dialog
 
-    QAction *showHitboxNames = hitboxMenu->addAction("Show Hitbox Names");
-    showHitboxNames->setCheckable(true);
+	bonesMenu->addSeparator();
 
-    hitboxMenu->addSeparator();
+	// ═══════════════════════════════════════════════════════
+	// HITBOX MANAGEMENT
+	// ═══════════════════════════════════════════════════════
 
-    // Hitbox sets (for different damage groups - head, chest, legs)
-    QMenu *hitboxSetMenu = hitboxMenu->addMenu("Select Hitbox Set");
-    QActionGroup *hitboxSetGroup = new QActionGroup(this);
+	QMenu *hitboxMenu = bonesMenu->addMenu( "Hitboxes" );
 
-    QAction *hitboxDefault = hitboxSetMenu->addAction("Default (Set 0)");
-    hitboxDefault->setCheckable(true);
-    hitboxDefault->setChecked(true);
-    hitboxSetGroup->addAction(hitboxDefault);
+	QAction *showHitboxes = hitboxMenu->addAction( "Show Hitboxes" );
+	showHitboxes->setCheckable( true );
 
-    QAction *hitboxCustom1 = hitboxSetMenu->addAction("Custom Set 1");
-    hitboxCustom1->setCheckable(true);
-    hitboxSetGroup->addAction(hitboxCustom1);
+	QAction *showHitboxNames = hitboxMenu->addAction( "Show Hitbox Names" );
+	showHitboxNames->setCheckable( true );
 
-    QAction *hitboxCustom2 = hitboxSetMenu->addAction("Custom Set 2");
-    hitboxCustom2->setCheckable(true);
-    hitboxSetGroup->addAction(hitboxCustom2);
+	hitboxMenu->addSeparator();
 
-    hitboxMenu->addSeparator();
-    hitboxMenu->addAction("Edit Hitbox...");          // Opens hitbox editor dialog
-    hitboxMenu->addAction("Add New Hitbox...");
-    hitboxMenu->addAction("Delete Selected Hitbox");
-    hitboxMenu->addSeparator();
-    hitboxMenu->addAction("Import Hitboxes from QC...");
-    hitboxMenu->addAction("Export Hitboxes to QC...");
+	// Hitbox sets (for different damage groups - head, chest, legs)
+	QMenu *hitboxSetMenu = hitboxMenu->addMenu( "Select Hitbox Set" );
+	QActionGroup *hitboxSetGroup = new QActionGroup( this );
 
-    bonesMenu->addSeparator();
-    
-    // ═══════════════════════════════════════════════════════
-    // BONE CONTROLLERS (For facial animations, mouth movement, etc.)
-    // ═══════════════════════════════════════════════════════
+	QAction *hitboxDefault = hitboxSetMenu->addAction( "Default (Set 0)" );
+	hitboxDefault->setCheckable( true );
+	hitboxDefault->setChecked( true );
+	hitboxSetGroup->addAction( hitboxDefault );
 
-    QMenu *controllersMenu = bonesMenu->addMenu("Bone Controllers");
+	QAction *hitboxCustom1 = hitboxSetMenu->addAction( "Custom Set 1" );
+	hitboxCustom1->setCheckable( true );
+	hitboxSetGroup->addAction( hitboxCustom1 );
 
-    QAction *showControllers = controllersMenu->addAction("Show Controllers");
-    showControllers->setCheckable(true);
+	QAction *hitboxCustom2 = hitboxSetMenu->addAction( "Custom Set 2" );
+	hitboxCustom2->setCheckable( true );
+	hitboxSetGroup->addAction( hitboxCustom2 );
 
-    controllersMenu->addSeparator();
+	hitboxMenu->addSeparator();
+	hitboxMenu->addAction( "Edit Hitbox..." ); // Opens hitbox editor dialog
+	hitboxMenu->addAction( "Add New Hitbox..." );
+	hitboxMenu->addAction( "Delete Selected Hitbox" );
+	hitboxMenu->addSeparator();
+	hitboxMenu->addAction( "Import Hitboxes from QC..." );
+	hitboxMenu->addAction( "Export Hitboxes to QC..." );
 
-    QMenu *selectControllerMenu = controllersMenu->addMenu("Select Controller");
-    selectControllerMenu->addAction("Mouth (Controller 0)");
-    selectControllerMenu->addAction("Eyes Vertical (Controller 1)");
-    selectControllerMenu->addAction("Eyes Horizontal (Controller 2)");
-    selectControllerMenu->addAction("Body Turn (Controller 3)");
+	bonesMenu->addSeparator();
 
-    controllersMenu->addSeparator();
-    controllersMenu->addAction("Reset Controller Values");
-    controllersMenu->addAction("Edit Controller Range...");
+	// ═══════════════════════════════════════════════════════
+	// BONE CONTROLLERS (For facial animations, mouth movement, etc.)
+	// ═══════════════════════════════════════════════════════
 
-    bonesMenu->addSeparator(); 
-    
-    // ═══════════════════════════════════════════════════════
-    // CONSTRAINTS & IK (Inverse Kinematics)
-    // ═══════════════════════════════════════════════════════
+	QMenu *controllersMenu = bonesMenu->addMenu( "Bone Controllers" );
 
-    QMenu *constraintsMenu = bonesMenu->addMenu("Constraints & IK");
+	QAction *showControllers = controllersMenu->addAction( "Show Controllers" );
+	showControllers->setCheckable( true );
 
-    QAction *showIKChains = constraintsMenu->addAction("Show IK Chains");
-    showIKChains->setCheckable(true);
+	controllersMenu->addSeparator();
 
-    QAction *showConstraints = constraintsMenu->addAction("Show Constraints");
-    showConstraints->setCheckable(true);
+	QMenu *selectControllerMenu = controllersMenu->addMenu( "Select Controller" );
+	selectControllerMenu->addAction( "Mouth (Controller 0)" );
+	selectControllerMenu->addAction( "Eyes Vertical (Controller 1)" );
+	selectControllerMenu->addAction( "Eyes Horizontal (Controller 2)" );
+	selectControllerMenu->addAction( "Body Turn (Controller 3)" );
 
-    constraintsMenu->addSeparator();
-    constraintsMenu->addAction("Add IK Chain...");
-    constraintsMenu->addAction("Add Constraint...");
-    constraintsMenu->addAction("Edit Selected IK/Constraint...");
-    constraintsMenu->addAction("Remove Selected");
+	controllersMenu->addSeparator();
+	controllersMenu->addAction( "Reset Controller Values" );
+	controllersMenu->addAction( "Edit Controller Range..." );
 
-    bonesMenu->addSeparator(); 
-    
-    // ═══════════════════════════════════════════════════════
-    // BONE INFORMATION & TOOLS
-    // ═══════════════════════════════════════════════════════
+	bonesMenu->addSeparator();
 
-    bonesMenu->addAction("List All Bones...");        // Opens dialog with full bone list
-    bonesMenu->addAction("Show Bone Properties...");  // Shows selected bone data
-    bonesMenu->addAction("Show Bone Hierarchy...");   // Tree view diagram
+	// ═══════════════════════════════════════════════════════
+	// CONSTRAINTS & IK (Inverse Kinematics)
+	// ═══════════════════════════════════════════════════════
 
-    bonesMenu->addSeparator();
+	QMenu *constraintsMenu = bonesMenu->addMenu( "Constraints & IK" );
 
-    // ═══════════════════════════════════════════════════════
-    // EXPORT BONES
-    // ═══════════════════════════════════════════════════════
+	QAction *showIKChains = constraintsMenu->addAction( "Show IK Chains" );
+	showIKChains->setCheckable( true );
 
-    QMenu *exportBonesMenu = bonesMenu->addMenu("Export");
-    exportBonesMenu->addAction("Export Skeleton to SMD...");
-    exportBonesMenu->addAction("Export Bone Weights...");
-    exportBonesMenu->addAction("Export Hitboxes to QC..."); 
+	QAction *showConstraints = constraintsMenu->addAction( "Show Constraints" );
+	showConstraints->setCheckable( true );
+
+	constraintsMenu->addSeparator();
+	constraintsMenu->addAction( "Add IK Chain..." );
+	constraintsMenu->addAction( "Add Constraint..." );
+	constraintsMenu->addAction( "Edit Selected IK/Constraint..." );
+	constraintsMenu->addAction( "Remove Selected" );
+
+	bonesMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// BONE INFORMATION & TOOLS
+	// ═══════════════════════════════════════════════════════
+
+	bonesMenu->addAction( "List All Bones..." ); // Opens dialog with full bone list
+	bonesMenu->addAction( "Show Bone Properties..." ); // Shows selected bone data
+	bonesMenu->addAction( "Show Bone Hierarchy..." ); // Tree view diagram
+
+	bonesMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// EXPORT BONES
+	// ═══════════════════════════════════════════════════════
+
+	QMenu *exportBonesMenu = bonesMenu->addMenu( "Export" );
+	exportBonesMenu->addAction( "Export Skeleton to SMD..." );
+	exportBonesMenu->addAction( "Export Bone Weights..." );
+	exportBonesMenu->addAction( "Export Hitboxes to QC..." );
 }
 
-
 void MainWindow::createSequencesMenu() {
-    QMenu *sequencesMenu = menuBar()->addMenu(tr("&Sequences"));
+	QMenu *sequencesMenu = menuBar()->addMenu( tr( "&Sequences" ) );
 
-    // ═══════════════════════════════════════════════════════
-    // SELECT SEQUENCE (Populated from model)
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// SELECT SEQUENCE (Populated from model)
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *selectSeqMenu = sequencesMenu->addMenu("Select Sequence");
-    // NOTE: Will be populated from loaded model's sequences
-    selectSeqMenu->addAction("idle");
-    selectSeqMenu->addAction("walk");
-    selectSeqMenu->addAction("run");
-    selectSeqMenu->addAction("jump");
-    selectSeqMenu->addAction("crouch_idle");
-    selectSeqMenu->addAction("crouch_walk");
-    selectSeqMenu->addAction("die1");
-    selectSeqMenu->addAction("die2");
-    selectSeqMenu->addSeparator();
-    selectSeqMenu->addAction("Refresh List");
-    selectSeqMenu->addAction("Search Sequences...");
+	QMenu *selectSeqMenu = sequencesMenu->addMenu( "Select Sequence" );
+	// NOTE: Will be populated from loaded model's sequences
+	selectSeqMenu->addAction( "idle" );
+	selectSeqMenu->addAction( "walk" );
+	selectSeqMenu->addAction( "run" );
+	selectSeqMenu->addAction( "jump" );
+	selectSeqMenu->addAction( "crouch_idle" );
+	selectSeqMenu->addAction( "crouch_walk" );
+	selectSeqMenu->addAction( "die1" );
+	selectSeqMenu->addAction( "die2" );
+	selectSeqMenu->addSeparator();
+	selectSeqMenu->addAction( "Refresh List" );
+	selectSeqMenu->addAction( "Search Sequences..." );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // PLAYBACK CONTROLS
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// PLAYBACK CONTROLS
+	// ═══════════════════════════════════════════════════════
 
-    sequencesMenu->addAction("Play");
-    sequencesMenu->addAction("Pause");
-    sequencesMenu->addAction("Stop");
-    sequencesMenu->addAction("Restart");
+	sequencesMenu->addAction( "Play" );
+	sequencesMenu->addAction( "Pause" );
+	sequencesMenu->addAction( "Stop" );
+	sequencesMenu->addAction( "Restart" );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // FRAME NAVIGATION
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// FRAME NAVIGATION
+	// ═══════════════════════════════════════════════════════
 
-    sequencesMenu->addAction("Next Frame");
-    sequencesMenu->addAction("Previous Frame");
-    sequencesMenu->addAction("Jump to Frame...");     // Input dialog
-    sequencesMenu->addAction("Jump to Start");
-    sequencesMenu->addAction("Jump to End");
+	sequencesMenu->addAction( "Next Frame" );
+	sequencesMenu->addAction( "Previous Frame" );
+	sequencesMenu->addAction( "Jump to Frame..." ); // Input dialog
+	sequencesMenu->addAction( "Jump to Start" );
+	sequencesMenu->addAction( "Jump to End" );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // PLAYBACK OPTIONS
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// PLAYBACK OPTIONS
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *playbackMenu = sequencesMenu->addMenu("Playback Options");
+	QMenu *playbackMenu = sequencesMenu->addMenu( "Playback Options" );
 
-    QAction *loopAnim = playbackMenu->addAction("Loop");
-    loopAnim->setCheckable(true);
-    loopAnim->setChecked(true);  // Usually want looping
+	QAction *loopAnim = playbackMenu->addAction( "Loop" );
+	loopAnim->setCheckable( true );
+	loopAnim->setChecked( true ); // Usually want looping
 
-    QAction *reverseAnim = playbackMenu->addAction("Reverse");
-    reverseAnim->setCheckable(true);
+	QAction *reverseAnim = playbackMenu->addAction( "Reverse" );
+	reverseAnim->setCheckable( true );
 
-    QAction *pingPong = playbackMenu->addAction("Ping-Pong");
-    pingPong->setCheckable(true);
-    // Plays forward, then backward, then repeats
+	QAction *pingPong = playbackMenu->addAction( "Ping-Pong" );
+	pingPong->setCheckable( true );
+	// Plays forward, then backward, then repeats
 
-    playbackMenu->addSeparator();
+	playbackMenu->addSeparator();
 
-    QMenu *speedMenu = playbackMenu->addMenu("Playback Speed");
-    QActionGroup *speedGroup = new QActionGroup(this);
+	QMenu *speedMenu = playbackMenu->addMenu( "Playback Speed" );
+	QActionGroup *speedGroup = new QActionGroup( this );
 
-    QAction *speed025 = speedMenu->addAction("0.25x");
-    speed025->setCheckable(true);
-    speedGroup->addAction(speed025);
+	QAction *speed025 = speedMenu->addAction( "0.25x" );
+	speed025->setCheckable( true );
+	speedGroup->addAction( speed025 );
 
-    QAction *speed050 = speedMenu->addAction("0.5x");
-    speed050->setCheckable(true);
-    speedGroup->addAction(speed050);
+	QAction *speed050 = speedMenu->addAction( "0.5x" );
+	speed050->setCheckable( true );
+	speedGroup->addAction( speed050 );
 
-    QAction *speed100 = speedMenu->addAction("1.0x (Normal)");
-    speed100->setCheckable(true);
-    speed100->setChecked(true);
-    speedGroup->addAction(speed100);
+	QAction *speed100 = speedMenu->addAction( "1.0x (Normal)" );
+	speed100->setCheckable( true );
+	speed100->setChecked( true );
+	speedGroup->addAction( speed100 );
 
-    QAction *speed150 = speedMenu->addAction("1.5x");
-    speed150->setCheckable(true);
-    speedGroup->addAction(speed150);
+	QAction *speed150 = speedMenu->addAction( "1.5x" );
+	speed150->setCheckable( true );
+	speedGroup->addAction( speed150 );
 
-    QAction *speed200 = speedMenu->addAction("2.0x");
-    speed200->setCheckable(true);
-    speedGroup->addAction(speed200);
+	QAction *speed200 = speedMenu->addAction( "2.0x" );
+	speed200->setCheckable( true );
+	speedGroup->addAction( speed200 );
 
-    speedMenu->addSeparator();
-    speedMenu->addAction("Custom Speed...");
+	speedMenu->addSeparator();
+	speedMenu->addAction( "Custom Speed..." );
 
-    playbackMenu->addSeparator();
-    playbackMenu->addAction("Override Frame Rate...");  // Manually set FPS
+	playbackMenu->addSeparator();
+	playbackMenu->addAction( "Override Frame Rate..." ); // Manually set FPS
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // SEQUENCE BLENDING (Mix two animations)
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// SEQUENCE BLENDING (Mix two animations)
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *blendMenu = sequencesMenu->addMenu("Sequence Blending");
+	QMenu *blendMenu = sequencesMenu->addMenu( "Sequence Blending" );
 
-    QAction *enableBlend = blendMenu->addAction("Enable Blending");
-    enableBlend->setCheckable(true);
+	QAction *enableBlend = blendMenu->addAction( "Enable Blending" );
+	enableBlend->setCheckable( true );
 
-    blendMenu->addSeparator();
+	blendMenu->addSeparator();
 
-    QMenu *blendSeqMenu = blendMenu->addMenu("Select Blend Sequence");
-    blendSeqMenu->addAction("idle");
-    blendSeqMenu->addAction("walk");
-    blendSeqMenu->addAction("run");
-    // NOTE: Same list as main sequences
+	QMenu *blendSeqMenu = blendMenu->addMenu( "Select Blend Sequence" );
+	blendSeqMenu->addAction( "idle" );
+	blendSeqMenu->addAction( "walk" );
+	blendSeqMenu->addAction( "run" );
+	// NOTE: Same list as main sequences
 
-    blendMenu->addSeparator();
+	blendMenu->addSeparator();
 
-    QMenu *blendFactorMenu = blendMenu->addMenu("Blend Factor");
-    QActionGroup *blendFactorGroup = new QActionGroup(this);
+	QMenu *blendFactorMenu = blendMenu->addMenu( "Blend Factor" );
+	QActionGroup *blendFactorGroup = new QActionGroup( this );
 
-    QStringList blendValues = {"0%", "25%", "50%", "75%", "100%"};
-    for (const QString &val : blendValues) {
-    QAction *blendAction = blendFactorMenu->addAction(val);
-    blendAction->setCheckable(true);
-    if (val == "50%") {
-    blendAction->setChecked(true);
-    }
-    blendFactorGroup->addAction(blendAction);
-    }
-    blendFactorMenu->addSeparator();
-    blendFactorMenu->addAction("Custom...");
+	QStringList blendValues = { "0%", "25%", "50%", "75%", "100%" };
+	for ( const QString &val : blendValues ) {
+		QAction *blendAction = blendFactorMenu->addAction( val );
+		blendAction->setCheckable( true );
+		if ( val == "50%" ) {
+			blendAction->setChecked( true );
+		}
+		blendFactorGroup->addAction( blendAction );
+	}
+	blendFactorMenu->addSeparator();
+	blendFactorMenu->addAction( "Custom..." );
 
-    blendMenu->addSeparator();
+	blendMenu->addSeparator();
 
-    QMenu *blendTypeMenu = blendMenu->addMenu("Blend Type");
-    QActionGroup *blendTypeGroup = new QActionGroup(this);
+	QMenu *blendTypeMenu = blendMenu->addMenu( "Blend Type" );
+	QActionGroup *blendTypeGroup = new QActionGroup( this );
 
-    QAction *blendLinear = blendTypeMenu->addAction("Linear");
-    blendLinear->setCheckable(true);
-    blendLinear->setChecked(true);
-    blendTypeGroup->addAction(blendLinear);
+	QAction *blendLinear = blendTypeMenu->addAction( "Linear" );
+	blendLinear->setCheckable( true );
+	blendLinear->setChecked( true );
+	blendTypeGroup->addAction( blendLinear );
 
-    QAction *blendEaseIn = blendTypeMenu->addAction("Ease In");
-    blendEaseIn->setCheckable(true);
-    blendTypeGroup->addAction(blendEaseIn);
+	QAction *blendEaseIn = blendTypeMenu->addAction( "Ease In" );
+	blendEaseIn->setCheckable( true );
+	blendTypeGroup->addAction( blendEaseIn );
 
-    QAction *blendEaseOut = blendTypeMenu->addAction("Ease Out");
-    blendEaseOut->setCheckable(true);
-    blendTypeGroup->addAction(blendEaseOut);
+	QAction *blendEaseOut = blendTypeMenu->addAction( "Ease Out" );
+	blendEaseOut->setCheckable( true );
+	blendTypeGroup->addAction( blendEaseOut );
 
-    QAction *blendCustom = blendTypeMenu->addAction("Custom Curve...");
-    blendCustom->setCheckable(true);
-    blendTypeGroup->addAction(blendCustom);
+	QAction *blendCustom = blendTypeMenu->addAction( "Custom Curve..." );
+	blendCustom->setCheckable( true );
+	blendTypeGroup->addAction( blendCustom );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // SEQUENCE INFORMATION
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// SEQUENCE INFORMATION
+	// ═══════════════════════════════════════════════════════
 
-    QAction *showSeqInfo = sequencesMenu->addAction("Show Sequence Info");
-    showSeqInfo->setCheckable(true);
-    // Displays: frame count, FPS, duration, blend count
+	QAction *showSeqInfo = sequencesMenu->addAction( "Show Sequence Info" );
+	showSeqInfo->setCheckable( true );
+	// Displays: frame count, FPS, duration, blend count
 
-    sequencesMenu->addAction("List All Sequences...");
-    sequencesMenu->addAction("Sequence Properties...");
+	sequencesMenu->addAction( "List All Sequences..." );
+	sequencesMenu->addAction( "Sequence Properties..." );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // SEQUENCE EVENTS (Sound effects, particle effects, etc.)
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// SEQUENCE EVENTS (Sound effects, particle effects, etc.)
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *eventsMenu = sequencesMenu->addMenu("Sequence Events");
+	QMenu *eventsMenu = sequencesMenu->addMenu( "Sequence Events" );
 
-    QAction *showEvents = eventsMenu->addAction("Show Events");
-    showEvents->setCheckable(true);
-    // Highlights event markers on timeline
+	QAction *showEvents = eventsMenu->addAction( "Show Events" );
+	showEvents->setCheckable( true );
+	// Highlights event markers on timeline
 
-    eventsMenu->addSeparator();
-    eventsMenu->addAction("Edit Events...");       // Opens event editor
-    eventsMenu->addAction("Add Event...");
-    eventsMenu->addAction("Delete Selected Event");
-    eventsMenu->addSeparator();
-    eventsMenu->addAction("Import Events from QC...");
-    eventsMenu->addAction("Export Events to QC...");
+	eventsMenu->addSeparator();
+	eventsMenu->addAction( "Edit Events..." ); // Opens event editor
+	eventsMenu->addAction( "Add Event..." );
+	eventsMenu->addAction( "Delete Selected Event" );
+	eventsMenu->addSeparator();
+	eventsMenu->addAction( "Import Events from QC..." );
+	eventsMenu->addAction( "Export Events to QC..." );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // POSE EDITING
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// POSE EDITING
+	// ═══════════════════════════════════════════════════════
 
-    sequencesMenu->addAction("Reset Pose");              // T-pose
-    sequencesMenu->addAction("Apply Current Frame Pose");
-    sequencesMenu->addAction("Edit Bone Orientation...");
+	sequencesMenu->addAction( "Reset Pose" ); // T-pose
+	sequencesMenu->addAction( "Apply Current Frame Pose" );
+	sequencesMenu->addAction( "Edit Bone Orientation..." );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // SEQUENCE FILTERING
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// SEQUENCE FILTERING
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *filterMenu = sequencesMenu->addMenu("Filter Sequences");
+	QMenu *filterMenu = sequencesMenu->addMenu( "Filter Sequences" );
 
-    QAction *sortAlpha = filterMenu->addAction("Sort Alphabetically");
-    sortAlpha->setCheckable(true);
+	QAction *sortAlpha = filterMenu->addAction( "Sort Alphabetically" );
+	sortAlpha->setCheckable( true );
 
-    filterMenu->addSeparator();
+	filterMenu->addSeparator();
 
-    QMenu *filterTypeMenu = filterMenu->addMenu("Filter by Type");
-    QAction *filterAll = filterTypeMenu->addAction("All Sequences");
-    filterAll->setCheckable(true);
-    filterAll->setChecked(true);
+	QMenu *filterTypeMenu = filterMenu->addMenu( "Filter by Type" );
+	QAction *filterAll = filterTypeMenu->addAction( "All Sequences" );
+	filterAll->setCheckable( true );
+	filterAll->setChecked( true );
 
-    QAction *filterIdle = filterTypeMenu->addAction("Idle Animations");
-    filterIdle->setCheckable(true);
+	QAction *filterIdle = filterTypeMenu->addAction( "Idle Animations" );
+	filterIdle->setCheckable( true );
 
-    QAction *filterMove = filterTypeMenu->addAction("Movement");
-    filterMove->setCheckable(true);
+	QAction *filterMove = filterTypeMenu->addAction( "Movement" );
+	filterMove->setCheckable( true );
 
-    QAction *filterAttack = filterTypeMenu->addAction("Attack/Action");
-    filterAttack->setCheckable(true);
+	QAction *filterAttack = filterTypeMenu->addAction( "Attack/Action" );
+	filterAttack->setCheckable( true );
 
-    QAction *filterCustom = filterTypeMenu->addAction("Custom Filter...");
-    filterCustom->setCheckable(true);
+	QAction *filterCustom = filterTypeMenu->addAction( "Custom Filter..." );
+	filterCustom->setCheckable( true );
 
-    sequencesMenu->addSeparator();
+	sequencesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // IMPORT/EXPORT
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// IMPORT/EXPORT
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *importSeqMenu = sequencesMenu->addMenu("Import Sequence");
-    importSeqMenu->addAction("Import from SMD...");
-    importSeqMenu->addAction("Import from FBX...");
-    importSeqMenu->addAction("Import from BVH...");
+	QMenu *importSeqMenu = sequencesMenu->addMenu( "Import Sequence" );
+	importSeqMenu->addAction( "Import from SMD..." );
+	importSeqMenu->addAction( "Import from FBX..." );
+	importSeqMenu->addAction( "Import from BVH..." );
 
-    QMenu *exportSeqMenu = sequencesMenu->addMenu("Export Sequence");
-    exportSeqMenu->addAction("Export Selected to SMD...");
-    exportSeqMenu->addAction("Export Selected to FBX...");
-    exportSeqMenu->addAction("Export All Sequences...");
+	QMenu *exportSeqMenu = sequencesMenu->addMenu( "Export Sequence" );
+	exportSeqMenu->addAction( "Export Selected to SMD..." );
+	exportSeqMenu->addAction( "Export Selected to FBX..." );
+	exportSeqMenu->addAction( "Export All Sequences..." );
 }
 
 void MainWindow::createTexturesMenu() {
-    QMenu *texturesMenu = menuBar()->addMenu(tr("&Textures"));
+	QMenu *texturesMenu = menuBar()->addMenu( tr( "&Textures" ) );
 
-    // ═══════════════════════════════════════════════════════
-    // SELECT TEXTURE
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// SELECT TEXTURE
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *selectTexMenu = texturesMenu->addMenu("Select Texture");
-    // NOTE: Will be populated from model's textures
-    selectTexMenu->addAction("body.bmp (512x512)");
-    selectTexMenu->addAction("head.bmp (256x256)");
-    selectTexMenu->addAction("weapon.bmp (128x128)");
-    selectTexMenu->addAction("eyes.bmp (64x64)");
-    selectTexMenu->addSeparator();
-    selectTexMenu->addAction("Refresh List");
+	QMenu *selectTexMenu = texturesMenu->addMenu( "Select Texture" );
+	// NOTE: Will be populated from model's textures
+	selectTexMenu->addAction( "body.bmp (512x512)" );
+	selectTexMenu->addAction( "head.bmp (256x256)" );
+	selectTexMenu->addAction( "weapon.bmp (128x128)" );
+	selectTexMenu->addAction( "eyes.bmp (64x64)" );
+	selectTexMenu->addSeparator();
+	selectTexMenu->addAction( "Refresh List" );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // TEXTURE DISPLAY
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// TEXTURE DISPLAY
+	// ═══════════════════════════════════════════════════════
 
-    QAction *showTexture = texturesMenu->addAction("Show Texture");
-    showTexture->setCheckable(true);
-    showTexture->setChecked(true);
+	QAction *showTexture = texturesMenu->addAction( "Show Texture" );
+	showTexture->setCheckable( true );
+	showTexture->setChecked( true );
 
-    QAction *showUVMap = texturesMenu->addAction("Show UV Map");
-    showUVMap->setCheckable(true);
-    // Overlays UV layout on model
+	QAction *showUVMap = texturesMenu->addAction( "Show UV Map" );
+	showUVMap->setCheckable( true );
+	// Overlays UV layout on model
 
-    QAction *showUVSeams = texturesMenu->addAction("Show UV Seams");
-    showUVSeams->setCheckable(true);
-    // Highlights where UV islands are cut
+	QAction *showUVSeams = texturesMenu->addAction( "Show UV Seams" );
+	showUVSeams->setCheckable( true );
+	// Highlights where UV islands are cut
 
-    QAction *showUVChecker = texturesMenu->addAction("Show UV Checker");
-    showUVChecker->setCheckable(true);
-    // Checkerboard pattern to check UV distortion
+	QAction *showUVChecker = texturesMenu->addAction( "Show UV Checker" );
+	showUVChecker->setCheckable( true );
+	// Checkerboard pattern to check UV distortion
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // TEXTURE PROPERTIES (Half-Life specific flags)
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// TEXTURE PROPERTIES (Half-Life specific flags)
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *propertiesMenu = texturesMenu->addMenu("Texture Properties");
+	QMenu *propertiesMenu = texturesMenu->addMenu( "Texture Properties" );
 
-    // Half-Life texture flags
-    QAction *flagChrome = propertiesMenu->addAction("Chrome/Reflective");
-    flagChrome->setCheckable(true);
+	// Half-Life texture flags
+	QAction *flagChrome = propertiesMenu->addAction( "Chrome/Reflective" );
+	flagChrome->setCheckable( true );
 
-    QAction *flagAdditive = propertiesMenu->addAction("Additive Blending");
-    flagAdditive->setCheckable(true);
+	QAction *flagAdditive = propertiesMenu->addAction( "Additive Blending" );
+	flagAdditive->setCheckable( true );
 
-    QAction *flagTransparent = propertiesMenu->addAction("Transparent");
-    flagTransparent->setCheckable(true);
+	QAction *flagTransparent = propertiesMenu->addAction( "Transparent" );
+	flagTransparent->setCheckable( true );
 
-    QAction *flagFlat = propertiesMenu->addAction("Flat Shade");
-    flagFlat->setCheckable(true);
+	QAction *flagFlat = propertiesMenu->addAction( "Flat Shade" );
+	flagFlat->setCheckable( true );
 
-    QAction *flagFullbright = propertiesMenu->addAction("Fullbright");
-    flagFullbright->setCheckable(true);
+	QAction *flagFullbright = propertiesMenu->addAction( "Fullbright" );
+	flagFullbright->setCheckable( true );
 
-    propertiesMenu->addSeparator();
-    propertiesMenu->addAction("Edit All Flags...");
+	propertiesMenu->addSeparator();
+	propertiesMenu->addAction( "Edit All Flags..." );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // TEXTURE FORMAT
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// TEXTURE FORMAT
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *formatMenu = texturesMenu->addMenu("Texture Format");
-    QActionGroup *formatGroup = new QActionGroup(this);
+	QMenu *formatMenu = texturesMenu->addMenu( "Texture Format" );
+	QActionGroup *formatGroup = new QActionGroup( this );
 
-    QAction *formatBMP = formatMenu->addAction("BMP (8-bit indexed)");
-    formatBMP->setCheckable(true);
-    formatBMP->setChecked(true);  // Half-Life default
-    formatGroup->addAction(formatBMP);
+	QAction *formatBMP = formatMenu->addAction( "BMP (8-bit indexed)" );
+	formatBMP->setCheckable( true );
+	formatBMP->setChecked( true ); // Half-Life default
+	formatGroup->addAction( formatBMP );
 
-    QAction *formatTGA = formatMenu->addAction("TGA");
-    formatTGA->setCheckable(true);
-    formatGroup->addAction(formatTGA);
+	QAction *formatTGA = formatMenu->addAction( "TGA" );
+	formatTGA->setCheckable( true );
+	formatGroup->addAction( formatTGA );
 
-    QAction *formatPNG = formatMenu->addAction("PNG");
-    formatPNG->setCheckable(true);
-    formatGroup->addAction(formatPNG);
+	QAction *formatPNG = formatMenu->addAction( "PNG" );
+	formatPNG->setCheckable( true );
+	formatGroup->addAction( formatPNG );
 
-    QAction *formatDDS = formatMenu->addAction("DDS (Compressed)");
-    formatDDS->setCheckable(true);
-    formatGroup->addAction(formatDDS);
+	QAction *formatDDS = formatMenu->addAction( "DDS (Compressed)" );
+	formatDDS->setCheckable( true );
+	formatGroup->addAction( formatDDS );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // MATERIAL/SHADER OPTIONS (For advanced rendering)
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// MATERIAL/SHADER OPTIONS (For advanced rendering)
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *materialMenu = texturesMenu->addMenu("Material/Shader");
+	QMenu *materialMenu = texturesMenu->addMenu( "Material/Shader" );
 
-    QMenu *shaderTypeMenu = materialMenu->addMenu("Shader Type");
-    QActionGroup *shaderGroup = new QActionGroup(this);
+	QMenu *shaderTypeMenu = materialMenu->addMenu( "Shader Type" );
+	QActionGroup *shaderGroup = new QActionGroup( this );
 
-    QAction *shaderStandard = shaderTypeMenu->addAction("Standard");
-    shaderStandard->setCheckable(true);
-    shaderStandard->setChecked(true);
-    shaderGroup->addAction(shaderStandard);
+	QAction *shaderStandard = shaderTypeMenu->addAction( "Standard" );
+	shaderStandard->setCheckable( true );
+	shaderStandard->setChecked( true );
+	shaderGroup->addAction( shaderStandard );
 
-    QAction *shaderMetallic = shaderTypeMenu->addAction("Metallic");
-    shaderMetallic->setCheckable(true);
-    shaderGroup->addAction(shaderMetallic);
+	QAction *shaderMetallic = shaderTypeMenu->addAction( "Metallic" );
+	shaderMetallic->setCheckable( true );
+	shaderGroup->addAction( shaderMetallic );
 
-    QAction *shaderGlass = shaderTypeMenu->addAction("Glass/Transparent");
-    shaderGlass->setCheckable(true);
-    shaderGroup->addAction(shaderGlass);
+	QAction *shaderGlass = shaderTypeMenu->addAction( "Glass/Transparent" );
+	shaderGlass->setCheckable( true );
+	shaderGroup->addAction( shaderGlass );
 
-    QAction *shaderGlow = shaderTypeMenu->addAction("Glow/Emissive");
-    shaderGlow->setCheckable(true);
-    shaderGroup->addAction(shaderGlow);
+	QAction *shaderGlow = shaderTypeMenu->addAction( "Glow/Emissive" );
+	shaderGlow->setCheckable( true );
+	shaderGroup->addAction( shaderGlow );
 
-    QAction *shaderCustom = shaderTypeMenu->addAction("Custom Shader...");
-    shaderCustom->setCheckable(true);
-    shaderGroup->addAction(shaderCustom);
+	QAction *shaderCustom = shaderTypeMenu->addAction( "Custom Shader..." );
+	shaderCustom->setCheckable( true );
+	shaderGroup->addAction( shaderCustom );
 
-    materialMenu->addSeparator();
+	materialMenu->addSeparator();
 
-    QAction *showMaterialProps = materialMenu->addAction("Show Material Properties");
-    showMaterialProps->setCheckable(true);
+	QAction *showMaterialProps = materialMenu->addAction( "Show Material Properties" );
+	showMaterialProps->setCheckable( true );
 
-    materialMenu->addAction("Edit Material...");
+	materialMenu->addAction( "Edit Material..." );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // TEXTURE EDITING
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// TEXTURE EDITING
+	// ═══════════════════════════════════════════════════════
 
-    texturesMenu->addAction("Import Texture...");
-    texturesMenu->addAction("Export Texture...");
-    texturesMenu->addAction("Replace Texture...");
-    texturesMenu->addAction("Edit in External Program...");
+	texturesMenu->addAction( "Import Texture..." );
+	texturesMenu->addAction( "Export Texture..." );
+	texturesMenu->addAction( "Replace Texture..." );
+	texturesMenu->addAction( "Edit in External Program..." );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // UV MAPPING
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// UV MAPPING
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *uvMenu = texturesMenu->addMenu("UV Mapping");
+	QMenu *uvMenu = texturesMenu->addMenu( "UV Mapping" );
 
-    QAction *showUVEditor = uvMenu->addAction("Show UV Editor");
-    showUVEditor->setCheckable(true);
+	QAction *showUVEditor = uvMenu->addAction( "Show UV Editor" );
+	showUVEditor->setCheckable( true );
 
-    uvMenu->addSeparator();
-    uvMenu->addAction("View UV Layout...");
-    uvMenu->addAction("Edit UV Coordinates...");
+	uvMenu->addSeparator();
+	uvMenu->addAction( "View UV Layout..." );
+	uvMenu->addAction( "Edit UV Coordinates..." );
 
-    uvMenu->addSeparator();
+	uvMenu->addSeparator();
 
-    QMenu *uvTransformMenu = uvMenu->addMenu("UV Transform");
-    uvTransformMenu->addAction("Offset U/V...");
-    uvTransformMenu->addAction("Scale U/V...");
-    uvTransformMenu->addAction("Rotate UV...");
-    uvTransformMenu->addSeparator();
-    uvTransformMenu->addAction("Reset UV Transform");
+	QMenu *uvTransformMenu = uvMenu->addMenu( "UV Transform" );
+	uvTransformMenu->addAction( "Offset U/V..." );
+	uvTransformMenu->addAction( "Scale U/V..." );
+	uvTransformMenu->addAction( "Rotate UV..." );
+	uvTransformMenu->addSeparator();
+	uvTransformMenu->addAction( "Reset UV Transform" );
 
-    uvMenu->addSeparator();
-    uvMenu->addAction("Optimize UVs");
-    uvMenu->addAction("Auto-Unwrap...");
-    uvMenu->addAction("Export UV Map Image...");
+	uvMenu->addSeparator();
+	uvMenu->addAction( "Optimize UVs" );
+	uvMenu->addAction( "Auto-Unwrap..." );
+	uvMenu->addAction( "Export UV Map Image..." );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // TEXTURE FILTERING
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// TEXTURE FILTERING
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *filterTexMenu = texturesMenu->addMenu("Filter Textures");
+	QMenu *filterTexMenu = texturesMenu->addMenu( "Filter Textures" );
 
-    QAction *sortTexAlpha = filterTexMenu->addAction("Sort Alphabetically");
-    sortTexAlpha->setCheckable(true);
+	QAction *sortTexAlpha = filterTexMenu->addAction( "Sort Alphabetically" );
+	sortTexAlpha->setCheckable( true );
 
-    filterTexMenu->addSeparator();
+	filterTexMenu->addSeparator();
 
-    QMenu *filterTexTypeMenu = filterTexMenu->addMenu("Filter by Type");
-    QAction *filterTexAll = filterTexTypeMenu->addAction("All Textures");
-    filterTexAll->setCheckable(true);
-    filterTexAll->setChecked(true);
+	QMenu *filterTexTypeMenu = filterTexMenu->addMenu( "Filter by Type" );
+	QAction *filterTexAll = filterTexTypeMenu->addAction( "All Textures" );
+	filterTexAll->setCheckable( true );
+	filterTexAll->setChecked( true );
 
-    QAction *filterDiffuse = filterTexTypeMenu->addAction("Diffuse Maps");
-    filterDiffuse->setCheckable(true);
+	QAction *filterDiffuse = filterTexTypeMenu->addAction( "Diffuse Maps" );
+	filterDiffuse->setCheckable( true );
 
-    QAction *filterNormal = filterTexTypeMenu->addAction("Normal Maps");
-    filterNormal->setCheckable(true);
+	QAction *filterNormal = filterTexTypeMenu->addAction( "Normal Maps" );
+	filterNormal->setCheckable( true );
 
-    QAction *filterSpecular = filterTexTypeMenu->addAction("Specular Maps");
-    filterSpecular->setCheckable(true);
+	QAction *filterSpecular = filterTexTypeMenu->addAction( "Specular Maps" );
+	filterSpecular->setCheckable( true );
 
-    QAction *filterGlow = filterTexTypeMenu->addAction("Glow Maps");
-    filterGlow->setCheckable(true);
+	QAction *filterGlow = filterTexTypeMenu->addAction( "Glow Maps" );
+	filterGlow->setCheckable( true );
 
-    filterTexMenu->addSeparator();
+	filterTexMenu->addSeparator();
 
-    QAction *showTexStats = filterTexMenu->addAction("Show Texture Statistics");
-    showTexStats->setCheckable(true);
-    // Shows total memory usage, texture count, etc.
+	QAction *showTexStats = filterTexMenu->addAction( "Show Texture Statistics" );
+	showTexStats->setCheckable( true );
+	// Shows total memory usage, texture count, etc.
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // MULTI-TEXTURE MANAGEMENT
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// MULTI-TEXTURE MANAGEMENT
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *multiTexMenu = texturesMenu->addMenu("Batch Operations");
+	QMenu *multiTexMenu = texturesMenu->addMenu( "Batch Operations" );
 
-    QMenu *importAllMenu = multiTexMenu->addMenu("Import All Textures");
-    importAllMenu->addAction("From Folder...");
-    importAllMenu->addAction("From Texture Pack...");
-    importAllMenu->addAction("Auto-Match to Slots");
+	QMenu *importAllMenu = multiTexMenu->addMenu( "Import All Textures" );
+	importAllMenu->addAction( "From Folder..." );
+	importAllMenu->addAction( "From Texture Pack..." );
+	importAllMenu->addAction( "Auto-Match to Slots" );
 
-    QMenu *exportAllMenu = multiTexMenu->addMenu("Export All Textures");
-    exportAllMenu->addAction("To Folder...");
-    exportAllMenu->addAction("To Texture Pack...");
-    exportAllMenu->addAction("Preserve Directory Structure");
+	QMenu *exportAllMenu = multiTexMenu->addMenu( "Export All Textures" );
+	exportAllMenu->addAction( "To Folder..." );
+	exportAllMenu->addAction( "To Texture Pack..." );
+	exportAllMenu->addAction( "Preserve Directory Structure" );
 
-    multiTexMenu->addSeparator();
-    multiTexMenu->addAction("Replace All Textures...");
-    multiTexMenu->addAction("Batch Resize...");
-    multiTexMenu->addAction("Batch Convert Format...");
+	multiTexMenu->addSeparator();
+	multiTexMenu->addAction( "Replace All Textures..." );
+	multiTexMenu->addAction( "Batch Resize..." );
+	multiTexMenu->addAction( "Batch Convert Format..." );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // TEXTURE PREVIEW
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// TEXTURE PREVIEW
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *previewMenu = texturesMenu->addMenu("Preview");
+	QMenu *previewMenu = texturesMenu->addMenu( "Preview" );
 
-    QMenu *previewSizeMenu = previewMenu->addMenu("Preview Size");
-    QActionGroup *previewSizeGroup = new QActionGroup(this);
+	QMenu *previewSizeMenu = previewMenu->addMenu( "Preview Size" );
+	QActionGroup *previewSizeGroup = new QActionGroup( this );
 
-    QAction *previewSmall = previewSizeMenu->addAction("Small (64x64)");
-    previewSmall->setCheckable(true);
-    previewSizeGroup->addAction(previewSmall);
+	QAction *previewSmall = previewSizeMenu->addAction( "Small (64x64)" );
+	previewSmall->setCheckable( true );
+	previewSizeGroup->addAction( previewSmall );
 
-    QAction *previewMedium = previewSizeMenu->addAction("Medium (256x256)");
-    previewMedium->setCheckable(true);
-    previewMedium->setChecked(true);
-    previewSizeGroup->addAction(previewMedium);
+	QAction *previewMedium = previewSizeMenu->addAction( "Medium (256x256)" );
+	previewMedium->setCheckable( true );
+	previewMedium->setChecked( true );
+	previewSizeGroup->addAction( previewMedium );
 
-    QAction *previewLarge = previewSizeMenu->addAction("Large (512x512)");
-    previewLarge->setCheckable(true);
-    previewSizeGroup->addAction(previewLarge);
+	QAction *previewLarge = previewSizeMenu->addAction( "Large (512x512)" );
+	previewLarge->setCheckable( true );
+	previewSizeGroup->addAction( previewLarge );
 
-    previewMenu->addSeparator();
+	previewMenu->addSeparator();
 
-    QMenu *previewModeMenu = previewMenu->addMenu("Preview Mode");
-    QActionGroup *previewModeGroup = new QActionGroup(this);
+	QMenu *previewModeMenu = previewMenu->addMenu( "Preview Mode" );
+	QActionGroup *previewModeGroup = new QActionGroup( this );
 
-    QAction *previewTexOnly = previewModeMenu->addAction("Texture Only");
-    previewTexOnly->setCheckable(true);
-    previewModeGroup->addAction(previewTexOnly);
+	QAction *previewTexOnly = previewModeMenu->addAction( "Texture Only" );
+	previewTexOnly->setCheckable( true );
+	previewModeGroup->addAction( previewTexOnly );
 
-    QAction *previewModel = previewModeMenu->addAction("Model with Texture");
-    previewModel->setCheckable(true);
-    previewModel->setChecked(true);
-    previewModeGroup->addAction(previewModel);
+	QAction *previewModel = previewModeMenu->addAction( "Model with Texture" );
+	previewModel->setCheckable( true );
+	previewModel->setChecked( true );
+	previewModeGroup->addAction( previewModel );
 
-    QAction *previewWireframe = previewModeMenu->addAction("Wireframe + Texture");
-    previewWireframe->setCheckable(true);
-    previewModeGroup->addAction(previewWireframe);
+	QAction *previewWireframe = previewModeMenu->addAction( "Wireframe + Texture" );
+	previewWireframe->setCheckable( true );
+	previewModeGroup->addAction( previewWireframe );
 
-    QAction *previewSideBySide = previewModeMenu->addAction("Side-by-Side");
-    previewSideBySide->setCheckable(true);
-    previewModeGroup->addAction(previewSideBySide);
+	QAction *previewSideBySide = previewModeMenu->addAction( "Side-by-Side" );
+	previewSideBySide->setCheckable( true );
+	previewModeGroup->addAction( previewSideBySide );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // ADVANCED OPTIONS
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// ADVANCED OPTIONS
+	// ═══════════════════════════════════════════════════════
 
-    QMenu *advancedMenu = texturesMenu->addMenu("Advanced");
+	QMenu *advancedMenu = texturesMenu->addMenu( "Advanced" );
 
-    QMenu *compressionMenu = advancedMenu->addMenu("Texture Compression");
-    QActionGroup *compressionGroup = new QActionGroup(this);
+	QMenu *compressionMenu = advancedMenu->addMenu( "Texture Compression" );
+	QActionGroup *compressionGroup = new QActionGroup( this );
 
-    QAction *compressNone = compressionMenu->addAction("No Compression");
-    compressNone->setCheckable(true);
-    compressNone->setChecked(true);
-    compressionGroup->addAction(compressNone);
+	QAction *compressNone = compressionMenu->addAction( "No Compression" );
+	compressNone->setCheckable( true );
+	compressNone->setChecked( true );
+	compressionGroup->addAction( compressNone );
 
-    QAction *compressDXT1 = compressionMenu->addAction("DXT1 (BC1)");
-    compressDXT1->setCheckable(true);
-    compressionGroup->addAction(compressDXT1);
+	QAction *compressDXT1 = compressionMenu->addAction( "DXT1 (BC1)" );
+	compressDXT1->setCheckable( true );
+	compressionGroup->addAction( compressDXT1 );
 
-    QAction *compressDXT5 = compressionMenu->addAction("DXT5 (BC3)");
-    compressDXT5->setCheckable(true);
-    compressionGroup->addAction(compressDXT5);
+	QAction *compressDXT5 = compressionMenu->addAction( "DXT5 (BC3)" );
+	compressDXT5->setCheckable( true );
+	compressionGroup->addAction( compressDXT5 );
 
-    QAction *compressAuto = compressionMenu->addAction("Auto-Select");
-    compressAuto->setCheckable(true);
-    compressionGroup->addAction(compressAuto);
+	QAction *compressAuto = compressionMenu->addAction( "Auto-Select" );
+	compressAuto->setCheckable( true );
+	compressionGroup->addAction( compressAuto );
 
-    advancedMenu->addSeparator();
+	advancedMenu->addSeparator();
 
-    QMenu *mipmapMenu = advancedMenu->addMenu("Mipmap Settings");
-    QAction *genMipmaps = mipmapMenu->addAction("Generate Mipmaps");
-    genMipmaps->setCheckable(true);
+	QMenu *mipmapMenu = advancedMenu->addMenu( "Mipmap Settings" );
+	QAction *genMipmaps = mipmapMenu->addAction( "Generate Mipmaps" );
+	genMipmaps->setCheckable( true );
 
-    mipmapMenu->addSeparator();
-    mipmapMenu->addAction("Mipmap Count...");
-    mipmapMenu->addAction("Mipmap Filter Type...");
+	mipmapMenu->addSeparator();
+	mipmapMenu->addAction( "Mipmap Count..." );
+	mipmapMenu->addAction( "Mipmap Filter Type..." );
 
-    advancedMenu->addSeparator();
+	advancedMenu->addSeparator();
 
-    QMenu *scaleMenu = advancedMenu->addMenu("Texture Scaling");
-    scaleMenu->addAction("Scale 50%");
-    scaleMenu->addAction("Scale 100% (Original)");
-    scaleMenu->addAction("Scale 200%");
-    scaleMenu->addSeparator();
-    scaleMenu->addAction("Custom Resolution...");
+	QMenu *scaleMenu = advancedMenu->addMenu( "Texture Scaling" );
+	scaleMenu->addAction( "Scale 50%" );
+	scaleMenu->addAction( "Scale 100% (Original)" );
+	scaleMenu->addAction( "Scale 200%" );
+	scaleMenu->addSeparator();
+	scaleMenu->addAction( "Custom Resolution..." );
 
-    texturesMenu->addSeparator();
+	texturesMenu->addSeparator();
 
-    // ═══════════════════════════════════════════════════════
-    // TEXTURE INFORMATION
-    // ═══════════════════════════════════════════════════════
+	// ═══════════════════════════════════════════════════════
+	// TEXTURE INFORMATION
+	// ═══════════════════════════════════════════════════════
 
-    texturesMenu->addAction("List All Textures...");
-    texturesMenu->addAction("Texture Info...");
-      texturesMenu->addAction("Show Memory Usage...");
+	texturesMenu->addAction( "List All Textures..." );
+	texturesMenu->addAction( "Texture Info..." );
+	texturesMenu->addAction( "Show Memory Usage..." );
 }
-
-
-
 
 void MainWindow::createFileMenu() {
 	QMenu *fileMenu = menuBar()->addMenu( tr( "&File" ) );
@@ -1488,6 +1481,44 @@ void MainWindow::createToolsMenu() {
 }
 void MainWindow::createDebugMenu() {
 	// TODO: Need to be filled properly, for now empty
+
+	QMenu *debugMenu = menuBar()->addMenu( tr( "&Debug" ) );
+    
+    // ═══════════════════════════════════════════════════════
+    // PERFORMANCE MONITORING
+    // ═══════════════════════════════════════════════════════
+    
+    QAction *showFPS = debugMenu->addAction("Show FPS");
+    showFPS->setCheckable( true );
+    
+    QAction *showMemory = debugMenu->addAction("Show Memory");
+    showMemory->setCheckable(true);
+    
+    QAction *showRenderStats = debugMenu->addAction("Show Render Stats");
+    showRenderStats->setCheckable(true);
+    
+    debugMenu->addSeparator();
+    
+    // ═══════════════════════════════════════════════════════
+    // DEBUGGING TOOLS
+    // ═══════════════════════════════════════════════════════
+    
+    debugMenu->addAction("Print Model Info to Console...");
+    debugMenu->addAction("Dump Vertices to File...");
+    debugMenu->addAction("Dump Bones to File...");
+    debugMenu->addAction("Dump Sequence to File...");
+    debugMenu->addAction("Export Debug Log...");
+    
+    debugMenu->addSeparator();
+    
+    
+    // ═══════════════════════════════════════════════════════
+    // 
+    // ═══════════════════════════════════════════════════════
+    
+    
+    
+    
 }
 
 void MainWindow::createWindowMenu() {
