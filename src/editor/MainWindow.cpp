@@ -1513,8 +1513,61 @@ void MainWindow::createDebugMenu() {
     
     
     // ═══════════════════════════════════════════════════════
-    // 
+    // OPENGL DEBUG
     // ═══════════════════════════════════════════════════════
+    
+    QMenu *glDebugMenu = debugMenu->addMenu("OpenGL Debug");
+    
+    QAction *showGLInfo = glDebugMenu->addAction("Show GL Info");
+    showGLInfo->setCheckable( true );
+    
+    QAction *wireframeOverlay = glDebugMenu->addAction("Wireframe Overlay");
+    wireframeOverlay->setCheckable( true );
+    
+    QAction *showDrawCalls = glDebugMenu->addAction("Show Draw Calls");
+    showDrawCalls->setCheckable( true );
+    
+    QAction *showBufferStats = glDebugMenu->addAction("Show Buffer Stats");
+    showBufferStats->setCheckable( true );
+    
+    glDebugMenu->addSeparator();
+    glDebugMenu->addAction("Clear GL Errors");
+    glDebugMenu->addAction("Force GL Sync");
+    glDebugMenu->addAction("Recreate GL Context");
+
+    debugMenu->addSeparator();   
+    
+    
+    // ═══════════════════════════════════════════════════════
+    // MODEL VALIDATION & TESTING
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *validateMenu = debugMenu->addMenu("Validation");
+    
+    validateMenu->addAction("Validate Bone Hierarchy");
+    validateMenu->addAction("Validate Sequences");
+    validateMenu->addAction("Validate Textures");
+    validateMenu->addAction("Validate Hitboxes");
+    validateMenu->addAction("Validate Attachments");
+    validateMenu->addSeparator();
+    validateMenu->addAction("Run All Validation Checks...");
+
+    debugMenu->addSeparator();    
+    
+    // ═══════════════════════════════════════════════════════
+    // ANIMATION DEBUG
+    // ═══════════════════════════════════════════════════════
+    
+    QMenu *animDebugMenu = menuBar()->addMenu("Animation Debug");
+    
+    
+    
+    
+    
+    
+    
+ 
+     
     
     
     
