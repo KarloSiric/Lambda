@@ -1606,20 +1606,68 @@ void MainWindow::createDebugMenu() {
     
     debugMenu->addAction("Clear Console");
     debugMenu->addAction("Copy Console to Clipboard");
+    debugMenu->addAction("Save Console to File...");
+    debugMenu->addAction("Open Log File Location...");
     
+    debugMenu->addSeparator();
     
+    // ═══════════════════════════════════════════════════════
+    // PROFILING
+    // ═══════════════════════════════════════════════════════
     
+    QMenu *profilingMenu = debugMenu->addMenu("Profiling");
     
+    QAction *enableProfiling = profilingMenu->addAction("Profiling");
     
+    enableProfiling->setCheckable(true);
     
+    profilingMenu->addSeparator();
+    profilingMenu->addAction("Show Profiling Results...");
+    profilingMenu->addAction("Reset Profiling Results...");
+    profilingMenu->addAction("Export Profiling Report...");
     
+    debugMenu->addSeparator();
     
-    
-    
-     
-    
-    
-    
+    // ═══════════════════════════════════════════════════════
+    // CRASH & ERROR HANDLING
+    // ═══════════════════════════════════════════════════════
+
+    QMenu *crashMenu = debugMenu->addMenu("Crash Handling");
+
+    QAction *enableCrashDump = crashMenu->addAction("Enable Crash Dumps");
+    enableCrashDump->setCheckable(true);
+    enableCrashDump->setChecked(true);
+
+    QAction *enableAutoSave = crashMenu->addAction("Enable Auto-Save");
+    enableAutoSave->setCheckable(true);
+    enableAutoSave->setChecked(true);
+
+    crashMenu->addSeparator();
+    crashMenu->addAction("Open Crash Logs Folder...");
+    crashMenu->addAction("Send Crash Report...");
+
+    debugMenu->addSeparator();
+
+    // ═══════════════════════════════════════════════════════
+    // ADVANCED DEBUG
+    // ═══════════════════════════════════════════════════════
+
+    QAction *showMemAddresses = debugMenu->addAction("Show Memory Addresses");
+    showMemAddresses->setCheckable(true);
+
+    QAction *enableAsserts = debugMenu->addAction("Enable Runtime Assertions");
+    enableAsserts->setCheckable(true);
+    enableAsserts->setChecked(true);
+
+    debugMenu->addSeparator();
+
+    // ═══════════════════════════════════════════════════════
+    // TESTING
+    // ═══════════════════════════════════════════════════════
+
+    debugMenu->addAction("Run Unit Tests...");
+    debugMenu->addAction("Stress Test Renderer...");
+    debugMenu->addAction("Test All Sequences...");    
     
 }
 
