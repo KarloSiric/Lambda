@@ -1510,8 +1510,7 @@ void MainWindow::createDebugMenu() {
     debugMenu->addAction("Export Debug Log...");
     
     debugMenu->addSeparator();
-    
-    
+     
     // ═══════════════════════════════════════════════════════
     // OPENGL DEBUG
     // ═══════════════════════════════════════════════════════
@@ -1536,8 +1535,7 @@ void MainWindow::createDebugMenu() {
     glDebugMenu->addAction("Recreate GL Context");
 
     debugMenu->addSeparator();   
-    
-    
+     
     // ═══════════════════════════════════════════════════════
     // MODEL VALIDATION & TESTING
     // ═══════════════════════════════════════════════════════
@@ -1560,13 +1558,64 @@ void MainWindow::createDebugMenu() {
     
     QMenu *animDebugMenu = menuBar()->addMenu("Animation Debug");
     
+    QAction *showBoneTransforms = animDebugMenu->addAction("Show Bone Transformations");
+    showBoneTransforms->setCheckable( true );
+    
+    QAction *showBlendWeights = animDebugMenu->addAction("Show Blend Weights");
+    showBlendWeights->setCheckable(true);
+
+    QAction *freezeAnimation = animDebugMenu->addAction("Freeze Animation");
+    freezeAnimation->setCheckable(true);
+
+    animDebugMenu->addSeparator();
+    animDebugMenu->addAction("Print Current Pose to Console");
+    animDebugMenu->addAction("Export Current Frame as SMD...");
+
+    debugMenu->addSeparator();
+    
+    // ═══════════════════════════════════════════════════════
+    // LOGGER SETTINGS (IMPORTANT FOR USER NEEDS!)
+    // ═══════════════════════════════════════════════════════ 
+    
+    QMenu *logLevelMenu = debugMenu->addMenu("Log Level");
+    QActionGroup *logLevelGroup = new QActionGroup(this);
+    
+    QAction *logError = logLevelMenu->addAction("Error Only");
+    logError->setCheckable( true );
+    logLevelGroup->addAction(logError);
+    
+    QAction *logWarning = logLevelMenu->addAction("Warning");
+    logWarning->setCheckable( true );
+    logLevelGroup->addAction(logWarning);
+    
+    QAction *logInfo = logLevelMenu->addAction("Info");
+    logInfo->setCheckable( true );
+    logLevelGroup->addAction(logInfo);
+    
+    QAction *logDebug = logLevelMenu->addAction("Debug");
+    logDebug->setCheckable( true );
+    logLevelGroup->addAction(logDebug);
+    
+    QAction *logVerbose = logLevelMenu->addAction("Verbose");
+    logVerbose->setCheckable( true );
+    logLevelGroup->addAction(logVerbose);
+    
+    // ═══════════════════════════════════════════════════════
+    // CONSOLE ACTIONS
+    // ═══════════════════════════════════════════════════════ 
+    
+    debugMenu->addAction("Clear Console");
+    debugMenu->addAction("Copy Console to Clipboard");
     
     
     
     
     
     
- 
+    
+    
+    
+    
      
     
     
