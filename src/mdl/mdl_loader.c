@@ -917,7 +917,7 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 
 	if ( result != MDL_SUCCESS ) {
 		fprintf( stderr, "WARNING - Failed to load sequence groups.\n" );
-		// we continue because some dont have them simply
+		// @Note: We continue because some dont have them simply
 	}
 
 	if ( model->num_seqgroups > 1 ) {
