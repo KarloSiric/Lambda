@@ -58,15 +58,61 @@ class ModelViewport : public QOpenGLWidget , protected QOpenGLFunctions
 public:
     
     explicit ModelViewport( QWidget *parent = nullptr );
-    ~ModelViewport() override;
+    ~ModelViewport( ) override;
     
     // @Note: Model managment - using C backend
     bool loadModel( const QString &modelPath );
-    void closeModel();
-    bool hasModelLoaded();
+    void closeModel( );
+    bool hasModelLoaded( );
+    
+    // @Note: Model animations managment - uses C backend API
+    void setSequence( int sequenceIndex );
+    void playAnimation( bool play );
+    void setAnimationFrame( float frame );
+    int getCurrentSequence( ) const;
+    float getCurrentFrame( ) const;
+    bool isAnimationPlaying( ) const;
+    
+    // @Note: Rendering toggles - uses C backend r_draw and r_grid API
+    void setWireframeMode( bool enabled );
+    void setShowGrid( bool show );
+    void setShowGround( bool show );
+    void setShowAxes( bool show );
+    void setShowBones( bool show );
+    void setShowHitboxes( bool show );
+    
+    // @Note: Camera control - uses C backend r_camera API
+    void resetCamera( );
+    void setCameraDistance( float distance );
+    float getCameraDistance( ) const;
+    
+    // @Note: Skin family control - uses C backend r_draw API
+    void setSkinFamily( int family );
+    void nextSkinFamily( );
+    void prevSkinFamily( );
+    int getCurrentSkinFamily( ) const;
+    int getNumSkinFamilies( ) const;
+    
+signals:
+    
+    // @Note: What happens when the model is loaded and everything
+    void modelLoaded( const QString &path );
+    void modelCloses( );
+    
+    void sequenceChanged( int sequenceIndex );
+    void frameChanged( float frame );
+    void animationPlayStateChanged( bool playing );
+    
+protected:
+
+    void initializeGL( ) override;
+    void paintGL( ) override;
+    void resizeGL( int width, int height ) override;
     
     
     
+    
+     
     
       
     
