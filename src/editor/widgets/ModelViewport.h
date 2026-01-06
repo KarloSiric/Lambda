@@ -31,6 +31,7 @@
 #include <QWheelEvent>
 #include <QtCore/qobject.h>
 #include <QtCore/qtmetamacros.h>
+#include <QtGui/qevent.h>
 #include <QtWidgets/qtabwidget.h>
 
 
@@ -108,6 +109,57 @@ protected:
     void initializeGL( ) override;
     void paintGL( ) override;
     void resizeGL( int width, int height ) override;
+    
+    // @Note: Need to override all of the Qt mouse events - C backend camera
+    void mousePressEvent( QMouseEvent *event ) override;
+    void mouseMoveEvent( QMouseEvent *event ) override;
+    void mouseReleaseEvent( QMouseEvent *event ) override;
+    void wheelEvent( QWheelEvent *event ) override;
+    
+private slots:
+    
+    void onAnimationTick( );
+    
+private:
+    
+    // @Note: model is owned by Qt but C backend manages it
+    mdl_model_t *m_model;
+    
+    // @Note: Animatons same thing, C backend manages them all
+    mdl_animation_state_t m_animState;
+    bool m_animationPlaying;
+    QTimer *m_animationTimer;
+    
+    // @Note: Camera state
+    r_camera_t m_camera;
+    
+    // View/projection matrices for rendering
+    math_mat4_t m_viewMatrix;
+    math_mat4_t m_projMatrix;
+
+    // Rendering flags
+    bool m_showGrid;
+    bool m_showGround;
+    bool m_showAxes;
+    bool m_wireframeMode;
+    bool m_showBones;
+    bool m_showHitboxes;
+
+    // Skin family selection
+    int m_currentSkinFamily;
+
+    // Mouse input tracking
+    QPoint m_lastMousePos;
+    Qt::MouseButton m_activeButton;
+
+    // Helper functions
+    void updateAnimationState( float deltaTime );
+    void setupProjectionMatrix( int width, int height );
+    void renderScene();
+    
+    
+    
+    
     
     
     
