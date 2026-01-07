@@ -98,7 +98,7 @@ signals:
     
     // @Note: What happens when the model is loaded and everything
     void modelLoaded( const QString &path );
-    void modelCloses( );
+    void modelClosed( );
     
     void sequenceChanged( int sequenceIndex );
     void frameChanged( float frame );

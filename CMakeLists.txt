@@ -438,10 +438,12 @@ if(Qt6_FOUND)
     set(EDITOR_SOURCES
         src/editor/main.cpp
         src/editor/MainWindow.cpp
+        src/editor/widgets/ModelViewport.cpp
     )
 
     set(EDITOR_HEADERS
         src/editor/MainWindow.h
+        src/editor/widgets/ModelViewport.h
     )
 
     #
@@ -458,6 +460,15 @@ if(Qt6_FOUND)
         ${EDITOR_SOURCES}
         ${SRC_EDITOR_THEME}
         ${LAMBDA_RESOURCES}
+        # C backend sources (same as Lambda executable)
+        ${SRC_CL}
+        ${SRC_R}
+        ${SRC_MDL}
+        ${SRC_MATH}
+        ${SRC_UTIL}
+        ${SRC_INPUT}
+        ${SRC_SHADER}
+        ${EXTERNAL}    
     )
 
     #
@@ -470,6 +481,15 @@ if(Qt6_FOUND)
         ${CMAKE_SOURCE_DIR}/src/editor/widgets
         ${CMAKE_SOURCE_DIR}/src/editor/dialogs
         ${CMAKE_SOURCE_DIR}/src/bridge
+        # C backend includes (same as Lambda)
+        ${CMAKE_SOURCE_DIR}/src/cl
+        ${CMAKE_SOURCE_DIR}/src/r
+        ${CMAKE_SOURCE_DIR}/src/mdl
+        ${CMAKE_SOURCE_DIR}/src/math
+        ${CMAKE_SOURCE_DIR}/src/util
+        ${CMAKE_SOURCE_DIR}/src/input
+        ${CMAKE_SOURCE_DIR}/src/shaders
+        ${CMAKE_SOURCE_DIR}/external 
     )
 
     #
@@ -481,6 +501,9 @@ if(Qt6_FOUND)
         Qt6::Gui
         Qt6::OpenGL
         Qt6::OpenGLWidgets
+        OpenGL::GL
+        glfw
+        m
     )
 
     #
@@ -492,6 +515,6 @@ if(Qt6_FOUND)
         AUTOUIC ON
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
-
+    
     message(STATUS "✓ LambdaEditor GUI target created")
 endif()

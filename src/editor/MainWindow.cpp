@@ -21,6 +21,7 @@
  */
 
 #include "MainWindow.h"
+#include "widgets/ModelViewport.h"
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -66,7 +67,7 @@ void MainWindow::setupMenus() {
 	createBonesMenu();
 	createSequencesMenu();
 	createTexturesMenu();
-	// createToolsMenu();
+	createToolsMenu();
 	createDebugMenu();
 	createWindowMenu();
 	createHelpMenu();
@@ -1691,12 +1692,13 @@ void MainWindow::createHelpMenu() {
 }
 
 void MainWindow::createViewportContainer() {
-	viewportContainer = new QWidget( this );
-	viewportContainer->setStyleSheet( "background-color: #1e1e1e;" );
-
-	viewportContainer->setObjectName( "ViewportContainer" );
-
-	setCentralWidget( viewportContainer );
+    
+    viewportContainer = new ModelViewport( this );
+    
+    viewportContainer->setObjectName( "ViewportContainer" );
+    setCentralWidget( viewportContainer );
+    
+    
 }
 
 void MainWindow::createDocks() {
