@@ -60,8 +60,21 @@ ModelViewport::~ModelViewport( )
     }
     doneCurrent( );
     
-    qDebug() << "ModelViewport Destroyed";
+    qDebug( ) << "ModelViewport Destroyed";
 }
+
+
+void ModelViewport::initializeGL( void )
+{
+    
+    // Open OpenGL function pointers ( This is Qt's version of glewInit )
+    
+    initializeOpenGLFunctions( );
+    
+    qDebug( ) << "OpenGL Initialized";   
+    
+}
+
 
 
 
