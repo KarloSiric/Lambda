@@ -44,6 +44,7 @@ extern "C" {
     #include "r/r_grid.h"
     #include "r/r_camera.h"
     #include "math/math_types.h"
+    #include "math/math_matrix.h"
     #include <cglm/cglm.h>
     
 

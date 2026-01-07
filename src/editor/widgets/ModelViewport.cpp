@@ -21,6 +21,9 @@
  */
 
 #include "ModelViewport.h"
+#include "math_matrix.h"
+#include "r_camera.h"
+#include "r_grid.h"
 #include <QDebug>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlogging.h>
@@ -91,11 +94,42 @@ void ModelViewport::initializeGL( void ) {
 
 void ModelViewport::resizeGL( int width, int height ) {
 	glViewport( 0, 0, width, height );
+    
+    float aspect = (float)width / (float)height;
+    float fov = 60.0f;
+    float nearPlane = 1.0f;
+    float farPlane = 10000.0f;
+    
+    glm_perspective( glm_rad( fov ), aspect, nearPlane, farPlane, m_projMatrix );
+    
+    
+    
 	qDebug() << "Viewport Resized:" << width << "x" << height;
 }
 
 void ModelViewport::paintGL() {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    
+    Camera_UpdateTransforms( &m_camera );
+    
+    // Need to get the view matrix now
+    const math_mat4_t *view_matrix = Camera_GetViewMatrix( &m_camera );
+    Math_Mat4_Copy( *view_matrix, m_viewMatrix );
+    
+    if ( m_showGrid )
+    {
+        r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
+        r_ground_draw( m_viewMatrix, m_projMatrix, 0.0f );
+        r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
+    }
+    
+    update( );
+    
+    // @NOTE: Need to render the model here later!
+    
+    
+    
+    
 }
 
 void ModelViewport::onAnimationTick() {
