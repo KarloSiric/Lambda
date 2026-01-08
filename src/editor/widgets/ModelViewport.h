@@ -134,6 +134,11 @@ private:
     // @Note: Camera state
     r_camera_t m_camera;
     
+    // @Note: Adding camera control variables ( spherical coordinates like in Lambda CLI version )
+    float m_cameraPitch;
+    float m_cameraYaw;
+    float m_cameraDistance;
+    
     // View/projection matrices for rendering
     math_mat4_t m_viewMatrix;
     math_mat4_t m_projMatrix;

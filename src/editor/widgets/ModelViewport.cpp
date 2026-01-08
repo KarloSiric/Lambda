@@ -33,8 +33,12 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_model( nullptr ),
 	  m_animationPlaying( false ),
 	  m_animationTimer( nullptr ),
-	  m_showGrid( true ),
-	  m_wireframeMode( false ) {
+	  m_cameraPitch( 0.3f ),
+	  m_cameraYaw( 0.5f ),
+      m_cameraDistance( 50.0f ),
+      m_showGrid( true ),
+      m_wireframeMode( false ) {
+        
 	mdl_animation_init( &m_animState );
 
 	// Create the new animationTimer so 60 fps ~16.66 ms ~16 ms
@@ -115,11 +119,11 @@ void ModelViewport::paintGL() {
 
     // @Note: Calculate camera position EXACTLY like Lambda does in r_draw.c (lines 1340-1352)
     //        Lambda uses spherical coordinates, not Quake-style angles!
-    float zoom = 0.1f;   // Lambda's default zoom value
-    float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );  // = 50.0f
-
-    float pitch = 0.3f;  // Lambda's rotation_x (IN RADIANS!)
-    float yaw = 0.5f;    // Lambda's rotation_y (IN RADIANS!)
+    
+    float camDist = m_cameraDistance;
+     
+    float pitch = m_cameraPitch;
+    float yaw = m_cameraYaw;
 
     // Spherical to Cartesian conversion (Lambda's formula)
     math_vec3_t camPos;
@@ -165,4 +169,33 @@ void ModelViewport::mouseReleaseEvent( QMouseEvent *event ) {
 }
 
 void ModelViewport::wheelEvent( QWheelEvent *event ) {
+    
+    // @Note: Adding the wheel behavior for the camera movement
+    int delta = event->angleDelta().y();
+    
+    if ( delta > 0 )
+    {
+        m_cameraDistance *= 0.9f;   // we are reducing the distance by this 90 %
+    } 
+    else if ( delta < 0 )
+    {
+        m_cameraDistance *= 1.1f;   // we are increasing the distance by 110 %
+    }
+    
+    
+    // @Note: We need to clamp the distance so we dont get too close to the model
+    if ( m_cameraDistance < 1.0f )
+    {
+        m_cameraDistance = 1.0f;   // this is the minimum length
+    }
+    
+    if ( m_cameraDistance > 500.0f )
+    {
+        m_cameraDistance = 500.0f; // this is the maximum length
+    }
+    
+    
+    
+    event->accept( );   
+    
 }
