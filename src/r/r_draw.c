@@ -1069,22 +1069,197 @@ void set_current_texture( unsigned int texture_id ) {
 	current_texture = texture_id;
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Layer 4: Full rendering with camera (CLI version uses this)
+// ───────────────────────────────────────────────────────────────────────────
 void render_model( studiohdr_t *header, unsigned char *data ) {
 	(void)header;
 	(void)data;
 
+	// Get framebuffer size for aspect ratio
+	int fbw, fbh;
+	glfwGetFramebufferSize( window, &fbw, &fbh );
+	float aspect = ( fbh > 0 ) ? (float)fbw / (float)fbh : 1.0f;
+
+	// Build model matrix following Sam Vanheer's approach
+	// Transform order: Scale → Face camera → User rotations → Translate
+	mat4 M;
+	Math_Mat4_Identity( M );
+
+	// GROUND ALIGNMENT - Use different offsets for T-pose vs animation
+	float ground_offset_y = g_animation_enabled ? g_model_ground_y : g_model_ground_y_tpose;
+
+	// 1) Translate model so feet land on ground
+	glm_translate( M, (vec3){ 0.0f, ground_offset_y, 0.0f } );
+
+	// 2) Apply user rotations
+	mat4 Rx = GLM_MAT4_IDENTITY_INIT;
+	glm_rotate( Rx, model_rotation_x, (vec3){ 1, 0, 0 } );
+	glm_mat4_mul( M, Rx, M );
+
+	mat4 Ry = GLM_MAT4_IDENTITY_INIT;
+	glm_rotate( Ry, model_rotation_y, (vec3){ 0, 1, 0 } );
+	glm_mat4_mul( M, Ry, M );
+
+	// 3) Rotate HL forward → GL forward (face camera fix)
+	mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
+	glm_rotate( RyFace, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
+	glm_mat4_mul( M, RyFace, M );
+
+	// 4) Scale LAST because HL units are large
+	mat4 S = GLM_MAT4_IDENTITY_INIT;
+	glm_scale( S, (vec3){ g_model_scale, g_model_scale, g_model_scale } );
+	glm_mat4_mul( M, S, M );
+
+	// Calculate camera position from rotation angles
+	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
+	vec3 camPos;
+	vec3 target = { 0.0f, 0.0f, 0.0f };
+	vec3 up = { 0.0f, 1.0f, 0.0f };
+
+	float pitch = rotation_x;
+	float yaw = rotation_y;
+
+	// Convert spherical coordinates to cartesian
+	camPos[0] = camDist * cosf( pitch ) * sinf( yaw );
+	camPos[1] = camDist * sinf( pitch );
+	camPos[2] = camDist * cosf( pitch ) * cosf( yaw );
+
+	// Clamp camera Y to prevent going below ground
+	float min_camera_height = 0.5f;
+	if ( camPos[1] < min_camera_height ) {
+		camPos[1] = min_camera_height;
+	}
+
+	// Create view and projection matrices
+	mat4 V;
+	Math_Mat4_LookAt( camPos, target, up, V );
+	mat4 P;
+	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
+
+	// Debug print (one-time)
+	static bool printed_once = false;
+	if ( !printed_once && g_model_bounds.valid ) {
+		printf( "\n=== GROUND ALIGNMENT ===\n" );
+		printf( "Model feet at HL Z: %.2f\n", g_model_bounds.min[2] );
+		printf( "After 0.1x scale: %.4f\n", g_model_bounds.min[2] * g_model_scale );
+		printf( "Ground offset (translate UP): +%.4f\n", ground_offset_y );
+		printf( "\nCamera: pos=(%.2f, %.2f, %.2f), looking at (0,0,0)\n", camPos[0], camPos[1], camPos[2] );
+		printf( "=========================\n\n" );
+		printed_once = true;
+	}
+
+	// Render the full scene (Layer 3)
+	render_scene( V, P, M );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYERED RENDERING API
+// ═══════════════════════════════════════════════════════════════════════════
+// These functions provide a clean separation between:
+// - Pure OpenGL drawing (Layer 1)
+// - Model rendering with custom matrices (Layer 2)
+// - Scene rendering with grid/axes (Layer 3)
+// - Full rendering with camera (Layer 4)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ───────────────────────────────────────────────────────────────────────────
+// Layer 1: Pure OpenGL drawing (lowest level - just draw triangles)
+// ───────────────────────────────────────────────────────────────────────────
+void draw_model_geometry( void ) {
+	if ( total_render_vertices == 0 ) {
+		return;
+	}
+
+	glBindVertexArray( VAO );
+	glBindBuffer( GL_ARRAY_BUFFER, VBO );
+
+	// Set up vertex attributes
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 0 ) );
+	glEnableVertexAttribArray( 0 );
+	glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 3 * sizeof( float ) ) );
+	glEnableVertexAttribArray( 1 );
+	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 6 * sizeof( float ) ) );
+	glEnableVertexAttribArray( 2 );
+
+	// Bone index attribute for GPU skinning
+	glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
+	glVertexAttribIPointer( 3, 1, GL_INT, sizeof( int ), (void *)0 );
+	glEnableVertexAttribArray( 3 );
+
+	GLint uTex = glGetUniformLocation( shader_program, "tex" );
+	if ( uTex != -1 ) {
+		glUniform1i( uTex, 0 );
+	}
+
+	glDisable( GL_BLEND );
+
+	// Draw each texture range
+	for ( int r = 0; r < g_num_ranges; ++r ) {
+		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
+		glActiveTexture( GL_TEXTURE0 );
+		glBindTexture( GL_TEXTURE_2D, tex_to_bind );
+
+		// Find texture flags
+		int text_index = -1;
+		for ( int t1 = 0; t1 < g_textures.count; t1++ ) {
+			if ( g_textures.textures[t1].gl_id == tex_to_bind ) {
+				text_index = t1;
+				break;
+			}
+		}
+
+		int flags = 0;
+		if ( text_index >= 0 && text_index < g_textures.count ) {
+			flags = g_textures.textures[text_index].flags;
+		}
+
+		// Handle texture blending flags
+		if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
+			glEnable( GL_BLEND );
+
+			if ( flags & STUDIO_NF_ADDITIVE ) {
+				glBlendFunc( GL_SRC_ALPHA, GL_ONE );
+			} else {
+				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			}
+		} else {
+			glDisable( GL_BLEND );
+		}
+
+		// Set shader flags
+		glUniform1i( glGetUniformLocation( shader_program, "u_masked" ),
+					 ( flags & STUDIO_NF_MASKED ) != 0 );
+
+		glUniform1i( glGetUniformLocation( shader_program, "u_fullbright" ),
+					 ( flags & STUDIO_NF_FULLBRIGHT ) != 0 );
+
+		glUniform1i( glGetUniformLocation( shader_program, "u_additive" ),
+					 ( flags & STUDIO_NF_ADDITIVE ) != 0 );
+
+		glUniform1i( glGetUniformLocation( shader_program, "u_chrome" ),
+					 ( flags & STUDIO_NF_CHROME ) != 0 );
+
+		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
+	}
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Layer 2: Model rendering with custom matrices (Qt/GUI uses this)
+// ───────────────────────────────────────────────────────────────────────────
+void render_model_with_matrices( mat4 view, mat4 proj, mat4 model ) {
 	// ONE-TIME: Build mesh topology
 	if ( !model_processed ) {
 		ProcessModelForRendering();
 
-		// @Note: Forgot to upload the vertices and the vertex data to the GPU
+		// Upload vertices to GPU
 		glBindBuffer( GL_ARRAY_BUFFER, VBO );
 		glBufferData( GL_ARRAY_BUFFER,
 					  total_render_vertices * 8 * sizeof( float ),
 					  render_vertex_buffer,
 					  GL_STATIC_DRAW );
 
-		// @Note: Adding NEW for GPU skinning
+		// Upload bone indices for GPU skinning
 		glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
 		glBufferData( GL_ARRAY_BUFFER, total_render_vertices * sizeof( int ), render_bone_indices, GL_STATIC_DRAW );
 	}
@@ -1123,26 +1298,12 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 			glUniformMatrix4fv( bone_matrices_loc, global_header->numbones, GL_FALSE,
 								(const float *)g_bonetransformations );
 		}
-
-		// DEBUG: Print root bone matrix (bone 0) to see if there's unexpected translation
-		static bool printed_bones = false;
-		if (!printed_bones) {
-			printf("\n=== ROOT BONE MATRIX (Bone 0) ===\n");
-			mat4 *bone0 = (mat4 *)g_bonetransformations;
-			for (int i = 0; i < 4; i++) {
-				printf("  [%.4f %.4f %.4f %.4f]\n", bone0[0][0][i], bone0[0][1][i], bone0[0][2][i], bone0[0][3][i]);
-			}
-			printf("Translation in bone 0: X=%.4f, Y=%.4f, Z=%.4f\n", bone0[0][3][0], bone0[0][3][1], bone0[0][3][2]);
-			printf("==================================\n\n");
-			printed_bones = true;
-		}
 	}
 
 	// Re-transform vertices with new bone positions
 	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
 
 	// CRITICAL: Re-build the vertex buffer with new skinned positions
-	// We need to rebuild the render buffer because AddVertexToBuffer reads from skinned_positions
 	total_render_vertices = 0;
 	g_num_ranges = 0;
 
@@ -1156,22 +1317,22 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 			selected_model_index = 0;
 		}
 
-		mstudiomodel_t *model = &models[selected_model_index];
+		mstudiomodel_t *mdl = &models[selected_model_index];
 
-		TransformVertices( global_header, global_data, model, skinned_positions );
+		TransformVertices( global_header, global_data, mdl, skinned_positions );
 		have_skinned_positions = true;
 
-		g_current.model = model;
-		g_current.vertices = (vec3_t *)( global_data + model->vertindex );
-		g_current.normals = (vec3_t *)( global_data + model->normindex );
-		g_current.vertex_count = model->numverts;
-		g_current.normal_count = model->numnorms;
+		g_current.model = mdl;
+		g_current.vertices = (vec3_t *)( global_data + mdl->vertindex );
+		g_current.normals = (vec3_t *)( global_data + mdl->normindex );
+		g_current.vertex_count = mdl->numverts;
+		g_current.normal_count = mdl->numnorms;
 
-		mstudiomesh_t *meshes = (mstudiomesh_t *)( global_data + model->meshindex );
+		mstudiomesh_t *meshes = (mstudiomesh_t *)( global_data + mdl->meshindex );
 		const short *skin_table = (const short *)( global_data + global_header->skinindex );
 		const int numskinref = global_header->numskinref;
 
-		for ( int mesh = 0; mesh < model->nummesh; ++mesh ) {
+		for ( int mesh = 0; mesh < mdl->nummesh; ++mesh ) {
 			const int norm_base = meshes[mesh].normindex;
 
 			int tex_index = meshes[mesh].skinref;
@@ -1290,215 +1451,56 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 		}
 	}
 
+	// Use shader program
 	glUseProgram( shader_program );
 
-	// Rest of your existing render code...
-	int fbw, fbh;
-	glfwGetFramebufferSize( window, &fbw, &fbh );
-	float aspect = ( fbh > 0 ) ? (float)fbw / (float)fbh : 1.0f;
-
-    // Build model matrix following Sam Vanheer's approach:
-    // In OpenGL fixed pipeline: translate → rotate → scale (applied in REVERSE!)
-    // Actual transform order: Scale FIRST, then Rotate, then Translate
-    mat4 M;
-    Math_Mat4_Identity( M );
-
-    // GROUND ALIGNMENT - Use different offsets for T-pose vs animation
-    // Animation: Use sequence bbox (Sam Vanheer's method)
-    // T-pose: Use vertex bounds (because T-pose bones have different root position)
-    float ground_offset_y = g_animation_enabled ? g_model_ground_y : g_model_ground_y_tpose;
-
-    // Build matrix with CGLM functions directly
-    // We want: vertices transformed as Scale → Rotate → Translate
-
-    // 1) translate model so feet land on ground
-    glm_translate(M, (vec3){0.0f, ground_offset_y, 0.0f});
-
-    // 2) apply user rotations
-    mat4 Rx = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate(Rx, model_rotation_x, (vec3){1,0,0});
-    glm_mat4_mul(M, Rx, M);
-
-    mat4 Ry = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate(Ry, model_rotation_y, (vec3){0,1,0});
-    glm_mat4_mul(M, Ry, M);
-
-    // 3) rotate HL forward → GL forward (face camera fix)
-    mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate(RyFace, -MATH_PI * 0.5f, (vec3){0,1,0});
-    glm_mat4_mul(M, RyFace, M);
-
-    // 4) scale LAST because HL units are large
-    mat4 S = GLM_MAT4_IDENTITY_INIT;
-    glm_scale(S, (vec3){g_model_scale, g_model_scale, g_model_scale});
-    glm_mat4_mul(M, S, M);
-
-    // Final result: M = T * Rx * Ry * RyFace * S
-    // Applied to vertices: v' = T * Rx * Ry * RyFace * S * v
-    // Order: Scale → Face camera → User rotations → Translate
-
-	float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );
-	vec3 camPos;
-	vec3 target = { 0.0f, 0.0f, 0.0f };
-	vec3 up = { 0.0f, 1.0f, 0.0f };
-
-	// Camera position is always calculated from rotation angles
-	float pitch = rotation_x;
-	float yaw = rotation_y;
-
-	// Convert spherical coordinates to cartesian
-	camPos[0] = camDist * cosf(pitch) * sinf(yaw);  // X
-	camPos[1] = camDist * sinf(pitch);              // Y
-	camPos[2] = camDist * cosf(pitch) * cosf(yaw);  // Z
-
-	// Clamp camera Y to prevent going below ground (ground is at Y=0 now)
-	float ground_level = 0.0f;
-	float min_camera_height = ground_level + 0.5f; // Stay at least 0.5 units above ground
-	if (camPos[1] < min_camera_height) {
-		camPos[1] = min_camera_height;
-	}
-
-    static bool printed_once = false;
-    if (!printed_once && g_model_bounds.valid) {
-        printf("\n=== GROUND ALIGNMENT ===\n");
-        printf("Model feet at HL Z: %.2f\n", g_model_bounds.min[2]);
-        printf("After 0.1x scale: %.4f\n", g_model_bounds.min[2] * g_model_scale);
-        printf("Ground offset (translate UP): +%.4f\n", ground_offset_y);
-
-        printf("\nFinal Model Matrix:\n");
-        for (int i = 0; i < 4; i++) {
-            printf("  [%.4f %.4f %.4f %.4f]\n", M[0][i], M[1][i], M[2][i], M[3][i]);
-        }
-        printf("Translation column (last column): X=%.4f, Y=%.4f, Z=%.4f\n", M[3][0], M[3][1], M[3][2]);
-
-        printf("\nCamera: pos=(%.2f, %.2f, %.2f), looking at (0,0,0)\n", camPos[0], camPos[1], camPos[2]);
-        printf("Initial pitch=%.3f, yaw=%.3f, zoom=%.3f, camDist=%.2f\n", rotation_x, rotation_y, zoom, camDist);
-        printf("=========================\n\n");
-        printed_once = true;
-    }
-
-	// Note: camera_orbit_mode controls whether rotation angles affect camera or model
-	// This is handled in the input system, not here
-
-	mat4 V;
-	Math_Mat4_LookAt( camPos, target, up, V );
-	mat4 P;
-	Math_Mat4_Perspective( 50.0f * MATH_DEG2RAD, aspect, 0.01f, 1000.0f, P );
-
-	// Ground plane at Y=0 (world origin)
-	// Model has been translated so its feet are at Y=0
-	float ground_y = 0.0f;
-	r_ground_draw( V, P, ground_y );
-	r_grid_draw( V, P, ground_y );
-	r_axes_draw( V, P, ground_y );
-
-	// CRITICAL: Re-activate model shader after grid rendering!
-	glUseProgram( shader_program );
-
+	// Set matrices (provided by caller - Qt or CLI)
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );
 	GLint uProj = glGetUniformLocation( shader_program, "projection" );
 	if ( uModel != -1 )
-		glUniformMatrix4fv( uModel, 1, GL_FALSE, (const float *)M );
+		glUniformMatrix4fv( uModel, 1, GL_FALSE, (const float *)model );
 	if ( uView != -1 )
-		glUniformMatrix4fv( uView, 1, GL_FALSE, (const float *)V );
+		glUniformMatrix4fv( uView, 1, GL_FALSE, (const float *)view );
 	if ( uProj != -1 )
-		glUniformMatrix4fv( uProj, 1, GL_FALSE, (const float *)P );
+		glUniformMatrix4fv( uProj, 1, GL_FALSE, (const float *)proj );
 
-	// Main light positioned above and in front-right (3-point lighting style)
+	// Set lighting (3-point lighting)
 	vec3 lightPos = { 5.0f, 8.0f, 5.0f };
 	GLint uLight = glGetUniformLocation( shader_program, "lightPos" );
-	GLint uViewP = glGetUniformLocation( shader_program, "viewPos" );
 	if ( uLight != -1 )
 		glUniform3fv( uLight, 1, (const float *)lightPos );
+
+	// Extract camera position from view matrix for chrome shader
+	// Camera position is the inverse translation of the view matrix
+	vec3 camPos;
+	camPos[0] = -( view[0][0] * view[3][0] + view[0][1] * view[3][1] + view[0][2] * view[3][2] );
+	camPos[1] = -( view[1][0] * view[3][0] + view[1][1] * view[3][1] + view[1][2] * view[3][2] );
+	camPos[2] = -( view[2][0] * view[3][0] + view[2][1] * view[3][1] + view[2][2] * view[3][2] );
+
+	GLint uViewP = glGetUniformLocation( shader_program, "viewPos" );
 	if ( uViewP != -1 )
 		glUniform3fv( uViewP, 1, (const float *)camPos );
 
+	// Draw the model geometry (Layer 1)
+	draw_model_geometry();
+}
 
-	glBindVertexArray( VAO );
-	glBindBuffer( GL_ARRAY_BUFFER, VBO );
+// ───────────────────────────────────────────────────────────────────────────
+// Layer 3: Scene rendering (grid/axes + model)
+// ───────────────────────────────────────────────────────────────────────────
+void render_scene( mat4 view, mat4 proj, mat4 model ) {
+	// Draw grid, ground, and axes at Y=0
+	float ground_y = 0.0f;
+	r_ground_draw( view, proj, ground_y );
+	r_grid_draw( view, proj, ground_y );
+	r_axes_draw( view, proj, ground_y );
 
-	// @Note: Removing this because it is already now on the GPU, experimental and testing for now
-	// glBufferData(
-	// 	GL_ARRAY_BUFFER,
-	// 	(GLsizeiptr)( total_render_vertices * 8 * sizeof( float ) ),
-	// 	render_vertex_buffer,
-	// 	GL_STATIC_DRAW );
+	// Re-activate model shader after grid rendering
+	glUseProgram( shader_program );
 
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 0 ) );
-	glEnableVertexAttribArray( 0 );
-	glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 3 * sizeof( float ) ) );
-	glEnableVertexAttribArray( 1 );
-	glVertexAttribPointer( 2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof( float ), (void *)( 6 * sizeof( float ) ) );
-	glEnableVertexAttribArray( 2 );
-
-	// @Note: Adding NEW for GPU skinning - Added the bone_index_VBO
-	glBindBuffer( GL_ARRAY_BUFFER, bone_index_VBO );
-	glVertexAttribIPointer( 3, 1, GL_INT, sizeof( int ), (void *)0 );
-	glEnableVertexAttribArray( 3 );
-
-	GLint uTex = glGetUniformLocation( shader_program, "tex" );
-	if ( uTex != -1 ) {
-		glUniform1i( uTex, 0 );
-	}
-
-	glDisable( GL_BLEND );
-
-	for ( int r = 0; r < g_num_ranges; ++r ) {
-		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
-		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, tex_to_bind );
-
-		// @Note(Karlo): Adding texture flags checkout
-		int text_index = -1;
-		for ( int t1 = 0; t1 < g_textures.count; t1++ ) {
-			if ( g_textures.textures[t1].gl_id == tex_to_bind ) {
-				text_index = t1;
-				break;
-			}
-		}
-
-		// @Note(Karlo): THis was wrong and not functioning
-		// @Cleanup(Karlo): Had to add safety checking to avid loading garabge data instead of proper flags
-		int flags = 0;
-		if ( text_index >= 0 && text_index < g_textures.count ) {
-			flags = g_textures.textures[text_index].flags;
-		}
-
-		if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
-			glEnable( GL_BLEND );
-
-			if ( flags & STUDIO_NF_ADDITIVE ) {
-				glBlendFunc( GL_SRC_ALPHA, GL_ONE ); // ADITIVE FLAG
-			} else {
-				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-			}
-		} else {
-			glDisable( GL_BLEND );
-		}
-
-		// mask
-		glUniform1i( glGetUniformLocation( shader_program, "u_masked" ),
-					 ( flags & STUDIO_NF_MASKED ) != 0 );
-
-		// fullbright
-		glUniform1i( glGetUniformLocation( shader_program, "u_fullbright" ),
-					 ( flags & STUDIO_NF_FULLBRIGHT ) != 0 );
-
-		// additive
-		glUniform1i( glGetUniformLocation( shader_program, "u_additive" ),
-					 ( flags & STUDIO_NF_ADDITIVE ) != 0 );
-
-		// chrome
-		glUniform1i( glGetUniformLocation( shader_program, "u_chrome" ),
-					 ( flags & STUDIO_NF_CHROME ) != 0 );
-
-		// for chrome, vertex shader needs the camera pos
-		glUniform3f( glGetUniformLocation( shader_program, "viewPos" ),
-					 camPos[0], camPos[1], camPos[2] );
-
-		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
-	}
+	// Draw model with provided matrices (Layer 2)
+	render_model_with_matrices( view, proj, model );
 }
 
 void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_header, unsigned char *tex_data, mdl_seqgroup_blob_t *seqgroups, int num_seqgroups ) {

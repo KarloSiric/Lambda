@@ -5,6 +5,7 @@
 
 #include "studio.h"
 #include "mdl/mdl_loader.h"  // <-- Need this for mdl_seqgroup_blob_tS
+#include "math_types.h"
 
 #include <stdbool.h>
 
@@ -25,7 +26,21 @@ bool should_close_window(void);
 
 float compute_model_floor_y( void );
 
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYERED RENDERING API
+// ═══════════════════════════════════════════════════════════════════════════
+// Layer 1: Pure OpenGL drawing (just bind and draw)
+void draw_model_geometry( void );
+
+// Layer 2: Model rendering with custom matrices (Qt/GUI uses this)
+void render_model_with_matrices( mat4 view, mat4 proj, mat4 model );
+
+// Layer 3: Scene rendering (grid/axes + model)
+void render_scene( mat4 view, mat4 proj, mat4 model );
+
+// Layer 4: Full rendering with camera (CLI version uses this)
 void render_model(studiohdr_t *header, unsigned char *data);
+
 void set_wireframe_mode(bool enabled);
 void set_current_texture(unsigned int texture_id);
 
@@ -68,6 +83,7 @@ int load_shaders( void );
 
 void clear_screen(void);
 
+void setup_triangle(void);  // Creates VAO/VBO for model rendering
 void UpdateBonesForCurrentFrame(void);
 void ProcessModelForRendering(void);
 void AddVertexToBuffer(int vIndex, int nIndex, short s, short t, float texW, float texH);

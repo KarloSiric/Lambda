@@ -98,12 +98,23 @@ void ModelViewport::initializeGL( void ) {
     glCullFace( GL_BACK );
     glFrontFace( GL_CCW );
     
+    // CRITICAL: Initialize VAO/VBO for model rendering (MUST be before load_shaders)
+    setup_triangle();
+    qDebug() << "VAO/VBO created for model rendering!";
+
+    // CRITICAL: Load the model rendering shader
+    if ( load_shaders() != 0 ) {
+        qCritical() << "ERROR: Failed to load model shaders!";
+    } else {
+        qDebug() << "Model shaders loaded successfully!";
+    }
+
     r_grid_init( 1000.0f, 10.0f );
     r_ground_init( 1000.0f );
-    r_axes_init( 100.0f ); 
-    
+    r_axes_init( 100.0f );
+
     qDebug( ) << "Grid/Ground/Axes initialized!";
-    
+
 }
 
 void ModelViewport::resizeGL( int width, int height ) {
@@ -156,18 +167,38 @@ void ModelViewport::paintGL() {
         r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
     }
 
-    // @NOTE: Need to render the model here later!
-    
-    if ( m_model && m_model->header && m_model->data ) 
+    // Build model matrix (EXACT same order as CLI version in r_draw.c)
+    mat4 modelMatrix;
+    Math_Mat4_Identity( modelMatrix );
+
+    // Transform order: Translate → Rotate → Scale (applied in REVERSE to vertices)
+    // Final vertex transform: Scale → Rotate → Translate
+
+    // 1) Translate to ground (for now, no ground alignment - can add later)
+    // glm_translate( modelMatrix, (vec3){ 0.0f, ground_offset_y, 0.0f } );
+
+    // 2) No user rotations yet
+
+    // 3) Rotate HL forward → GL forward (face camera fix)
+    mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
+    glm_rotate( RyFace, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
+    glm_mat4_mul( modelMatrix, RyFace, modelMatrix );
+
+    // 4) Scale LAST because HL units are large (0.1x scale)
+    mat4 S = GLM_MAT4_IDENTITY_INIT;
+    glm_scale( S, (vec3){ 0.1f, 0.1f, 0.1f } );
+    glm_mat4_mul( modelMatrix, S, modelMatrix );
+
+    // Render the model if loaded (using Layer 2 - no grid/axes drawing)
+    if ( m_model && m_model->header && m_model->data )
     {
-        
-        set_model_data( m_model->header, m_model->data, m_model->texture_header, m_model->texture_data, m_model->seqgroups, m_model->num_seqgroups );
-        render_model( m_model->header, m_model->data );
-        
+        // Use Layer 2: render with Qt's own matrices (no duplicate grid/axes)
+        // Note: set_model_data() is called ONCE in loadModel(), not here!
+        render_model_with_matrices( m_viewMatrix, m_projMatrix, modelMatrix );
     }
-     
+
     update( );
-    
+
 }
 
 void ModelViewport::onAnimationTick() {
@@ -318,8 +349,12 @@ bool ModelViewport::loadModel( const QString &modelPath )
     qDebug( ) << "Model Loaded Successfully!";
     qDebug( ) << "   Bones: " << m_model->header->numbones;
     qDebug( ) << "   Sequences: " << m_model->header->numseq;
-    
+
+    // CRITICAL: Set model data for renderer (ONLY CALLED ONCE HERE!)
+    set_model_data( m_model->header, m_model->data, m_model->texture_header,
+                    m_model->texture_data, m_model->seqgroups, m_model->num_seqgroups );
+
     emit modelLoaded( modelPath );
     return ( true );
-    
+
 }
