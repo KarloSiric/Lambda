@@ -27,6 +27,8 @@
 #include <QDebug>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlogging.h>
+#include <QtCore/qnamespace.h>
+#include <QtCore/qpoint.h>
 
 ModelViewport::ModelViewport( QWidget *parent )
 	: QOpenGLWidget( parent ),
@@ -158,14 +160,64 @@ void ModelViewport::onAnimationTick() {
 }
 
 void ModelViewport::mousePressEvent( QMouseEvent *event ) {
-	m_lastMousePos = event->pos();
+    
+    // @Note: here we are adding button mouse support
+    
+    // Storing the current mouse button that is pressed
+    m_activeButton = event->button( );
+    
+    // Storing the last mouse position
+    m_lastMousePos = event->pos( );
+    
+    event->accept( ); 
+    
 }
 
 void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
-	m_lastMousePos = event->pos();
+    // First we get the current mouse position
+    QPoint currentPos = event->pos( );
+    
+    QPoint delta = currentPos - m_lastMousePos;
+    
+    if ( m_activeButton == Qt::LeftButton )
+    {
+        // Now we convert the pixel movement to angle change
+        // we can adjust the sensitivity
+        float sensitivity = 0.005f;
+        
+        m_cameraYaw += delta.x( ) * sensitivity;
+        
+        m_cameraPitch -= delta.y( ) * sensitivity;
+         
+        // We clamp the pitch to prevent camera flipping ( e.g. gimbal lock case )
+        // ~90 degerees = pi/2 radians
+        float maxPitch = 1.57f; 
+        
+        if ( m_cameraPitch > maxPitch )
+        {
+            m_cameraPitch = maxPitch;
+        }
+        
+        if ( m_cameraPitch < - ( maxPitch ) )
+        {
+            m_cameraPitch = - ( maxPitch );
+        }
+    }
+    
+    m_lastMousePos = currentPos;
+    
+    event->accept( );
+    
 }
 
 void ModelViewport::mouseReleaseEvent( QMouseEvent *event ) {
+    
+    // We here release the button, we clear the active button that was being used/pressed
+    
+    m_activeButton = Qt::NoButton;
+    
+    event->accept( );    
+    
 }
 
 void ModelViewport::wheelEvent( QWheelEvent *event ) {
