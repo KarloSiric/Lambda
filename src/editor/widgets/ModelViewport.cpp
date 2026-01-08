@@ -167,27 +167,27 @@ void ModelViewport::paintGL() {
         r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
     }
 
-    // Build model matrix (EXACT same order as CLI version in r_draw.c)
+    // Build model matrix - Add proper transformations
     mat4 modelMatrix;
     Math_Mat4_Identity( modelMatrix );
 
-    // Transform order: Translate → Rotate → Scale (applied in REVERSE to vertices)
-    // Final vertex transform: Scale → Rotate → Translate
+    // CRITICAL: Apply transformations in REVERSE order (last operation first)
+    // This matches CLI: Scale → Rotate → Translate
 
-    // 1) Translate to ground (for now, no ground alignment - can add later)
-    // glm_translate( modelMatrix, (vec3){ 0.0f, ground_offset_y, 0.0f } );
-
-    // 2) No user rotations yet
-
-    // 3) Rotate HL forward → GL forward (face camera fix)
-    mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate( RyFace, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
-    glm_mat4_mul( modelMatrix, RyFace, modelMatrix );
-
-    // 4) Scale LAST because HL units are large (0.1x scale)
+    // Step 1: Scale down (HL units are huge - 0.1x scale)
     mat4 S = GLM_MAT4_IDENTITY_INIT;
     glm_scale( S, (vec3){ 0.1f, 0.1f, 0.1f } );
-    glm_mat4_mul( modelMatrix, S, modelMatrix );
+    glm_mat4_mul( S, modelMatrix, modelMatrix );
+
+    // Step 2: Rotate HL forward (-Z) to OpenGL forward (-Z)
+    mat4 R = GLM_MAT4_IDENTITY_INIT;
+    glm_rotate( R, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
+    glm_mat4_mul( R, modelMatrix, modelMatrix );
+
+    // Step 3: Translate up slightly (lift above ground)
+    mat4 T = GLM_MAT4_IDENTITY_INIT;
+    glm_translate( T, (vec3){ 0.0f, 0.01f, 0.0f } );
+    glm_mat4_mul( T, modelMatrix, modelMatrix );
 
     // Render the model if loaded (using Layer 2 - no grid/axes drawing)
     if ( m_model && m_model->header && m_model->data )
@@ -195,9 +195,16 @@ void ModelViewport::paintGL() {
         // Use Layer 2: render with Qt's own matrices (no duplicate grid/axes)
         // Note: set_model_data() is called ONCE in loadModel(), not here!
         render_model_with_matrices( m_viewMatrix, m_projMatrix, modelMatrix );
+
+        // Check for OpenGL errors
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            qCritical() << "OpenGL Error after rendering:" << err;
+        }
     }
 
-    update( );
+    // NOTE: Do NOT call update() here - it creates infinite render loop!
+    // Qt will automatically call paintGL() when needed (e.g., resize, mouse move, etc.)
 
 }
 
@@ -273,11 +280,14 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
         m_cameraTarget[2] -= up[2] * delta.y() * panSpeed;    
         
     }
-    
+
     m_lastMousePos = currentPos;
-    
+
+    // Trigger repaint when camera changes
+    update();
+
     event->accept( );
-    
+
 }
 
 void ModelViewport::mouseReleaseEvent( QMouseEvent *event ) {
@@ -315,11 +325,12 @@ void ModelViewport::wheelEvent( QWheelEvent *event ) {
     {
         m_cameraDistance = 500.0f; // this is the maximum length
     }
-    
-    
-    
-    event->accept( );   
-    
+
+    // Trigger repaint when zoom changes
+    update();
+
+    event->accept( );
+
 }
 
 bool ModelViewport::loadModel( const QString &modelPath )

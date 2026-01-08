@@ -1167,7 +1167,19 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 // Layer 1: Pure OpenGL drawing (lowest level - just draw triangles)
 // ───────────────────────────────────────────────────────────────────────────
 void draw_model_geometry( void ) {
+	static bool first_call = true;
+	if (first_call) {
+		printf("\n=== DRAW GEOMETRY DEBUG ===\n");
+		printf("total_render_vertices: %d\n", total_render_vertices);
+		printf("g_num_ranges: %d\n", g_num_ranges);
+		printf("VAO: %u\n", VAO);
+		printf("VBO: %u\n", VBO);
+		printf("shader_program: %u\n", shader_program);
+		first_call = false;
+	}
+
 	if ( total_render_vertices == 0 ) {
+		printf("ERROR: total_render_vertices is 0, not drawing!\n");
 		return;
 	}
 
@@ -1215,16 +1227,15 @@ void draw_model_geometry( void ) {
 		}
 
 		// Handle texture blending flags
-		if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
+		// CRITICAL: Masked textures use alpha discard (in shader), NOT blending!
+		// Only additive textures should enable blending
+		if ( flags & STUDIO_NF_ADDITIVE ) {
 			glEnable( GL_BLEND );
-
-			if ( flags & STUDIO_NF_ADDITIVE ) {
-				glBlendFunc( GL_SRC_ALPHA, GL_ONE );
-			} else {
-				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-			}
+			glBlendFunc( GL_SRC_ALPHA, GL_ONE );
+			glDepthMask( GL_FALSE );  // Don't write depth for transparent objects
 		} else {
 			glDisable( GL_BLEND );
+			glDepthMask( GL_TRUE );   // Write depth for opaque/masked objects
 		}
 
 		// Set shader flags
@@ -1239,6 +1250,18 @@ void draw_model_geometry( void ) {
 
 		glUniform1i( glGetUniformLocation( shader_program, "u_chrome" ),
 					 ( flags & STUDIO_NF_CHROME ) != 0 );
+
+		// DEBUG: Print first 5 draw calls with texture info
+		static int printed_count = 0;
+		if (printed_count < 5) {
+			printf("Range %d: first=%d, count=%d, tex=%u, flags=0x%X (chrome=%d, masked=%d, additive=%d, fullbright=%d)\n",
+				   r, g_ranges[r].first, g_ranges[r].count, tex_to_bind, flags,
+				   (flags & STUDIO_NF_CHROME) != 0,
+				   (flags & STUDIO_NF_MASKED) != 0,
+				   (flags & STUDIO_NF_ADDITIVE) != 0,
+				   (flags & STUDIO_NF_FULLBRIGHT) != 0);
+			printed_count++;
+		}
 
 		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
 	}
@@ -1291,6 +1314,9 @@ void render_model_with_matrices( mat4 view, mat4 proj, mat4 model ) {
 		}
 	}
 
+	// CRITICAL: Use shader program FIRST before setting uniforms!
+	glUseProgram( shader_program );
+
 	// Upload bone matrices to shader (ALWAYS, whether animated or T-pose)
 	if ( global_header && global_data ) {
 		GLint bone_matrices_loc = glGetUniformLocation( shader_program, "boneMatrices" );
@@ -1300,13 +1326,20 @@ void render_model_with_matrices( mat4 view, mat4 proj, mat4 model ) {
 		}
 	}
 
+	// @TODO(Karlo): FIXME - This vertex rebuilding code is duplicated and causes issues!
+	// For now, SKIP IT since Qt doesn't have animation yet.
+	// The ProcessModelForRendering() call above already built the buffer once.
+
 	// Re-transform vertices with new bone positions
-	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
+	// mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( global_data + global_header->bodypartindex );
 
 	// CRITICAL: Re-build the vertex buffer with new skinned positions
-	total_render_vertices = 0;
-	g_num_ranges = 0;
+	// total_render_vertices = 0;
+	// g_num_ranges = 0;
 
+	// @TODO(Karlo): Commenting out entire vertex rebuilding loop - causes total_render_vertices = 0 bug!
+	// This needs to be refactored properly to avoid code duplication
+	/*
 	// Rebuild vertex data with updated skinned positions
 	for ( int bp = 0; bp < global_header->numbodyparts; ++bp ) {
 		mstudiobodyparts_t *bpRec = &bodyparts[bp];
@@ -1450,14 +1483,22 @@ void render_model_with_matrices( mat4 view, mat4 proj, mat4 model ) {
 			}
 		}
 	}
+	*/
+	// End of commented-out vertex rebuilding code
 
-	// Use shader program
-	glUseProgram( shader_program );
+	// NOTE: Shader program already bound above (before setting bone matrices)
 
 	// Set matrices (provided by caller - Qt or CLI)
 	GLint uModel = glGetUniformLocation( shader_program, "model" );
 	GLint uView = glGetUniformLocation( shader_program, "view" );
 	GLint uProj = glGetUniformLocation( shader_program, "projection" );
+
+	static bool checked_uniforms = false;
+	if (!checked_uniforms) {
+		printf("Uniform locations: model=%d, view=%d, proj=%d\n", uModel, uView, uProj);
+		checked_uniforms = true;
+	}
+
 	if ( uModel != -1 )
 		glUniformMatrix4fv( uModel, 1, GL_FALSE, (const float *)model );
 	if ( uView != -1 )
