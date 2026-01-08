@@ -1167,19 +1167,7 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 // Layer 1: Pure OpenGL drawing (lowest level - just draw triangles)
 // ───────────────────────────────────────────────────────────────────────────
 void draw_model_geometry( void ) {
-	static bool first_call = true;
-	if (first_call) {
-		printf("\n=== DRAW GEOMETRY DEBUG ===\n");
-		printf("total_render_vertices: %d\n", total_render_vertices);
-		printf("g_num_ranges: %d\n", g_num_ranges);
-		printf("VAO: %u\n", VAO);
-		printf("VBO: %u\n", VBO);
-		printf("shader_program: %u\n", shader_program);
-		first_call = false;
-	}
-
 	if ( total_render_vertices == 0 ) {
-		printf("ERROR: total_render_vertices is 0, not drawing!\n");
 		return;
 	}
 
@@ -1206,7 +1194,47 @@ void draw_model_geometry( void ) {
 
 	glDisable( GL_BLEND );
 
-	// Draw each texture range
+	// PASS 1: Draw opaque objects first (with depth write)
+	for ( int r = 0; r < g_num_ranges; ++r ) {
+		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
+
+		// Find texture flags
+		int text_index = -1;
+		for ( int t1 = 0; t1 < g_textures.count; t1++ ) {
+			if ( g_textures.textures[t1].gl_id == tex_to_bind ) {
+				text_index = t1;
+				break;
+			}
+		}
+
+		int flags = 0;
+		if ( text_index >= 0 && text_index < g_textures.count ) {
+			flags = g_textures.textures[text_index].flags;
+		}
+
+		// Skip transparent/masked objects in first pass
+		if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
+			continue;
+		}
+
+		glActiveTexture( GL_TEXTURE0 );
+		glBindTexture( GL_TEXTURE_2D, tex_to_bind );
+
+		glDisable( GL_BLEND );
+		glDepthMask( GL_TRUE );
+
+		// Set shader flags
+		glUniform1i( glGetUniformLocation( shader_program, "u_masked" ), 0 );
+		glUniform1i( glGetUniformLocation( shader_program, "u_fullbright" ),
+					 ( flags & STUDIO_NF_FULLBRIGHT ) != 0 );
+		glUniform1i( glGetUniformLocation( shader_program, "u_additive" ), 0 );
+		glUniform1i( glGetUniformLocation( shader_program, "u_chrome" ),
+					 ( flags & STUDIO_NF_CHROME ) != 0 );
+
+		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
+	}
+
+	// PASS 2: Draw masked/transparent objects (with proper alpha handling)
 	for ( int r = 0; r < g_num_ranges; ++r ) {
 		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
 		glActiveTexture( GL_TEXTURE0 );
