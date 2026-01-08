@@ -22,11 +22,15 @@
 
 #include "ModelViewport.h"
 #include "math_vector.h"
+#include "mdl_loader.h"
+#include "r_draw.h"
+#include "util_messages.h"
 #include <QDebug>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlogging.h>
 #include <QtCore/qnamespace.h>
 #include <QtCore/qpoint.h>
+#include <QtCore/qstringview.h>
 
 ModelViewport::ModelViewport( QWidget *parent )
 	: QOpenGLWidget( parent ),
@@ -152,9 +156,18 @@ void ModelViewport::paintGL() {
         r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
     }
 
-    update( );
-
     // @NOTE: Need to render the model here later!
+    
+    if ( m_model && m_model->header && m_model->data ) 
+    {
+        
+        set_model_data( m_model->header, m_model->data, m_model->texture_header, m_model->texture_data, m_model->seqgroups, m_model->num_seqgroups );
+        render_model( m_model->header, m_model->data );
+        
+    }
+     
+    update( );
+    
 }
 
 void ModelViewport::onAnimationTick() {
@@ -275,5 +288,38 @@ void ModelViewport::wheelEvent( QWheelEvent *event ) {
     
     
     event->accept( );   
+    
+}
+
+bool ModelViewport::loadModel( const QString &modelPath )
+{
+    
+    if ( m_model )
+    {
+        free_model( m_model );
+        m_model = nullptr;
+    }
+    
+    QByteArray pathBytes = modelPath.toUtf8( );
+    const char *cPath = pathBytes.constData( );
+    
+    qDebug( ) << "Loading Model:" << modelPath;
+    
+    mdl_result_t result = create_mdl_model( cPath, &m_model );
+    
+    if ( result != MDL_SUCCESS || m_model == nullptr )
+    {
+        qDebug( ) << "Error: Failed to load the model!";
+        m_model = nullptr;
+        return ( false ); 
+    }
+    
+    
+    qDebug( ) << "Model Loaded Successfully!";
+    qDebug( ) << "   Bones: " << m_model->header->numbones;
+    qDebug( ) << "   Sequences: " << m_model->header->numseq;
+    
+    emit modelLoaded( modelPath );
+    return ( true );
     
 }
