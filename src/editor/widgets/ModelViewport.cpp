@@ -21,9 +21,7 @@
  */
 
 #include "ModelViewport.h"
-#include "math_matrix.h"
-#include "r_camera.h"
-#include "r_grid.h"
+#include "math_vector.h"
 #include <QDebug>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlogging.h>
@@ -139,7 +137,9 @@ void ModelViewport::paintGL() {
         camPos[1] = 0.5f;
     }
 
-    math_vec3_t target = { 0.0f, 0.0f, 0.0f };  // Look at origin
+    math_vec3_t target;
+    Math_Vec3Copy( m_cameraTarget, target );
+    
     math_vec3_t up = { 0.0f, 1.0f, 0.0f };      // World up
 
     // Create view matrix (same as Lambda)
@@ -203,6 +203,31 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
         {
             m_cameraPitch = - ( maxPitch );
         }
+    }
+    
+    // @NOTE( Karlo ): Adding support for PANNING!
+    else if ( m_activeButton == Qt::MiddleButton )
+    {
+        float panSpeed = 0.01f; 
+        math_vec3_t right, up;
+        
+        right[0] = -cosf( m_cameraYaw );
+        right[1] = 0.0f;
+        right[2] = sinf( m_cameraYaw );
+        
+        up[0] = 0.0f;
+        up[1] = 1.0f;
+        up[2] = 0.0f;
+        
+        m_cameraTarget[0] -= right[0] * delta.x( ) * panSpeed; 
+        m_cameraTarget[1] -= right[1] * delta.x() * panSpeed;
+        m_cameraTarget[2] -= right[2] * delta.x() * panSpeed;
+
+        // Vertical drag (Y) = move along up vector
+        m_cameraTarget[0] -= up[0] * delta.y() * panSpeed;
+        m_cameraTarget[1] -= up[1] * delta.y() * panSpeed;
+        m_cameraTarget[2] -= up[2] * delta.y() * panSpeed;    
+        
     }
     
     m_lastMousePos = currentPos;

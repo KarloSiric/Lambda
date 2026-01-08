@@ -26,7 +26,6 @@
 #include "math_vector.h"
 #include "math_types.h"
 #include "mdl_animations.h"
-#include "mdl_bonecontrollers.h"
 #include "util/util_logger.h"
 
 #include <stdio.h>
@@ -109,5 +108,3 @@ void TransformVertices( studiohdr_t *header, unsigned char *data, mstudiomodel_t
 // NOTE: SetUpBonesFromAnimation was removed because it had incorrect matrix conversion logic.
 // Use mdl_animation_calculate_bones() from mdl_animations.c instead, which correctly
 // handles bone transformations using quaternions.
-
-
