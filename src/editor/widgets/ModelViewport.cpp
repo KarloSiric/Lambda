@@ -47,7 +47,12 @@ ModelViewport::ModelViewport( QWidget *parent )
 	math_vec3_t target = { 0.0f, 0.0f, 0.0f };
 
 	// 100 units away the distance
-	Camera_Init( &m_camera, target, 100.0f );
+	Camera_Init( &m_camera, target, 50.0f );
+    
+    // Set camera angles for isometric view
+    m_camera.angles_deg[0] = 17.2f;  // Pitch: look down 20 degrees
+    m_camera.angles_deg[1] = 28.6f;  // Yaw: rotate 45 degrees
+    m_camera.angles_deg[2] = 0.0f;   // Roll: no rotation
 
 	qDebug() << "ModelViewport Created";
 }
@@ -94,42 +99,55 @@ void ModelViewport::initializeGL( void ) {
 
 void ModelViewport::resizeGL( int width, int height ) {
 	glViewport( 0, 0, width, height );
-    
+
     float aspect = (float)width / (float)height;
-    float fov = 60.0f;
-    float nearPlane = 1.0f;
-    float farPlane = 10000.0f;
-    
+    float fov = 50.0f;        // Match Lambda's FOV (was 60)
+    float nearPlane = 0.01f;  // Match Lambda (was 1.0f)
+    float farPlane = 1000.0f; // Match Lambda (was 10000.0f)
+
     glm_perspective( glm_rad( fov ), aspect, nearPlane, farPlane, m_projMatrix );
-    
-    
-    
+
 	qDebug() << "Viewport Resized:" << width << "x" << height;
 }
 
 void ModelViewport::paintGL() {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    
-    Camera_UpdateTransforms( &m_camera );
-    
-    // Need to get the view matrix now
-    const math_mat4_t *view_matrix = Camera_GetViewMatrix( &m_camera );
-    Math_Mat4_Copy( *view_matrix, m_viewMatrix );
-    
+
+    // @Note: Calculate camera position EXACTLY like Lambda does in r_draw.c (lines 1340-1352)
+    //        Lambda uses spherical coordinates, not Quake-style angles!
+    float zoom = 0.1f;   // Lambda's default zoom value
+    float camDist = 5.0f / ( zoom > 0.001f ? zoom : 0.001f );  // = 50.0f
+
+    float pitch = 0.3f;  // Lambda's rotation_x (IN RADIANS!)
+    float yaw = 0.5f;    // Lambda's rotation_y (IN RADIANS!)
+
+    // Spherical to Cartesian conversion (Lambda's formula)
+    math_vec3_t camPos;
+    camPos[0] = camDist * cosf(pitch) * sinf(yaw);   // X
+    camPos[1] = camDist * sinf(pitch);               // Y
+    camPos[2] = camDist * cosf(pitch) * cosf(yaw);   // Z
+
+    // Clamp camera Y above ground (Lambda does this)
+    if ( camPos[1] < 0.5f ) {
+        camPos[1] = 0.5f;
+    }
+
+    math_vec3_t target = { 0.0f, 0.0f, 0.0f };  // Look at origin
+    math_vec3_t up = { 0.0f, 1.0f, 0.0f };      // World up
+
+    // Create view matrix (same as Lambda)
+    Math_Mat4_LookAt( camPos, target, up, m_viewMatrix );
+
     if ( m_showGrid )
     {
         r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
         r_ground_draw( m_viewMatrix, m_projMatrix, 0.0f );
         r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
     }
-    
+
     update( );
-    
+
     // @NOTE: Need to render the model here later!
-    
-    
-    
-    
 }
 
 void ModelViewport::onAnimationTick() {
