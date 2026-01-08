@@ -138,6 +138,7 @@ private:
     float m_cameraPitch;
     float m_cameraYaw;
     float m_cameraDistance;
+    math_vec3_t m_cameraTarget;
     
     // View/projection matrices for rendering
     math_mat4_t m_viewMatrix;

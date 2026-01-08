@@ -38,6 +38,7 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_cameraPitch( 0.3f ),
 	  m_cameraYaw( 0.5f ),
       m_cameraDistance( 50.0f ),
+      m_cameraTarget{ 0.0f, 0.0f, 0.0f },
       m_showGrid( true ),
       m_wireframeMode( false ) {
         
