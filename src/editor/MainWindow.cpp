@@ -32,6 +32,8 @@
 #include <QActionGroup>
 #include <QDockWidget>
 #include <QOpenGLWidget>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QtCore/qcontainerfwd.h>
 #include <QtCore/qnamespace.h>
 #include <QtCore/qobject.h>
@@ -42,6 +44,7 @@
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qmenu.h>
+#include <QtWidgets/qmessagebox.h>
 #include <QtWidgets/qtoolbar.h>
 
 MainWindow::MainWindow( QWidget *parent )
@@ -1068,7 +1071,8 @@ void MainWindow::createFileMenu() {
 	// OPEN SECTION
 	// ==================================
 
-	fileMenu->addAction( "Open Model..." );
+	QAction *openAction = fileMenu->addAction( "Open Model" );
+	connect( openAction, &QAction::triggered, this, &MainWindow::onOpenModel );
 	QMenu *recentMenu = fileMenu->addMenu( "Open recent" );
 	recentMenu->addAction( "barney.mdl" );
 	recentMenu->addAction( "player.mdl" );
@@ -1484,192 +1488,191 @@ void MainWindow::createDebugMenu() {
 	// TODO: Need to be filled properly, for now empty
 
 	QMenu *debugMenu = menuBar()->addMenu( tr( "&Debug" ) );
-    
-    // ═══════════════════════════════════════════════════════
-    // PERFORMANCE MONITORING
-    // ═══════════════════════════════════════════════════════
-    
-    QAction *showFPS = debugMenu->addAction("Show FPS");
-    showFPS->setCheckable( true );
-    
-    QAction *showMemory = debugMenu->addAction("Show Memory");
-    showMemory->setCheckable(true);
-    
-    QAction *showRenderStats = debugMenu->addAction("Show Render Stats");
-    showRenderStats->setCheckable(true);
-    
-    debugMenu->addSeparator();
-    
-    // ═══════════════════════════════════════════════════════
-    // DEBUGGING TOOLS
-    // ═══════════════════════════════════════════════════════
-    
-    debugMenu->addAction("Print Model Info to Console...");
-    debugMenu->addAction("Dump Vertices to File...");
-    debugMenu->addAction("Dump Bones to File...");
-    debugMenu->addAction("Dump Sequence to File...");
-    debugMenu->addAction("Export Debug Log...");
-    
-    debugMenu->addSeparator();
-     
-    // ═══════════════════════════════════════════════════════
-    // OPENGL DEBUG
-    // ═══════════════════════════════════════════════════════
-    
-    QMenu *glDebugMenu = debugMenu->addMenu("OpenGL Debug");
-    
-    QAction *showGLInfo = glDebugMenu->addAction("Show GL Info");
-    showGLInfo->setCheckable( true );
-    
-    QAction *wireframeOverlay = glDebugMenu->addAction("Wireframe Overlay");
-    wireframeOverlay->setCheckable( true );
-    
-    QAction *showDrawCalls = glDebugMenu->addAction("Show Draw Calls");
-    showDrawCalls->setCheckable( true );
-    
-    QAction *showBufferStats = glDebugMenu->addAction("Show Buffer Stats");
-    showBufferStats->setCheckable( true );
-    
-    glDebugMenu->addSeparator();
-    glDebugMenu->addAction("Clear GL Errors");
-    glDebugMenu->addAction("Force GL Sync");
-    glDebugMenu->addAction("Recreate GL Context");
 
-    debugMenu->addSeparator();   
-     
-    // ═══════════════════════════════════════════════════════
-    // MODEL VALIDATION & TESTING
-    // ═══════════════════════════════════════════════════════
-    
-    QMenu *validateMenu = debugMenu->addMenu("Validation");
-    
-    validateMenu->addAction("Validate Bone Hierarchy");
-    validateMenu->addAction("Validate Sequences");
-    validateMenu->addAction("Validate Textures");
-    validateMenu->addAction("Validate Hitboxes");
-    validateMenu->addAction("Validate Attachments");
-    validateMenu->addSeparator();
-    validateMenu->addAction("Run All Validation Checks...");
+	// ═══════════════════════════════════════════════════════
+	// PERFORMANCE MONITORING
+	// ═══════════════════════════════════════════════════════
 
-    debugMenu->addSeparator();    
-    
-    // ═══════════════════════════════════════════════════════
-    // ANIMATION DEBUG
-    // ═══════════════════════════════════════════════════════
-    
-    QMenu *animDebugMenu = menuBar()->addMenu("Animation Debug");
-    
-    QAction *showBoneTransforms = animDebugMenu->addAction("Show Bone Transformations");
-    showBoneTransforms->setCheckable( true );
-    
-    QAction *showBlendWeights = animDebugMenu->addAction("Show Blend Weights");
-    showBlendWeights->setCheckable(true);
+	QAction *showFPS = debugMenu->addAction( "Show FPS" );
+	showFPS->setCheckable( true );
 
-    QAction *freezeAnimation = animDebugMenu->addAction("Freeze Animation");
-    freezeAnimation->setCheckable(true);
+	QAction *showMemory = debugMenu->addAction( "Show Memory" );
+	showMemory->setCheckable( true );
 
-    animDebugMenu->addSeparator();
-    animDebugMenu->addAction("Print Current Pose to Console");
-    animDebugMenu->addAction("Export Current Frame as SMD...");
+	QAction *showRenderStats = debugMenu->addAction( "Show Render Stats" );
+	showRenderStats->setCheckable( true );
 
-    debugMenu->addSeparator();
-    
-    // ═══════════════════════════════════════════════════════
-    // LOGGER SETTINGS (IMPORTANT FOR USER NEEDS!)
-    // ═══════════════════════════════════════════════════════ 
-    
-    QMenu *logLevelMenu = debugMenu->addMenu("Log Level");
-    QActionGroup *logLevelGroup = new QActionGroup(this);
-    
-    QAction *logError = logLevelMenu->addAction("Error Only");
-    logError->setCheckable( true );
-    logLevelGroup->addAction(logError);
-    
-    QAction *logWarning = logLevelMenu->addAction("Warning");
-    logWarning->setCheckable( true );
-    logLevelGroup->addAction(logWarning);
-    
-    QAction *logInfo = logLevelMenu->addAction("Info");
-    logInfo->setCheckable( true );
-    logLevelGroup->addAction(logInfo);
-    
-    QAction *logDebug = logLevelMenu->addAction("Debug");
-    logDebug->setCheckable( true );
-    logLevelGroup->addAction(logDebug);
-    
-    QAction *logVerbose = logLevelMenu->addAction("Verbose");
-    logVerbose->setCheckable( true );
-    logLevelGroup->addAction(logVerbose);
-    
-    // ═══════════════════════════════════════════════════════
-    // CONSOLE ACTIONS
-    // ═══════════════════════════════════════════════════════ 
-    
-    debugMenu->addAction("Clear Console");
-    debugMenu->addAction("Copy Console to Clipboard");
-    debugMenu->addAction("Save Console to File...");
-    debugMenu->addAction("Open Log File Location...");
-    
-    debugMenu->addSeparator();
-    
-    // ═══════════════════════════════════════════════════════
-    // PROFILING
-    // ═══════════════════════════════════════════════════════
-    
-    QMenu *profilingMenu = debugMenu->addMenu("Profiling");
-    
-    QAction *enableProfiling = profilingMenu->addAction("Profiling");
-    
-    enableProfiling->setCheckable(true);
-    
-    profilingMenu->addSeparator();
-    profilingMenu->addAction("Show Profiling Results...");
-    profilingMenu->addAction("Reset Profiling Results...");
-    profilingMenu->addAction("Export Profiling Report...");
-    
-    debugMenu->addSeparator();
-    
-    // ═══════════════════════════════════════════════════════
-    // CRASH & ERROR HANDLING
-    // ═══════════════════════════════════════════════════════
+	debugMenu->addSeparator();
 
-    QMenu *crashMenu = debugMenu->addMenu("Crash Handling");
+	// ═══════════════════════════════════════════════════════
+	// DEBUGGING TOOLS
+	// ═══════════════════════════════════════════════════════
 
-    QAction *enableCrashDump = crashMenu->addAction("Enable Crash Dumps");
-    enableCrashDump->setCheckable(true);
-    enableCrashDump->setChecked(true);
+	debugMenu->addAction( "Print Model Info to Console..." );
+	debugMenu->addAction( "Dump Vertices to File..." );
+	debugMenu->addAction( "Dump Bones to File..." );
+	debugMenu->addAction( "Dump Sequence to File..." );
+	debugMenu->addAction( "Export Debug Log..." );
 
-    QAction *enableAutoSave = crashMenu->addAction("Enable Auto-Save");
-    enableAutoSave->setCheckable(true);
-    enableAutoSave->setChecked(true);
+	debugMenu->addSeparator();
 
-    crashMenu->addSeparator();
-    crashMenu->addAction("Open Crash Logs Folder...");
-    crashMenu->addAction("Send Crash Report...");
+	// ═══════════════════════════════════════════════════════
+	// OPENGL DEBUG
+	// ═══════════════════════════════════════════════════════
 
-    debugMenu->addSeparator();
+	QMenu *glDebugMenu = debugMenu->addMenu( "OpenGL Debug" );
 
-    // ═══════════════════════════════════════════════════════
-    // ADVANCED DEBUG
-    // ═══════════════════════════════════════════════════════
+	QAction *showGLInfo = glDebugMenu->addAction( "Show GL Info" );
+	showGLInfo->setCheckable( true );
 
-    QAction *showMemAddresses = debugMenu->addAction("Show Memory Addresses");
-    showMemAddresses->setCheckable(true);
+	QAction *wireframeOverlay = glDebugMenu->addAction( "Wireframe Overlay" );
+	wireframeOverlay->setCheckable( true );
 
-    QAction *enableAsserts = debugMenu->addAction("Enable Runtime Assertions");
-    enableAsserts->setCheckable(true);
-    enableAsserts->setChecked(true);
+	QAction *showDrawCalls = glDebugMenu->addAction( "Show Draw Calls" );
+	showDrawCalls->setCheckable( true );
 
-    debugMenu->addSeparator();
+	QAction *showBufferStats = glDebugMenu->addAction( "Show Buffer Stats" );
+	showBufferStats->setCheckable( true );
 
-    // ═══════════════════════════════════════════════════════
-    // TESTING
-    // ═══════════════════════════════════════════════════════
+	glDebugMenu->addSeparator();
+	glDebugMenu->addAction( "Clear GL Errors" );
+	glDebugMenu->addAction( "Force GL Sync" );
+	glDebugMenu->addAction( "Recreate GL Context" );
 
-    debugMenu->addAction("Run Unit Tests...");
-    debugMenu->addAction("Stress Test Renderer...");
-    debugMenu->addAction("Test All Sequences...");    
-    
+	debugMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// MODEL VALIDATION & TESTING
+	// ═══════════════════════════════════════════════════════
+
+	QMenu *validateMenu = debugMenu->addMenu( "Validation" );
+
+	validateMenu->addAction( "Validate Bone Hierarchy" );
+	validateMenu->addAction( "Validate Sequences" );
+	validateMenu->addAction( "Validate Textures" );
+	validateMenu->addAction( "Validate Hitboxes" );
+	validateMenu->addAction( "Validate Attachments" );
+	validateMenu->addSeparator();
+	validateMenu->addAction( "Run All Validation Checks..." );
+
+	debugMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// ANIMATION DEBUG
+	// ═══════════════════════════════════════════════════════
+
+	QMenu *animDebugMenu = menuBar()->addMenu( "Animation Debug" );
+
+	QAction *showBoneTransforms = animDebugMenu->addAction( "Show Bone Transformations" );
+	showBoneTransforms->setCheckable( true );
+
+	QAction *showBlendWeights = animDebugMenu->addAction( "Show Blend Weights" );
+	showBlendWeights->setCheckable( true );
+
+	QAction *freezeAnimation = animDebugMenu->addAction( "Freeze Animation" );
+	freezeAnimation->setCheckable( true );
+
+	animDebugMenu->addSeparator();
+	animDebugMenu->addAction( "Print Current Pose to Console" );
+	animDebugMenu->addAction( "Export Current Frame as SMD..." );
+
+	debugMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// LOGGER SETTINGS (IMPORTANT FOR USER NEEDS!)
+	// ═══════════════════════════════════════════════════════
+
+	QMenu *logLevelMenu = debugMenu->addMenu( "Log Level" );
+	QActionGroup *logLevelGroup = new QActionGroup( this );
+
+	QAction *logError = logLevelMenu->addAction( "Error Only" );
+	logError->setCheckable( true );
+	logLevelGroup->addAction( logError );
+
+	QAction *logWarning = logLevelMenu->addAction( "Warning" );
+	logWarning->setCheckable( true );
+	logLevelGroup->addAction( logWarning );
+
+	QAction *logInfo = logLevelMenu->addAction( "Info" );
+	logInfo->setCheckable( true );
+	logLevelGroup->addAction( logInfo );
+
+	QAction *logDebug = logLevelMenu->addAction( "Debug" );
+	logDebug->setCheckable( true );
+	logLevelGroup->addAction( logDebug );
+
+	QAction *logVerbose = logLevelMenu->addAction( "Verbose" );
+	logVerbose->setCheckable( true );
+	logLevelGroup->addAction( logVerbose );
+
+	// ═══════════════════════════════════════════════════════
+	// CONSOLE ACTIONS
+	// ═══════════════════════════════════════════════════════
+
+	debugMenu->addAction( "Clear Console" );
+	debugMenu->addAction( "Copy Console to Clipboard" );
+	debugMenu->addAction( "Save Console to File..." );
+	debugMenu->addAction( "Open Log File Location..." );
+
+	debugMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// PROFILING
+	// ═══════════════════════════════════════════════════════
+
+	QMenu *profilingMenu = debugMenu->addMenu( "Profiling" );
+
+	QAction *enableProfiling = profilingMenu->addAction( "Profiling" );
+
+	enableProfiling->setCheckable( true );
+
+	profilingMenu->addSeparator();
+	profilingMenu->addAction( "Show Profiling Results..." );
+	profilingMenu->addAction( "Reset Profiling Results..." );
+	profilingMenu->addAction( "Export Profiling Report..." );
+
+	debugMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// CRASH & ERROR HANDLING
+	// ═══════════════════════════════════════════════════════
+
+	QMenu *crashMenu = debugMenu->addMenu( "Crash Handling" );
+
+	QAction *enableCrashDump = crashMenu->addAction( "Enable Crash Dumps" );
+	enableCrashDump->setCheckable( true );
+	enableCrashDump->setChecked( true );
+
+	QAction *enableAutoSave = crashMenu->addAction( "Enable Auto-Save" );
+	enableAutoSave->setCheckable( true );
+	enableAutoSave->setChecked( true );
+
+	crashMenu->addSeparator();
+	crashMenu->addAction( "Open Crash Logs Folder..." );
+	crashMenu->addAction( "Send Crash Report..." );
+
+	debugMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// ADVANCED DEBUG
+	// ═══════════════════════════════════════════════════════
+
+	QAction *showMemAddresses = debugMenu->addAction( "Show Memory Addresses" );
+	showMemAddresses->setCheckable( true );
+
+	QAction *enableAsserts = debugMenu->addAction( "Enable Runtime Assertions" );
+	enableAsserts->setCheckable( true );
+	enableAsserts->setChecked( true );
+
+	debugMenu->addSeparator();
+
+	// ═══════════════════════════════════════════════════════
+	// TESTING
+	// ═══════════════════════════════════════════════════════
+
+	debugMenu->addAction( "Run Unit Tests..." );
+	debugMenu->addAction( "Stress Test Renderer..." );
+	debugMenu->addAction( "Test All Sequences..." );
 }
 
 void MainWindow::createWindowMenu() {
@@ -1692,13 +1695,10 @@ void MainWindow::createHelpMenu() {
 }
 
 void MainWindow::createViewportContainer() {
-    
-    viewportContainer = new ModelViewport( this );
-    
-    viewportContainer->setObjectName( "ViewportContainer" );
-    setCentralWidget( viewportContainer );
-    
-    
+	viewportContainer = new ModelViewport( this );
+
+	viewportContainer->setObjectName( "ViewportContainer" );
+	setCentralWidget( viewportContainer );
 }
 
 void MainWindow::createDocks() {
@@ -1771,4 +1771,23 @@ void MainWindow::setupDocks( void ) {
 
 void MainWindow::setupToolbars( void ) {
 	createToolbarUpper();
+}
+
+void MainWindow::onOpenModel( void ) {
+	// Now we need to open the file dialog
+	QString filePath = QFileDialog::getOpenFileName( this, "Open Half-Life Model", "", "Half-Life Models (*.mdl)" );
+
+	if ( filePath.isEmpty() ) {
+		qDebug() << "Model loading cancelled";
+		return;
+	}
+
+	qDebug() << "Selected file: " << filePath;
+
+	// Now we load the model in viewport
+	bool success = viewportContainer->loadModel( filePath );
+
+	if ( !success ) {
+		QMessageBox::critical( this, "Error Loading Model", "Failed to load model:\n" + filePath );
+	}
 }

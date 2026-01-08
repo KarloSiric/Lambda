@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 
+#include "ModelViewport.h"
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QWidget>
@@ -29,15 +30,19 @@ class MainWindow : public QMainWindow {
     
 	explicit MainWindow( QWidget *parent = nullptr );
     
-  private:
+  private slots:
     
+    void onOpenModel( );  
+    
+  private:
+     
 	void setupMenus();
 	void setupViewports();
 	void setupDocks();
     void setupToolbars();
     void setupTheme();
-
-
+    
+    
 	void createFileMenu();
 	void createEditMenu();
 	void createViewMenu();
@@ -62,7 +67,7 @@ class MainWindow : public QMainWindow {
 	QDockWidget *bottomDock;
 	QStatusBar *statusBar;
 
-	QWidget *viewportContainer;
+	ModelViewport *viewportContainer;
 };
 
 #endif
