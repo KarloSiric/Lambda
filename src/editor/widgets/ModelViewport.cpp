@@ -93,10 +93,12 @@ void ModelViewport::initializeGL( void ) {
     
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
-    
-    glEnable( GL_CULL_FACE );
-    glCullFace( GL_BACK );
-    glFrontFace( GL_CCW );
+
+    // TEMPORARY: Disable culling to debug transparency issue
+    glDisable( GL_CULL_FACE );
+    // glEnable( GL_CULL_FACE );
+    // glCullFace( GL_BACK );
+    // glFrontFace( GL_CCW );
     
     // CRITICAL: Initialize VAO/VBO for model rendering (MUST be before load_shaders)
     setup_triangle();
@@ -195,12 +197,6 @@ void ModelViewport::paintGL() {
         // Use Layer 2: render with Qt's own matrices (no duplicate grid/axes)
         // Note: set_model_data() is called ONCE in loadModel(), not here!
         render_model_with_matrices( m_viewMatrix, m_projMatrix, modelMatrix );
-
-        // Check for OpenGL errors
-        GLenum err = glGetError();
-        if (err != GL_NO_ERROR) {
-            qCritical() << "OpenGL Error after rendering:" << err;
-        }
     }
 
     // NOTE: Do NOT call update() here - it creates infinite render loop!

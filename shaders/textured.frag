@@ -12,6 +12,7 @@ uniform sampler2D tex;
 uniform bool u_fullbright;
 uniform bool u_masked;
 uniform bool u_additive;
+uniform bool u_chrome;
 
 out vec4 FragColor;
 

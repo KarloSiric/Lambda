@@ -61,9 +61,10 @@ typedef struct
 
 typedef struct
 {
-	GLuint tex; // GL texture to bind
-	int first; // first vertex in the big VBO
-	int count; // how many vertices to draw
+	GLuint tex;   // GL texture to bind
+	int first;    // first vertex in the big VBO
+	int count;    // how many vertices to draw
+	int flags;    // Texture flags (STUDIO_NF_*) - CACHED for performance!
 } DrawRange;
 
 static DrawRange g_ranges[MAX_DRAW_RANGES];
@@ -85,6 +86,19 @@ static unsigned int VAO = 0;
 static unsigned int EBO = 0; // Element Buffer Object for indices
 static unsigned int shader_program = 0;
 static unsigned int current_texture = 0; // Currently bound texture
+
+// PERFORMANCE: Cached uniform locations (looked up once, not every frame!)
+static GLint u_model_loc = -1;
+static GLint u_view_loc = -1;
+static GLint u_proj_loc = -1;
+static GLint u_tex_loc = -1;
+static GLint u_lightPos_loc = -1;
+static GLint u_viewPos_loc = -1;
+static GLint u_masked_loc = -1;
+static GLint u_fullbright_loc = -1;
+static GLint u_additive_loc = -1;
+static GLint u_chrome_loc = -1;
+static GLint u_boneMatrices_loc = -1;
 
 extern float rotation_x;
 extern float rotation_y;
@@ -374,13 +388,15 @@ void ProcessModelForRendering( void ) {
 				tex_index = skin_table[g_current_skin_family * numskinref + tex_index];
 			}
 
-			// GL texture + size
+			// GL texture + size + flags (PERFORMANCE: get flags here, not in render loop!)
 			GLuint gl_tex = 0;
 			int texW = 1, texH = 1;
+			int tex_flags = 0; // STUDIO_NF_* flags
 			if ( tex_index >= 0 && tex_index < g_textures.count ) {
 				gl_tex = g_textures.textures[tex_index].gl_id;
 				texW = g_textures.textures[tex_index].width;
 				texH = g_textures.textures[tex_index].height;
+				tex_flags = g_textures.textures[tex_index].flags; // Cache flags!
 
 				if ( texW <= 0 )
 					texW = 1;
@@ -545,11 +561,12 @@ void ProcessModelForRendering( void ) {
 				}
 			}
 
-			// One draw range for this mesh
+			// One draw range for this mesh (PERFORMANCE: store flags to avoid search!)
 			if ( g_num_ranges < MAX_DRAW_RANGES ) {
 				g_ranges[g_num_ranges].tex = gl_tex;
 				g_ranges[g_num_ranges].first = start_first;
 				g_ranges[g_num_ranges].count = total_render_vertices - start_first;
+				g_ranges[g_num_ranges].flags = tex_flags; // Store flags here!
 				g_num_ranges++;
 			}
 		}
@@ -748,6 +765,19 @@ int load_shaders( void ) {
 		fprintf( stderr, "ERROR - Failed to create properly a shader program!\n" );
 		return ( -1 );
 	}
+
+	// PERFORMANCE: Cache all uniform locations once (not every frame!)
+	u_model_loc = glGetUniformLocation( shader_program, "model" );
+	u_view_loc = glGetUniformLocation( shader_program, "view" );
+	u_proj_loc = glGetUniformLocation( shader_program, "projection" );
+	u_tex_loc = glGetUniformLocation( shader_program, "tex" );
+	u_lightPos_loc = glGetUniformLocation( shader_program, "lightPos" );
+	u_viewPos_loc = glGetUniformLocation( shader_program, "viewPos" );
+	u_masked_loc = glGetUniformLocation( shader_program, "u_masked" );
+	u_fullbright_loc = glGetUniformLocation( shader_program, "u_fullbright" );
+	u_additive_loc = glGetUniformLocation( shader_program, "u_additive" );
+	u_chrome_loc = glGetUniformLocation( shader_program, "u_chrome" );
+	u_boneMatrices_loc = glGetUniformLocation( shader_program, "boneMatrices" );
 
 	return ( 0 );
 }
@@ -1187,109 +1217,44 @@ void draw_model_geometry( void ) {
 	glVertexAttribIPointer( 3, 1, GL_INT, sizeof( int ), (void *)0 );
 	glEnableVertexAttribArray( 3 );
 
-	GLint uTex = glGetUniformLocation( shader_program, "tex" );
-	if ( uTex != -1 ) {
-		glUniform1i( uTex, 0 );
+	// PERFORMANCE: Use cached uniform location
+	if ( u_tex_loc != -1 ) {
+		glUniform1i( u_tex_loc, 0 );
 	}
 
-	glDisable( GL_BLEND );
+	// PERFORMANCE: Track GL state to avoid redundant calls
+	static bool blend_enabled = false;
 
-	// PASS 1: Draw opaque objects first (with depth write)
-	for ( int r = 0; r < g_num_ranges; ++r ) {
-		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
-
-		// Find texture flags
-		int text_index = -1;
-		for ( int t1 = 0; t1 < g_textures.count; t1++ ) {
-			if ( g_textures.textures[t1].gl_id == tex_to_bind ) {
-				text_index = t1;
-				break;
-			}
-		}
-
-		int flags = 0;
-		if ( text_index >= 0 && text_index < g_textures.count ) {
-			flags = g_textures.textures[text_index].flags;
-		}
-
-		// Skip transparent/masked objects in first pass
-		if ( flags & ( STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED ) ) {
-			continue;
-		}
-
-		glActiveTexture( GL_TEXTURE0 );
-		glBindTexture( GL_TEXTURE_2D, tex_to_bind );
-
-		glDisable( GL_BLEND );
-		glDepthMask( GL_TRUE );
-
-		// Set shader flags
-		glUniform1i( glGetUniformLocation( shader_program, "u_masked" ), 0 );
-		glUniform1i( glGetUniformLocation( shader_program, "u_fullbright" ),
-					 ( flags & STUDIO_NF_FULLBRIGHT ) != 0 );
-		glUniform1i( glGetUniformLocation( shader_program, "u_additive" ), 0 );
-		glUniform1i( glGetUniformLocation( shader_program, "u_chrome" ),
-					 ( flags & STUDIO_NF_CHROME ) != 0 );
-
-		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
-	}
-
-	// PASS 2: Draw masked/transparent objects (with proper alpha handling)
+	// Draw each texture range (single pass like CLI version)
 	for ( int r = 0; r < g_num_ranges; ++r ) {
 		GLuint tex_to_bind = g_ranges[r].tex ? g_ranges[r].tex : g_white_tex;
 		glActiveTexture( GL_TEXTURE0 );
 		glBindTexture( GL_TEXTURE_2D, tex_to_bind );
 
-		// Find texture flags
-		int text_index = -1;
-		for ( int t1 = 0; t1 < g_textures.count; t1++ ) {
-			if ( g_textures.textures[t1].gl_id == tex_to_bind ) {
-				text_index = t1;
-				break;
+		// PERFORMANCE: Use flags stored in draw range (no search needed!)
+		int flags = g_ranges[r].flags;
+
+		// PERFORMANCE: Only change blend state if needed
+		bool needs_blend = ( flags & STUDIO_NF_ADDITIVE ) != 0;
+		if ( needs_blend != blend_enabled ) {
+			if ( needs_blend ) {
+				glEnable( GL_BLEND );
+				glBlendFunc( GL_SRC_ALPHA, GL_ONE );
+			} else {
+				glDisable( GL_BLEND );
 			}
+			blend_enabled = needs_blend;
 		}
 
-		int flags = 0;
-		if ( text_index >= 0 && text_index < g_textures.count ) {
-			flags = g_textures.textures[text_index].flags;
-		}
-
-		// Handle texture blending flags
-		// CRITICAL: Masked textures use alpha discard (in shader), NOT blending!
-		// Only additive textures should enable blending
-		if ( flags & STUDIO_NF_ADDITIVE ) {
-			glEnable( GL_BLEND );
-			glBlendFunc( GL_SRC_ALPHA, GL_ONE );
-			glDepthMask( GL_FALSE );  // Don't write depth for transparent objects
-		} else {
-			glDisable( GL_BLEND );
-			glDepthMask( GL_TRUE );   // Write depth for opaque/masked objects
-		}
-
-		// Set shader flags
-		glUniform1i( glGetUniformLocation( shader_program, "u_masked" ),
-					 ( flags & STUDIO_NF_MASKED ) != 0 );
-
-		glUniform1i( glGetUniformLocation( shader_program, "u_fullbright" ),
-					 ( flags & STUDIO_NF_FULLBRIGHT ) != 0 );
-
-		glUniform1i( glGetUniformLocation( shader_program, "u_additive" ),
-					 ( flags & STUDIO_NF_ADDITIVE ) != 0 );
-
-		glUniform1i( glGetUniformLocation( shader_program, "u_chrome" ),
-					 ( flags & STUDIO_NF_CHROME ) != 0 );
-
-		// DEBUG: Print first 5 draw calls with texture info
-		static int printed_count = 0;
-		if (printed_count < 5) {
-			printf("Range %d: first=%d, count=%d, tex=%u, flags=0x%X (chrome=%d, masked=%d, additive=%d, fullbright=%d)\n",
-				   r, g_ranges[r].first, g_ranges[r].count, tex_to_bind, flags,
-				   (flags & STUDIO_NF_CHROME) != 0,
-				   (flags & STUDIO_NF_MASKED) != 0,
-				   (flags & STUDIO_NF_ADDITIVE) != 0,
-				   (flags & STUDIO_NF_FULLBRIGHT) != 0);
-			printed_count++;
-		}
+		// PERFORMANCE: Use cached uniform locations (not glGetUniformLocation!)
+		if ( u_masked_loc != -1 )
+			glUniform1i( u_masked_loc, ( flags & STUDIO_NF_MASKED ) != 0 );
+		if ( u_fullbright_loc != -1 )
+			glUniform1i( u_fullbright_loc, ( flags & STUDIO_NF_FULLBRIGHT ) != 0 );
+		if ( u_additive_loc != -1 )
+			glUniform1i( u_additive_loc, ( flags & STUDIO_NF_ADDITIVE ) != 0 );
+		if ( u_chrome_loc != -1 )
+			glUniform1i( u_chrome_loc, ( flags & STUDIO_NF_CHROME ) != 0 );
 
 		glDrawArrays( GL_TRIANGLES, g_ranges[r].first, g_ranges[r].count );
 	}
@@ -1346,12 +1311,10 @@ void render_model_with_matrices( mat4 view, mat4 proj, mat4 model ) {
 	glUseProgram( shader_program );
 
 	// Upload bone matrices to shader (ALWAYS, whether animated or T-pose)
-	if ( global_header && global_data ) {
-		GLint bone_matrices_loc = glGetUniformLocation( shader_program, "boneMatrices" );
-		if ( bone_matrices_loc != -1 ) {
-			glUniformMatrix4fv( bone_matrices_loc, global_header->numbones, GL_FALSE,
-								(const float *)g_bonetransformations );
-		}
+	// PERFORMANCE: Use cached uniform location
+	if ( global_header && global_data && u_boneMatrices_loc != -1 ) {
+		glUniformMatrix4fv( u_boneMatrices_loc, global_header->numbones, GL_FALSE,
+							(const float *)g_bonetransformations );
 	}
 
 	// @TODO(Karlo): FIXME - This vertex rebuilding code is duplicated and causes issues!
@@ -1516,40 +1479,27 @@ void render_model_with_matrices( mat4 view, mat4 proj, mat4 model ) {
 
 	// NOTE: Shader program already bound above (before setting bone matrices)
 
-	// Set matrices (provided by caller - Qt or CLI)
-	GLint uModel = glGetUniformLocation( shader_program, "model" );
-	GLint uView = glGetUniformLocation( shader_program, "view" );
-	GLint uProj = glGetUniformLocation( shader_program, "projection" );
-
-	static bool checked_uniforms = false;
-	if (!checked_uniforms) {
-		printf("Uniform locations: model=%d, view=%d, proj=%d\n", uModel, uView, uProj);
-		checked_uniforms = true;
-	}
-
-	if ( uModel != -1 )
-		glUniformMatrix4fv( uModel, 1, GL_FALSE, (const float *)model );
-	if ( uView != -1 )
-		glUniformMatrix4fv( uView, 1, GL_FALSE, (const float *)view );
-	if ( uProj != -1 )
-		glUniformMatrix4fv( uProj, 1, GL_FALSE, (const float *)proj );
+	// PERFORMANCE: Set matrices using cached uniform locations
+	if ( u_model_loc != -1 )
+		glUniformMatrix4fv( u_model_loc, 1, GL_FALSE, (const float *)model );
+	if ( u_view_loc != -1 )
+		glUniformMatrix4fv( u_view_loc, 1, GL_FALSE, (const float *)view );
+	if ( u_proj_loc != -1 )
+		glUniformMatrix4fv( u_proj_loc, 1, GL_FALSE, (const float *)proj );
 
 	// Set lighting (3-point lighting)
 	vec3 lightPos = { 5.0f, 8.0f, 5.0f };
-	GLint uLight = glGetUniformLocation( shader_program, "lightPos" );
-	if ( uLight != -1 )
-		glUniform3fv( uLight, 1, (const float *)lightPos );
+	if ( u_lightPos_loc != -1 )
+		glUniform3fv( u_lightPos_loc, 1, (const float *)lightPos );
 
 	// Extract camera position from view matrix for chrome shader
-	// Camera position is the inverse translation of the view matrix
 	vec3 camPos;
 	camPos[0] = -( view[0][0] * view[3][0] + view[0][1] * view[3][1] + view[0][2] * view[3][2] );
 	camPos[1] = -( view[1][0] * view[3][0] + view[1][1] * view[3][1] + view[1][2] * view[3][2] );
 	camPos[2] = -( view[2][0] * view[3][0] + view[2][1] * view[3][1] + view[2][2] * view[3][2] );
 
-	GLint uViewP = glGetUniformLocation( shader_program, "viewPos" );
-	if ( uViewP != -1 )
-		glUniform3fv( uViewP, 1, (const float *)camPos );
+	if ( u_viewPos_loc != -1 )
+		glUniform3fv( u_viewPos_loc, 1, (const float *)camPos );
 
 	// Draw the model geometry (Layer 1)
 	draw_model_geometry();
