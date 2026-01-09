@@ -94,11 +94,11 @@ void ModelViewport::initializeGL( void ) {
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
 
-    // TEMPORARY: Disable culling to debug transparency issue
-    glDisable( GL_CULL_FACE );
-    // glEnable( GL_CULL_FACE );
-    // glCullFace( GL_BACK );
-    // glFrontFace( GL_CCW );
+    // Enable face culling for performance (cull back-facing triangles)
+    glEnable( GL_CULL_FACE );
+    glCullFace( GL_BACK );
+    // FIXED: Our transformations flip winding order, so front faces are clockwise
+    glFrontFace( GL_CW );
     
     // CRITICAL: Initialize VAO/VBO for model rendering (MUST be before load_shaders)
     setup_triangle();

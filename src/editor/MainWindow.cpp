@@ -34,6 +34,8 @@
 #include <QOpenGLWidget>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QFileInfo>
+#include <exception>
 #include <QtCore/qcontainerfwd.h>
 #include <QtCore/qnamespace.h>
 #include <QtCore/qobject.h>
@@ -70,7 +72,7 @@ void MainWindow::setupMenus() {
 	createBonesMenu();
 	createSequencesMenu();
 	createTexturesMenu();
-	createToolsMenu();
+	// createToolsMenu();
 	createDebugMenu();
 	createWindowMenu();
 	createHelpMenu();
@@ -1071,7 +1073,15 @@ void MainWindow::createFileMenu() {
 	// OPEN SECTION
 	// ==================================
 
+	// New Tab - Opens a new empty tab for loading another model
+	QAction *newTabAction = fileMenu->addAction( "New Tab" );
+	newTabAction->setShortcut(QKeySequence("Ctrl+T"));
+	connect( newTabAction, &QAction::triggered, this, &MainWindow::onNewTab );
+
+	fileMenu->addSeparator();
+
 	QAction *openAction = fileMenu->addAction( "Open Model" );
+	openAction->setShortcut(QKeySequence::Open);  // Ctrl+O
 	connect( openAction, &QAction::triggered, this, &MainWindow::onOpenModel );
 	QMenu *recentMenu = fileMenu->addMenu( "Open recent" );
 	recentMenu->addAction( "barney.mdl" );
@@ -1558,27 +1568,6 @@ void MainWindow::createDebugMenu() {
 	debugMenu->addSeparator();
 
 	// ═══════════════════════════════════════════════════════
-	// ANIMATION DEBUG
-	// ═══════════════════════════════════════════════════════
-
-	QMenu *animDebugMenu = menuBar()->addMenu( "Animation Debug" );
-
-	QAction *showBoneTransforms = animDebugMenu->addAction( "Show Bone Transformations" );
-	showBoneTransforms->setCheckable( true );
-
-	QAction *showBlendWeights = animDebugMenu->addAction( "Show Blend Weights" );
-	showBlendWeights->setCheckable( true );
-
-	QAction *freezeAnimation = animDebugMenu->addAction( "Freeze Animation" );
-	freezeAnimation->setCheckable( true );
-
-	animDebugMenu->addSeparator();
-	animDebugMenu->addAction( "Print Current Pose to Console" );
-	animDebugMenu->addAction( "Export Current Frame as SMD..." );
-
-	debugMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
 	// LOGGER SETTINGS (IMPORTANT FOR USER NEEDS!)
 	// ═══════════════════════════════════════════════════════
 
@@ -1678,6 +1667,14 @@ void MainWindow::createDebugMenu() {
 void MainWindow::createWindowMenu() {
 	QMenu *winMenu = menuBar()->addMenu( "&Window" );
 
+	// Tab Management
+	QAction *newTabAction = winMenu->addAction( "New Tab" );
+	newTabAction->setShortcut(QKeySequence("Ctrl+T"));
+	connect(newTabAction, &QAction::triggered, this, &MainWindow::onNewTab);
+
+	winMenu->addSeparator();
+
+	// Panels
 	winMenu->addAction( "Texture Browser" );
 	winMenu->addAction( "Model Explorer" );
 	winMenu->addAction( "Sequence Viewer" );
@@ -1695,10 +1692,20 @@ void MainWindow::createHelpMenu() {
 }
 
 void MainWindow::createViewportContainer() {
-	viewportContainer = new ModelViewport( this );
+	// Create tab widget for multi-model support
+	tabWidget = new QTabWidget(this);
+	tabWidget->setTabsClosable(true);  // Show close buttons on tabs
+	tabWidget->setMovable(true);        // Allow tab reordering
+	tabWidget->setDocumentMode(true);   // Cleaner look on macOS
 
-	viewportContainer->setObjectName( "ViewportContainer" );
-	setCentralWidget( viewportContainer );
+	// Connect tab close signal
+	connect(tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::onCloseTab);
+
+	// Set as central widget
+	setCentralWidget(tabWidget);
+
+	// Create initial tab with empty viewport
+	addViewportTab("Untitled");
 }
 
 void MainWindow::createDocks() {
@@ -1773,21 +1780,164 @@ void MainWindow::setupToolbars( void ) {
 	createToolbarUpper();
 }
 
-void MainWindow::onOpenModel( void ) {
-	// Now we need to open the file dialog
-	QString filePath = QFileDialog::getOpenFileName( this, "Open Half-Life Model", "", "Half-Life Models (*.mdl)" );
-
-	if ( filePath.isEmpty() ) {
-		qDebug() << "Model loading cancelled";
+void MainWindow::onOpenModel() {
+	// SAFETY: Ensure tab widget exists
+	if (!tabWidget) {
+		qCritical() << "ERROR: Tab widget is null!";
 		return;
 	}
 
-	qDebug() << "Selected file: " << filePath;
+	// Get current viewport (or create new tab if none exist)
+	ModelViewport *viewport = getCurrentViewport();
+	if (!viewport) {
+		qDebug() << "No viewport found, creating new tab...";
+		addViewportTab("New Model");
+		viewport = getCurrentViewport();
+	}
 
-	// Now we load the model in viewport
-	bool success = viewportContainer->loadModel( filePath );
+	// SAFETY: Double-check viewport creation succeeded
+	if (!viewport) {
+		qCritical() << "ERROR: Failed to create viewport!";
+		QMessageBox::critical(this, "Error", "Failed to create viewport. Please restart the application.");
+		return;
+	}
 
-	if ( !success ) {
-		QMessageBox::critical( this, "Error Loading Model", "Failed to load model:\n" + filePath );
+	// Open file dialog
+	QString filePath = QFileDialog::getOpenFileName(this, "Open Half-Life Model", "", "Half-Life Models (*.mdl)");
+
+	if (filePath.isEmpty()) {
+		qDebug() << "Model loading cancelled by user";
+		return;
+	}
+
+	// SAFETY: Check if file actually exists
+	QFileInfo fileInfo(filePath);
+	if (!fileInfo.exists()) {
+		qCritical() << "ERROR: File does not exist:" << filePath;
+		QMessageBox::critical(this, "File Not Found", "The selected file does not exist:\n" + filePath);
+		return;
+	}
+
+	// SAFETY: Check if it's actually a .mdl file
+	if (fileInfo.suffix().toLower() != "mdl") {
+		qCritical() << "ERROR: Not a .mdl file:" << filePath;
+		QMessageBox::critical(this, "Invalid File Type", "Please select a Half-Life model file (.mdl):\n" + filePath);
+		return;
+	}
+
+	qDebug() << "Loading model:" << filePath;
+
+	// Load model in current viewport
+	bool success = viewport->loadModel(filePath);
+
+	if (!success) {
+		qCritical() << "ERROR: Failed to load model:" << filePath;
+		QMessageBox::critical(this, "Error Loading Model",
+			"Failed to load model. The file may be corrupted or invalid:\n\n" + filePath);
+		return;
+	}
+
+	// Success! Update tab title to show model name
+	int currentIndex = tabWidget->currentIndex();
+	if (currentIndex >= 0) {
+		tabWidget->setTabText(currentIndex, fileInfo.fileName());
+	}
+
+	qDebug() << "Model loaded successfully:" << fileInfo.fileName();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tab Management Helper Functions
+// ═══════════════════════════════════════════════════════════════════════════
+
+ModelViewport* MainWindow::createNewViewport() {
+	try {
+		ModelViewport *viewport = new ModelViewport(this);
+		if (!viewport) {
+			qCritical() << "ERROR: Failed to allocate ModelViewport!";
+			return nullptr;
+		}
+		return viewport;
+	} catch (const std::exception &e) {
+		qCritical() << "EXCEPTION creating viewport:" << e.what();
+		return nullptr;
+	}
+}
+
+ModelViewport* MainWindow::getCurrentViewport() {
+	if (!tabWidget) {
+		qWarning() << "WARNING: tabWidget is null in getCurrentViewport()";
+		return nullptr;
+	}
+
+	if (tabWidget->count() == 0) {
+		qDebug() << "No tabs available";
+		return nullptr;
+	}
+
+	QWidget *widget = tabWidget->currentWidget();
+	if (!widget) {
+		qWarning() << "WARNING: currentWidget() returned null";
+		return nullptr;
+	}
+
+	ModelViewport *viewport = qobject_cast<ModelViewport*>(widget);
+	if (!viewport) {
+		qWarning() << "WARNING: Current widget is not a ModelViewport!";
+		return nullptr;
+	}
+
+	return viewport;
+}
+
+int MainWindow::addViewportTab(const QString &title) {
+	if (!tabWidget) {
+		qCritical() << "ERROR: Cannot add tab - tabWidget is null!";
+		return -1;
+	}
+
+	ModelViewport *viewport = createNewViewport();
+	if (!viewport) {
+		qCritical() << "ERROR: Failed to create viewport for new tab!";
+		return -1;
+	}
+
+	int index = tabWidget->addTab(viewport, title);
+	tabWidget->setCurrentIndex(index);
+
+	qDebug() << "Added new tab:" << title << "at index" << index;
+	return index;
+}
+
+void MainWindow::onNewTab() {
+	int index = addViewportTab("Untitled");
+	if (index < 0) {
+		QMessageBox::warning(this, "Error", "Failed to create new tab!");
+	}
+}
+
+void MainWindow::onCloseTab(int index) {
+	if (!tabWidget) {
+		qWarning() << "WARNING: tabWidget is null in onCloseTab()";
+		return;
+	}
+
+	if (tabWidget->count() <= 1) {
+		qDebug() << "Cannot close last tab";
+		return;
+	}
+
+	if (index < 0 || index >= tabWidget->count()) {
+		qWarning() << "WARNING: Invalid tab index:" << index;
+		return;
+	}
+
+	QWidget *widget = tabWidget->widget(index);
+	tabWidget->removeTab(index);
+
+	// Delete the viewport widget safely
+	if (widget) {
+		qDebug() << "Closing tab at index" << index;
+		widget->deleteLater();
 	}
 }

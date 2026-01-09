@@ -7,6 +7,7 @@
 #include <QDockWidget>
 #include <QWidget>
 #include <QOpenGLWidget>
+#include <QTabWidget>
 #include <QtWidgets/qmainwindow.h>
 
 
@@ -31,9 +32,11 @@ class MainWindow : public QMainWindow {
 	explicit MainWindow( QWidget *parent = nullptr );
     
   private slots:
-    
-    void onOpenModel( );  
-    
+
+    void onOpenModel();
+    void onNewTab();
+    void onCloseTab(int index);
+
   private:
      
 	void setupMenus();
@@ -62,12 +65,18 @@ class MainWindow : public QMainWindow {
 	void createDocks();
 	void createViewportContainer();
 
+	// Helper functions for tab management
+	ModelViewport* createNewViewport();
+	ModelViewport* getCurrentViewport();
+	int addViewportTab(const QString &title = "New Model");
+
 	QDockWidget *leftDock;
 	QDockWidget *rightDock;
 	QDockWidget *bottomDock;
 	QStatusBar *statusBar;
 
-	ModelViewport *viewportContainer;
+	// Central tab widget (replaces single viewport)
+	QTabWidget *tabWidget;
 };
 
 #endif
