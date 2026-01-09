@@ -36,6 +36,7 @@ class MainWindow : public QMainWindow {
     void onOpenModel();
     void onNewTab();
     void onCloseTab(int index);
+    void onTabChanged(int index);
 
   private:
      

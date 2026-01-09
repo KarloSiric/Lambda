@@ -67,6 +67,9 @@ public:
     bool loadModel( const QString &modelPath );
     void closeModel( );
     bool hasModelLoaded( );
+
+    // WORKAROUND: Reload model data to renderer (fixes multi-tab bug)
+    void reloadModelToRenderer();
     
     // @Note: Model animations managment - uses C backend API
     void setSequence( int sequenceIndex );

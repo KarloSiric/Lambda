@@ -365,3 +365,22 @@ bool ModelViewport::loadModel( const QString &modelPath )
     return ( true );
 
 }
+
+// WORKAROUND: Reload model data to renderer globals (fixes multi-tab rendering bug)
+// This is a temporary fix until we refactor the renderer to support per-viewport instances
+void ModelViewport::reloadModelToRenderer() {
+    if (!m_model || !m_model->header || !m_model->data) {
+        qWarning() << "WARNING: Cannot reload model to renderer - no model loaded";
+        return;
+    }
+
+    qDebug() << "Reloading model data to renderer for tab switch";
+
+    // Re-set the model data in renderer globals
+    set_model_data(m_model->header, m_model->data, m_model->texture_header,
+                   m_model->texture_data, m_model->seqgroups, m_model->num_seqgroups);
+}
+
+bool ModelViewport::hasModelLoaded() {
+    return (m_model != nullptr);
+}

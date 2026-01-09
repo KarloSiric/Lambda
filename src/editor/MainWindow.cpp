@@ -1701,6 +1701,9 @@ void MainWindow::createViewportContainer() {
 	// Connect tab close signal
 	connect(tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::onCloseTab);
 
+	// Connect tab switch signal (fixes multi-tab rendering bug)
+	connect(tabWidget, &QTabWidget::currentChanged, this, &MainWindow::onTabChanged);
+
 	// Set as central widget
 	setCentralWidget(tabWidget);
 
@@ -1939,5 +1942,39 @@ void MainWindow::onCloseTab(int index) {
 	if (widget) {
 		qDebug() << "Closing tab at index" << index;
 		widget->deleteLater();
+	}
+}
+
+void MainWindow::onTabChanged(int index) {
+	// WORKAROUND: Reload model data when switching tabs (fixes multi-tab rendering bug)
+	// This is needed because the renderer uses global static variables for model data
+
+	if (!tabWidget) {
+		qWarning() << "WARNING: tabWidget is null in onTabChanged()";
+		return;
+	}
+
+	if (index < 0 || index >= tabWidget->count()) {
+		qDebug() << "Invalid tab index or no tabs available";
+		return;
+	}
+
+	// Get the viewport for the new tab
+	ModelViewport *viewport = qobject_cast<ModelViewport*>(tabWidget->widget(index));
+
+	if (!viewport) {
+		qWarning() << "WARNING: Widget at index" << index << "is not a ModelViewport!";
+		return;
+	}
+
+	// If this viewport has a model loaded, reload it to the renderer globals
+	if (viewport->hasModelLoaded()) {
+		qDebug() << "Tab switched to index" << index << "- reloading model to renderer";
+		viewport->reloadModelToRenderer();
+
+		// Trigger repaint to show the correct model
+		viewport->update();
+	} else {
+		qDebug() << "Tab switched to index" << index << "- no model loaded";
 	}
 }
