@@ -35,6 +35,7 @@
 ModelViewport::ModelViewport( QWidget *parent )
 	: QOpenGLWidget( parent ),
 	  m_model( nullptr ),
+	  m_renderInstance( nullptr ),
 	  m_animationPlaying( false ),
 	  m_animationTimer( nullptr ),
 	  m_cameraPitch( 0.3f ),
@@ -43,7 +44,7 @@ ModelViewport::ModelViewport( QWidget *parent )
       m_cameraTarget{ 0.0f, 0.0f, 0.0f },
       m_showGrid( true ),
       m_wireframeMode( false ) {
-        
+
 	mdl_animation_init( &m_animState );
 
 	// Create the new animationTimer so 60 fps ~16.66 ms ~16 ms
@@ -73,6 +74,13 @@ ModelViewport::~ModelViewport() {
 		free_model( m_model );
 		m_model = nullptr;
 	}
+
+	// CRITICAL: Destroy per-viewport rendering instance
+	if ( m_renderInstance ) {
+		r_qt_destroy_instance( m_renderInstance );
+		m_renderInstance = nullptr;
+	}
+
 	doneCurrent();
 
 	qDebug() << "ModelViewport Destroyed";
@@ -87,10 +95,10 @@ void ModelViewport::initializeGL( void ) {
 	qDebug() << "OpenGL Version: " << (const char *)glGetString( GL_VERSION );
 	qDebug() << "GLSL Version: " << (const char *)glGetString( GL_SHADING_LANGUAGE_VERSION );
 	qDebug() << "Renderer: " << (const char *)glGetString( GL_RENDERER );
-    
-    
+
+
     glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
-    
+
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
 
@@ -99,16 +107,14 @@ void ModelViewport::initializeGL( void ) {
     glCullFace( GL_BACK );
     // FIXED: Our transformations flip winding order, so front faces are clockwise
     glFrontFace( GL_CW );
-    
-    // CRITICAL: Initialize VAO/VBO for model rendering (MUST be before load_shaders)
-    setup_triangle();
-    qDebug() << "VAO/VBO created for model rendering!";
 
-    // CRITICAL: Load the model rendering shader
-    if ( load_shaders() != 0 ) {
-        qCritical() << "ERROR: Failed to load model shaders!";
+    // CRITICAL: Create per-viewport rendering instance (replaces global setup_triangle/load_shaders)
+    // Each ModelViewport gets its own VAO/VBO/shaders/textures/bones
+    m_renderInstance = r_qt_create_instance();
+    if ( !m_renderInstance ) {
+        qCritical() << "ERROR: Failed to create Qt rendering instance!";
     } else {
-        qDebug() << "Model shaders loaded successfully!";
+        qDebug() << "Qt rendering instance created successfully!";
     }
 
     r_grid_init( 1000.0f, 10.0f );
@@ -191,12 +197,12 @@ void ModelViewport::paintGL() {
     glm_translate( T, (vec3){ 0.0f, 0.01f, 0.0f } );
     glm_mat4_mul( T, modelMatrix, modelMatrix );
 
-    // Render the model if loaded (using Layer 2 - no grid/axes drawing)
-    if ( m_model && m_model->header && m_model->data )
+    // Render the model if loaded (using per-instance Qt renderer)
+    if ( m_renderInstance && m_model && m_model->header && m_model->data )
     {
-        // Use Layer 2: render with Qt's own matrices (no duplicate grid/axes)
-        // Note: set_model_data() is called ONCE in loadModel(), not here!
-        render_model_with_matrices( m_viewMatrix, m_projMatrix, modelMatrix );
+        // Use per-instance rendering (each tab has its own renderer state)
+        // Note: r_qt_set_model_data() is called ONCE in loadModel(), not here!
+        r_qt_render_with_matrices( m_renderInstance, m_viewMatrix, m_projMatrix, modelMatrix );
     }
 
     // NOTE: Do NOT call update() here - it creates infinite render loop!
@@ -357,29 +363,23 @@ bool ModelViewport::loadModel( const QString &modelPath )
     qDebug( ) << "   Bones: " << m_model->header->numbones;
     qDebug( ) << "   Sequences: " << m_model->header->numseq;
 
-    // CRITICAL: Set model data for renderer (ONLY CALLED ONCE HERE!)
-    set_model_data( m_model->header, m_model->data, m_model->texture_header,
-                    m_model->texture_data, m_model->seqgroups, m_model->num_seqgroups );
+    // CRITICAL: Set model data for THIS viewport's renderer instance (ONLY CALLED ONCE HERE!)
+    // Each tab has its own instance, so no more multi-tab conflicts!
+    if ( m_renderInstance ) {
+        r_qt_set_model_data( m_renderInstance, m_model->header, m_model->data,
+                             m_model->texture_header, m_model->texture_data,
+                             m_model->seqgroups, m_model->num_seqgroups );
+    } else {
+        qCritical() << "ERROR: No render instance available!";
+    }
 
     emit modelLoaded( modelPath );
     return ( true );
 
 }
 
-// WORKAROUND: Reload model data to renderer globals (fixes multi-tab rendering bug)
-// This is a temporary fix until we refactor the renderer to support per-viewport instances
-void ModelViewport::reloadModelToRenderer() {
-    if (!m_model || !m_model->header || !m_model->data) {
-        qWarning() << "WARNING: Cannot reload model to renderer - no model loaded";
-        return;
-    }
-
-    qDebug() << "Reloading model data to renderer for tab switch";
-
-    // Re-set the model data in renderer globals
-    set_model_data(m_model->header, m_model->data, m_model->texture_header,
-                   m_model->texture_data, m_model->seqgroups, m_model->num_seqgroups);
-}
+// NOTE: reloadModelToRenderer() REMOVED - no longer needed with per-instance rendering!
+// Each tab now has its own r_qt_instance_t, so tab switches don't affect rendering.
 
 bool ModelViewport::hasModelLoaded() {
     return (m_model != nullptr);

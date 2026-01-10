@@ -1967,12 +1967,10 @@ void MainWindow::onTabChanged(int index) {
 		return;
 	}
 
-	// If this viewport has a model loaded, reload it to the renderer globals
+	// With per-instance rendering, each tab maintains its own state
+	// No need to reload anything - just trigger repaint
 	if (viewport->hasModelLoaded()) {
-		qDebug() << "Tab switched to index" << index << "- reloading model to renderer";
-		viewport->reloadModelToRenderer();
-
-		// Trigger repaint to show the correct model
+		qDebug() << "Tab switched to index" << index << "- viewport has model";
 		viewport->update();
 	} else {
 		qDebug() << "Tab switched to index" << index << "- no model loaded";

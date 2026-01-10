@@ -67,9 +67,6 @@ public:
     bool loadModel( const QString &modelPath );
     void closeModel( );
     bool hasModelLoaded( );
-
-    // WORKAROUND: Reload model data to renderer (fixes multi-tab bug)
-    void reloadModelToRenderer();
     
     // @Note: Model animations managment - uses C backend API
     void setSequence( int sequenceIndex );
@@ -129,7 +126,10 @@ private:
     
     // @Note: model is owned by Qt but C backend manages it
     mdl_model_t *m_model;
-    
+
+    // @Note: Per-viewport rendering instance (Qt only - CLI uses globals)
+    r_qt_instance_t *m_renderInstance;
+
     // @Note: Animatons same thing, C backend manages them all
     mdl_animation_state_t m_animState;
     bool m_animationPlaying;
