@@ -35,10 +35,17 @@ class MainWindow : public QMainWindow {
 
     void onOpenModel();
     void onNewTab();
-    void onCloseTab(int index);
-    void onTabChanged(int index);
+    void onCloseTab( int index );
+    void onTabChanged( int index );
+    
+    // Adding for the console and inspector control slots
+    void onToggleConsole( );
+    void onToggleInspector( );
+    void updateStatusBar( );
 
   private:
+    
+    // Adding for the status bar and for the 
      
 	void setupMenus();
 	void setupViewports();

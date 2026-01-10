@@ -47,8 +47,6 @@
 #include <math.h>   // For cosf/sinf in orbit camera
 #include <float.h>  // For FLT_MAX
 
-// NOTE: current_model_data_t and DrawRange are now defined in r_draw.h
-// They are shared between CLI (global state) and Qt (per-instance) rendering.
 
 static DrawRange g_ranges[MAX_DRAW_RANGES];
 static int g_num_ranges = 0;
@@ -1554,15 +1552,13 @@ float *get_model_rotation_y_ptr( void ) {
 r_qt_instance_t* r_qt_create_instance(void) {
 	LOG_INFOF("renderer", "Creating Qt viewport instance");
 
-	// Allocate and zero-initialize
 	r_qt_instance_t *inst = (r_qt_instance_t*)calloc(1, sizeof(r_qt_instance_t));
 	if (!inst) {
 		LOG_FATALF("renderer", "Failed to allocate Qt instance!");
 		return NULL;
 	}
 
-	// CRITICAL: Initialize bone transformations to IDENTITY matrices
-	// (calloc zeros them, but bones MUST be identity transforms!)
+	// Initialize bone transformations to identity matrices
 	for (int i = 0; i < MAXSTUDIOBONES; i++) {
 		Math_Mat4_Identity(inst->bone_transformations[i]);
 	}
@@ -1767,11 +1763,9 @@ static void r_qt_add_vertex_to_buffer(
 
 	const int base = inst->total_render_vertices * 8;
 
-	// Position (rest-pose, no transforms - GPU does it)
 	vec3 P;
 	Math_Vec3Copy(inst->current.vertices[vertex_index], P);
 
-	// Normal (rest-pose)
 	vec3 N;
 	Math_Vec3Copy(inst->current.normals[normal_index], N);
 
@@ -1782,12 +1776,10 @@ static void r_qt_add_vertex_to_buffer(
 		bone = 0;
 	}
 
-	// Write position
 	inst->render_vertex_buffer[base + 0] = P[0];
 	inst->render_vertex_buffer[base + 1] = P[1];
 	inst->render_vertex_buffer[base + 2] = P[2];
 
-	// Write normal
 	inst->render_vertex_buffer[base + 3] = N[0];
 	inst->render_vertex_buffer[base + 4] = N[1];
 	inst->render_vertex_buffer[base + 5] = N[2];
@@ -1816,18 +1808,15 @@ static void r_qt_process_model(r_qt_instance_t *inst) {
 		return;
 	}
 
-	LOG_DEBUGF("renderer", "Qt instance: Processing model for rendering");
-
 	inst->total_render_vertices = 0;
 	inst->num_ranges = 0;
 
 	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)(inst->data + inst->header->bodypartindex);
 
-	// Calculate initial T-pose bones (animations will update per-frame)
+	// Calculate initial T-pose bones
 	SetUpBones(inst->header, inst->data);
 
-	// CRITICAL: Copy bones from global array to instance array
-	// SetUpBones() writes to g_bonetransformations, but we need them in inst->bone_transformations
+	// Copy bones from global array to instance array
 	for (int i = 0; i < inst->header->numbones; i++) {
 		Math_Mat4_Copy(g_bonetransformations[i], inst->bone_transformations[i]);
 	}
@@ -1950,8 +1939,79 @@ static void r_qt_process_model(r_qt_instance_t *inst) {
 						t1 = t2;
 					}
 				} else {
-					// Triangle strip (similar logic, omitted for brevity - same as CLI)
-					// ... (implement if needed, for now skip)
+					// Triangle strip - alternates winding every other triangle
+					// Read first 2 vertices
+					short v0 = ptricmds[0];
+					short n0 = ptricmds[1];
+					short s0 = ptricmds[2];
+					short t0 = ptricmds[3];
+					ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+					short v1 = ptricmds[0];
+					short n1 = ptricmds[1];
+					short s1 = ptricmds[2];
+					short t1 = ptricmds[3];
+					ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+					// Handle ON-SEAM
+					if (n0 & 0x8000) s0 = (short)(s0 + texW / 2);
+					n0 &= 0x7FFF;
+					if (n1 & 0x8000) s1 = (short)(s1 + texW / 2);
+					n1 &= 0x7FFF;
+
+					n0 = (short)(n0 + norm_base);
+					n1 = (short)(n1 + norm_base);
+
+					for (int j = 2; j < i; ++j) {
+						short v2 = ptricmds[0];
+						short n2 = ptricmds[1];
+						short s2 = ptricmds[2];
+						short t2 = ptricmds[3];
+						ptricmds = (short *)((char *)ptricmds + 4 * sizeof(short));
+
+						if (n2 & 0x8000) s2 = (short)(s2 + texW / 2);
+						n2 &= 0x7FFF;
+						n2 = (short)(n2 + norm_base);
+
+						// Parity for triangle strip winding
+						if ((j - 2) % 2 == 0) {
+							// Even: v0, v1, v2
+							if (v0 >= 0 && v0 < inst->current.vertex_count &&
+							    n0 >= 0 && n0 < inst->current.normal_count &&
+							    v1 >= 0 && v1 < inst->current.vertex_count &&
+							    n1 >= 0 && n1 < inst->current.normal_count &&
+							    v2 >= 0 && v2 < inst->current.vertex_count &&
+							    n2 >= 0 && n2 < inst->current.normal_count) {
+
+								r_qt_add_vertex_to_buffer(inst, v0, n0, s0, t0, (float)texW, (float)texH);
+								r_qt_add_vertex_to_buffer(inst, v1, n1, s1, t1, (float)texW, (float)texH);
+								r_qt_add_vertex_to_buffer(inst, v2, n2, s2, t2, (float)texW, (float)texH);
+							}
+						} else {
+							// Odd: v1, v0, v2 (swap winding)
+							if (v0 >= 0 && v0 < inst->current.vertex_count &&
+							    n0 >= 0 && n0 < inst->current.normal_count &&
+							    v1 >= 0 && v1 < inst->current.vertex_count &&
+							    n1 >= 0 && n1 < inst->current.normal_count &&
+							    v2 >= 0 && v2 < inst->current.vertex_count &&
+							    n2 >= 0 && n2 < inst->current.normal_count) {
+
+								r_qt_add_vertex_to_buffer(inst, v1, n1, s1, t1, (float)texW, (float)texH);
+								r_qt_add_vertex_to_buffer(inst, v0, n0, s0, t0, (float)texW, (float)texH);
+								r_qt_add_vertex_to_buffer(inst, v2, n2, s2, t2, (float)texW, (float)texH);
+							}
+						}
+
+						// Roll forward (keep both v0/v1, shift them)
+						v0 = v1;
+						n0 = n1;
+						s0 = s1;
+						t0 = t1;
+						v1 = v2;
+						n1 = n2;
+						s1 = s2;
+						t1 = t2;
+					}
 				}
 			}
 
@@ -1967,9 +2027,6 @@ static void r_qt_process_model(r_qt_instance_t *inst) {
 	}
 
 	inst->model_processed = true;
-
-	LOG_DEBUGF("renderer", "Qt instance: Model processed - %d vertices, %d ranges",
-	          inst->total_render_vertices, inst->num_ranges);
 }
 
 void r_qt_render_with_matrices(
@@ -1982,7 +2039,7 @@ void r_qt_render_with_matrices(
 		return;
 	}
 
-	// ONE-TIME: Process model geometry
+	// Process model geometry once
 	if (!inst->model_processed) {
 		r_qt_process_model(inst);
 
@@ -2005,29 +2062,24 @@ void r_qt_render_with_matrices(
 		return;
 	}
 
-	// EVERY FRAME: Update bone matrices
+	// Update bone matrices
 	if (inst->animation_enabled && inst->header && inst->data) {
-		// Animated: Calculate bones every frame
 		mdl_result_t anim_result = mdl_animation_calculate_bones(
 			&inst->anim_state, inst->header, inst->data, inst->seqgroups,
 			inst->bone_transformations);
 
 		inst->t_pose_bones_calculated = false;
 
-		// Fallback to T-pose if sequence group missing
 		if (anim_result == MDL_ERROR_SEQUENCE_GROUP_MISSING) {
 			SetUpBones(inst->header, inst->data);
-			// Copy to instance bones
 			for (int i = 0; i < inst->header->numbones; i++) {
 				Math_Mat4_Copy(g_bonetransformations[i], inst->bone_transformations[i]);
 			}
 			inst->t_pose_bones_calculated = true;
 		}
 	} else if (inst->header && inst->data) {
-		// Static: Calculate T-pose once
 		if (!inst->t_pose_bones_calculated) {
 			SetUpBones(inst->header, inst->data);
-			// Copy to instance bones
 			for (int i = 0; i < inst->header->numbones; i++) {
 				Math_Mat4_Copy(g_bonetransformations[i], inst->bone_transformations[i]);
 			}
@@ -2071,11 +2123,10 @@ void r_qt_render_with_matrices(
 		glUniform3fv(inst->u_viewPos_loc, 1, (const float *)camPos);
 	}
 
-	// Draw geometry
+	// Set up vertex attributes
 	glBindVertexArray(inst->vao);
 	glBindBuffer(GL_ARRAY_BUFFER, inst->vbo);
 
-	// Set up vertex attributes
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(0));
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
@@ -2083,19 +2134,17 @@ void r_qt_render_with_matrices(
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	// Bone index attribute
 	glBindBuffer(GL_ARRAY_BUFFER, inst->bone_index_vbo);
 	glVertexAttribIPointer(3, 1, GL_INT, sizeof(int), (void *)0);
 	glEnableVertexAttribArray(3);
 
-	// Set texture uniform
 	if (inst->u_tex_loc != -1) {
 		glUniform1i(inst->u_tex_loc, 0);
 	}
 
-	// Draw each range
-	static bool blend_enabled = false;
+	glDisable(GL_BLEND);
 
+	// Draw each range
 	for (int r = 0; r < inst->num_ranges; ++r) {
 		GLuint tex_to_bind = inst->ranges[r].tex ? inst->ranges[r].tex : inst->white_tex;
 		glActiveTexture(GL_TEXTURE0);
@@ -2103,19 +2152,12 @@ void r_qt_render_with_matrices(
 
 		int flags = inst->ranges[r].flags;
 
-		// Handle blending
-		bool needs_blend = (flags & STUDIO_NF_ADDITIVE) != 0;
-		if (needs_blend != blend_enabled) {
-			if (needs_blend) {
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			} else {
-				glDisable(GL_BLEND);
-			}
-			blend_enabled = needs_blend;
+		if (flags & STUDIO_NF_ADDITIVE) {
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		} else {
+			glDisable(GL_BLEND);
 		}
-
-		// Set texture flags
 		if (inst->u_masked_loc != -1) {
 			glUniform1i(inst->u_masked_loc, (flags & STUDIO_NF_MASKED) != 0);
 		}

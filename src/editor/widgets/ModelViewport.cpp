@@ -75,7 +75,6 @@ ModelViewport::~ModelViewport() {
 		m_model = nullptr;
 	}
 
-	// CRITICAL: Destroy per-viewport rendering instance
 	if ( m_renderInstance ) {
 		r_qt_destroy_instance( m_renderInstance );
 		m_renderInstance = nullptr;
@@ -105,11 +104,9 @@ void ModelViewport::initializeGL( void ) {
     // Enable face culling for performance (cull back-facing triangles)
     glEnable( GL_CULL_FACE );
     glCullFace( GL_BACK );
-    // FIXED: Our transformations flip winding order, so front faces are clockwise
     glFrontFace( GL_CW );
 
-    // CRITICAL: Create per-viewport rendering instance (replaces global setup_triangle/load_shaders)
-    // Each ModelViewport gets its own VAO/VBO/shaders/textures/bones
+    // Create per-viewport rendering instance
     m_renderInstance = r_qt_create_instance();
     if ( !m_renderInstance ) {
         qCritical() << "ERROR: Failed to create Qt rendering instance!";
@@ -197,16 +194,11 @@ void ModelViewport::paintGL() {
     glm_translate( T, (vec3){ 0.0f, 0.01f, 0.0f } );
     glm_mat4_mul( T, modelMatrix, modelMatrix );
 
-    // Render the model if loaded (using per-instance Qt renderer)
+    // Render the model if loaded
     if ( m_renderInstance && m_model && m_model->header && m_model->data )
     {
-        // Use per-instance rendering (each tab has its own renderer state)
-        // Note: r_qt_set_model_data() is called ONCE in loadModel(), not here!
         r_qt_render_with_matrices( m_renderInstance, m_viewMatrix, m_projMatrix, modelMatrix );
     }
-
-    // NOTE: Do NOT call update() here - it creates infinite render loop!
-    // Qt will automatically call paintGL() when needed (e.g., resize, mouse move, etc.)
 
 }
 
@@ -363,8 +355,7 @@ bool ModelViewport::loadModel( const QString &modelPath )
     qDebug( ) << "   Bones: " << m_model->header->numbones;
     qDebug( ) << "   Sequences: " << m_model->header->numseq;
 
-    // CRITICAL: Set model data for THIS viewport's renderer instance (ONLY CALLED ONCE HERE!)
-    // Each tab has its own instance, so no more multi-tab conflicts!
+    // Set model data for this viewport's renderer instance
     if ( m_renderInstance ) {
         r_qt_set_model_data( m_renderInstance, m_model->header, m_model->data,
                              m_model->texture_header, m_model->texture_data,
@@ -377,9 +368,6 @@ bool ModelViewport::loadModel( const QString &modelPath )
     return ( true );
 
 }
-
-// NOTE: reloadModelToRenderer() REMOVED - no longer needed with per-instance rendering!
-// Each tab now has its own r_qt_instance_t, so tab switches don't affect rendering.
 
 bool ModelViewport::hasModelLoaded() {
     return (m_model != nullptr);
