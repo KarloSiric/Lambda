@@ -6,8 +6,14 @@
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QWidget>
+#include <QMenu>
+#include <QLabel>
+#include <QTimer>
+#include <QPushButton>
 #include <QOpenGLWidget>
 #include <QTabWidget>
+#include <QtWidgets/qdialog.h>
+#include <QtWidgets/qlabel.h>
 #include <QtWidgets/qmainwindow.h>
 
 
@@ -42,10 +48,31 @@ class MainWindow : public QMainWindow {
     void onToggleConsole( );
     void onToggleInspector( );
     void updateStatusBar( );
+    void updateFPS( );    
 
   private:
     
     // Adding for the status bar and for the 
+    
+    QLabel *m_fileNameLabel;
+    QLabel *m_fileSizeLabel;
+    QLabel *m_vertexCountLabel;
+    QLabel *m_polyCountLabel;
+    QLabel *m_boneCountLabel;
+    QLabel *m_sequenceCountLabel;
+    QLabel *m_textureCountLabel;
+    
+    QLabel *m_cameraDistLabel;
+    QLabel *m_fpsCountLabel;
+    QLabel *m_gridSizeCountLabel; 
+    
+    QPushButton *m_memoryToggle;
+    QPushButton *m_inspectorToggle;
+    QPushButton *m_consoleToggle;
+    
+    QTimer *m_fpsTimer;
+    int m_frameCount;
+    double m_lastFPSUpdate;
      
 	void setupMenus();
 	void setupViewports();
