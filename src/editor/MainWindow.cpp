@@ -1740,8 +1740,26 @@ void MainWindow::createHelpMenu() {
 }
 
 void MainWindow::createViewportContainer() {
+	// Create container widget with frame for viewport panel
+	QWidget *viewportContainer = new QWidget(this);
+	QVBoxLayout *containerLayout = new QVBoxLayout(viewportContainer);
+	containerLayout->setContentsMargins(4, 4, 4, 4);
+	containerLayout->setSpacing(0);
+
+	// Apply frame style to container (raised 3D border)
+	viewportContainer->setStyleSheet(
+		"QWidget { "
+		"    background-color: #c0c0c0; "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom-color: #808080; "
+		"}"
+	);
+
 	// Create tab widget for multi-model support
-	tabWidget = new QTabWidget(this);
+	tabWidget = new QTabWidget(viewportContainer);
 	tabWidget->setTabsClosable(true);    // Enable close buttons
 	tabWidget->setMovable(true);         // Allow tab reordering
 	tabWidget->setDocumentMode(false);   // Keep traditional tabs for classic look
@@ -1755,6 +1773,7 @@ void MainWindow::createViewportContainer() {
 		"    border-right-color: #ffffff; "
 		"    border-bottom-color: #ffffff; "
 		"    background-color: #c0c0c0; "
+		"    margin: 0px; "
 		"} "
 		"QTabBar::tab { "
 		"    background-color: #c0c0c0; "
@@ -1812,8 +1831,11 @@ void MainWindow::createViewportContainer() {
 	// Connect tab switch signal (fixes multi-tab rendering bug)
 	connect(tabWidget, &QTabWidget::currentChanged, this, &MainWindow::onTabChanged);
 
-	// Set as central widget
-	setCentralWidget(tabWidget);
+	// Add tab widget to container layout
+	containerLayout->addWidget(tabWidget);
+
+	// Set viewport container as central widget (not just tab widget)
+	setCentralWidget(viewportContainer);
 
 	// Create initial tab with empty viewport
 	addViewportTab("Untitled");
@@ -1841,6 +1863,22 @@ void MainWindow::createDocks() {
 	inspectorPanel->setLayout( inspLayout );
 	inspectorPanel->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
 	inspectorPanel->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
+
+	// Add inner frame to inspector panel
+	inspectorPanel->setStyleSheet(
+		"QWidget { "
+		"    background-color: #505050; "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #f0f0f0; "
+		"    border-bottom-color: #f0f0f0; "
+		"} "
+		"QLabel { "
+		"    color: #c0c0c0; "
+		"    border: none; "
+		"}"
+	);
 
 	rightDock->setWidget( inspectorPanel );
 	addDockWidget( Qt::RightDockWidgetArea, rightDock );
@@ -1999,7 +2037,15 @@ void MainWindow::createDocks() {
 
 	consoleLayout->addWidget( logToolbar );
 	consoleLayout->addWidget( consoleLabel, 1 );
-	consolePanel->setStyleSheet( "QWidget { background-color: #353535; }" );
+	consolePanel->setStyleSheet(
+		"QWidget { "
+		"    background-color: #353535; "
+		"} "
+		"QLabel { "
+		"    color: #c0c0c0; "
+		"    border: none; "
+		"}"
+	);
 
 	// Memory panel
 	QWidget *memoryPanel = new QWidget();
@@ -2007,7 +2053,15 @@ void MainWindow::createDocks() {
 	QLabel *memoryLabel = new QLabel( "Memory Panel - Hex Dump and Structure View" );
 	memoryLabel->setStyleSheet( "QLabel { color: #c0c0c0; }" );
 	memoryLayout->addWidget( memoryLabel );
-	memoryPanel->setStyleSheet( "QWidget { background-color: #353535; }" );
+	memoryPanel->setStyleSheet(
+		"QWidget { "
+		"    background-color: #353535; "
+		"} "
+		"QLabel { "
+		"    color: #c0c0c0; "
+		"    border: none; "
+		"}"
+	);
 
 	// Add tabs
 	bottomTabs->addTab(consolePanel, "Console");
@@ -2061,11 +2115,11 @@ void MainWindow::createDocks() {
 	rightDock->setTitleBarWidget( new QWidget() );
 	bottomDock->setTitleBarWidget( new QWidget() );
 
-	// Apply classic dock styling - consistent for all docks
+	// Apply classic dock styling with visible borders for separation
 	QString dockStyle =
 		"QDockWidget { "
 		"    background-color: #c0c0c0; "
-		"    border: 2px solid; "
+		"    border: 3px solid; "
 		"    border-top-color: #ffffff; "
 		"    border-left-color: #ffffff; "
 		"    border-right-color: #808080; "
@@ -2077,10 +2131,27 @@ void MainWindow::createDocks() {
 		"    padding: 4px 6px; "
 		"    text-align: left; "
 		"    font-weight: bold; "
+		"} "
+		"QDockWidget > QWidget { "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #f0f0f0; "
+		"    border-bottom-color: #f0f0f0; "
+		"    background-color: #353535; "
 		"}";
 
-	rightDock->setStyleSheet(dockStyle);
+	// Inspector dock with prominent border
+	QString inspectorStyle = dockStyle +
+		"QDockWidget > QWidget { "
+		"    background-color: #505050; "
+		"}";
+
+	rightDock->setStyleSheet(inspectorStyle);
 	bottomDock->setStyleSheet(dockStyle);
+
+	// Add spacing between docks and central widget
+	setDockNestingEnabled(false);  // Cleaner separation
 
 	// Create status bar widget
 	m_statusBar = new StatusBarWidget(this);
