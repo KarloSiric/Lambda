@@ -3,18 +3,13 @@
 
 
 #include "ModelViewport.h"
+#include "widgets/StatusBarWidget.h"
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QWidget>
-#include <QMenu>
-#include <QLabel>
-#include <QTimer>
-#include <QPushButton>
 #include <QOpenGLWidget>
 #include <QTabWidget>
-#include <QtWidgets/qdialog.h>
-#include <QtWidgets/qlabel.h>
-#include <QtWidgets/qmainwindow.h>
+#include <QMap>
 
 
 #define MW_WIDTH 1920
@@ -43,44 +38,15 @@ class MainWindow : public QMainWindow {
     void onNewTab();
     void onCloseTab( int index );
     void onTabChanged( int index );
-    
-    // Adding for the console and inspector control slots
-    void onToggleConsole( );
-    void onToggleInspector( );
-    void updateStatusBar( );
-    void updateFPS( );    
 
   private:
-    
-    // Adding for the status bar and for the 
-    
-    QLabel *m_fileNameLabel;
-    QLabel *m_fileSizeLabel;
-    QLabel *m_vertexCountLabel;
-    QLabel *m_polyCountLabel;
-    QLabel *m_boneCountLabel;
-    QLabel *m_sequenceCountLabel;
-    QLabel *m_textureCountLabel;
-    
-    QLabel *m_cameraDistLabel;
-    QLabel *m_fpsCountLabel;
-    QLabel *m_gridSizeCountLabel; 
-    
-    QPushButton *m_memoryToggle;
-    QPushButton *m_inspectorToggle;
-    QPushButton *m_consoleToggle;
-    
-    QTimer *m_fpsTimer;
-    int m_frameCount;
-    double m_lastFPSUpdate;
      
 	void setupMenus();
 	void setupViewports();
 	void setupDocks();
     void setupToolbars();
     void setupTheme();
-    
-    
+     
 	void createFileMenu();
 	void createEditMenu();
 	void createViewMenu();
@@ -105,13 +71,28 @@ class MainWindow : public QMainWindow {
 	ModelViewport* getCurrentViewport();
 	int addViewportTab(const QString &title = "New Model");
 
+	StatusBarWidget *m_statusBar;
 	QDockWidget *leftDock;
 	QDockWidget *rightDock;
 	QDockWidget *bottomDock;
-	QStatusBar *statusBar;
-
-	// Central tab widget (replaces single viewport)
 	QTabWidget *tabWidget;
+
+	// Store per-tab model info for status bar
+	struct TabModelInfo {
+		QString filePath;
+		qint64 fileSize = 0;
+		int vertexCount = 0;
+		int triangleCount = 0;
+		int boneCount = 0;
+		int sequenceCount = 0;
+		int textureCount = 0;
+		QString currentSequence;
+		int currentFrame = 0;
+		int totalFrames = 0;
+		QString selectedBone;
+		QString activeController;
+	};
+	QMap<int, TabModelInfo> m_tabModelInfo;
 };
 
 #endif

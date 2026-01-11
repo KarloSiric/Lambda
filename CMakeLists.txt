@@ -439,11 +439,13 @@ if(Qt6_FOUND)
         src/editor/main.cpp
         src/editor/MainWindow.cpp
         src/editor/widgets/ModelViewport.cpp
+        src/editor/widgets/StatusBarWidget.cpp
     )
 
     set(EDITOR_HEADERS
         src/editor/MainWindow.h
         src/editor/widgets/ModelViewport.h
+        src/editor/widgets/StatusBarWidget.h
     )
 
     #

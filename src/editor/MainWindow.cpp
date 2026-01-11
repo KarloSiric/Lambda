@@ -35,6 +35,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QTabBar>
 #include <exception>
 #include <QtCore/qcontainerfwd.h>
 #include <QtCore/qnamespace.h>
@@ -53,6 +54,51 @@ MainWindow::MainWindow( QWidget *parent )
 	: QMainWindow( parent ) {
 	setWindowTitle( "Lambda MDL Editor" );
 	resize( MW_WIDTH, MW_HEIGHT );
+
+	// Apply classic window styling
+	setStyleSheet(
+		"QMainWindow { "
+		"    background-color: #c0c0c0; "
+		"} "
+		"QMenuBar { "
+		"    background-color: #d0d0d0; "
+		"    color: #000000; "
+		"    border-bottom: 1px solid #808080; "
+		"} "
+		"QMenuBar::item { "
+		"    background-color: transparent; "
+		"    padding: 4px 8px; "
+		"} "
+		"QMenuBar::item:selected { "
+		"    background-color: #000080; "
+		"    color: #ffffff; "
+		"} "
+		"QToolBar { "
+		"    background-color: #d0d0d0; "
+		"    border: 1px solid #808080; "
+		"    spacing: 3px; "
+		"    padding: 2px; "
+		"} "
+		"QToolButton { "
+		"    background-color: #c0c0c0; "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom-color: #808080; "
+		"    padding: 3px; "
+		"    margin: 1px; "
+		"} "
+		"QToolButton:hover { "
+		"    background-color: #d0d0d0; "
+		"} "
+		"QToolButton:pressed { "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    background-color: #a0a0a0; "
+		"}" );
 
 	// Setting up all the major componenents
 	setupMenus();
@@ -1694,9 +1740,56 @@ void MainWindow::createHelpMenu() {
 void MainWindow::createViewportContainer() {
 	// Create tab widget for multi-model support
 	tabWidget = new QTabWidget(this);
-	tabWidget->setTabsClosable(true);  // Show close buttons on tabs
-	tabWidget->setMovable(true);        // Allow tab reordering
-	tabWidget->setDocumentMode(true);   // Cleaner look on macOS
+	tabWidget->setTabsClosable(true);    // Enable close buttons
+	tabWidget->setMovable(true);         // Allow tab reordering
+	tabWidget->setDocumentMode(false);   // Keep traditional tabs for classic look
+
+	// Apply classic tab styling with better X close buttons
+	QString tabStyle =
+		"QTabWidget::pane { "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    background-color: #c0c0c0; "
+		"} "
+		"QTabBar::tab { "
+		"    background-color: #c0c0c0; "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom: none; "
+		"    padding: 4px 18px 4px 8px; "  // Extra padding for close button
+		"    margin-right: 2px; "
+		"    color: #000000; "
+		"    min-width: 60px; "
+		"} "
+		"QTabBar::tab:selected { "
+		"    background-color: #d0d0d0; "
+		"    border-bottom: 2px solid #d0d0d0; "
+		"    font-weight: bold; "
+		"} "
+		"QTabBar::tab:hover { "
+		"    background-color: #d8d8d8; "
+		"} "
+		"QTabBar::close-button { "
+		"    subcontrol-position: center right; "
+		"    width: 14px; "
+		"    height: 14px; "
+		"    margin-right: 3px; "
+		"    background-color: transparent; "
+		"    border: none; "
+		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiPjxwYXRoIGQ9Ik0zLDMgTDExLDExIE0zLDExIEwxMSwzIiBzdHJva2U9IiM2MDYwNjAiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==); "
+		"} "
+		"QTabBar::close-button:hover { "
+		"    background-color: #d04040; "
+		"    border: 1px solid #a03030; "
+		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiPjxwYXRoIGQ9Ik0zLDMgTDExLDExIE0zLDExIEwxMSwzIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==); "
+		"}";
+
+	tabWidget->setStyleSheet(tabStyle);
 
 	// Connect tab close signal
 	connect(tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::onCloseTab);
@@ -1709,6 +1802,10 @@ void MainWindow::createViewportContainer() {
 
 	// Create initial tab with empty viewport
 	addViewportTab("Untitled");
+
+	// Remove close button from first tab completely (first tab always stays open)
+	tabWidget->tabBar()->setTabButton(0, QTabBar::RightSide, nullptr);
+	tabWidget->tabBar()->setTabButton(0, QTabBar::LeftSide, nullptr);
 }
 
 void MainWindow::createDocks() {
@@ -1741,30 +1838,145 @@ void MainWindow::createDocks() {
 	//       For now just the console, but would be good to add memory dump or something,
 	//       or hex dump to be able to see the HEX view of the MDL file and whatnot
 
-	bottomDock = new QDockWidget( "Console", this );
+	// @Note: Create bottom dock with Console and Memory tabs
+	bottomDock = new QDockWidget( "Output", this );
 	bottomDock->setAllowedAreas( Qt::BottomDockWidgetArea );
 	bottomDock->setObjectName( "BottomDock" );
+	bottomDock->setMinimumHeight( MW_CONSOLE_MIN_HEIGHT );
+	bottomDock->setMaximumHeight( MW_CONSOLE_MAX_HEIGHT );
 
+	// Create tab widget for Console and Memory
+	QTabWidget *bottomTabs = new QTabWidget();
+	bottomTabs->setDocumentMode(false);  // Classic tabs
+
+	// Console panel
 	QWidget *consolePanel = new QWidget();
-	QVBoxLayout *consoleLayout = new QVBoxLayout( new QLabel( "Console Panel TODO" ) );
+	QVBoxLayout *consoleLayout = new QVBoxLayout( consolePanel );
+	consoleLayout->addWidget( new QLabel( "Console Panel - Logs and Messages" ) );
+	consolePanel->setStyleSheet( "QWidget { background-color: #2d2d2d; color: #c0c0c0; }" );
 
-	consolePanel->setLayout( consoleLayout );
-	consolePanel->setMinimumHeight( MW_CONSOLE_MIN_HEIGHT );
-	consolePanel->setMaximumHeight( MW_CONSOLE_MAX_HEIGHT );
+	// Memory panel
+	QWidget *memoryPanel = new QWidget();
+	QVBoxLayout *memoryLayout = new QVBoxLayout( memoryPanel );
+	memoryLayout->addWidget( new QLabel( "Memory Panel - Hex Dump and Structure View" ) );
+	memoryPanel->setStyleSheet( "QWidget { background-color: #2d2d2d; color: #c0c0c0; }" );
 
-	consolePanel->setObjectName( "Console" );
+	// Add tabs
+	bottomTabs->addTab(consolePanel, "Console");
+	bottomTabs->addTab(memoryPanel, "Memory");
 
-	bottomDock->setWidget( consolePanel );
+	// Style the tabs to match classic theme with blue active tab
+	QString bottomTabStyle =
+		"QTabWidget::pane { "
+		"    border: none; "
+		"    background-color: #2d2d2d; "
+		"} "
+		"QTabBar::tab { "
+		"    background-color: #3a3a3a; "
+		"    border: 2px solid; "
+		"    border-top-color: #4a4a4a; "
+		"    border-left-color: #4a4a4a; "
+		"    border-right-color: #2a2a2a; "
+		"    border-bottom: none; "
+		"    padding: 4px 12px; "
+		"    margin-right: 2px; "
+		"    color: #909090; "
+		"    min-width: 60px; "
+		"} "
+		"QTabBar::tab:selected { "
+		"    background-color: #0a246a; "  // Blue for active tab
+		"    border-top-color: #0d2d85; "
+		"    border-left-color: #0d2d85; "
+		"    border-right-color: #081d55; "
+		"    color: #ffffff; "
+		"    font-weight: bold; "
+		"} "
+		"QTabBar::tab:hover { "
+		"    background-color: #4a4a4a; "
+		"    color: #b0b0b0; "
+		"}";
+
+	bottomTabs->setStyleSheet(bottomTabStyle);
+
+	bottomDock->setWidget( bottomTabs );
 	addDockWidget( Qt::BottomDockWidgetArea, bottomDock );
 
 	// Make the docks non deattachable
 	rightDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
 	bottomDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
 
-	// removes height-reduction
+	// Remove title bar from inspector for cleaner look
 	rightDock->setTitleBarWidget( new QWidget() );
 
-	// @Note: Adding status bar
+	// Apply classic dock styling with active/inactive colors
+	QString dockStyleActive =
+		"QDockWidget { "
+		"    background-color: #c0c0c0; "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom-color: #808080; "
+		"} "
+		"QDockWidget::title { "
+		"    background-color: #0a246a; "  // Active window blue
+		"    color: #ffffff; "
+		"    padding: 4px 6px; "
+		"    text-align: left; "
+		"    font-weight: bold; "
+		"    border-bottom: 1px solid #000000; "
+		"}";
+
+	QString dockStyleInactive =
+		"QDockWidget { "
+		"    background-color: #c0c0c0; "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom-color: #808080; "
+		"} "
+		"QDockWidget::title { "
+		"    background-color: #808080; "  // Inactive window gray
+		"    color: #c0c0c0; "
+		"    padding: 4px 6px; "
+		"    text-align: left; "
+		"    font-weight: bold; "
+		"    border-bottom: 1px solid #000000; "
+		"}";
+
+	// Start with console active (will change based on focus)
+	rightDock->setStyleSheet(dockStyleActive);
+	bottomDock->setStyleSheet(dockStyleActive);
+
+	// Create status bar widget
+	m_statusBar = new StatusBarWidget(this);
+	setStatusBar(m_statusBar);
+
+	// Connect status bar signals to dock visibility
+	connect(m_statusBar, &StatusBarWidget::inspectorToggleRequested, this, [this]() {
+		bool visible = !rightDock->isVisible();
+		rightDock->setVisible(visible);
+		m_statusBar->setInspectorVisible(visible);
+	});
+
+	connect(m_statusBar, &StatusBarWidget::consoleToggleRequested, this, [this, bottomTabs]() {
+		bool visible = !bottomDock->isVisible();
+		bottomDock->setVisible(visible);
+		if (visible) {
+			bottomTabs->setCurrentIndex(0);  // Switch to Console tab
+		}
+		m_statusBar->setConsoleVisible(visible);
+	});
+
+	connect(m_statusBar, &StatusBarWidget::memoryToggleRequested, this, [this, bottomTabs]() {
+		bool visible = !bottomDock->isVisible();
+		bottomDock->setVisible(visible);
+		if (visible) {
+			bottomTabs->setCurrentIndex(1);  // Switch to Memory tab
+		}
+		m_statusBar->setMemoryVisible(visible);
+	});
 }
 
 void MainWindow::setupTheme( void ) {
@@ -1845,6 +2057,27 @@ void MainWindow::onOpenModel() {
 	if (currentIndex >= 0) {
 		tabWidget->setTabText(currentIndex, fileInfo.fileName());
 	}
+
+	// Store model info for this tab
+	int tabIndex = tabWidget->currentIndex();
+	TabModelInfo &info = m_tabModelInfo[tabIndex];
+	info.filePath = filePath;
+	info.fileSize = fileInfo.size();
+	info.vertexCount = 1234;    // TODO: Get from viewport
+	info.triangleCount = 2456;  // TODO: Get from viewport
+	info.boneCount = 32;        // TODO: Get from viewport
+	info.sequenceCount = 15;    // TODO: Get from viewport
+	info.textureCount = 8;      // TODO: Get from viewport
+	info.currentSequence = "";  // Will be set when animation plays
+	info.currentFrame = 0;
+	info.totalFrames = 0;
+	info.selectedBone = "";
+	info.activeController = "";
+
+	// Update status bar with model info
+	m_statusBar->setModelInfo(filePath, info.vertexCount, info.triangleCount,
+	                          info.boneCount, info.sequenceCount, info.textureCount);
+	m_statusBar->setFileSize(info.fileSize);
 
 	qDebug() << "Model loaded successfully:" << fileInfo.fileName();
 }
@@ -1938,6 +2171,9 @@ void MainWindow::onCloseTab(int index) {
 	QWidget *widget = tabWidget->widget(index);
 	tabWidget->removeTab(index);
 
+	// Remove this tab's model info
+	m_tabModelInfo.remove(index);
+
 	// Delete the viewport widget safely
 	if (widget) {
 		qDebug() << "Closing tab at index" << index;
@@ -1965,6 +2201,20 @@ void MainWindow::onTabChanged(int index) {
 	if (!viewport) {
 		qWarning() << "WARNING: Widget at index" << index << "is not a ModelViewport!";
 		return;
+	}
+
+	// Update status bar with this tab's model info
+	if (m_tabModelInfo.contains(index)) {
+		const TabModelInfo &info = m_tabModelInfo[index];
+		m_statusBar->setModelInfo(info.filePath, info.vertexCount, info.triangleCount,
+		                          info.boneCount, info.sequenceCount, info.textureCount);
+		m_statusBar->setFileSize(info.fileSize);
+		m_statusBar->setSequenceInfo(info.currentSequence, info.currentFrame, info.totalFrames);
+		m_statusBar->setBoneName(info.selectedBone);
+		m_statusBar->setControllerName(info.activeController);
+	} else {
+		// No model loaded in this tab
+		m_statusBar->clearModelInfo();
 	}
 
 	// With per-instance rendering, each tab maintains its own state
