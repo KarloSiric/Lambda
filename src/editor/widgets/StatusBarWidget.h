@@ -40,11 +40,21 @@ public:
     void setSequenceInfo(const QString &sequenceName, int currentFrame, int totalFrames);
     void setBoneName(const QString &boneName);
     void setControllerName(const QString &controllerName);
+    void setBodygroupInfo(int current, int total);
+    void setSkinInfo(int current, int total);
+    void setAttachmentCount(int count);
+    void setEventCount(int count);
     void setSystemStats(float cpuUsage, float gpuUsage, float ramUsage);
     void setCameraDistance(float distance);
     void setGridSize(float size);
     void setFPS(int fps);
+    void setFrameTime(float milliseconds);
     void setResolution(int width, int height);
+    void setCameraPosition(float x, float y, float z);
+    void setFOV(float fov);
+    void setZoomLevel(float zoom);
+    void setViewMode(const QString &mode);
+    void setPlaybackSpeed(float speed);
     void clearModelInfo();
 
     void setInspectorVisible(bool visible);
@@ -63,6 +73,7 @@ private slots:
     void showInspectorContextMenu(const QPoint &pos);
     void showConsoleContextMenu(const QPoint &pos);
     void showMemoryContextMenu(const QPoint &pos);
+    void onCopyFilePathClicked();
 
 private:
     void setupUI();
@@ -82,6 +93,10 @@ private:
     QLabel *m_sequenceInfoLabel;
     QLabel *m_boneNameLabel;
     QLabel *m_controllerNameLabel;
+    QLabel *m_bodygroupLabel;
+    QLabel *m_skinLabel;
+    QLabel *m_attachmentLabel;
+    QLabel *m_eventLabel;
 
     QLabel *m_cpuUsageLabel;
     QLabel *m_gpuUsageLabel;
@@ -91,10 +106,17 @@ private:
     QLabel *m_cameraDistLabel;
     QLabel *m_resolutionLabel;
     QLabel *m_fpsLabel;
+    QLabel *m_frameTimeLabel;
+    QLabel *m_cameraPosLabel;
+    QLabel *m_fovLabel;
+    QLabel *m_zoomLabel;
+    QLabel *m_viewModeLabel;
+    QLabel *m_playbackSpeedLabel;
 
     QPushButton *m_inspectorToggle;
     QPushButton *m_consoleToggle;
     QPushButton *m_memoryToggle;
+    QPushButton *m_copyPathButton;
 
     QString m_currentFilePath;
     int m_vertexCount;
@@ -107,6 +129,20 @@ private:
     int m_viewportWidth;
     int m_viewportHeight;
     int m_currentFPS;
+    float m_frameTime;
+    float m_cameraX;
+    float m_cameraY;
+    float m_cameraZ;
+    float m_fov;
+    float m_zoom;
+    float m_playbackSpeed;
+    QString m_viewMode;
+    int m_currentBodygroup;
+    int m_totalBodygroups;
+    int m_currentSkin;
+    int m_totalSkins;
+    int m_attachmentCount;
+    int m_eventCount;
 };
 
 #endif // STATUSBARWIDGET_H

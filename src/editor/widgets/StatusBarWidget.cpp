@@ -23,6 +23,8 @@
 #include "StatusBarWidget.h"
 #include <QMenu>
 #include <QFileInfo>
+#include <QClipboard>
+#include <QApplication>
 
 StatusBarWidget::StatusBarWidget( QWidget *parent )
 	: QStatusBar( parent ),
@@ -35,7 +37,21 @@ StatusBarWidget::StatusBarWidget( QWidget *parent )
 	  m_cameraDistance( 50.0f ),
 	  m_viewportWidth( 1920 ),
 	  m_viewportHeight( 1080 ),
-	  m_currentFPS( 60 ) {
+	  m_currentFPS( 60 ),
+	  m_frameTime( 16.7f ),
+	  m_cameraX( 0.0f ),
+	  m_cameraY( 0.0f ),
+	  m_cameraZ( 0.0f ),
+	  m_fov( 75.0f ),
+	  m_zoom( 100.0f ),
+	  m_playbackSpeed( 1.0f ),
+	  m_viewMode( "Textured" ),
+	  m_currentBodygroup( 0 ),
+	  m_totalBodygroups( 0 ),
+	  m_currentSkin( 0 ),
+	  m_totalSkins( 0 ),
+	  m_attachmentCount( 0 ),
+	  m_eventCount( 0 ) {
 	setSizeGripEnabled( false ); // Disable size grip to prevent cutoff
 	setContentsMargins( 4, 0, 4, 0 ); // Add padding on left/right edges
 	setupUI();
@@ -52,55 +68,69 @@ void StatusBarWidget::setupUI() {
 }
 
 void StatusBarWidget::createModelInfoWidgets() {
-	m_filePathLabel = new QLabel( "No model loaded" );
-	m_filePathLabel->setMinimumWidth( 300 );
-	m_filePathLabel->setMaximumWidth( 600 ); // Increased for full path display
+	m_filePathLabel = new QLabel( "No model" );
+	m_filePathLabel->setMinimumWidth( 150 );
+	m_filePathLabel->setMaximumWidth( 300 ); // Reduced from 600
 	addWidget( m_filePathLabel );
 
-	// Small spacer for visual separation
-	QWidget *spacer1 = new QWidget();
-	spacer1->setFixedWidth( 8 );
-	addWidget( spacer1 );
+	// Copy path button
+	m_copyPathButton = new QPushButton();
+	m_copyPathButton->setText( "📋" );
+	m_copyPathButton->setFixedSize( 20, 20 );
+	m_copyPathButton->setToolTip( "Copy path" );
+	connect( m_copyPathButton, &QPushButton::clicked, this, &StatusBarWidget::onCopyFilePathClicked );
+	addWidget( m_copyPathButton );
 
 	m_vertexCountLabel = new QLabel( "Verts: --" );
-	m_vertexCountLabel->setToolTip( "Total vertex count" );
+	m_vertexCountLabel->setToolTip( "Vertex count" );
 	addWidget( m_vertexCountLabel );
 
 	m_triangleCountLabel = new QLabel( "Tris: --" );
-	m_triangleCountLabel->setToolTip( "Total triangle count" );
+	m_triangleCountLabel->setToolTip( "Triangle count" );
 	addWidget( m_triangleCountLabel );
 
 	m_boneCountLabel = new QLabel( "Bones: --" );
-	m_boneCountLabel->setToolTip( "Skeletal bone count" );
+	m_boneCountLabel->setToolTip( "Bone count" );
 	addWidget( m_boneCountLabel );
 
 	m_sequenceCountLabel = new QLabel( "Seqs: --" );
-	m_sequenceCountLabel->setToolTip( "Animation sequence count" );
+	m_sequenceCountLabel->setToolTip( "Sequence count" );
 	addWidget( m_sequenceCountLabel );
 
-	m_textureCountLabel = new QLabel( "Textures: --" );
+	m_textureCountLabel = new QLabel( "Tex: --" );
 	m_textureCountLabel->setToolTip( "Texture count" );
 	addWidget( m_textureCountLabel );
 
 	m_fileSizeLabel = new QLabel( "Size: --" );
-	m_fileSizeLabel->setToolTip( "MDL file size" );
+	m_fileSizeLabel->setToolTip( "File size" );
 	addWidget( m_fileSizeLabel );
 
-	// Animation and bone info section
-	QWidget *spacer2 = new QWidget();
-	spacer2->setFixedWidth( 12 );
-	addWidget( spacer2 );
-
 	m_sequenceInfoLabel = new QLabel( "Seq: --" );
-	m_sequenceInfoLabel->setToolTip( "Current animation sequence" );
+	m_sequenceInfoLabel->setToolTip( "Current sequence" );
 	addWidget( m_sequenceInfoLabel );
+
+	m_bodygroupLabel = new QLabel( "Body: --" );
+	m_bodygroupLabel->setToolTip( "Bodygroup" );
+	addWidget( m_bodygroupLabel );
+
+	m_skinLabel = new QLabel( "Skin: --" );
+	m_skinLabel->setToolTip( "Skin" );
+	addWidget( m_skinLabel );
+
+	m_attachmentLabel = new QLabel( "Attach: --" );
+	m_attachmentLabel->setToolTip( "Attachment count" );
+	addWidget( m_attachmentLabel );
+
+	m_eventLabel = new QLabel( "Events: --" );
+	m_eventLabel->setToolTip( "Event count" );
+	addWidget( m_eventLabel );
 
 	m_boneNameLabel = new QLabel( "Bone: --" );
 	m_boneNameLabel->setToolTip( "Selected bone" );
 	addWidget( m_boneNameLabel );
 
 	m_controllerNameLabel = new QLabel( "Ctrl: --" );
-	m_controllerNameLabel->setToolTip( "Bone controller" );
+	m_controllerNameLabel->setToolTip( "Controller" );
 	addWidget( m_controllerNameLabel );
 
 	// Stretch spacer to push everything else to the right
@@ -108,6 +138,15 @@ void StatusBarWidget::createModelInfoWidgets() {
 }
 
 void StatusBarWidget::createViewInfoWidgets() {
+	// Performance
+	m_fpsLabel = new QLabel( "FPS: 60" );
+	m_fpsLabel->setToolTip( "Frames per second" );
+	addPermanentWidget( m_fpsLabel );
+
+	m_frameTimeLabel = new QLabel( "Frame: 16ms" );
+	m_frameTimeLabel->setToolTip( "Frame time" );
+	addPermanentWidget( m_frameTimeLabel );
+
 	// System stats
 	m_cpuUsageLabel = new QLabel( "CPU: 0%" );
 	m_cpuUsageLabel->setToolTip( "CPU usage" );
@@ -117,26 +156,42 @@ void StatusBarWidget::createViewInfoWidgets() {
 	m_gpuUsageLabel->setToolTip( "GPU usage" );
 	addPermanentWidget( m_gpuUsageLabel );
 
-	m_ramUsageLabel = new QLabel( "RAM: 0 MB" );
+	m_ramUsageLabel = new QLabel( "RAM: 0MB" );
 	m_ramUsageLabel->setToolTip( "RAM usage" );
 	addPermanentWidget( m_ramUsageLabel );
 
-	// Viewport info
-	m_resolutionLabel = new QLabel( QString( "%1x%2" ).arg( m_viewportWidth ).arg( m_viewportHeight ) );
+	// Viewport
+	m_resolutionLabel = new QLabel( "Res: 1920x1080" );
 	m_resolutionLabel->setToolTip( "Viewport resolution" );
 	addPermanentWidget( m_resolutionLabel );
 
-	m_gridSizeLabel = new QLabel( QString( "Grid: %1" ).arg( m_gridSize, 0, 'f', 1 ) );
-	m_gridSizeLabel->setToolTip( "Grid spacing in units" );
-	addPermanentWidget( m_gridSizeLabel );
+	m_viewModeLabel = new QLabel( "Mode: Textured" );
+	m_viewModeLabel->setToolTip( "Render mode" );
+	addPermanentWidget( m_viewModeLabel );
 
-	m_cameraDistLabel = new QLabel( QString( "Cam: %1" ).arg( m_cameraDistance, 0, 'f', 1 ) );
-	m_cameraDistLabel->setToolTip( "Camera distance from target" );
+	m_fovLabel = new QLabel( "FOV: 75°" );
+	m_fovLabel->setToolTip( "Field of view" );
+	addPermanentWidget( m_fovLabel );
+
+	m_zoomLabel = new QLabel( "Zoom: 100%" );
+	m_zoomLabel->setToolTip( "Zoom level" );
+	addPermanentWidget( m_zoomLabel );
+
+	m_playbackSpeedLabel = new QLabel( "Speed: 1.0x" );
+	m_playbackSpeedLabel->setToolTip( "Playback speed" );
+	addPermanentWidget( m_playbackSpeedLabel );
+
+	m_cameraPosLabel = new QLabel( "Cam: 0,0,0" );
+	m_cameraPosLabel->setToolTip( "Camera position XYZ" );
+	addPermanentWidget( m_cameraPosLabel );
+
+	m_cameraDistLabel = new QLabel( "Dist: 50" );
+	m_cameraDistLabel->setToolTip( "Camera distance" );
 	addPermanentWidget( m_cameraDistLabel );
 
-	m_fpsLabel = new QLabel( QString( "%1 FPS" ).arg( m_currentFPS ) );
-	m_fpsLabel->setToolTip( "Rendering framerate" );
-	addPermanentWidget( m_fpsLabel );
+	m_gridSizeLabel = new QLabel( "Grid: 10" );
+	m_gridSizeLabel->setToolTip( "Grid size" );
+	addPermanentWidget( m_gridSizeLabel );
 }
 
 void StatusBarWidget::createToggleButtons() {
@@ -198,7 +253,7 @@ void StatusBarWidget::applyStyles() {
 	// File path with sunken panel look
 	m_filePathLabel->setStyleSheet(
 		"QLabel { "
-		"    padding: 3px 6px; "
+		"    padding: 2px 4px; "
 		"    color: #101010; "
 		"    background-color: #e8e8e8; "
 		"    border: 1px solid #808080; "
@@ -211,7 +266,7 @@ void StatusBarWidget::applyStyles() {
 	// Model info with classic sunken panels
 	QString modelInfoStyle =
 		"QLabel { "
-		"    padding: 3px 6px; "
+		"    padding: 2px 4px; "
 		"    color: #202020; "
 		"    background-color: #e8e8e8; "
 		"    border: 1px solid #808080; "
@@ -228,7 +283,7 @@ void StatusBarWidget::applyStyles() {
 
 	QString viewInfoStyle =
 		"QLabel { "
-		"    padding: 3px 6px; "
+		"    padding: 2px 4px; "
 		"    color: #202020; "
 		"    background-color: #e8e8e8; "
 		"    border: 1px solid #808080; "
@@ -241,6 +296,10 @@ void StatusBarWidget::applyStyles() {
 	m_sequenceInfoLabel->setStyleSheet( modelInfoStyle );
 	m_boneNameLabel->setStyleSheet( modelInfoStyle );
 	m_controllerNameLabel->setStyleSheet( modelInfoStyle );
+	m_bodygroupLabel->setStyleSheet( modelInfoStyle );
+	m_skinLabel->setStyleSheet( modelInfoStyle );
+	m_attachmentLabel->setStyleSheet( modelInfoStyle );
+	m_eventLabel->setStyleSheet( modelInfoStyle );
 	m_cpuUsageLabel->setStyleSheet( viewInfoStyle );
 	m_gpuUsageLabel->setStyleSheet( viewInfoStyle );
 	m_ramUsageLabel->setStyleSheet( viewInfoStyle );
@@ -248,6 +307,12 @@ void StatusBarWidget::applyStyles() {
 	m_gridSizeLabel->setStyleSheet( viewInfoStyle );
 	m_cameraDistLabel->setStyleSheet( viewInfoStyle );
 	m_fpsLabel->setStyleSheet( viewInfoStyle );
+	m_frameTimeLabel->setStyleSheet( viewInfoStyle );
+	m_cameraPosLabel->setStyleSheet( viewInfoStyle );
+	m_fovLabel->setStyleSheet( viewInfoStyle );
+	m_zoomLabel->setStyleSheet( viewInfoStyle );
+	m_viewModeLabel->setStyleSheet( viewInfoStyle );
+	m_playbackSpeedLabel->setStyleSheet( viewInfoStyle );
 
 	// Classic raised buttons (like Windows 95/2000 style)
 	QString buttonStyle =
@@ -285,6 +350,31 @@ void StatusBarWidget::applyStyles() {
 	m_inspectorToggle->setStyleSheet( buttonStyle );
 	m_consoleToggle->setStyleSheet( buttonStyle );
 	m_memoryToggle->setStyleSheet( buttonStyle );
+
+	// Copy button style (smaller, compact)
+	QString copyButtonStyle =
+		"QPushButton { "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom-color: #808080; "
+		"    background-color: #c0c0c0; "
+		"    padding: 1px; "
+		"    color: #000000; "
+		"    font-size: 10px; "
+		"} "
+		"QPushButton:hover { "
+		"    background-color: #d0d0d0; "
+		"} "
+		"QPushButton:pressed { "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    background-color: #b0b0b0; "
+		"}";
+	m_copyPathButton->setStyleSheet( copyButtonStyle );
 }
 
 void StatusBarWidget::setModelInfo( const QString &filePath, int vertexCount,
@@ -324,7 +414,7 @@ void StatusBarWidget::setModelInfo( const QString &filePath, int vertexCount,
 	m_triangleCountLabel->setText( QString( "Tris: %L1" ).arg( triangleCount ) );
 	m_boneCountLabel->setText( QString( "Bones: %1" ).arg( boneCount ) );
 	m_sequenceCountLabel->setText( QString( "Seqs: %1" ).arg( sequenceCount ) );
-	m_textureCountLabel->setText( QString( "Textures: %1" ).arg( textureCount ) );
+	m_textureCountLabel->setText( QString( "Tex: %1" ).arg( textureCount ) );
 }
 
 void StatusBarWidget::setFileSize( qint64 sizeBytes ) {
@@ -364,12 +454,12 @@ void StatusBarWidget::setControllerName( const QString &controllerName ) {
 void StatusBarWidget::setSystemStats( float cpuUsage, float gpuUsage, float ramUsage ) {
 	m_cpuUsageLabel->setText( QString( "CPU: %1%" ).arg( cpuUsage, 0, 'f', 1 ) );
 	m_gpuUsageLabel->setText( QString( "GPU: %1%" ).arg( gpuUsage, 0, 'f', 1 ) );
-	m_ramUsageLabel->setText( QString( "RAM: %1 MB" ).arg( ramUsage, 0, 'f', 0 ) );
+	m_ramUsageLabel->setText( QString( "RAM: %1MB" ).arg( ramUsage, 0, 'f', 0 ) );
 }
 
 void StatusBarWidget::setCameraDistance( float distance ) {
 	m_cameraDistance = distance;
-	m_cameraDistLabel->setText( QString( "Cam: %1" ).arg( distance, 0, 'f', 1 ) );
+	m_cameraDistLabel->setText( QString( "Dist: %1" ).arg( distance, 0, 'f', 1 ) );
 }
 
 void StatusBarWidget::setGridSize( float size ) {
@@ -380,12 +470,12 @@ void StatusBarWidget::setGridSize( float size ) {
 void StatusBarWidget::setResolution( int width, int height ) {
 	m_viewportWidth = width;
 	m_viewportHeight = height;
-	m_resolutionLabel->setText( QString( "%1x%2" ).arg( width ).arg( height ) );
+	m_resolutionLabel->setText( QString( "Res: %1x%2" ).arg( width ).arg( height ) );
 }
 
 void StatusBarWidget::setFPS( int fps ) {
 	m_currentFPS = fps;
-	m_fpsLabel->setText( QString( "%1 FPS" ).arg( fps ) );
+	m_fpsLabel->setText( QString( "FPS: %1" ).arg( fps ) );
 
 	// Classic style with color coding for performance
 	QString baseStyle =
@@ -408,6 +498,96 @@ void StatusBarWidget::setFPS( int fps ) {
 	}
 }
 
+void StatusBarWidget::setFrameTime( float milliseconds ) {
+	m_frameTime = milliseconds;
+	m_frameTimeLabel->setText( QString( "Frame: %1ms" ).arg( milliseconds, 0, 'f', 1 ) );
+
+	// Color code frame time (16.7ms = 60fps threshold)
+	QString baseStyle =
+		"QLabel { "
+		"    padding: 3px 6px; "
+		"    background-color: #e8e8e8; "
+		"    border: 1px solid #808080; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #f0f0f0; "
+		"    border-bottom-color: #f0f0f0; "
+		"    color: ";
+
+	if ( milliseconds <= 20.0f ) { // Under 20ms (50+ fps)
+		m_frameTimeLabel->setStyleSheet( baseStyle + "#006000; }" );
+	} else if ( milliseconds <= 33.0f ) { // Under 33ms (30+ fps)
+		m_frameTimeLabel->setStyleSheet( baseStyle + "#806000; }" );
+	} else {
+		m_frameTimeLabel->setStyleSheet( baseStyle + "#800000; }" );
+	}
+}
+
+void StatusBarWidget::setCameraPosition( float x, float y, float z ) {
+	m_cameraX = x;
+	m_cameraY = y;
+	m_cameraZ = z;
+	m_cameraPosLabel->setText( QString( "Cam: %1,%2,%3" ).arg( x, 0, 'f', 1 ).arg( y, 0, 'f', 1 ).arg( z, 0, 'f', 1 ) );
+}
+
+void StatusBarWidget::setFOV( float fov ) {
+	m_fov = fov;
+	m_fovLabel->setText( QString( "FOV: %1°" ).arg( fov, 0, 'f', 0 ) );
+}
+
+void StatusBarWidget::setZoomLevel( float zoom ) {
+	m_zoom = zoom;
+	m_zoomLabel->setText( QString( "Zoom: %1%" ).arg( zoom, 0, 'f', 0 ) );
+}
+
+void StatusBarWidget::setViewMode( const QString &mode ) {
+	m_viewMode = mode;
+	m_viewModeLabel->setText( QString( "Mode: %1" ).arg( mode ) );
+}
+
+void StatusBarWidget::setPlaybackSpeed( float speed ) {
+	m_playbackSpeed = speed;
+	m_playbackSpeedLabel->setText( QString( "Speed: %1x" ).arg( speed, 0, 'f', 1 ) );
+}
+
+void StatusBarWidget::setBodygroupInfo( int current, int total ) {
+	m_currentBodygroup = current;
+	m_totalBodygroups = total;
+	if ( total == 0 ) {
+		m_bodygroupLabel->setText( "Body: --" );
+	} else {
+		m_bodygroupLabel->setText( QString( "Body: %1/%2" ).arg( current ).arg( total ) );
+	}
+}
+
+void StatusBarWidget::setSkinInfo( int current, int total ) {
+	m_currentSkin = current;
+	m_totalSkins = total;
+	if ( total == 0 ) {
+		m_skinLabel->setText( "Skin: --" );
+	} else {
+		m_skinLabel->setText( QString( "Skin: %1/%2" ).arg( current ).arg( total ) );
+	}
+}
+
+void StatusBarWidget::setAttachmentCount( int count ) {
+	m_attachmentCount = count;
+	if ( count == 0 ) {
+		m_attachmentLabel->setText( "Attach: --" );
+	} else {
+		m_attachmentLabel->setText( QString( "Attach: %1" ).arg( count ) );
+	}
+}
+
+void StatusBarWidget::setEventCount( int count ) {
+	m_eventCount = count;
+	if ( count == 0 ) {
+		m_eventLabel->setText( "Events: --" );
+	} else {
+		m_eventLabel->setText( QString( "Events: %1" ).arg( count ) );
+	}
+}
+
 void StatusBarWidget::clearModelInfo() {
 	m_currentFilePath.clear();
 	m_vertexCount = 0;
@@ -416,17 +596,21 @@ void StatusBarWidget::clearModelInfo() {
 	m_sequenceCount = 0;
 	m_textureCount = 0;
 
-	m_filePathLabel->setText( "No model loaded" );
+	m_filePathLabel->setText( "No model" );
 	m_filePathLabel->setToolTip( "" );
 	m_vertexCountLabel->setText( "Verts: --" );
 	m_triangleCountLabel->setText( "Tris: --" );
 	m_boneCountLabel->setText( "Bones: --" );
 	m_sequenceCountLabel->setText( "Seqs: --" );
-	m_textureCountLabel->setText( "Textures: --" );
+	m_textureCountLabel->setText( "Tex: --" );
 	m_fileSizeLabel->setText( "Size: --" );
 	m_sequenceInfoLabel->setText( "Seq: --" );
 	m_boneNameLabel->setText( "Bone: --" );
 	m_controllerNameLabel->setText( "Ctrl: --" );
+	m_bodygroupLabel->setText( "Body: --" );
+	m_skinLabel->setText( "Skin: --" );
+	m_attachmentLabel->setText( "Attach: --" );
+	m_eventLabel->setText( "Events: --" );
 }
 
 void StatusBarWidget::setInspectorVisible( bool visible ) {
@@ -451,6 +635,13 @@ void StatusBarWidget::onConsoleButtonClicked() {
 
 void StatusBarWidget::onMemoryButtonClicked() {
 	emit memoryToggleRequested();
+}
+
+void StatusBarWidget::onCopyFilePathClicked() {
+	if ( !m_currentFilePath.isEmpty() ) {
+		QClipboard *clipboard = QApplication::clipboard();
+		clipboard->setText( m_currentFilePath );
+	}
 }
 
 void StatusBarWidget::showInspectorContextMenu( const QPoint &pos ) {

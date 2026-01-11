@@ -36,6 +36,8 @@
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QTabBar>
+#include <QPushButton>
+#include <QLineEdit>
 #include <exception>
 #include <QtCore/qcontainerfwd.h>
 #include <QtCore/qnamespace.h>
@@ -1761,18 +1763,31 @@ void MainWindow::createViewportContainer() {
 		"    border-left-color: #ffffff; "
 		"    border-right-color: #808080; "
 		"    border-bottom: none; "
-		"    padding: 4px 18px 4px 8px; "  // Extra padding for close button
+		"    padding: 6px 20px 6px 10px; "  // Extra padding for close button
 		"    margin-right: 2px; "
 		"    color: #000000; "
-		"    min-width: 60px; "
+		"    min-width: 80px; "
+		"    max-width: 200px; "
+		"    min-height: 24px; "  // Fixed height
+		"    max-height: 24px; "  // Fixed height
+		"} "
+		"QTabBar::tab:first { "  // First tab same size as others
+		"    padding: 6px 20px 6px 10px; "  // Same padding as others
+		"    min-width: 80px; "
+		"    min-height: 24px; "  // Fixed height
+		"    max-height: 24px; "  // Fixed height
 		"} "
 		"QTabBar::tab:selected { "
-		"    background-color: #d0d0d0; "
-		"    border-bottom: 2px solid #d0d0d0; "
+		"    background-color: #0a246a; "  // Classic blue for active tab
+		"    border-top-color: #0d2d85; "
+		"    border-left-color: #0d2d85; "
+		"    border-right-color: #081d55; "
+		"    border-bottom: 2px solid #0a246a; "
+		"    color: #ffffff; "
 		"    font-weight: bold; "
 		"} "
 		"QTabBar::tab:hover { "
-		"    background-color: #d8d8d8; "
+		"    background-color: #a8a8a8; "
 		"} "
 		"QTabBar::close-button { "
 		"    subcontrol-position: center right; "
@@ -1849,51 +1864,188 @@ void MainWindow::createDocks() {
 	QTabWidget *bottomTabs = new QTabWidget();
 	bottomTabs->setDocumentMode(false);  // Classic tabs
 
-	// Console panel
+	// Console panel with log level toolbar
 	QWidget *consolePanel = new QWidget();
 	QVBoxLayout *consoleLayout = new QVBoxLayout( consolePanel );
-	consoleLayout->addWidget( new QLabel( "Console Panel - Logs and Messages" ) );
-	consolePanel->setStyleSheet( "QWidget { background-color: #2d2d2d; color: #c0c0c0; }" );
+	consoleLayout->setContentsMargins( 0, 0, 0, 0 );
+	consoleLayout->setSpacing( 0 );
+
+	// Log level toolbar
+	QWidget *logToolbar = new QWidget();
+	logToolbar->setFixedHeight( 24 );
+	QHBoxLayout *logToolbarLayout = new QHBoxLayout( logToolbar );
+	logToolbarLayout->setContentsMargins( 2, 2, 2, 2 );
+	logToolbarLayout->setSpacing( 2 );
+
+	// Search bar
+	QLineEdit *searchBox = new QLineEdit();
+	searchBox->setPlaceholderText( "Search..." );
+	searchBox->setFixedSize( 150, 20 );
+
+	// Log level filter buttons - full words
+	QPushButton *btnTrace = new QPushButton( "TRACE" );
+	btnTrace->setCheckable( true );
+	btnTrace->setChecked( false );
+	btnTrace->setFixedSize( 50, 20 );
+	btnTrace->setToolTip( "Show trace messages" );
+
+	QPushButton *btnDebug = new QPushButton( "DEBUG" );
+	btnDebug->setCheckable( true );
+	btnDebug->setChecked( false );
+	btnDebug->setFixedSize( 50, 20 );
+	btnDebug->setToolTip( "Show debug messages" );
+
+	QPushButton *btnInfo = new QPushButton( "INFO" );
+	btnInfo->setCheckable( true );
+	btnInfo->setChecked( true );
+	btnInfo->setFixedSize( 50, 20 );
+	btnInfo->setToolTip( "Show info messages" );
+
+	QPushButton *btnWarn = new QPushButton( "WARN" );
+	btnWarn->setCheckable( true );
+	btnWarn->setChecked( true );
+	btnWarn->setFixedSize( 50, 20 );
+	btnWarn->setToolTip( "Show warnings" );
+
+	QPushButton *btnError = new QPushButton( "ERROR" );
+	btnError->setCheckable( true );
+	btnError->setChecked( true );
+	btnError->setFixedSize( 50, 20 );
+	btnError->setToolTip( "Show errors" );
+
+	QPushButton *btnFatal = new QPushButton( "FATAL" );
+	btnFatal->setCheckable( true );
+	btnFatal->setChecked( true );
+	btnFatal->setFixedSize( 50, 20 );
+	btnFatal->setToolTip( "Show fatal errors" );
+
+	// Clear button
+	QPushButton *btnClear = new QPushButton( "CLEAR" );
+	btnClear->setFixedSize( 50, 20 );
+	btnClear->setToolTip( "Clear all logs" );
+
+	// Classic button style for log toolbar
+	QString logButtonStyle =
+		"QPushButton { "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom-color: #808080; "
+		"    background-color: #c0c0c0; "
+		"    color: #000000; "
+		"    font-size: 9px; "
+		"    font-weight: bold; "
+		"} "
+		"QPushButton:checked { "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    background-color: #a0a0a0; "
+		"} "
+		"QPushButton:hover { "
+		"    background-color: #d0d0d0; "
+		"} "
+		"QPushButton:pressed { "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    background-color: #b0b0b0; "
+		"}";
+
+	btnTrace->setStyleSheet( logButtonStyle );
+	btnDebug->setStyleSheet( logButtonStyle );
+	btnInfo->setStyleSheet( logButtonStyle );
+	btnWarn->setStyleSheet( logButtonStyle );
+	btnError->setStyleSheet( logButtonStyle );
+	btnFatal->setStyleSheet( logButtonStyle );
+	btnClear->setStyleSheet( logButtonStyle );
+
+	// Search box style
+	QString searchStyle =
+		"QLineEdit { "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #f0f0f0; "
+		"    border-bottom-color: #f0f0f0; "
+		"    background-color: #ffffff; "
+		"    color: #000000; "
+		"    padding: 2px 4px; "
+		"    font-size: 10px; "
+		"}";
+	searchBox->setStyleSheet( searchStyle );
+
+	// Layout: Search, buttons, clear, stretch
+	logToolbarLayout->addWidget( searchBox );
+	logToolbarLayout->addSpacing( 4 );
+	logToolbarLayout->addWidget( btnTrace );
+	logToolbarLayout->addWidget( btnDebug );
+	logToolbarLayout->addWidget( btnInfo );
+	logToolbarLayout->addWidget( btnWarn );
+	logToolbarLayout->addWidget( btnError );
+	logToolbarLayout->addWidget( btnFatal );
+	logToolbarLayout->addSpacing( 4 );
+	logToolbarLayout->addWidget( btnClear );
+	logToolbarLayout->addStretch();
+
+	logToolbar->setStyleSheet( "QWidget { background-color: #d0d0d0; }" );
+
+	// Console content area
+	QLabel *consoleLabel = new QLabel( "Console Panel - Logs and Messages" );
+	consoleLabel->setStyleSheet( "QLabel { color: #c0c0c0; padding: 8px; }" );
+
+	consoleLayout->addWidget( logToolbar );
+	consoleLayout->addWidget( consoleLabel, 1 );
+	consolePanel->setStyleSheet( "QWidget { background-color: #353535; }" );
 
 	// Memory panel
 	QWidget *memoryPanel = new QWidget();
 	QVBoxLayout *memoryLayout = new QVBoxLayout( memoryPanel );
-	memoryLayout->addWidget( new QLabel( "Memory Panel - Hex Dump and Structure View" ) );
-	memoryPanel->setStyleSheet( "QWidget { background-color: #2d2d2d; color: #c0c0c0; }" );
+	QLabel *memoryLabel = new QLabel( "Memory Panel - Hex Dump and Structure View" );
+	memoryLabel->setStyleSheet( "QLabel { color: #c0c0c0; }" );
+	memoryLayout->addWidget( memoryLabel );
+	memoryPanel->setStyleSheet( "QWidget { background-color: #353535; }" );
 
 	// Add tabs
 	bottomTabs->addTab(consolePanel, "Console");
 	bottomTabs->addTab(memoryPanel, "Memory");
 
-	// Style the tabs to match classic theme with blue active tab
+	// Style the tabs to match window tabs (classic with blue active)
 	QString bottomTabStyle =
 		"QTabWidget::pane { "
-		"    border: none; "
-		"    background-color: #2d2d2d; "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    background-color: #353535; "
 		"} "
 		"QTabBar::tab { "
-		"    background-color: #3a3a3a; "
+		"    background-color: #c0c0c0; "
 		"    border: 2px solid; "
-		"    border-top-color: #4a4a4a; "
-		"    border-left-color: #4a4a4a; "
-		"    border-right-color: #2a2a2a; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
 		"    border-bottom: none; "
 		"    padding: 4px 12px; "
 		"    margin-right: 2px; "
-		"    color: #909090; "
-		"    min-width: 60px; "
+		"    color: #000000; "
+		"    min-width: 80px; "
 		"} "
 		"QTabBar::tab:selected { "
-		"    background-color: #0a246a; "  // Blue for active tab
+		"    background-color: #0a246a; "  // Classic blue for active tab
 		"    border-top-color: #0d2d85; "
 		"    border-left-color: #0d2d85; "
 		"    border-right-color: #081d55; "
+		"    border-bottom: 2px solid #0a246a; "
 		"    color: #ffffff; "
 		"    font-weight: bold; "
 		"} "
 		"QTabBar::tab:hover { "
-		"    background-color: #4a4a4a; "
-		"    color: #b0b0b0; "
+		"    background-color: #a8a8a8; "
 		"}";
 
 	bottomTabs->setStyleSheet(bottomTabStyle);
@@ -1905,11 +2057,12 @@ void MainWindow::createDocks() {
 	rightDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
 	bottomDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
 
-	// Remove title bar from inspector for cleaner look
+	// Remove title bar from inspector and console for cleaner look
 	rightDock->setTitleBarWidget( new QWidget() );
+	bottomDock->setTitleBarWidget( new QWidget() );
 
-	// Apply classic dock styling with active/inactive colors
-	QString dockStyleActive =
+	// Apply classic dock styling - consistent for all docks
+	QString dockStyle =
 		"QDockWidget { "
 		"    background-color: #c0c0c0; "
 		"    border: 2px solid; "
@@ -1919,35 +2072,15 @@ void MainWindow::createDocks() {
 		"    border-bottom-color: #808080; "
 		"} "
 		"QDockWidget::title { "
-		"    background-color: #0a246a; "  // Active window blue
+		"    background-color: #0a246a; "
 		"    color: #ffffff; "
 		"    padding: 4px 6px; "
 		"    text-align: left; "
 		"    font-weight: bold; "
-		"    border-bottom: 1px solid #000000; "
 		"}";
 
-	QString dockStyleInactive =
-		"QDockWidget { "
-		"    background-color: #c0c0c0; "
-		"    border: 2px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom-color: #808080; "
-		"} "
-		"QDockWidget::title { "
-		"    background-color: #808080; "  // Inactive window gray
-		"    color: #c0c0c0; "
-		"    padding: 4px 6px; "
-		"    text-align: left; "
-		"    font-weight: bold; "
-		"    border-bottom: 1px solid #000000; "
-		"}";
-
-	// Start with console active (will change based on focus)
-	rightDock->setStyleSheet(dockStyleActive);
-	bottomDock->setStyleSheet(dockStyleActive);
+	rightDock->setStyleSheet(dockStyle);
+	bottomDock->setStyleSheet(dockStyle);
 
 	// Create status bar widget
 	m_statusBar = new StatusBarWidget(this);
