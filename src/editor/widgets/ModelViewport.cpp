@@ -165,12 +165,13 @@ void ModelViewport::paintGL() {
     // Create view matrix (same as Lambda)
     Math_Mat4_LookAt( camPos, target, up, m_viewMatrix );
 
-    if ( m_showGrid )
-    {
-        r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
-        r_ground_draw( m_viewMatrix, m_projMatrix, 0.0f );
-        r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
-    }
+    // Grid/ground disabled - just render the model as-is
+    // if ( m_showGrid )
+    // {
+    //     r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
+    //     r_ground_draw( m_viewMatrix, m_projMatrix, 0.0f );
+    //     r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
+    // }
 
     // Build model matrix - Add proper transformations
     mat4 modelMatrix;
@@ -180,8 +181,9 @@ void ModelViewport::paintGL() {
     // This matches CLI: Scale → Rotate → Translate
 
     // Step 1: Scale down (HL units are huge - 0.1x scale)
+    float modelScale = 0.1f;
     mat4 S = GLM_MAT4_IDENTITY_INIT;
-    glm_scale( S, (vec3){ 0.1f, 0.1f, 0.1f } );
+    glm_scale( S, (vec3){ modelScale, modelScale, modelScale } );
     glm_mat4_mul( S, modelMatrix, modelMatrix );
 
     // Step 2: Rotate HL forward (-Z) to OpenGL forward (-Z)
@@ -189,9 +191,13 @@ void ModelViewport::paintGL() {
     glm_rotate( R, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
     glm_mat4_mul( R, modelMatrix, modelMatrix );
 
-    // Step 3: Translate up slightly (lift above ground)
+    // Step 3: No translation by default - render model at origin as-is
+    // HLAM doesn't automatically align models. It provides buttons for:
+    // - "Center On World Origin" (move to 0,0,0)
+    // - "Align On Ground" (lift so bottom touches ground)
+    // We'll add those features later. For now, respect the model's authored position.
     mat4 T = GLM_MAT4_IDENTITY_INIT;
-    glm_translate( T, (vec3){ 0.0f, 0.01f, 0.0f } );
+    glm_translate( T, (vec3){ 0.0f, 0.0f, 0.0f } );  // No offset
     glm_mat4_mul( T, modelMatrix, modelMatrix );
 
     // Render the model if loaded
@@ -364,9 +370,68 @@ bool ModelViewport::loadModel( const QString &modelPath )
         qCritical() << "ERROR: No render instance available!";
     }
 
+    // Auto-frame camera to show entire model
+    frameModel();
+
     emit modelLoaded( modelPath );
     return ( true );
 
+}
+
+void ModelViewport::frameModel() {
+    if ( !m_model || !m_model->header ) {
+        return;
+    }
+
+    const float modelScale = 0.1f;  // Same scale we use for rendering
+
+    // Get bounding box and eyeposition from model header
+    math_vec3_t bbmin, bbmax, eyepos;
+    Math_Vec3Copy( m_model->header->bbmin, bbmin );
+    Math_Vec3Copy( m_model->header->bbmax, bbmax );
+    Math_Vec3Copy( m_model->header->eyeposition, eyepos );
+
+    // Calculate bounding box dimensions for distance calculation
+    float sizeX = (bbmax[0] - bbmin[0]);
+    float sizeY = (bbmax[1] - bbmin[1]);
+    float sizeZ = (bbmax[2] - bbmin[2]);
+
+    // Calculate the diagonal (corner-to-corner distance) of the bounding box
+    float diagonal = sqrtf(sizeX * sizeX + sizeY * sizeY + sizeZ * sizeZ);
+
+    // Camera targets the eyeposition - this is where the model's "view" is
+    // This is the natural focal point (head level for characters, eye of barnacle, etc.)
+    //
+    // Transform to OpenGL coordinates (after rotation)
+    // After rotation: HL X → OpenGL -Z, HL Y → OpenGL X, HL Z → OpenGL Y
+    m_cameraTarget[0] = eyepos[1] * modelScale;    // HL Y → OpenGL X
+    m_cameraTarget[1] = eyepos[2] * modelScale;    // HL Z → OpenGL Y
+    m_cameraTarget[2] = -eyepos[0] * modelScale;   // HL X → OpenGL -Z
+
+    // Calculate camera distance using standard formula
+    float fov = 50.0f;  // Match our projection FOV (in degrees)
+    float fovRadians = fov * (MATH_PI / 180.0f);
+    float objectRadius = (diagonal / 2.0f) * modelScale;
+
+    // Standard framing formula with 1.3x padding for comfortable viewing
+    m_cameraDistance = (objectRadius / tanf(fovRadians / 2.0f)) * 1.3f;
+
+    // Clamp to reasonable values
+    if ( m_cameraDistance < 5.0f ) {
+        m_cameraDistance = 5.0f;
+    }
+    if ( m_cameraDistance > 500.0f ) {
+        m_cameraDistance = 500.0f;
+    }
+
+    // Trigger repaint to show new framing
+    update();
+
+    qDebug() << "Model framed:";
+    qDebug() << "  BBox (HL):" << sizeX << "x" << sizeY << "x" << sizeZ;
+    qDebug() << "  EyePos (HL):" << eyepos[0] << eyepos[1] << eyepos[2];
+    qDebug() << "  Target (GL):" << m_cameraTarget[0] << m_cameraTarget[1] << m_cameraTarget[2];
+    qDebug() << "  Distance:" << m_cameraDistance;
 }
 
 bool ModelViewport::hasModelLoaded() {

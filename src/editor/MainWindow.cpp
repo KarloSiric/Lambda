@@ -1919,6 +1919,7 @@ void MainWindow::createDocks() {
 	QLineEdit *searchBox = new QLineEdit();
 	searchBox->setPlaceholderText( "Search..." );
 	searchBox->setFixedSize( 150, 20 );
+	searchBox->setFocusPolicy( Qt::ClickFocus );  // Only focus when clicked, not auto-focus
 
 	// Log level filter buttons - full words
 	QPushButton *btnTrace = new QPushButton( "TRACE" );
@@ -2152,6 +2153,10 @@ void MainWindow::createDocks() {
 
 	// Add spacing between docks and central widget
 	setDockNestingEnabled(false);  // Cleaner separation
+
+	// Set initial dock sizes - inspector wider for tab panels, console taller for logs
+	resizeDocks({rightDock}, {650}, Qt::Horizontal);
+	resizeDocks({bottomDock}, {350}, Qt::Vertical);
 
 	// Create status bar widget
 	m_statusBar = new StatusBarWidget(this);

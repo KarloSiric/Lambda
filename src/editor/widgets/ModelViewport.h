@@ -167,6 +167,7 @@ private:
     void updateAnimationState( float deltaTime );
     void setupProjectionMatrix( int width, int height );
     void renderScene();
+    void frameModel();  // Auto-frame camera to fit loaded model
     
     
     

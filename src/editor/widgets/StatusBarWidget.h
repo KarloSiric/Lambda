@@ -75,12 +75,16 @@ private slots:
     void showMemoryContextMenu(const QPoint &pos);
     void onCopyFilePathClicked();
 
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+
 private:
     void setupUI();
     void createModelInfoWidgets();
     void createViewInfoWidgets();
     void createToggleButtons();
     void applyStyles();
+    void updateWidgetVisibility();
 
     QLabel *m_filePathLabel;
     QLabel *m_vertexCountLabel;
