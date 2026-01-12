@@ -172,13 +172,11 @@ void ModelViewport::paintGL() {
     // Create view matrix - camera looks at target from offset position
     Math_Mat4_LookAt( camPos, target, up, m_viewMatrix );
 
-    // Draw grid/ground at automatically calculated height (model's bottom)
-    // Ground height is set in frameModel() when model loads - aligns with model's feet/lowest point
+    // Draw grid and axes at Y=0 (NO ground plane - grid only)
     if ( m_showGrid && m_model && m_model->header )
     {
-        r_grid_draw( m_viewMatrix, m_projMatrix, m_groundHeight );
-        r_ground_draw( m_viewMatrix, m_projMatrix, m_groundHeight );
-        r_axes_draw( m_viewMatrix, m_projMatrix, m_groundHeight );
+        r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
+        r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
     }
 
     // Build model matrix - Add proper transformations
@@ -194,18 +192,22 @@ void ModelViewport::paintGL() {
     glm_scale( S, (vec3){ modelScale, modelScale, modelScale } );
     glm_mat4_mul( S, modelMatrix, modelMatrix );
 
-    // Step 2: Rotate HL forward (-Z) to OpenGL forward (-Z)
+    // Step 2: Rotate model 180° to face toward camera
+    // After shader axis remap: HL +Y (forward) → GL -Z
+    // Camera looks from +Z toward origin, so model needs to face +Z
     mat4 R = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate( R, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
+    glm_rotate( R, MATH_PI, (vec3){ 0, 1, 0 } );  // 180° rotation
     glm_mat4_mul( R, modelMatrix, modelMatrix );
 
-    // Step 3: No translation by default - render model at origin as-is
-    // HLAM doesn't automatically align models. It provides buttons for:
-    // - "Center On World Origin" (move to 0,0,0)
-    // - "Align On Ground" (lift so bottom touches ground)
-    // We'll add those features later. For now, respect the model's authored position.
+    // Step 3: Ground alignment - translate model up so feet touch Y=0
+    // Use sequence bounding box bbmin.z (HL Z = up, becomes GL Y)
+    float groundOffset = 0.0f;
+    if (m_model && m_model->header && m_model->data && m_model->header->numseq > 0) {
+        mstudioseqdesc_t* sequences = (mstudioseqdesc_t*)(m_model->data + m_model->header->seqindex);
+        groundOffset = -sequences[0].bbmin[2] * modelScale;  // Use sequence 0 bbox
+    }
     mat4 T = GLM_MAT4_IDENTITY_INIT;
-    glm_translate( T, (vec3){ 0.0f, 0.0f, 0.0f } );  // No offset
+    glm_translate( T, (vec3){ 0.0f, groundOffset, 0.0f } );
     glm_mat4_mul( T, modelMatrix, modelMatrix );
 
     // Render the model if loaded

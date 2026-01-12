@@ -3,6 +3,6 @@
 out vec4 FragColor;
 
 void main() {
-    // Light grey grid lines (professional editor style)
-    FragColor = vec4(0.4, 0.4, 0.42, 0.6);
+    // Subtle transparent grid (MilkShape 3D style)
+    FragColor = vec4(0.35, 0.35, 0.38, 0.35);
 }
