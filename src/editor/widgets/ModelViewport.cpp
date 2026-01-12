@@ -31,6 +31,7 @@
 #include <QtCore/qnamespace.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qstringview.h>
+#include <cmath>
 
 ModelViewport::ModelViewport( QWidget *parent )
 	: QOpenGLWidget( parent ),
@@ -43,7 +44,8 @@ ModelViewport::ModelViewport( QWidget *parent )
       m_cameraDistance( 50.0f ),
       m_cameraTarget{ 0.0f, 0.0f, 0.0f },
       m_showGrid( true ),
-      m_wireframeMode( false ) {
+      m_wireframeMode( false ),
+      m_groundHeight( 0.0f ) {
 
 	mdl_animation_init( &m_animState );
 
@@ -58,7 +60,7 @@ ModelViewport::ModelViewport( QWidget *parent )
 
 	// 100 units away the distance
 	Camera_Init( &m_camera, target, 50.0f );
-    
+
     // Set camera angles for isometric view
     m_camera.angles_deg[0] = 17.2f;  // Pitch: look down 20 degrees
     m_camera.angles_deg[1] = 28.6f;  // Yaw: rotate 45 degrees
@@ -138,40 +140,46 @@ void ModelViewport::resizeGL( int width, int height ) {
 void ModelViewport::paintGL() {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    // @Note: Calculate camera position EXACTLY like Lambda does in r_draw.c (lines 1340-1352)
-    //        Lambda uses spherical coordinates, not Quake-style angles!
-    
+    // ============================================================================
+    // CAMERA CALCULATION: Orbit camera around target point (ARC BALL style)
+    // ============================================================================
     float camDist = m_cameraDistance;
-     
     float pitch = m_cameraPitch;
     float yaw = m_cameraYaw;
 
-    // Spherical to Cartesian conversion (Lambda's formula)
-    math_vec3_t camPos;
-    camPos[0] = camDist * cosf(pitch) * sinf(yaw);   // X
-    camPos[1] = camDist * sinf(pitch);               // Y
-    camPos[2] = camDist * cosf(pitch) * cosf(yaw);   // Z
+    // Calculate camera offset from target using spherical coordinates
+    math_vec3_t offset;
+    offset[0] = camDist * cosf(pitch) * sinf(yaw);   // X offset
+    offset[1] = camDist * sinf(pitch);               // Y offset (vertical)
+    offset[2] = camDist * cosf(pitch) * cosf(yaw);   // Z offset
 
-    // Clamp camera Y above ground (Lambda does this)
-    if ( camPos[1] < 0.5f ) {
-        camPos[1] = 0.5f;
+    // CRITICAL: Camera position = target + offset (orbit around target!)
+    math_vec3_t camPos;
+    camPos[0] = m_cameraTarget[0] + offset[0];
+    camPos[1] = m_cameraTarget[1] + offset[1];
+    camPos[2] = m_cameraTarget[2] + offset[2];
+
+    // Optional: Clamp camera Y above ground
+    if ( camPos[1] < m_groundHeight + 0.5f ) {
+        camPos[1] = m_groundHeight + 0.5f;
     }
 
     math_vec3_t target;
     Math_Vec3Copy( m_cameraTarget, target );
-    
+
     math_vec3_t up = { 0.0f, 1.0f, 0.0f };      // World up
 
-    // Create view matrix (same as Lambda)
+    // Create view matrix - camera looks at target from offset position
     Math_Mat4_LookAt( camPos, target, up, m_viewMatrix );
 
-    // Grid/ground disabled - just render the model as-is
-    // if ( m_showGrid )
-    // {
-    //     r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
-    //     r_ground_draw( m_viewMatrix, m_projMatrix, 0.0f );
-    //     r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
-    // }
+    // Draw grid/ground at automatically calculated height (model's bottom)
+    // Ground height is set in frameModel() when model loads - aligns with model's feet/lowest point
+    if ( m_showGrid && m_model && m_model->header )
+    {
+        r_grid_draw( m_viewMatrix, m_projMatrix, m_groundHeight );
+        r_ground_draw( m_viewMatrix, m_projMatrix, m_groundHeight );
+        r_axes_draw( m_viewMatrix, m_projMatrix, m_groundHeight );
+    }
 
     // Build model matrix - Add proper transformations
     mat4 modelMatrix;
@@ -226,68 +234,61 @@ void ModelViewport::mousePressEvent( QMouseEvent *event ) {
 }
 
 void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
-    // First we get the current mouse position
-    QPoint currentPos = event->pos( );
-    
+    // Get current mouse position and calculate delta
+    QPoint currentPos = event->pos();
     QPoint delta = currentPos - m_lastMousePos;
-    
-    if ( m_activeButton == Qt::LeftButton )
+
+    // HLAM-style controls: Left+Shift OR Middle button = PAN, Left alone = ORBIT
+    bool isPanning = ( m_activeButton == Qt::LeftButton && (event->modifiers() & Qt::ShiftModifier) ) ||
+                     ( m_activeButton == Qt::MiddleButton );
+
+    if ( m_activeButton == Qt::LeftButton && !isPanning )
     {
-        // Now we convert the pixel movement to angle change
-        // we can adjust the sensitivity
+        // ORBIT MODE: Rotate camera around target (Left button without Shift)
         float sensitivity = 0.005f;
-        
-        m_cameraYaw += delta.x( ) * sensitivity;
-        
-        m_cameraPitch -= delta.y( ) * sensitivity;
-         
-        // We clamp the pitch to prevent camera flipping ( e.g. gimbal lock case )
-        // ~90 degerees = pi/2 radians
-        float maxPitch = 1.57f; 
-        
-        if ( m_cameraPitch > maxPitch )
-        {
-            m_cameraPitch = maxPitch;
-        }
-        
-        if ( m_cameraPitch < - ( maxPitch ) )
-        {
-            m_cameraPitch = - ( maxPitch );
-        }
+
+        m_cameraYaw += delta.x() * sensitivity;
+        m_cameraPitch -= delta.y() * sensitivity;
+
+        // Clamp pitch to prevent gimbal lock (~90 degrees = pi/2 radians)
+        float maxPitch = 1.57f;
+        if ( m_cameraPitch > maxPitch ) m_cameraPitch = maxPitch;
+        if ( m_cameraPitch < -maxPitch ) m_cameraPitch = -maxPitch;
     }
-    
-    // @NOTE( Karlo ): Adding support for PANNING!
-    else if ( m_activeButton == Qt::MiddleButton )
+    else if ( isPanning )
     {
-        float panSpeed = 0.01f; 
-        math_vec3_t right, up;
-        
+        // PAN MODE: Move camera target (Left+Shift OR Middle button)
+        // This is CRITICAL - allows adjusting view height to frame models properly!
+        float panSpeed = 0.01f;
+
+        // Calculate camera-relative right vector (perpendicular to view direction)
+        math_vec3_t right;
         right[0] = -cosf( m_cameraYaw );
         right[1] = 0.0f;
         right[2] = sinf( m_cameraYaw );
-        
+
+        // World up vector (Y-axis in OpenGL)
+        math_vec3_t up;
         up[0] = 0.0f;
         up[1] = 1.0f;
         up[2] = 0.0f;
-        
-        m_cameraTarget[0] -= right[0] * delta.x( ) * panSpeed; 
+
+        // Horizontal drag (X) = move along right vector
+        m_cameraTarget[0] -= right[0] * delta.x() * panSpeed;
         m_cameraTarget[1] -= right[1] * delta.x() * panSpeed;
         m_cameraTarget[2] -= right[2] * delta.x() * panSpeed;
 
-        // Vertical drag (Y) = move along up vector
-        m_cameraTarget[0] -= up[0] * delta.y() * panSpeed;
-        m_cameraTarget[1] -= up[1] * delta.y() * panSpeed;
-        m_cameraTarget[2] -= up[2] * delta.y() * panSpeed;    
-        
+        // Vertical drag (Y) = move along up vector (THIS IS KEY FOR HEIGHT ADJUSTMENT!)
+        m_cameraTarget[0] += up[0] * delta.y() * panSpeed;
+        m_cameraTarget[1] += up[1] * delta.y() * panSpeed;
+        m_cameraTarget[2] += up[2] * delta.y() * panSpeed;
     }
 
     m_lastMousePos = currentPos;
 
     // Trigger repaint when camera changes
     update();
-
-    event->accept( );
-
+    event->accept();
 }
 
 void ModelViewport::mouseReleaseEvent( QMouseEvent *event ) {
@@ -385,53 +386,73 @@ void ModelViewport::frameModel() {
 
     const float modelScale = 0.1f;  // Same scale we use for rendering
 
-    // Get bounding box and eyeposition from model header
-    math_vec3_t bbmin, bbmax, eyepos;
+    // Get bounding box from model header
+    math_vec3_t bbmin, bbmax;
     Math_Vec3Copy( m_model->header->bbmin, bbmin );
     Math_Vec3Copy( m_model->header->bbmax, bbmax );
-    Math_Vec3Copy( m_model->header->eyeposition, eyepos );
 
-    // Calculate bounding box dimensions for distance calculation
-    float sizeX = (bbmax[0] - bbmin[0]);
-    float sizeY = (bbmax[1] - bbmin[1]);
-    float sizeZ = (bbmax[2] - bbmin[2]);
+    // Calculate model dimensions
+    float sizeX = bbmax[0] - bbmin[0];
+    float sizeY = bbmax[1] - bbmin[1];
+    float sizeZ = bbmax[2] - bbmin[2];
 
-    // Calculate the diagonal (corner-to-corner distance) of the bounding box
-    float diagonal = sqrtf(sizeX * sizeX + sizeY * sizeY + sizeZ * sizeZ);
+    // ============================================================================
+    // GROUND POSITIONING: Place at model's actual lowest point
+    // ============================================================================
+    // Ground at model's lowest Z point (after coordinate transform to OpenGL Y)
+    m_groundHeight = bbmin[2] * modelScale;
 
-    // Camera targets the eyeposition - this is where the model's "view" is
-    // This is the natural focal point (head level for characters, eye of barnacle, etc.)
-    //
-    // Transform to OpenGL coordinates (after rotation)
-    // After rotation: HL X → OpenGL -Z, HL Y → OpenGL X, HL Z → OpenGL Y
-    m_cameraTarget[0] = eyepos[1] * modelScale;    // HL Y → OpenGL X
-    m_cameraTarget[1] = eyepos[2] * modelScale;    // HL Z → OpenGL Y
-    m_cameraTarget[2] = -eyepos[0] * modelScale;   // HL X → OpenGL -Z
+    // ============================================================================
+    // CAMERA SYSTEM: Based on hlmvqt (working Qt 6 Half-Life model viewer)
+    // Source: https://github.com/iOrange/hlmvqt/blob/main/renderview.cpp
+    // ============================================================================
 
-    // Calculate camera distance using standard formula
-    float fov = 50.0f;  // Match our projection FOV (in degrees)
-    float fovRadians = fov * (MATH_PI / 180.0f);
-    float objectRadius = (diagonal / 2.0f) * modelScale;
+    // Camera target: Vertical center of bounding box
+    // In HL coords: {0, 0, min.z + size.z/2}
+    math_vec3_t hlTarget;
+    hlTarget[0] = 0.0f;
+    hlTarget[1] = 0.0f;
+    hlTarget[2] = bbmin[2] + (sizeZ / 2.0f);  // Vertical center
 
-    // Standard framing formula with 1.3x padding for comfortable viewing
-    m_cameraDistance = (objectRadius / tanf(fovRadians / 2.0f)) * 1.3f;
+    // Transform to OpenGL coordinates (HL Z → OpenGL Y)
+    m_cameraTarget[0] = hlTarget[1] * modelScale;     // X = 0
+    m_cameraTarget[1] = hlTarget[2] * modelScale;     // Y = vertical center
+    m_cameraTarget[2] = -hlTarget[0] * modelScale;    // Z = 0
 
-    // Clamp to reasonable values
-    if ( m_cameraDistance < 5.0f ) {
-        m_cameraDistance = 5.0f;
-    }
-    if ( m_cameraDistance > 500.0f ) {
-        m_cameraDistance = 500.0f;
-    }
+    // Camera distance: EXACT formula from hlmvqt
+    // distance = max(dx, dy, dz) - largest bounding box dimension, NO multiplier!
+    float maxDim = sizeX;
+    if (sizeY > maxDim) maxDim = sizeY;
+    if (sizeZ > maxDim) maxDim = sizeZ;
+
+    // Apply ONLY the model scale (0.1), no additional padding/multipliers!
+    m_cameraDistance = maxDim * modelScale;
+
+    // Clamp to prevent extreme values
+    if (m_cameraDistance < 1.0f) m_cameraDistance = 1.0f;
+    if (m_cameraDistance > 100.0f) m_cameraDistance = 100.0f;
+
+    // Camera angles: Isometric-style view (looking down at model from angle)
+    // hlmvqt uses -90°/-90° rotations, converted to our spherical system:
+    m_cameraPitch = 0.3f;      // ~17 degrees - look down at model
+    m_cameraYaw = 0.785f;      // 45 degrees - 3/4 view angle
 
     // Trigger repaint to show new framing
     update();
 
-    qDebug() << "Model framed:";
-    qDebug() << "  BBox (HL):" << sizeX << "x" << sizeY << "x" << sizeZ;
-    qDebug() << "  EyePos (HL):" << eyepos[0] << eyepos[1] << eyepos[2];
-    qDebug() << "  Target (GL):" << m_cameraTarget[0] << m_cameraTarget[1] << m_cameraTarget[2];
-    qDebug() << "  Distance:" << m_cameraDistance;
+    qDebug() << "\n========== MODEL FRAMED (hlmvqt formula) ==========";
+    qDebug() << "BBox (HL): min=[" << bbmin[0] << bbmin[1] << bbmin[2]
+             << "] max=[" << bbmax[0] << bbmax[1] << bbmax[2] << "]";
+    qDebug() << "Size (HL):" << sizeX << "×" << sizeY << "×" << sizeZ;
+    qDebug() << "Max dimension (HL):" << maxDim;
+    qDebug() << "Model scale factor:" << modelScale;
+    qDebug() << "Ground height (OpenGL Y):" << m_groundHeight;
+    qDebug() << "Camera target (OpenGL): [" << m_cameraTarget[0] << ","
+             << m_cameraTarget[1] << "," << m_cameraTarget[2] << "]";
+    qDebug() << "Camera distance:" << m_cameraDistance << "(max dimension × scale)";
+    qDebug() << "Camera angles: pitch=" << (m_cameraPitch * 57.3f) << "° yaw="
+             << (m_cameraYaw * 57.3f) << "°";
+    qDebug() << "===================================================\n";
 }
 
 bool ModelViewport::hasModelLoaded() {

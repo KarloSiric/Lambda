@@ -159,6 +159,9 @@ private:
     // Skin family selection
     int m_currentSkinFamily;
 
+    // Ground positioning (automatically set to model's bbmin.z)
+    float m_groundHeight;
+
     // Mouse input tracking
     QPoint m_lastMousePos;
     Qt::MouseButton m_activeButton;
