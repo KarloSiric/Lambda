@@ -65,8 +65,6 @@ ModelViewport::ModelViewport( QWidget *parent )
     m_camera.angles_deg[0] = 17.2f;  // Pitch: look down 20 degrees
     m_camera.angles_deg[1] = 28.6f;  // Yaw: rotate 45 degrees
     m_camera.angles_deg[2] = 0.0f;   // Roll: no rotation
-
-	qDebug() << "ModelViewport Created";
 }
 
 ModelViewport::~ModelViewport() {
@@ -83,28 +81,17 @@ ModelViewport::~ModelViewport() {
 	}
 
 	doneCurrent();
-
-	qDebug() << "ModelViewport Destroyed";
 }
 
 void ModelViewport::initializeGL( void ) {
-	// Open OpenGL function pointers ( This is Qt's version of glewInit )
-
 	initializeOpenGLFunctions();
 
-	qDebug() << "OpenGL Initialized";
-	qDebug() << "OpenGL Version: " << (const char *)glGetString( GL_VERSION );
-	qDebug() << "GLSL Version: " << (const char *)glGetString( GL_SHADING_LANGUAGE_VERSION );
-	qDebug() << "Renderer: " << (const char *)glGetString( GL_RENDERER );
-
-
-    // Light cyan/blue background (professional model viewer style)
+    // Light cyan/blue background
     glClearColor( 0.20f, 0.50f, 0.80f, 1.0f );
 
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
 
-    // Enable face culling for performance (cull back-facing triangles)
     glEnable( GL_CULL_FACE );
     glCullFace( GL_BACK );
     glFrontFace( GL_CW );
@@ -113,29 +100,22 @@ void ModelViewport::initializeGL( void ) {
     m_renderInstance = r_qt_create_instance();
     if ( !m_renderInstance ) {
         qCritical() << "ERROR: Failed to create Qt rendering instance!";
-    } else {
-        qDebug() << "Qt rendering instance created successfully!";
     }
 
     r_grid_init( 1000.0f, 10.0f );
     r_ground_init( 1000.0f );
     r_axes_init( 100.0f );
-
-    qDebug( ) << "Grid/Ground/Axes initialized!";
-
 }
 
 void ModelViewport::resizeGL( int width, int height ) {
 	glViewport( 0, 0, width, height );
 
     float aspect = (float)width / (float)height;
-    float fov = 50.0f;        // Match Lambda's FOV (was 60)
-    float nearPlane = 0.01f;  // Match Lambda (was 1.0f)
-    float farPlane = 1000.0f; // Match Lambda (was 10000.0f)
+    float fov = 50.0f;
+    float nearPlane = 0.01f;
+    float farPlane = 1000.0f;
 
     glm_perspective( glm_rad( fov ), aspect, nearPlane, farPlane, m_projMatrix );
-
-	qDebug() << "Viewport Resized:" << width << "x" << height;
 }
 
 void ModelViewport::paintGL() {
@@ -193,12 +173,9 @@ void ModelViewport::paintGL() {
     glm_scale( S, (vec3){ modelScale, modelScale, modelScale } );
     glm_mat4_mul( S, modelMatrix, modelMatrix );
 
-    // Step 2: Rotate model 180° to face toward camera
-    // After shader axis remap: HL +Y (forward) → GL -Z
-    // Camera looks from +Z toward origin, so model needs to face +Z
-    mat4 R = GLM_MAT4_IDENTITY_INIT;
-    glm_rotate( R, MATH_PI, (vec3){ 0, 1, 0 } );  // 180° rotation
-    glm_mat4_mul( R, modelMatrix, modelMatrix );
+    // Step 2: NO rotation needed - Half-Life models face -Y (backward) in HL space
+    // After shader axis remap: HL -Y → GL +Z (toward camera)
+    // Model already faces the camera correctly without rotation!
 
     // Step 3: Ground alignment - translate model up so feet touch Y=0
     // Use sequence bounding box bbmin.z (HL Z = up, becomes GL Y)
@@ -349,21 +326,14 @@ bool ModelViewport::loadModel( const QString &modelPath )
     QByteArray pathBytes = modelPath.toUtf8( );
     const char *cPath = pathBytes.constData( );
     
-    qDebug( ) << "Loading Model:" << modelPath;
-    
     mdl_result_t result = create_mdl_model( cPath, &m_model );
-    
+
     if ( result != MDL_SUCCESS || m_model == nullptr )
     {
-        qDebug( ) << "Error: Failed to load the model!";
+        qWarning( ) << "Failed to load model:" << modelPath;
         m_model = nullptr;
-        return ( false ); 
+        return ( false );
     }
-    
-    
-    qDebug( ) << "Model Loaded Successfully!";
-    qDebug( ) << "   Bones: " << m_model->header->numbones;
-    qDebug( ) << "   Sequences: " << m_model->header->numseq;
 
     // Set model data for this viewport's renderer instance
     if ( m_renderInstance ) {
@@ -377,6 +347,9 @@ bool ModelViewport::loadModel( const QString &modelPath )
     // NOTE: Camera does NOT auto-adjust on model load
     // Camera stays at its default position, model appears at origin
     // User can manually adjust camera with mouse/keyboard
+
+    // CRITICAL: Trigger repaint to show the newly loaded model
+    update();
 
     emit modelLoaded( modelPath );
     return ( true );

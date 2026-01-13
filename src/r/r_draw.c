@@ -32,6 +32,7 @@
 #include "shader.h"
 #include "studio.h"
 #include "util_logger.h"
+#include "util_console.h"
 #include "input.h"
 #include "input_handler.h"
 #include "math_matrix.h"
@@ -871,6 +872,11 @@ int init_renderer( int width, int height, const char *title ) {
 	LOG_INFOF( "renderer", "OpenGL Renderer: %s", gl_renderer );
 	LOG_INFOF( "renderer", "GLSL Version: %s", glsl_version );
 
+	// User-facing console output
+	CONSOLE_INFO( "OpenGL %s", gl_version );
+	CONSOLE_INFO( "GPU: %s", gl_renderer );
+	CONSOLE_INFO( "GLSL: %s", glsl_version );
+
 	// ═══════════════════════════════════════════════════════════════
 	// Setup GLFW callbacks
 	// ═══════════════════════════════════════════════════════════════
@@ -1083,14 +1089,9 @@ void render_loop( void ) {
 				glm_rotate( Ry, model_rotation_y, (vec3){ 0, 1, 0 } );
 				glm_mat4_mul( M, Ry, M );
 
-				// 3) Rotate model to face toward camera
-				// After shader axis remap: HL +Y (forward) → GL -Z
-				// Camera on +Z axis looks at origin in -Z direction
-				// Model faces -Z (same as camera looks) = camera sees BACK
-				// Rotate 180° around Y so model faces +Z (toward camera)
-				mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
-				glm_rotate( RyFace, MATH_PI, (vec3){ 0, 1, 0 } );  // 180° rotation
-				glm_mat4_mul( M, RyFace, M );
+				// 3) NO rotation needed - Half-Life models face -Y (backward) in HL space
+				// After shader axis remap: HL -Y → GL +Z (toward camera)
+				// Model already faces the camera correctly without rotation!
 
 				// 4) Scale LAST because HL units are large
 				mat4 S = GLM_MAT4_IDENTITY_INIT;
@@ -1184,14 +1185,9 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	glm_rotate( Ry, model_rotation_y, (vec3){ 0, 1, 0 } );
 	glm_mat4_mul( M, Ry, M );
 
-	// 3) Rotate model to face toward camera
-	// After shader axis remap: HL +Y (forward) → GL -Z
-	// Camera on +Z axis looks at origin in -Z direction
-	// Model faces -Z (same as camera looks) = camera sees BACK
-	// Rotate 180° around Y so model faces +Z (toward camera)
-	mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
-	glm_rotate( RyFace, MATH_PI, (vec3){ 0, 1, 0 } );  // 180° rotation
-	glm_mat4_mul( M, RyFace, M );
+	// 3) NO rotation needed - Half-Life models face -Y (backward) in HL space
+	// After shader axis remap: HL -Y → GL +Z (toward camera)
+	// Model already faces the camera correctly without rotation!
 
 	// 4) Scale LAST because HL units are large
 	mat4 S = GLM_MAT4_IDENTITY_INIT;
@@ -1416,7 +1412,7 @@ void set_model_data( studiohdr_t *header, unsigned char *data, studiohdr_t *tex_
 		return;
 	}
 
-	LOG_INFOF( "renderer", "Loading model: %d bones, %d bodyparts, %d sequences",
+	LOG_DEBUGF( "renderer", "Setting up render data: %d bones, %d bodyparts, %d sequences",
 			   header->numbones, header->numbodyparts, header->numseq );
 
 	global_header = header;
@@ -1575,7 +1571,7 @@ float *get_model_rotation_y_ptr( void ) {
 // CLI does NOT use these - it uses the global state above.
 
 r_qt_instance_t* r_qt_create_instance(void) {
-	LOG_INFOF("renderer", "Creating Qt viewport instance");
+	LOG_DEBUGF("renderer", "Creating Qt viewport instance");
 
 	r_qt_instance_t *inst = (r_qt_instance_t*)calloc(1, sizeof(r_qt_instance_t));
 	if (!inst) {
@@ -1668,7 +1664,7 @@ r_qt_instance_t* r_qt_create_instance(void) {
 	inst->num_ranges = 0;
 	inst->total_render_vertices = 0;
 
-	LOG_INFOF("renderer", "Qt viewport instance created successfully!");
+	LOG_DEBUGF("renderer", "Qt viewport instance created successfully");
 
 	return inst;
 }
@@ -1678,7 +1674,7 @@ void r_qt_destroy_instance(r_qt_instance_t *inst) {
 		return;
 	}
 
-	LOG_INFOF("renderer", "Destroying Qt viewport instance");
+	LOG_DEBUGF("renderer", "Destroying Qt viewport instance");
 
 	// Free textures
 	if (inst->textures.textures) {
@@ -1708,7 +1704,7 @@ void r_qt_destroy_instance(r_qt_instance_t *inst) {
 	// Free the instance itself
 	free(inst);
 
-	LOG_INFOF("renderer", "Qt viewport instance destroyed");
+	LOG_DEBUGF("renderer", "Qt viewport instance destroyed");
 }
 
 void r_qt_set_model_data(
@@ -1730,7 +1726,7 @@ void r_qt_set_model_data(
 		return;
 	}
 
-	LOG_INFOF("renderer", "Qt instance: Loading model: %d bones, %d bodyparts, %d sequences",
+	LOG_DEBUGF("renderer", "Qt instance: Loading model: %d bones, %d bodyparts, %d sequences",
 	         header->numbones, header->numbodyparts, header->numseq);
 
 	// Store model data pointers (NOT owned by instance, just referenced)
@@ -1768,7 +1764,7 @@ void r_qt_set_model_data(
 		inst->animation_enabled = false;
 	}
 
-	LOG_INFOF("renderer", "Qt instance: Model data loaded successfully");
+	LOG_DEBUGF("renderer", "Qt instance: Model data loaded successfully");
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -24,6 +24,7 @@
 #include "studio.h"
 #include "util/util_messages.h"
 #include "util/util_utils.h"
+#include "util/util_console.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -198,9 +199,6 @@ mdl_result_t load_model_with_textures(
 		*texture_data = NULL;
 		*texture_header = NULL;
 	}
-
-	// Optional: on success, emit a friendly banner (console or GUI string)
-	fprintf( stderr, "SUCCESS: Model loaded completely!\n" );
 
 	return MDL_SUCCESS;
 }
@@ -786,42 +784,31 @@ mdl_result_t load_sequence_groups( const char *model_path, studiohdr_t *header, 
 
 		char seqgroup_path[512];
 		snprintf( seqgroup_path, sizeof( seqgroup_path ), "%s%s", dir_path, filename );
-		printf( "Loading sequence group %d: trying '%s'...\n", i, seqgroup_path );
 
 		mdl_result_t file_result = read_mdl_file( seqgroup_path, &seq_group_data, &group_size );
+
+		// Check if loading failed
+		if ( file_result != MDL_SUCCESS ) {
+			CONSOLE_WARN( "Missing sequence group %d: %s", i, filename );
+			groups[i].data = NULL;
+			groups[i].size = 0;
+			strncpy( groups[i].name, filename, sizeof( groups[i].name ) - 1 );
+			continue;
+		}
 
 		groups[i].sequence_header = (studioseqhdr_t *)seq_group_data;
 
 		if ( groups[i].sequence_header->id != IDSEQGRPHEADER ) {
-			fprintf( stderr, "ERROR - Invalid sequence group file (wrong magic -> 0x%08X)\n",
-					 groups[i].sequence_header->id );
+			CONSOLE_WARN( "Invalid sequence group file: %s", filename );
 			free( seq_group_data );
+			groups[i].data = NULL;
 			continue;
 		}
 
 		if ( groups[i].sequence_header->version != STUDIO_VERSION ) {
-			fprintf( stderr, "ERROR - Wrong sequence group version (got %d, expected %d)\n",
-					 groups[i].sequence_header->version, STUDIO_VERSION );
+			CONSOLE_WARN( "Wrong version in sequence group: %s", filename );
 			free( seq_group_data );
-			continue;
-		}
-
-		// Check if loading failed
-		if ( file_result != MDL_SUCCESS ) {
-			fprintf( stderr, "╔════════════════════════════════════════════════════╗\n" );
-			fprintf( stderr, "║ WARNING - Missing Sequence Group File              ║\n" );
-			fprintf( stderr, "╠════════════════════════════════════════════════════╣\n" );
-			fprintf( stderr, "  Sequence Group: %d\n", i );
-			fprintf( stderr, "  Expected File:  %s\n", filename );
-			fprintf( stderr, "  Full Path:      %s\n", seqgroup_path );
-			fprintf( stderr, "╠════════════════════════════════════════════════════╣\n" );
-			fprintf( stderr, "  IMPACT: Animations requiring this group will show  \n" );
-			fprintf( stderr, "          the T-pose instead of playing.             \n" );
-			fprintf( stderr, "╚════════════════════════════════════════════════════╝\n\n" );
-
 			groups[i].data = NULL;
-			groups[i].size = 0;
-			strncpy( groups[i].name, filename, sizeof( groups[i].name ) - 1 );
 			continue;
 		}
 
@@ -829,37 +816,10 @@ mdl_result_t load_sequence_groups( const char *model_path, studiohdr_t *header, 
 		groups[i].data = seq_group_data;
 		groups[i].size = group_size;
 		strncpy( groups[i].name, sq->name, sizeof( groups[i].name ) - 1 );
-
-		printf( "  Loaded sequence group %d: %s (%zu bytes)\n", i, sq->name, group_size );
 	}
 
 	*groups_out = groups;
 	*num_groups_out = num_groups;
-
-	// Print summary
-	int loaded_count = 0;
-	int missing_count = 0;
-
-	for ( int i = 0; i < num_groups; i++ ) {
-		if ( groups[i].data != NULL ) {
-			loaded_count++;
-		} else if ( i > 0 ) // Don't count group 0
-		{
-			missing_count++;
-		}
-	}
-
-	if ( missing_count > 0 ) {
-		printf( "\n\n" );
-		printf( "┌────────────────────────────────────────────────────┐\n" );
-		printf( "│ SEQUENCE GROUPS SUMMARY                            │\n" );
-		printf( "├────────────────────────────────────────────────────┤\n" );
-		printf( "│  Loaded:  %d groups                                │\n", loaded_count );
-		printf( "│  Missing: %d groups                                │\n", missing_count );
-		printf( "│                                                    │\n" );
-		printf( "│ Some animations will fallback to T-pose!           │\n" );
-		printf( "└────────────────────────────────────────────────────┘\n\n" );
-	}
 
 	return MDL_SUCCESS;
 }
@@ -901,12 +861,42 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 		&model->texture_data );
 
 	if ( result != MDL_SUCCESS ) {
-		fprintf( stderr, "ERROR - Failed to load model: '%s\n", model_path );
+		fprintf( stderr, "ERROR - Failed to load model: '%s'\n", model_path );
 		free( model );
 		return result;
 	}
 
-	printf( "Loaded main model: '%s\n", model_path );
+	// ═══════════════════════════════════════════════════════════════════════════
+	// VALIDATE: Detect texture-only MDL files (have textures but no geometry)
+	// These are companion files like *t.mdl that only contain texture data
+	// ═══════════════════════════════════════════════════════════════════════════
+	if ( model->header->numbodyparts == 0 ) {
+		if ( model->header->numtextures > 0 ) {
+			// This is a texture-only MDL file (like fungust.mdl or scientist01t.mdl)
+			fprintf( stderr, "\n" );
+			fprintf( stderr, "╔════════════════════════════════════════════════════════════════╗\n" );
+			fprintf( stderr, "║  ERROR - This is a TEXTURE-ONLY MDL file                       ║\n" );
+			fprintf( stderr, "╠════════════════════════════════════════════════════════════════╣\n" );
+			fprintf( stderr, "║  File: %s\n", model_path );
+			fprintf( stderr, "║                                                                ║\n" );
+			fprintf( stderr, "║  This file contains only texture data (no 3D geometry).       ║\n" );
+			fprintf( stderr, "║  It is a companion file meant to be used with a main model.   ║\n" );
+			fprintf( stderr, "║                                                                ║\n" );
+			fprintf( stderr, "║  SOLUTION: Load the main model file instead.                  ║\n" );
+			fprintf( stderr, "║  Example: If you tried to load 'scientist01t.mdl',            ║\n" );
+			fprintf( stderr, "║           load 'scientist.mdl' instead.                       ║\n" );
+			fprintf( stderr, "╚════════════════════════════════════════════════════════════════╝\n\n" );
+
+			free( model->data );
+			free( model );
+			return MDL_INFO_TEXTURE_MODEL_FILE;
+		} else {
+			// No bodyparts and no textures - might be a broken file
+			fprintf( stderr, "WARNING - Model has no bodyparts and no textures: '%s'\n", model_path );
+		}
+	}
+
+	CONSOLE_SUCCESS( "Loaded model: %s", model_path );
 
 	result = load_sequence_groups(
 		model_path,
@@ -915,15 +905,13 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 		&model->seqgroups,
 		&model->num_seqgroups );
 
-	if ( result != MDL_SUCCESS ) {
-		fprintf( stderr, "WARNING - Failed to load sequence groups.\n" );
-		// @Note: We continue because some dont have them simply
-	}
+	// Sequence group loading failure is non-fatal
+	(void)result;
 
 	if ( model->num_seqgroups > 1 ) {
-		printf( "     Loaded %d sequence groups\n", model->num_seqgroups - 1 );
+		CONSOLE_INFO( "   Loaded %d external sequence groups", model->num_seqgroups - 1 );
 	} else {
-		printf( "     No external sequence groups (animations in main file)\n" );
+		CONSOLE_INFO( "   Animations in main file (no external sequence groups)" );
 	}
 
 	*model_out = model;

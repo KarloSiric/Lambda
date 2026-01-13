@@ -2249,8 +2249,6 @@ void MainWindow::onOpenModel() {
 		return;
 	}
 
-	qDebug() << "Loading model:" << filePath;
-
 	// Load model in current viewport
 	bool success = viewport->loadModel(filePath);
 
@@ -2288,7 +2286,6 @@ void MainWindow::onOpenModel() {
 	                          info.boneCount, info.sequenceCount, info.textureCount);
 	m_statusBar->setFileSize(info.fileSize);
 
-	qDebug() << "Model loaded successfully:" << fileInfo.fileName();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2349,8 +2346,6 @@ int MainWindow::addViewportTab(const QString &title) {
 
 	int index = tabWidget->addTab(viewport, title);
 	tabWidget->setCurrentIndex(index);
-
-	qDebug() << "Added new tab:" << title << "at index" << index;
 	return index;
 }
 
@@ -2368,7 +2363,6 @@ void MainWindow::onCloseTab(int index) {
 	}
 
 	if (tabWidget->count() <= 1) {
-		qDebug() << "Cannot close last tab";
 		return;
 	}
 
@@ -2383,9 +2377,7 @@ void MainWindow::onCloseTab(int index) {
 	// Remove this tab's model info
 	m_tabModelInfo.remove(index);
 
-	// Delete the viewport widget safely
 	if (widget) {
-		qDebug() << "Closing tab at index" << index;
 		widget->deleteLater();
 	}
 }
@@ -2400,7 +2392,6 @@ void MainWindow::onTabChanged(int index) {
 	}
 
 	if (index < 0 || index >= tabWidget->count()) {
-		qDebug() << "Invalid tab index or no tabs available";
 		return;
 	}
 
@@ -2426,12 +2417,7 @@ void MainWindow::onTabChanged(int index) {
 		m_statusBar->clearModelInfo();
 	}
 
-	// With per-instance rendering, each tab maintains its own state
-	// No need to reload anything - just trigger repaint
 	if (viewport->hasModelLoaded()) {
-		qDebug() << "Tab switched to index" << index << "- viewport has model";
 		viewport->update();
-	} else {
-		qDebug() << "Tab switched to index" << index << "- no model loaded";
 	}
 }

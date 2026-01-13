@@ -214,7 +214,7 @@ void r_ground_init( float size ) {
 		free( frag_source );
 	}
 
-	LOG_INFOF( "ground", "Ground plane initialized (size: %.1f)", size );
+	LOG_DEBUGF( "ground", "Ground plane initialized (size: %.1f)", size );
 }
 
 void r_ground_draw( mat4 view, mat4 projection, float ground_y ) {
@@ -310,7 +310,7 @@ void r_axes_init( float size ) {
 	free( vert_source );
 	free( frag_source );
 
-	LOG_INFOF( "axes", "Origin axes initialized (size: %.1f)", size );
+	LOG_DEBUGF( "axes", "Origin axes initialized (size: %.1f)", size );
 }
 
 void r_axes_draw( mat4 view, mat4 projection, float ground_y ) {
