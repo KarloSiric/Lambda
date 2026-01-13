@@ -25,6 +25,7 @@
 #include "mdl_loader.h"
 #include "r_draw.h"
 #include "util_messages.h"
+#include "util_console.h"
 #include <QDebug>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlogging.h>
@@ -85,6 +86,25 @@ ModelViewport::~ModelViewport() {
 
 void ModelViewport::initializeGL( void ) {
 	initializeOpenGLFunctions();
+
+    // Print OpenGL info once (first viewport only)
+    static bool s_glInfoPrinted = false;
+    if ( !s_glInfoPrinted ) {
+        s_glInfoPrinted = true;
+
+        const char* vendor = (const char*)glGetString( GL_VENDOR );
+        const char* renderer = (const char*)glGetString( GL_RENDERER );
+        const char* version = (const char*)glGetString( GL_VERSION );
+        const char* glslVersion = (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION );
+
+        console_print( CONSOLE_INFO, "GPU: %s", renderer ? renderer : "Unknown" );
+        console_print( CONSOLE_INFO, "Vendor: %s", vendor ? vendor : "Unknown" );
+        console_print( CONSOLE_INFO, "OpenGL: %s", version ? version : "Unknown" );
+        console_print( CONSOLE_INFO, "GLSL: %s", glslVersion ? glslVersion : "Unknown" );
+        console_print_raw( "\n" );
+        console_print( CONSOLE_SUCCESS, "Initialization complete" );
+        console_print_raw( "\n" );
+    }
 
     // Light cyan/blue background
     glClearColor( 0.20f, 0.50f, 0.80f, 1.0f );
@@ -330,7 +350,6 @@ bool ModelViewport::loadModel( const QString &modelPath )
 
     if ( result != MDL_SUCCESS || m_model == nullptr )
     {
-        qWarning( ) << "Failed to load model:" << modelPath;
         m_model = nullptr;
         return ( false );
     }
@@ -416,4 +435,70 @@ void ModelViewport::frameModel() {
 
 bool ModelViewport::hasModelLoaded() {
     return (m_model != nullptr);
+}
+
+void ModelViewport::getCameraPosition( float &x, float &y, float &z ) const {
+    // Calculate camera position from spherical coordinates
+    float pitch = m_cameraPitch;
+    float yaw = m_cameraYaw;
+    float dist = m_cameraDistance;
+
+    x = m_cameraTarget[0] + dist * cosf(pitch) * sinf(yaw);
+    y = m_cameraTarget[1] + dist * sinf(pitch);
+    z = m_cameraTarget[2] + dist * cosf(pitch) * cosf(yaw);
+}
+
+int ModelViewport::getVertexCount( ) const {
+    if ( !m_model || !m_model->header ) return 0;
+
+    int total = 0;
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( m_model->data + m_model->header->bodypartindex );
+    for ( int bp = 0; bp < m_model->header->numbodyparts; bp++ ) {
+        mstudiomodel_t *models = (mstudiomodel_t *)( m_model->data + bodyparts[bp].modelindex );
+        for ( int m = 0; m < bodyparts[bp].nummodels; m++ ) {
+            total += models[m].numverts;
+        }
+    }
+    return total;
+}
+
+int ModelViewport::getTriangleCount( ) const {
+    if ( !m_model || !m_model->header ) return 0;
+
+    int total = 0;
+    mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( m_model->data + m_model->header->bodypartindex );
+    for ( int bp = 0; bp < m_model->header->numbodyparts; bp++ ) {
+        mstudiomodel_t *models = (mstudiomodel_t *)( m_model->data + bodyparts[bp].modelindex );
+        for ( int m = 0; m < bodyparts[bp].nummodels; m++ ) {
+            mstudiomesh_t *meshes = (mstudiomesh_t *)( m_model->data + models[m].meshindex );
+            for ( int mesh = 0; mesh < models[m].nummesh; mesh++ ) {
+                total += meshes[mesh].numtris;
+            }
+        }
+    }
+    return total;
+}
+
+int ModelViewport::getBoneCount( ) const {
+    if ( !m_model || !m_model->header ) return 0;
+    return m_model->header->numbones;
+}
+
+int ModelViewport::getSequenceCount( ) const {
+    if ( !m_model || !m_model->header ) return 0;
+    return m_model->header->numseq;
+}
+
+int ModelViewport::getTextureCount( ) const {
+    if ( !m_model || !m_model->header ) return 0;
+    int count = m_model->header->numtextures;
+    if ( count == 0 && m_model->texture_header ) {
+        count = m_model->texture_header->numtextures;
+    }
+    return count;
+}
+
+int ModelViewport::getBodypartCount( ) const {
+    if ( !m_model || !m_model->header ) return 0;
+    return m_model->header->numbodyparts;
 }

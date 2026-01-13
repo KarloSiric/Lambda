@@ -34,7 +34,8 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
     
 	app.setStyle( QStyleFactory::create( "Fusion" ) );
 
-	app.setFont( QFont( "SF Pro", 16 ) );
+	// Use system default font - works on all platforms
+	app.setFont( QFont( app.font().family(), 11 ) );
 
 	// ----------------------------
 	// CUSTOM PALETTE
@@ -172,7 +173,7 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
         }
         
         
-        // TOOLBAR SECONDARY // 
+        /* TOOLBAR SECONDARY */
         QToolBar#Secondary {
             border-top: 1px solid #C0C0C0;
         }

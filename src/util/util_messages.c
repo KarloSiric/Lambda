@@ -16,6 +16,7 @@
  */
 
 #include "util_messages.h"
+#include "util_console.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -166,10 +167,20 @@ size_t mdl_format_message( char *out, size_t cap, mdl_result_t r, const mdl_msg_
     return ( size_t ) snprintf( out, cap, "%s: %s", mdl_result_name( r ), mdl_result_default_text( r ) );
 }
 
-// Simple stderr printer
+// Print message using console system
 void mdl_print_message( mdl_result_t r, const mdl_msg_ctx_t *ctx )
 {
     char line[1024];
     mdl_format_message( line, sizeof line, r, ctx );
-    fprintf( stderr, "%s\n", line );
+
+    // Use appropriate console output based on result type
+    if ( r == MDL_SUCCESS ) {
+        console_print( CONSOLE_SUCCESS, "%s", line );
+    } else if ( r == MDL_INFO_SEQUENCE_GROUP_FILE || r == MDL_INFO_TEXTURE_MODEL_FILE ) {
+        console_print( CONSOLE_WARNING, "%s", line );
+    } else if ( r == MDL_ERROR_MISSING_TEXTURE_FILE ) {
+        console_print( CONSOLE_WARNING, "%s", line );
+    } else {
+        console_print( CONSOLE_ERROR, "%s", line );
+    }
 }

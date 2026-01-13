@@ -52,7 +52,6 @@ mdl_result_t validate_mdl_version( int version ) {
 mdl_result_t read_mdl_file( const char *filename, unsigned char **file_data, size_t *file_size ) {
 	FILE *file = fopen( filename, "rb" );
 	if ( !file ) {
-		fprintf( stderr, "ERROR - Failed to open the file '%s'. Invalid file name, file not found!\n", filename );
 		return MDL_ERROR_FILE_NOT_FOUND;
 	}
 
@@ -64,7 +63,6 @@ mdl_result_t read_mdl_file( const char *filename, unsigned char **file_data, siz
 
 	*file_data = malloc( bytes_size * sizeof( unsigned char ) );
 	if ( !*file_data ) {
-		fprintf( stderr, "ERROR - Failed to allocate enough memory for the file data buffer.\n" );
 		fclose( file );
 		return MDL_ERROR_MEMORY_ALLOCATION;
 	}
@@ -121,7 +119,6 @@ char *generate_texture_filename( const char *model_filename ) {
 	size_t original_filename_length = strlen( model_filename );
 	char *texture_filename = malloc( original_filename_length + 2 );
 	if ( !texture_filename ) {
-		fprintf( stderr, "ERROR - Failed to allocate enough space for texture filename!\n" );
 		return NULL;
 	}
 
@@ -493,7 +490,6 @@ mdl_result_t extract_texture_rgb(
 
 	*rgb_output = malloc( pixel_count * 3 );
 	if ( !*rgb_output ) {
-		fprintf( stderr, "ERROR - Failed to allocate space for RGB values.\n" );
 		return MDL_ERROR_MEMORY_ALLOCATION;
 	}
 
@@ -512,7 +508,6 @@ mdl_result_t extract_texture_rgb(
 		}
 	}
 
-	printf( "Extracted textures %d: %s (%dx%d)\n", texture_index, tex->name, tex->width, tex->height );
 	return MDL_SUCCESS;
 }
 
@@ -525,7 +520,6 @@ mdl_result_t extract_triangles_with_uvs(
 	float **out_texcoords,
 	int *out_vertex_count ) {
 	if ( !mesh || !main_data || !model_vertices || !out_vertices || !out_texcoords || !out_vertex_count ) {
-		fprintf( stderr, "ERROR - Invalid parameters error for function 'extract_traingles_with_uvs'" );
 		return MDL_ERROR_INVALID_PARAMETER;
 	}
 
@@ -732,7 +726,6 @@ mdl_result_t load_sequence_groups( const char *model_path, studiohdr_t *header, 
 
 	mdl_seqgroup_blob_t *groups = malloc( num_groups * sizeof( mdl_seqgroup_blob_t ) );
 	if ( !groups ) {
-		fprintf( stderr, "ERRRO - Failed to allocate memory for sequence groups\n" );
 		return MDL_ERROR_MEMORY_ALLOCATION;
 	}
 
@@ -845,9 +838,7 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 	}
 
 	mdl_model_t *model = malloc( sizeof( mdl_model_t ) );
-
 	if ( !model ) {
-		fprintf( stderr, "ERROR - Failed to allocate model structure.\n" );
 		return MDL_ERROR_MEMORY_ALLOCATION;
 	}
 
@@ -861,42 +852,58 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 		&model->texture_data );
 
 	if ( result != MDL_SUCCESS ) {
-		fprintf( stderr, "ERROR - Failed to load model: '%s'\n", model_path );
 		free( model );
 		return result;
 	}
 
-	// ═══════════════════════════════════════════════════════════════════════════
-	// VALIDATE: Detect texture-only MDL files (have textures but no geometry)
-	// These are companion files like *t.mdl that only contain texture data
-	// ═══════════════════════════════════════════════════════════════════════════
+	// Detect texture-only MDL files (have textures but no geometry)
 	if ( model->header->numbodyparts == 0 ) {
 		if ( model->header->numtextures > 0 ) {
 			// This is a texture-only MDL file (like fungust.mdl or scientist01t.mdl)
-			fprintf( stderr, "\n" );
-			fprintf( stderr, "╔════════════════════════════════════════════════════════════════╗\n" );
-			fprintf( stderr, "║  ERROR - This is a TEXTURE-ONLY MDL file                       ║\n" );
-			fprintf( stderr, "╠════════════════════════════════════════════════════════════════╣\n" );
-			fprintf( stderr, "║  File: %s\n", model_path );
-			fprintf( stderr, "║                                                                ║\n" );
-			fprintf( stderr, "║  This file contains only texture data (no 3D geometry).       ║\n" );
-			fprintf( stderr, "║  It is a companion file meant to be used with a main model.   ║\n" );
-			fprintf( stderr, "║                                                                ║\n" );
-			fprintf( stderr, "║  SOLUTION: Load the main model file instead.                  ║\n" );
-			fprintf( stderr, "║  Example: If you tried to load 'scientist01t.mdl',            ║\n" );
-			fprintf( stderr, "║           load 'scientist.mdl' instead.                       ║\n" );
-			fprintf( stderr, "╚════════════════════════════════════════════════════════════════╝\n\n" );
-
+			CONSOLE_ERROR( "Texture-only MDL file - load the main model instead" );
 			free( model->data );
 			free( model );
 			return MDL_INFO_TEXTURE_MODEL_FILE;
 		} else {
-			// No bodyparts and no textures - might be a broken file
-			fprintf( stderr, "WARNING - Model has no bodyparts and no textures: '%s'\n", model_path );
+			CONSOLE_WARN( "Model has no bodyparts or textures" );
 		}
 	}
 
-	CONSOLE_SUCCESS( "Loaded model: %s", model_path );
+	// Calculate total vertex count and polygon count from all bodyparts
+	int total_vertices = 0;
+	int total_triangles = 0;
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( model->data + model->header->bodypartindex );
+	for ( int bp = 0; bp < model->header->numbodyparts; bp++ ) {
+		mstudiomodel_t *models = (mstudiomodel_t *)( model->data + bodyparts[bp].modelindex );
+		for ( int m = 0; m < bodyparts[bp].nummodels; m++ ) {
+			total_vertices += models[m].numverts;
+			// Count triangles from all meshes
+			mstudiomesh_t *meshes = (mstudiomesh_t *)( model->data + models[m].meshindex );
+			for ( int mesh = 0; mesh < models[m].nummesh; mesh++ ) {
+				total_triangles += meshes[mesh].numtris;
+			}
+		}
+	}
+
+	// Get texture count (from main or companion file)
+	int texture_count = model->header->numtextures;
+	if ( texture_count == 0 && model->texture_header ) {
+		texture_count = model->texture_header->numtextures;
+	}
+
+	// Get file size (convert to KB for display)
+	int file_size_kb = model->header->length / 1024;
+
+	CONSOLE_SUCCESS( "Loaded: %s", model_path );
+	CONSOLE_INFO( "   File: %d KB, %d polygons, %d vertices",
+		file_size_kb,
+		total_triangles,
+		total_vertices );
+	CONSOLE_INFO( "   %d bones, %d textures, %d sequences, %d bodyparts",
+		model->header->numbones,
+		texture_count,
+		model->header->numseq,
+		model->header->numbodyparts );
 
 	result = load_sequence_groups(
 		model_path,
@@ -909,9 +916,7 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 	(void)result;
 
 	if ( model->num_seqgroups > 1 ) {
-		CONSOLE_INFO( "   Loaded %d external sequence groups", model->num_seqgroups - 1 );
-	} else {
-		CONSOLE_INFO( "   Animations in main file (no external sequence groups)" );
+		CONSOLE_INFO( "   %d external sequence groups", model->num_seqgroups - 1 );
 	}
 
 	*model_out = model;
@@ -940,6 +945,4 @@ void free_model( mdl_model_t *model ) {
 	}
 
 	free( model );
-
-	printf( "   Model Fully Freed!\n" );
 }

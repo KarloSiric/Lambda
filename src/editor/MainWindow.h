@@ -10,6 +10,8 @@
 #include <QOpenGLWidget>
 #include <QTabWidget>
 #include <QMap>
+#include <QTimer>
+#include <QElapsedTimer>
 
 
 #define MW_WIDTH 1920
@@ -38,6 +40,7 @@ class MainWindow : public QMainWindow {
     void onNewTab();
     void onCloseTab( int index );
     void onTabChanged( int index );
+    void onStatusBarUpdate();
 
   private:
      
@@ -93,6 +96,12 @@ class MainWindow : public QMainWindow {
 		QString activeController;
 	};
 	QMap<int, TabModelInfo> m_tabModelInfo;
+
+	// Real-time status bar update timer
+	QTimer *m_statusUpdateTimer;
+	QElapsedTimer m_fpsTimer;
+	int m_frameCount;
+	float m_lastFps;
 };
 
 #endif

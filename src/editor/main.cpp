@@ -20,20 +20,55 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-
-
 #include "MainWindow.h"
 #include "theme/ThemeManager.h"
+#include "util_console.h"
+#include "util_logger.h"
 #include <QApplication>
 #include <QWidget>
 #include <QSurfaceFormat>
+#include <QSysInfo>
+#include <QDateTime>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmainwindow.h>
 
-
+#define LAMBDA_VERSION "0.70 BETA"
+#define LAMBDA_BUILD_DATE __DATE__
+#define LAMBDA_BUILD_TIME __TIME__
 
 int main(int argc, char *argv[])
 {
+    // Initialize console system
+    console_init();
+
+    // Initialize logger with console output disabled (only file/GUI)
+    t_log_options log_opts = {0};
+    log_opts.console_level = LOG_FATAL;  // Suppress LOG_* from terminal
+    log_opts.use_colors = true;
+    logger_init( &log_opts );
+
+    // Print startup banner
+    console_print_raw( "\n" );
+    console_print_raw( "Lambda - Half-Life Model Viewer/Editor\n" );
+    console_print_raw( "Version %s\n", LAMBDA_VERSION );
+    console_print_raw( "\n" );
+
+    // Print build info
+    QDateTime now = QDateTime::currentDateTime();
+    console_print( CONSOLE_INFO, "Started: %s", now.toString( "dddd, MMMM d yyyy - hh:mm:ss" ).toUtf8().constData() );
+    console_print( CONSOLE_INFO, "Build: %s %s", LAMBDA_BUILD_DATE, LAMBDA_BUILD_TIME );
+
+    // Print OS info
+    console_print( CONSOLE_INFO, "OS: %s %s (%s)",
+        QSysInfo::productType().toUtf8().constData(),
+        QSysInfo::productVersion().toUtf8().constData(),
+        QSysInfo::currentCpuArchitecture().toUtf8().constData() );
+    console_print( CONSOLE_INFO, "Kernel: %s %s",
+        QSysInfo::kernelType().toUtf8().constData(),
+        QSysInfo::kernelVersion().toUtf8().constData() );
+
+    console_print_raw( "\n" );
+
     // Request OpenGL 4.1 Core Profile BEFORE creating QApplication
     QSurfaceFormat format;
     format.setVersion( 4, 1 );                    // OpenGL 4.1
@@ -51,7 +86,13 @@ int main(int argc, char *argv[])
 
     window.show();
 
-    return ( app.exec() );
+    int result = app.exec();
+
+    // Cleanup
+    logger_shutdown();
+    console_shutdown();
+
+    return result;
 }
 
 

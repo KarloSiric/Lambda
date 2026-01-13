@@ -88,6 +88,15 @@ public:
     void resetCamera( );
     void setCameraDistance( float distance );
     float getCameraDistance( ) const;
+    void getCameraPosition( float &x, float &y, float &z ) const;
+
+    // @Note: Model info getters for status bar
+    int getVertexCount( ) const;
+    int getTriangleCount( ) const;
+    int getBoneCount( ) const;
+    int getSequenceCount( ) const;
+    int getTextureCount( ) const;
+    int getBodypartCount( ) const;
     
     // @Note: Skin family control - uses C backend r_draw API
     void setSkinFamily( int family );

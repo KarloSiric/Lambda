@@ -109,6 +109,17 @@ MainWindow::MainWindow( QWidget *parent )
 	// Setting up the docks and the main window for viewing things
 	setupDocks();
 	setupViewports();
+
+	// Set up real-time status bar update timer (60 Hz)
+	m_statusUpdateTimer = new QTimer(this);
+	m_statusUpdateTimer->setInterval(16);  // ~60 FPS
+	connect(m_statusUpdateTimer, &QTimer::timeout, this, &MainWindow::onStatusBarUpdate);
+	m_statusUpdateTimer->start();
+
+	// Initialize FPS tracking
+	m_fpsTimer.start();
+	m_frameCount = 0;
+	m_lastFps = 0.0f;
 }
 void MainWindow::setupMenus() {
 	createFileMenu();
@@ -1902,141 +1913,16 @@ void MainWindow::createDocks() {
 	QTabWidget *bottomTabs = new QTabWidget();
 	bottomTabs->setDocumentMode(false);  // Classic tabs
 
-	// Console panel with log level toolbar
+	// Console panel - simple output area (no log filtering)
 	QWidget *consolePanel = new QWidget();
 	QVBoxLayout *consoleLayout = new QVBoxLayout( consolePanel );
-	consoleLayout->setContentsMargins( 0, 0, 0, 0 );
+	consoleLayout->setContentsMargins( 4, 4, 4, 4 );
 	consoleLayout->setSpacing( 0 );
 
-	// Log level toolbar
-	QWidget *logToolbar = new QWidget();
-	logToolbar->setFixedHeight( 24 );
-	QHBoxLayout *logToolbarLayout = new QHBoxLayout( logToolbar );
-	logToolbarLayout->setContentsMargins( 2, 2, 2, 2 );
-	logToolbarLayout->setSpacing( 2 );
+	// Console content area - placeholder for now
+	QLabel *consoleLabel = new QLabel( "Console output will appear here..." );
+	consoleLabel->setAlignment( Qt::AlignTop | Qt::AlignLeft );
 
-	// Search bar
-	QLineEdit *searchBox = new QLineEdit();
-	searchBox->setPlaceholderText( "Search..." );
-	searchBox->setFixedSize( 150, 20 );
-	searchBox->setFocusPolicy( Qt::ClickFocus );  // Only focus when clicked, not auto-focus
-
-	// Log level filter buttons - full words
-	QPushButton *btnTrace = new QPushButton( "TRACE" );
-	btnTrace->setCheckable( true );
-	btnTrace->setChecked( false );
-	btnTrace->setFixedSize( 50, 20 );
-	btnTrace->setToolTip( "Show trace messages" );
-
-	QPushButton *btnDebug = new QPushButton( "DEBUG" );
-	btnDebug->setCheckable( true );
-	btnDebug->setChecked( false );
-	btnDebug->setFixedSize( 50, 20 );
-	btnDebug->setToolTip( "Show debug messages" );
-
-	QPushButton *btnInfo = new QPushButton( "INFO" );
-	btnInfo->setCheckable( true );
-	btnInfo->setChecked( true );
-	btnInfo->setFixedSize( 50, 20 );
-	btnInfo->setToolTip( "Show info messages" );
-
-	QPushButton *btnWarn = new QPushButton( "WARN" );
-	btnWarn->setCheckable( true );
-	btnWarn->setChecked( true );
-	btnWarn->setFixedSize( 50, 20 );
-	btnWarn->setToolTip( "Show warnings" );
-
-	QPushButton *btnError = new QPushButton( "ERROR" );
-	btnError->setCheckable( true );
-	btnError->setChecked( true );
-	btnError->setFixedSize( 50, 20 );
-	btnError->setToolTip( "Show errors" );
-
-	QPushButton *btnFatal = new QPushButton( "FATAL" );
-	btnFatal->setCheckable( true );
-	btnFatal->setChecked( true );
-	btnFatal->setFixedSize( 50, 20 );
-	btnFatal->setToolTip( "Show fatal errors" );
-
-	// Clear button
-	QPushButton *btnClear = new QPushButton( "CLEAR" );
-	btnClear->setFixedSize( 50, 20 );
-	btnClear->setToolTip( "Clear all logs" );
-
-	// Classic button style for log toolbar
-	QString logButtonStyle =
-		"QPushButton { "
-		"    border: 2px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom-color: #808080; "
-		"    background-color: #c0c0c0; "
-		"    color: #000000; "
-		"    font-size: 9px; "
-		"    font-weight: bold; "
-		"} "
-		"QPushButton:checked { "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #ffffff; "
-		"    border-bottom-color: #ffffff; "
-		"    background-color: #a0a0a0; "
-		"} "
-		"QPushButton:hover { "
-		"    background-color: #d0d0d0; "
-		"} "
-		"QPushButton:pressed { "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #ffffff; "
-		"    border-bottom-color: #ffffff; "
-		"    background-color: #b0b0b0; "
-		"}";
-
-	btnTrace->setStyleSheet( logButtonStyle );
-	btnDebug->setStyleSheet( logButtonStyle );
-	btnInfo->setStyleSheet( logButtonStyle );
-	btnWarn->setStyleSheet( logButtonStyle );
-	btnError->setStyleSheet( logButtonStyle );
-	btnFatal->setStyleSheet( logButtonStyle );
-	btnClear->setStyleSheet( logButtonStyle );
-
-	// Search box style
-	QString searchStyle =
-		"QLineEdit { "
-		"    border: 2px solid; "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #f0f0f0; "
-		"    border-bottom-color: #f0f0f0; "
-		"    background-color: #ffffff; "
-		"    color: #000000; "
-		"    padding: 2px 4px; "
-		"    font-size: 10px; "
-		"}";
-	searchBox->setStyleSheet( searchStyle );
-
-	// Layout: Search, buttons, clear, stretch
-	logToolbarLayout->addWidget( searchBox );
-	logToolbarLayout->addSpacing( 4 );
-	logToolbarLayout->addWidget( btnTrace );
-	logToolbarLayout->addWidget( btnDebug );
-	logToolbarLayout->addWidget( btnInfo );
-	logToolbarLayout->addWidget( btnWarn );
-	logToolbarLayout->addWidget( btnError );
-	logToolbarLayout->addWidget( btnFatal );
-	logToolbarLayout->addSpacing( 4 );
-	logToolbarLayout->addWidget( btnClear );
-	logToolbarLayout->addStretch();
-
-	logToolbar->setStyleSheet( "QWidget { background-color: #d0d0d0; }" );
-
-	// Console content area
-	QLabel *consoleLabel = new QLabel( "Console Panel - Logs and Messages" );
-	consoleLabel->setStyleSheet( "QLabel { color: #c0c0c0; padding: 8px; }" );
-
-	consoleLayout->addWidget( logToolbar );
 	consoleLayout->addWidget( consoleLabel, 1 );
 	consolePanel->setStyleSheet(
 		"QWidget { "
@@ -2045,6 +1931,7 @@ void MainWindow::createDocks() {
 		"QLabel { "
 		"    color: #c0c0c0; "
 		"    border: none; "
+		"    padding: 4px; "
 		"}"
 	);
 
@@ -2107,6 +1994,11 @@ void MainWindow::createDocks() {
 
 	bottomDock->setWidget( bottomTabs );
 	addDockWidget( Qt::BottomDockWidgetArea, bottomDock );
+
+	// Give right dock (Inspector) the corners so it spans full height
+	// Console (bottom dock) will stop at the Inspector
+	setCorner( Qt::TopRightCorner, Qt::RightDockWidgetArea );
+	setCorner( Qt::BottomRightCorner, Qt::RightDockWidgetArea );
 
 	// Make the docks non deattachable
 	rightDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
@@ -2253,7 +2145,6 @@ void MainWindow::onOpenModel() {
 	bool success = viewport->loadModel(filePath);
 
 	if (!success) {
-		qCritical() << "ERROR: Failed to load model:" << filePath;
 		QMessageBox::critical(this, "Error Loading Model",
 			"Failed to load model. The file may be corrupted or invalid:\n\n" + filePath);
 		return;
@@ -2265,17 +2156,17 @@ void MainWindow::onOpenModel() {
 		tabWidget->setTabText(currentIndex, fileInfo.fileName());
 	}
 
-	// Store model info for this tab
+	// Store model info for this tab - get actual values from viewport
 	int tabIndex = tabWidget->currentIndex();
 	TabModelInfo &info = m_tabModelInfo[tabIndex];
 	info.filePath = filePath;
 	info.fileSize = fileInfo.size();
-	info.vertexCount = 1234;    // TODO: Get from viewport
-	info.triangleCount = 2456;  // TODO: Get from viewport
-	info.boneCount = 32;        // TODO: Get from viewport
-	info.sequenceCount = 15;    // TODO: Get from viewport
-	info.textureCount = 8;      // TODO: Get from viewport
-	info.currentSequence = "";  // Will be set when animation plays
+	info.vertexCount = viewport->getVertexCount();
+	info.triangleCount = viewport->getTriangleCount();
+	info.boneCount = viewport->getBoneCount();
+	info.sequenceCount = viewport->getSequenceCount();
+	info.textureCount = viewport->getTextureCount();
+	info.currentSequence = "";
 	info.currentFrame = 0;
 	info.totalFrames = 0;
 	info.selectedBone = "";
@@ -2420,4 +2311,39 @@ void MainWindow::onTabChanged(int index) {
 	if (viewport->hasModelLoaded()) {
 		viewport->update();
 	}
+}
+
+void MainWindow::onStatusBarUpdate() {
+	// Calculate FPS
+	m_frameCount++;
+	qint64 elapsed = m_fpsTimer.elapsed();
+	if (elapsed >= 1000) {
+		m_lastFps = (float)m_frameCount * 1000.0f / (float)elapsed;
+		m_frameCount = 0;
+		m_fpsTimer.restart();
+	}
+
+	// Get current viewport
+	ModelViewport *viewport = getCurrentViewport();
+	if (!viewport) {
+		return;
+	}
+
+	// Update FPS display
+	m_statusBar->setFPS((int)m_lastFps);
+	m_statusBar->setFrameTime(m_lastFps > 0 ? 1000.0f / m_lastFps : 0.0f);
+
+	// Update camera position
+	float camX, camY, camZ;
+	viewport->getCameraPosition(camX, camY, camZ);
+	m_statusBar->setCameraPosition(camX, camY, camZ);
+
+	// Update zoom level (camera distance)
+	m_statusBar->setZoomLevel(100.0f);  // Default zoom percentage
+
+	// Update viewport resolution
+	m_statusBar->setResolution(viewport->width(), viewport->height());
+
+	// Update grid size (default 10)
+	m_statusBar->setGridSize(10.0f);
 }
