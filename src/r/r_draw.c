@@ -985,8 +985,8 @@ void cleanup_renderer( void ) {
 }
 
 void clear_screen( void ) {
-	// Professional dark grey-blue background (like Blender/Maya)
-	glClearColor( 0.18f, 0.18f, 0.20f, 1.0f );
+	// Light cyan/blue background (professional model viewer style)
+	glClearColor( 0.45f, 0.55f, 0.60f, 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
 }
 

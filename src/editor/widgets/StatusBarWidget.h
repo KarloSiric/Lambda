@@ -54,6 +54,7 @@ public:
     void setFOV(float fov);
     void setZoomLevel(float zoom);
     void setViewMode(const QString &mode);
+    void setHelpIcon( void );
     void setPlaybackSpeed(float speed);
     void clearModelInfo();
 
@@ -112,6 +113,7 @@ private:
     QLabel *m_fpsLabel;
     QLabel *m_frameTimeLabel;
     QLabel *m_cameraPosLabel;
+    QLabel *m_modelViewportWidthHeight;
     QLabel *m_fovLabel;
     QLabel *m_zoomLabel;
     QLabel *m_viewModeLabel;

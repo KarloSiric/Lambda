@@ -39,9 +39,9 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_renderInstance( nullptr ),
 	  m_animationPlaying( false ),
 	  m_animationTimer( nullptr ),
-	  m_cameraPitch( 0.3f ),
-	  m_cameraYaw( 0.5f ),
-      m_cameraDistance( 50.0f ),
+	  m_cameraPitch( 0.25f ),    // ~14° tilt down - matches CLI default
+	  m_cameraYaw( 0.0f ),       // Straight front view - model faces camera
+      m_cameraDistance( 33.0f ), // ~33 units distance - shows full model
       m_cameraTarget{ 0.0f, 0.0f, 0.0f },
       m_showGrid( true ),
       m_wireframeMode( false ),
@@ -98,7 +98,8 @@ void ModelViewport::initializeGL( void ) {
 	qDebug() << "Renderer: " << (const char *)glGetString( GL_RENDERER );
 
 
-    glClearColor( 0.1f, 0.1f, 0.1f, 1.0f );
+    // Light cyan/blue background (professional model viewer style)
+    glClearColor( 0.20f, 0.50f, 0.80f, 1.0f );
 
     glEnable( GL_DEPTH_TEST );
     glDepthFunc( GL_LESS );
@@ -172,8 +173,8 @@ void ModelViewport::paintGL() {
     // Create view matrix - camera looks at target from offset position
     Math_Mat4_LookAt( camPos, target, up, m_viewMatrix );
 
-    // Draw grid and axes at Y=0 (NO ground plane - grid only)
-    if ( m_showGrid && m_model && m_model->header )
+    // Draw grid and axes at Y=0 (ALWAYS when enabled, even without model)
+    if ( m_showGrid )
     {
         r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
         r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
@@ -373,8 +374,9 @@ bool ModelViewport::loadModel( const QString &modelPath )
         qCritical() << "ERROR: No render instance available!";
     }
 
-    // Auto-frame camera to show entire model
-    frameModel();
+    // NOTE: Camera does NOT auto-adjust on model load
+    // Camera stays at its default position, model appears at origin
+    // User can manually adjust camera with mouse/keyboard
 
     emit modelLoaded( modelPath );
     return ( true );
@@ -403,11 +405,6 @@ void ModelViewport::frameModel() {
     // ============================================================================
     // Ground at model's lowest Z point (after coordinate transform to OpenGL Y)
     m_groundHeight = bbmin[2] * modelScale;
-
-    // ============================================================================
-    // CAMERA SYSTEM: Based on hlmvqt (working Qt 6 Half-Life model viewer)
-    // Source: https://github.com/iOrange/hlmvqt/blob/main/renderview.cpp
-    // ============================================================================
 
     // Camera target: Vertical center of bounding box
     // In HL coords: {0, 0, min.z + size.z/2}
@@ -442,19 +439,6 @@ void ModelViewport::frameModel() {
     // Trigger repaint to show new framing
     update();
 
-    qDebug() << "\n========== MODEL FRAMED (hlmvqt formula) ==========";
-    qDebug() << "BBox (HL): min=[" << bbmin[0] << bbmin[1] << bbmin[2]
-             << "] max=[" << bbmax[0] << bbmax[1] << bbmax[2] << "]";
-    qDebug() << "Size (HL):" << sizeX << "×" << sizeY << "×" << sizeZ;
-    qDebug() << "Max dimension (HL):" << maxDim;
-    qDebug() << "Model scale factor:" << modelScale;
-    qDebug() << "Ground height (OpenGL Y):" << m_groundHeight;
-    qDebug() << "Camera target (OpenGL): [" << m_cameraTarget[0] << ","
-             << m_cameraTarget[1] << "," << m_cameraTarget[2] << "]";
-    qDebug() << "Camera distance:" << m_cameraDistance << "(max dimension × scale)";
-    qDebug() << "Camera angles: pitch=" << (m_cameraPitch * 57.3f) << "° yaw="
-             << (m_cameraYaw * 57.3f) << "°";
-    qDebug() << "===================================================\n";
 }
 
 bool ModelViewport::hasModelLoaded() {

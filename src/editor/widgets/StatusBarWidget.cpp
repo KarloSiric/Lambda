@@ -26,6 +26,7 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QResizeEvent>
+#include <QtGui/qicon.h>
 
 StatusBarWidget::StatusBarWidget( QWidget *parent )
 	: QStatusBar( parent ),
@@ -71,17 +72,17 @@ void StatusBarWidget::setupUI() {
 void StatusBarWidget::createModelInfoWidgets() {
 	// File path with smart truncation
 	m_filePathLabel = new QLabel( "No model" );
-	m_filePathLabel->setMinimumWidth( 100 );
-	m_filePathLabel->setMaximumWidth( 400 );
+	m_filePathLabel->setMinimumWidth( 150 );
+	m_filePathLabel->setMaximumWidth( 750 );
 	addWidget( m_filePathLabel );
 
-	// Copy path button
-	m_copyPathButton = new QPushButton();
-	m_copyPathButton->setText( "📋" );
-	m_copyPathButton->setFixedSize( 20, 20 );
-	m_copyPathButton->setToolTip( "Copy full path to clipboard" );
-	connect( m_copyPathButton, &QPushButton::clicked, this, &StatusBarWidget::onCopyFilePathClicked );
-	addWidget( m_copyPathButton );
+	// // Copy path button
+	// m_copyPathButton = new QPushButton();
+	// m_copyPathButton->setText( "📋" );
+	// m_copyPathButton->setFixedSize( 20, 20 );
+	// m_copyPathButton->setToolTip( "Copy full path to clipboard" );
+	// connect( m_copyPathButton, &QPushButton::clicked, this, &StatusBarWidget::onCopyFilePathClicked );
+	// addWidget( m_copyPathButton );
 
 	// Essential model statistics (most commonly needed at a glance)
 	m_vertexCountLabel = new QLabel( "Verts: --" );
@@ -128,21 +129,15 @@ void StatusBarWidget::createModelInfoWidgets() {
 
 void StatusBarWidget::createViewInfoWidgets() {
 	// Performance metrics
-	m_fpsLabel = new QLabel( "FPS: 60" );
-	m_fpsLabel->setToolTip( "Frames per second" );
+	m_fpsLabel = new QLabel( "FPS: 60, 16.7ms" );
+	m_fpsLabel->setToolTip( "Frames per second, frame time ( miliseconds )" );
 	addPermanentWidget( m_fpsLabel );
 
-	m_cpuUsageLabel = new QLabel( "CPU: 0%" );
-	m_cpuUsageLabel->setToolTip( "CPU usage" );
-	addPermanentWidget( m_cpuUsageLabel );
+	m_cpuUsageLabel = new QLabel( );
 
-	m_gpuUsageLabel = new QLabel( "GPU: 0%" );
-	m_gpuUsageLabel->setToolTip( "GPU usage" );
-	addPermanentWidget( m_gpuUsageLabel );
+	m_gpuUsageLabel = new QLabel( );
 
-	m_ramUsageLabel = new QLabel( "RAM: 0MB" );
-	m_ramUsageLabel->setToolTip( "RAM usage" );
-	addPermanentWidget( m_ramUsageLabel );
+	m_ramUsageLabel = new QLabel( );
 
 	// Viewport essentials
 	m_gridSizeLabel = new QLabel( "Grid: 10" );
@@ -159,16 +154,27 @@ void StatusBarWidget::createViewInfoWidgets() {
 	m_viewModeLabel = new QLabel();
 	m_fovLabel = new QLabel();
 	m_playbackSpeedLabel = new QLabel();
-	m_cameraPosLabel = new QLabel();
+
+	// This is important to add
+	m_cameraPosLabel = new QLabel( "@ 0.53, 0.23 15.23" );
+	m_cameraPosLabel->setToolTip( "Camera Position" );
+	addPermanentWidget( m_cameraPosLabel );
+
+	m_modelViewportWidthHeight = new QLabel( "@ 1520, 950" );
+	m_modelViewportWidthHeight->setToolTip( "Model Viewport Window Resolution" );
+	addPermanentWidget( m_modelViewportWidthHeight );
+    
 	m_cameraDistLabel = new QLabel();
 
 	// Hide non-essential viewport info
 	m_frameTimeLabel->hide();
+    m_cpuUsageLabel->hide();
+    m_gpuUsageLabel->hide();
+    m_ramUsageLabel->hide();
 	m_resolutionLabel->hide();
 	m_viewModeLabel->hide();
 	m_fovLabel->hide();
 	m_playbackSpeedLabel->hide();
-	m_cameraPosLabel->hide();
 	m_cameraDistLabel->hide();
 }
 
@@ -223,54 +229,69 @@ void StatusBarWidget::applyStyles() {
 		"QStatusBar { "
 		"    background-color: #c0c0c0; "
 		"    color: #202020; "
-		"    border: 3px solid; "
+		"    border: 1px solid; "
 		"    border-top-color: #ffffff; "
 		"    border-left-color: #ffffff; "
 		"    border-right-color: #808080; "
 		"    border-bottom-color: #808080; "
-		"    padding: 2px; "
+		"    padding: 2px 6px; "
 		"} "
 		"QStatusBar::item { border: none; padding: 1px; }" );
 
-	// File path with sunken panel look
-	m_filePathLabel->setStyleSheet(
+	// Adding style for the items in the status bar
+	const QString cellStyle =
 		"QLabel { "
-		"    padding: 2px 4px; "
-		"    color: #101010; "
-		"    background-color: #e8e8e8; "
-		"    border: 1px solid #808080; "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #f0f0f0; "
-		"    border-bottom-color: #f0f0f0; "
-		"}" );
-
-	// Classic sunken panel style for visible info labels
-	QString infoLabelStyle =
-		"QLabel { "
-		"    padding: 2px 6px; "
-		"    color: #202020; "
-		"    background-color: #e8e8e8; "
-		"    border: 2px solid; "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #f0f0f0; "
-		"    border-bottom-color: #f0f0f0; "
+		"   padding: 2px 5px; "
+		"   color: #101010; "
+		"   background-color: #c0c0c0; "
+		// "   border: 2px solid #9A9999; "
+		"   border: 0.5px solid #808080; "
 		"}";
 
-	// Apply to all visible model info widgets
-	m_vertexCountLabel->setStyleSheet( infoLabelStyle );
-	m_triangleCountLabel->setStyleSheet( infoLabelStyle );
-	m_boneCountLabel->setStyleSheet( infoLabelStyle );
-	m_fileSizeLabel->setStyleSheet( infoLabelStyle );
+	m_filePathLabel->setStyleSheet( cellStyle );
 
-	// Apply to all visible viewport/performance widgets
-	m_fpsLabel->setStyleSheet( infoLabelStyle );
-	m_cpuUsageLabel->setStyleSheet( infoLabelStyle );
-	m_gpuUsageLabel->setStyleSheet( infoLabelStyle );
-	m_ramUsageLabel->setStyleSheet( infoLabelStyle );
-	m_gridSizeLabel->setStyleSheet( infoLabelStyle );
-	m_zoomLabel->setStyleSheet( infoLabelStyle );
+	// // File path with sunken panel look
+	// m_filePathLabel->setStyleSheet(
+	// 	"QLabel { "
+	// 	"    padding: 2px 4px; "
+	// 	"    color: #101010; "
+	// 	"    background-color: #e8e8e8; "
+	// 	"    border: 1px solid #808080; "
+	// 	"    border-top-color: #808080; "
+	// 	"    border-left-color: #808080; "
+	// 	"    border-right-color: #f0f0f0; "
+	// 	"    border-bottom-color: #f0f0f0; "
+	// 	"}" );
+
+	// Classic sunken panel style for visible info labels
+	// QString infoLabelStyle =
+	// 	"QLabel { "
+	// 	"    padding: 2px 6px; "
+	// 	"    color: #202020; "
+	// 	"    background-color: #e8e8e8; "
+	// 	"    border: 2px solid; "
+	// 	"    border-top-color: #808080; "
+	// 	"    border-left-color: #808080; "
+	// 	"    border-right-color: #f0f0f0; "
+	// 	"    border-bottom-color: #f0f0f0; "
+	// 	"}";
+
+	// Apply to all visible model info widgets
+
+	m_filePathLabel->setStyleSheet( cellStyle );
+	m_vertexCountLabel->setStyleSheet( cellStyle );
+	m_triangleCountLabel->setStyleSheet( cellStyle );
+	m_boneCountLabel->setStyleSheet( cellStyle );
+	m_fileSizeLabel->setStyleSheet( cellStyle );
+
+	m_fpsLabel->setStyleSheet( cellStyle );
+	m_cpuUsageLabel->setStyleSheet( cellStyle );
+	m_gpuUsageLabel->setStyleSheet( cellStyle );
+	m_ramUsageLabel->setStyleSheet( cellStyle );
+	m_gridSizeLabel->setStyleSheet( cellStyle );
+	m_zoomLabel->setStyleSheet( cellStyle );
+	m_cameraPosLabel->setStyleSheet( cellStyle );
+	m_modelViewportWidthHeight->setStyleSheet( cellStyle );
 
 	// Classic raised buttons (like Windows 95/2000 style)
 	QString buttonStyle =
@@ -332,7 +353,7 @@ void StatusBarWidget::applyStyles() {
 		"    border-bottom-color: #ffffff; "
 		"    background-color: #b0b0b0; "
 		"}";
-	m_copyPathButton->setStyleSheet( copyButtonStyle );
+	// m_copyPathButton->setStyleSheet( copyButtonStyle );
 }
 
 void StatusBarWidget::setModelInfo( const QString &filePath, int vertexCount,
@@ -375,13 +396,19 @@ void StatusBarWidget::setModelInfo( const QString &filePath, int vertexCount,
 	m_textureCountLabel->setText( QString( "Tex: %1" ).arg( textureCount ) );
 }
 
+void StatusBarWidget::setHelpIcon( void ) {
+	// QIcon *questionMarkIcon;
+	// questionMarkIcon->
+	// @NOTE: TODO Add a question mark old school icon like in BSP Editor
+}
+
 void StatusBarWidget::setFileSize( qint64 sizeBytes ) {
 	if ( sizeBytes < 1024 ) {
 		m_fileSizeLabel->setText( QString( "Size: %1 B" ).arg( sizeBytes ) );
 	} else if ( sizeBytes < 1024 * 1024 ) {
 		m_fileSizeLabel->setText( QString( "Size: %1 KB" ).arg( sizeBytes / 1024.0, 0, 'f', 1 ) );
 	} else {
-		m_fileSizeLabel->setText( QString( "Size: %1 MB" ).arg( sizeBytes / (1024.0 * 1024.0), 0, 'f', 2 ) );
+		m_fileSizeLabel->setText( QString( "Size: %1 MB" ).arg( sizeBytes / ( 1024.0 * 1024.0 ), 0, 'f', 2 ) );
 	}
 }
 
@@ -439,7 +466,8 @@ void StatusBarWidget::setFPS( int fps ) {
 	QString baseStyle =
 		"QLabel { "
 		"    padding: 3px 6px; "
-		"    background-color: #e8e8e8; "
+		// "    background-color: #e8e8e8; "
+		"    background-color: #212121; "
 		"    border: 1px solid #808080; "
 		"    border-top-color: #808080; "
 		"    border-left-color: #808080; "
@@ -615,8 +643,8 @@ void StatusBarWidget::updateWidgetVisibility() {
 	// Level 2 (700px+): Essential model stats + viewport controls (Verts, Tris, Bones, Size, Grid, Zoom)
 	// Level 3 (1100px+): System stats (CPU, GPU, RAM)
 
-	bool showLevel2 = availableWidth >= 700;   // Essential model stats + viewport controls
-	bool showLevel3 = availableWidth >= 1100;  // System stats (nice to have)
+	bool showLevel2 = availableWidth >= 700; // Essential model stats + viewport controls
+	bool showLevel3 = availableWidth >= 1100; // System stats (nice to have)
 
 	// Level 2: Essential model stats (always visible at half-screen and above)
 	m_vertexCountLabel->setVisible( showLevel2 );
