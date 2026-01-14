@@ -144,16 +144,16 @@ void StatusBarWidget::createViewInfoWidgets() {
 	m_gpuUsageLabel = new QLabel();
 	m_ramUsageLabel = new QLabel();
 
-	// Viewport essentials - Empty by default
-	m_gridSizeLabel = new QLabel( );
+	// Viewport essentials - Empty by default, FIXED size so they don't shrink
+	m_gridSizeLabel = new QLabel();
 	m_gridSizeLabel->setToolTip( "Grid size" );
-	m_gridSizeLabel->setFixedWidth( 65 );
+	m_gridSizeLabel->setFixedSize( 65, 20 );
 	addPermanentWidget( m_gridSizeLabel );
 	addPermanentWidget( createSeparator() );
 
-	m_zoomLabel = new QLabel( );
+	m_zoomLabel = new QLabel();
 	m_zoomLabel->setToolTip( "Zoom level" );
-	m_zoomLabel->setFixedWidth( 120 );
+	m_zoomLabel->setFixedSize( 90, 20 );
 	addPermanentWidget( m_zoomLabel );
 	addPermanentWidget( createSeparator() );
 
@@ -164,17 +164,17 @@ void StatusBarWidget::createViewInfoWidgets() {
 	m_fovLabel = new QLabel();
 	m_playbackSpeedLabel = new QLabel();
 
-	// Mouse/cursor 3D position - Empty by default
+	// Mouse/cursor 3D position - Empty by default, FIXED size
 	m_cameraPosLabel = new QLabel();
 	m_cameraPosLabel->setToolTip( "Cursor position (3D)" );
-	m_cameraPosLabel->setFixedWidth( 150 );
+	m_cameraPosLabel->setFixedSize( 200, 20 );
 	addPermanentWidget( m_cameraPosLabel );
 	addPermanentWidget( createSeparator() );
 
-	// Viewport size - Empty by default
+	// Viewport size - Empty by default, FIXED size
 	m_modelViewportWidthHeight = new QLabel();
 	m_modelViewportWidthHeight->setToolTip( "Model Viewport Window Resolution" );
-	m_modelViewportWidthHeight->setMinimumWidth( 90 );
+	m_modelViewportWidthHeight->setFixedSize( 140, 20 );
 	addPermanentWidget( m_modelViewportWidthHeight );
 	addPermanentWidget( createSeparator() );
 
@@ -430,20 +430,16 @@ void StatusBarWidget::setModelInfo( const QString &filePath, int vertexCount,
 	m_textureCountLabel->setText( QString( "Tex: %1" ).arg( textureCount ) );
 }
 
-void StatusBarWidget::setHelpIcon( void ) {
-	// QIcon *questionMarkIcon;
-	// questionMarkIcon->
-	// @NOTE: TODO Add a question mark old school icon like in BSP Editor
-}
-
 void StatusBarWidget::setFileSize( qint64 sizeBytes ) {
 	if ( sizeBytes < 1024 ) {
 		m_fileSizeLabel->setText( QString( "Size: %1 B" ).arg( sizeBytes ) );
 	} else if ( sizeBytes < 1024 * 1024 ) {
 		m_fileSizeLabel->setText( QString( "Size: %1 KB" ).arg( sizeBytes / 1024.0, 0, 'f', 1 ) );
-	} else {
+	} else if ( sizeBytes < 1024 * 1024 * 1024 ){
 		m_fileSizeLabel->setText( QString( "Size: %1 MB" ).arg( sizeBytes / ( 1024.0 * 1024.0 ), 0, 'f', 2 ) );
-	}
+	} else {
+        m_fileSizeLabel->setText( QString( "Size: %1 GB" ).arg( sizeBytes / ( 1024.0 * 1024.0 * 1024.0), 0, 'f', 2 ) ); 
+    }
 }
 
 void StatusBarWidget::setSequenceInfo( const QString &sequenceName, int currentFrame, int totalFrames ) {
@@ -503,7 +499,7 @@ void StatusBarWidget::setViewportSize( int width, int height ) {
 	m_viewportHeight = height;
 	// Only show if viewport has valid dimensions (mouse is in viewport)
 	if ( width > 0 && height > 0 ) {
-		m_modelViewportWidthHeight->setText( QString( "@ %1, %2" ).arg( width ).arg( height ) );
+		m_modelViewportWidthHeight->setText( QString( "@ W: %1 H:%2" ).arg( width ).arg( height ) );
 	} else {
 		m_modelViewportWidthHeight->setText( "" );
 	}

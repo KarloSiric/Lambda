@@ -56,7 +56,6 @@ public:
     void setFOV(float fov);
     void setZoomLevel(float zoom);
     void setViewMode(const QString &mode);
-    void setHelpIcon( void );
     void setPlaybackSpeed(float speed);
     void clearModelInfo();
     void setHelpText(const QString &text);

@@ -33,6 +33,10 @@
 #include <QtCore/qtmetamacros.h>
 #include <QtGui/qevent.h>
 #include <QtWidgets/qtabwidget.h>
+#include <QEnterEvent>
+
+// Forward declarations
+class StatusBarWidget;
 
 
 // @Note: C backend includes - everything is coevered in these includes
@@ -97,7 +101,10 @@ public:
     int getSequenceCount( ) const;
     int getTextureCount( ) const;
     int getBodypartCount( ) const;
-    
+
+    // @Note: Status bar integration
+    void setStatusBar( StatusBarWidget *statusBar );
+
     // @Note: Skin family control - uses C backend r_draw API
     void setSkinFamily( int family );
     void nextSkinFamily( );
@@ -126,6 +133,8 @@ protected:
     void mouseMoveEvent( QMouseEvent *event ) override;
     void mouseReleaseEvent( QMouseEvent *event ) override;
     void wheelEvent( QWheelEvent *event ) override;
+    void enterEvent( QEnterEvent *event ) override;
+    void leaveEvent( QEvent *event ) override;
     
 private slots:
     
@@ -174,6 +183,9 @@ private:
     // Mouse input tracking
     QPoint m_lastMousePos;
     Qt::MouseButton m_activeButton;
+
+    // Status bar pointer for updating viewport info
+    StatusBarWidget *m_statusBar;
 
     // Helper functions
     void updateAnimationState( float deltaTime );

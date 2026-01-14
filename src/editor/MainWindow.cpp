@@ -2237,6 +2237,9 @@ int MainWindow::addViewportTab(const QString &title) {
 		return -1;
 	}
 
+	// Connect viewport to status bar for hover updates
+	viewport->setStatusBar(m_statusBar);
+
 	int index = tabWidget->addTab(viewport, title);
 	tabWidget->setCurrentIndex(index);
 	return index;
@@ -2331,30 +2334,30 @@ void MainWindow::onStatusBarUpdate() {
 		return;
 	}
 
-	// Update FPS display
+	// Update FPS display (always shown)
 	m_statusBar->setFPS((int)m_lastFps);
-	m_statusBar->setFrameTime(m_lastFps > 0 ? 1000.0f / m_lastFps : 0.0f);
 
-	// Update mouse position in viewport (window coordinates)
+	// Check if mouse is inside the viewport
 	QPoint globalPos = QCursor::pos();
 	QPoint localPos = viewport->mapFromGlobal(globalPos);
+	bool mouseInViewport = viewport->rect().contains(localPos);
 
-	// Only show valid coordinates when mouse is inside the viewport
-	if (viewport->rect().contains(localPos)) {
+	// Only update viewport-specific info when mouse is inside
+	if (mouseInViewport) {
+		// Update mouse position (screen coordinates for now)
 		m_statusBar->setCameraPosition((float)localPos.x(), (float)localPos.y(), 0.0f);
-	} else {
-		m_statusBar->setCameraPosition(0.0f, 0.0f, 0.0f);
+
+		// Update zoom level based on camera distance
+		float defaultDistance = 50.0f;
+		float currentDistance = viewport->getCameraDistance();
+		float zoomPercent = (currentDistance > 0.0f) ? (defaultDistance / currentDistance) * 100.0f : 100.0f;
+		m_statusBar->setZoomLevel(zoomPercent);
+
+		// Update viewport size
+		m_statusBar->setViewportSize(viewport->width(), viewport->height());
+
+		// Update grid size
+		m_statusBar->setGridSize(10.0f);
 	}
-
-	// Update zoom level based on camera distance
-	float defaultDistance = 50.0f;  // Default camera distance
-	float currentDistance = viewport->getCameraDistance();
-	float zoomPercent = (currentDistance > 0.0f) ? (defaultDistance / currentDistance) * 100.0f : 100.0f;
-	m_statusBar->setZoomLevel(zoomPercent);
-
-	// Update viewport size (uses the visible label)
-	m_statusBar->setViewportSize(viewport->width(), viewport->height());
-
-	// Update grid size (default 10)
-	m_statusBar->setGridSize(10.0f);
+	// When mouse leaves viewport, clearViewportInfo() is called via leaveEvent
 }

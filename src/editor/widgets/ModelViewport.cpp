@@ -21,6 +21,7 @@
  */
 
 #include "ModelViewport.h"
+#include "StatusBarWidget.h"
 #include "math_vector.h"
 #include "mdl_loader.h"
 #include "r_draw.h"
@@ -37,6 +38,7 @@
 ModelViewport::ModelViewport( QWidget *parent )
 	: QOpenGLWidget( parent ),
 	  m_model( nullptr ),
+	  m_statusBar( nullptr ),
 	  m_renderInstance( nullptr ),
 	  m_animationPlaying( false ),
 	  m_animationTimer( nullptr ),
@@ -65,6 +67,9 @@ ModelViewport::ModelViewport( QWidget *parent )
 	m_camera.angles_deg[0] = 17.2f; // Pitch: look down 20 degrees
 	m_camera.angles_deg[1] = 28.6f; // Yaw: rotate 45 degrees
 	m_camera.angles_deg[2] = 0.0f; // Roll: no rotation
+
+	// Enable mouse tracking for hover detection (status bar updates)
+	setMouseTracking( true );
 }
 
 ModelViewport::~ModelViewport() {
@@ -313,6 +318,23 @@ void ModelViewport::wheelEvent( QWheelEvent *event ) {
 	// Trigger repaint when zoom changes
 	update();
 
+	event->accept();
+}
+
+void ModelViewport::setStatusBar( StatusBarWidget *statusBar ) {
+	m_statusBar = statusBar;
+}
+
+void ModelViewport::enterEvent( QEnterEvent *event ) {
+	// Mouse entered viewport - timer in MainWindow will handle updates
+	event->accept();
+}
+
+void ModelViewport::leaveEvent( QEvent *event ) {
+	// Mouse left viewport - clear viewport-specific info
+	if ( m_statusBar ) {
+		m_statusBar->clearViewportInfo();
+	}
 	event->accept();
 }
 
