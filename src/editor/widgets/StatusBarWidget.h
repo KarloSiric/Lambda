@@ -26,6 +26,7 @@
 #include <QStatusBar>
 #include <QLabel>
 #include <QPushButton>
+#include <QFrame>
 
 class StatusBarWidget : public QStatusBar {
     Q_OBJECT
@@ -58,6 +59,9 @@ public:
     void setHelpIcon( void );
     void setPlaybackSpeed(float speed);
     void clearModelInfo();
+    void setHelpText(const QString &text);
+    void clearHelpText();
+    void clearViewportInfo();  // Clear grid, zoom, position, viewport size when mouse leaves viewport
 
     void setInspectorVisible(bool visible);
     void setConsoleVisible(bool visible);
@@ -87,6 +91,7 @@ private:
     void createToggleButtons();
     void applyStyles();
     void updateWidgetVisibility();
+    QWidget* createSeparator();
 
     QLabel *m_filePathLabel;
     QLabel *m_vertexCountLabel;
@@ -119,6 +124,7 @@ private:
     QLabel *m_zoomLabel;
     QLabel *m_viewModeLabel;
     QLabel *m_playbackSpeedLabel;
+    QLabel *m_helpLabel;  // Dynamic help text (F1, hover info)
 
     QPushButton *m_inspectorToggle;
     QPushButton *m_consoleToggle;

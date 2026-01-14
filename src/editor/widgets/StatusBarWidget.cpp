@@ -26,6 +26,7 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QResizeEvent>
+#include <QtCore/qobject.h>
 #include <QtGui/qicon.h>
 
 StatusBarWidget::StatusBarWidget( QWidget *parent )
@@ -71,32 +72,39 @@ void StatusBarWidget::setupUI() {
 
 void StatusBarWidget::createModelInfoWidgets() {
 	// File path with smart truncation
-	m_filePathLabel = new QLabel( "No model" );
+	m_filePathLabel = new QLabel();  // Empty by default
 	m_filePathLabel->setMinimumWidth( 150 );
 	m_filePathLabel->setMaximumWidth( 700 );
 	addWidget( m_filePathLabel );
+	addWidget( createSeparator() );
 
 	// Essential model statistics (most commonly needed at a glance)
-	// Fixed minimum widths prevent layout shifts when values change
-	m_vertexCountLabel = new QLabel( "Verts: --" );
+	// Empty by default - only show when model is loaded
+	m_vertexCountLabel = new QLabel();
 	m_vertexCountLabel->setToolTip( "Model/Object Vertex Count" );
 	m_vertexCountLabel->setFixedWidth( 90 );
 	addWidget( m_vertexCountLabel );
+	addWidget( createSeparator() );
 
-	m_triangleCountLabel = new QLabel( "Polys: --" );
+	m_triangleCountLabel = new QLabel();
 	m_triangleCountLabel->setToolTip( "Model/Object Polygon count" );
 	m_triangleCountLabel->setFixedWidth( 90 );
 	addWidget( m_triangleCountLabel );
+	addWidget( createSeparator() );
 
-	m_boneCountLabel = new QLabel( "Bones: --" );
+	m_boneCountLabel = new QLabel();
 	m_boneCountLabel->setToolTip( "Model/Object Bone count" );
 	m_boneCountLabel->setFixedWidth( 85 );
 	addWidget( m_boneCountLabel );
+	addWidget( createSeparator() );
 
-	m_fileSizeLabel = new QLabel( "Size: --" );
+	m_fileSizeLabel = new QLabel();
 	m_fileSizeLabel->setToolTip( "File size" );
 	m_fileSizeLabel->setFixedWidth( 120 );
 	addWidget( m_fileSizeLabel );
+
+	// Separator between left section (model info) and right section (viewport info)
+	addWidget( createSeparator() );
 
 	// Create placeholder widgets for other info (will be hidden but kept for API compatibility)
 	m_sequenceCountLabel = new QLabel();
@@ -125,28 +133,29 @@ void StatusBarWidget::createModelInfoWidgets() {
 }
 
 void StatusBarWidget::createViewInfoWidgets() {
-	// Performance metrics - FIXED widths prevent layout shifts
-	m_fpsLabel = new QLabel( "FPS: 60" );
+	// Performance metrics - Empty by default
+	m_fpsLabel = new QLabel();
 	m_fpsLabel->setToolTip( "Frames per second" );
 	m_fpsLabel->setFixedWidth( 65 );
 	addPermanentWidget( m_fpsLabel );
+	addPermanentWidget( createSeparator() );
 
-	m_cpuUsageLabel = new QLabel( );
+	m_cpuUsageLabel = new QLabel();
+	m_gpuUsageLabel = new QLabel();
+	m_ramUsageLabel = new QLabel();
 
-	m_gpuUsageLabel = new QLabel( );
-
-	m_ramUsageLabel = new QLabel( );
-
-	// Viewport essentials - FIXED widths prevent layout shifts
-	m_gridSizeLabel = new QLabel( "Grid: 10" );
+	// Viewport essentials - Empty by default
+	m_gridSizeLabel = new QLabel();
 	m_gridSizeLabel->setToolTip( "Grid size" );
 	m_gridSizeLabel->setFixedWidth( 65 );
 	addPermanentWidget( m_gridSizeLabel );
+	addPermanentWidget( createSeparator() );
 
-	m_zoomLabel = new QLabel( "Zoom: 100%" );
+	m_zoomLabel = new QLabel();
 	m_zoomLabel->setToolTip( "Zoom level" );
 	m_zoomLabel->setFixedWidth( 120 );
 	addPermanentWidget( m_zoomLabel );
+	addPermanentWidget( createSeparator() );
 
 	// Create placeholder widgets for API compatibility (hidden - belong in Inspector/overlays)
 	m_frameTimeLabel = new QLabel();
@@ -155,25 +164,33 @@ void StatusBarWidget::createViewInfoWidgets() {
 	m_fovLabel = new QLabel();
 	m_playbackSpeedLabel = new QLabel();
 
-	// Mouse/cursor 3D position - FIXED width to prevent layout shifts
-	m_cameraPosLabel = new QLabel( "x: 0, y: 0, z: 0" );
+	// Mouse/cursor 3D position - Empty by default
+	m_cameraPosLabel = new QLabel();
 	m_cameraPosLabel->setToolTip( "Cursor position (3D)" );
 	m_cameraPosLabel->setFixedWidth( 150 );
 	addPermanentWidget( m_cameraPosLabel );
+	addPermanentWidget( createSeparator() );
 
-	// Viewport size - FIXED width to prevent layout shifts
-	m_modelViewportWidthHeight = new QLabel( "@ 0, 0" );
+	// Viewport size - Empty by default
+	m_modelViewportWidthHeight = new QLabel();
 	m_modelViewportWidthHeight->setToolTip( "Model Viewport Window Resolution" );
 	m_modelViewportWidthHeight->setMinimumWidth( 90 );
 	addPermanentWidget( m_modelViewportWidthHeight );
-    
+	addPermanentWidget( createSeparator() );
+
+	// Dynamic help text section (like J.A.C.K's "Press F1 for Help")
+	m_helpLabel = new QLabel( "Press F1 for Help" );
+	m_helpLabel->setToolTip( "Context-sensitive help (press F1)" );
+	m_helpLabel->setMinimumWidth( 120 );
+	addPermanentWidget( m_helpLabel );
+
 	m_cameraDistLabel = new QLabel();
 
 	// Hide non-essential viewport info
 	m_frameTimeLabel->hide();
-    m_cpuUsageLabel->hide();
-    m_gpuUsageLabel->hide();
-    m_ramUsageLabel->hide();
+	m_cpuUsageLabel->hide();
+	m_gpuUsageLabel->hide();
+	m_ramUsageLabel->hide();
 	m_resolutionLabel->hide();
 	m_viewModeLabel->hide();
 	m_fovLabel->hide();
@@ -182,7 +199,10 @@ void StatusBarWidget::createViewInfoWidgets() {
 }
 
 void StatusBarWidget::createToggleButtons() {
-	// Add small spacer before buttons
+	// Separator before toggle buttons section
+	addPermanentWidget( createSeparator() );
+
+	// Small spacer after separator
 	QWidget *leftSpacer = new QWidget();
 	leftSpacer->setFixedWidth( 4 );
 	addPermanentWidget( leftSpacer );
@@ -228,6 +248,7 @@ void StatusBarWidget::createToggleButtons() {
 
 void StatusBarWidget::applyStyles() {
 	// Enhanced status bar with prominent 3D raised border to match panel aesthetic
+	// Note: QStatusBar::item has no padding to allow full-height separators
 	setStyleSheet(
 		"QStatusBar { "
 		"    background-color: #c0c0c0; "
@@ -237,18 +258,16 @@ void StatusBarWidget::applyStyles() {
 		"    border-left-color: #ffffff; "
 		"    border-right-color: #808080; "
 		"    border-bottom-color: #808080; "
-		"    padding: 1px 2px; "
+		"    padding: 0px 2px; "
 		"} "
-		"QStatusBar::item { border: none; padding: 1px; }" );
+		"QStatusBar::item { border: none; padding: 0px; margin: 0px; }" );
 
 	// Adding style for the items in the status bar
 	const QString cellStyle =
 		"QLabel { "
-		"   padding: 0px 6px; "
+		"   padding: 2px 6px; "  // Added vertical padding for text labels
 		"   color: #101010; "
 		"   background-color: #c0c0c0; "
-		// "   border: 2px solid #9A9999; "
-		"   border: 1.5px solid #a9a9a9; "
 		"}";
 
 	m_filePathLabel->setStyleSheet( cellStyle );
@@ -295,6 +314,18 @@ void StatusBarWidget::applyStyles() {
 	m_zoomLabel->setStyleSheet( cellStyle );
 	m_cameraPosLabel->setStyleSheet( cellStyle );
 	m_modelViewportWidthHeight->setStyleSheet( cellStyle );
+
+	// Help label with slightly different style to stand out
+	QString helpStyle =
+		"QLabel { "
+		"   padding: 2px 6px; "
+		"   color: #404040; "
+		"   background-color: #c0c0c0; "
+		"   font-style: italic; "
+		"}";
+	if ( m_helpLabel ) {
+		m_helpLabel->setStyleSheet( helpStyle );
+	}
 
 	// Classic raised buttons (like Windows 95/2000 style)
 	QString buttonStyle =
@@ -452,8 +483,14 @@ void StatusBarWidget::setCameraDistance( float distance ) {
 
 void StatusBarWidget::setGridSize( float size ) {
 	m_gridSize = size;
-	m_gridSizeLabel->setText( QString( "Grid: %1" ).arg( size, 0, 'f', 1 ) );
+	// Only show if size is valid (non-zero)
+	if ( size > 0.0f ) {
+		m_gridSizeLabel->setText( QString( "Grid: %1" ).arg( size, 0, 'f', 1 ) );
+	} else {
+		m_gridSizeLabel->setText( "" );
+	}
 }
+
 
 void StatusBarWidget::setResolution( int width, int height ) {
 	m_viewportWidth = width;
@@ -464,8 +501,14 @@ void StatusBarWidget::setResolution( int width, int height ) {
 void StatusBarWidget::setViewportSize( int width, int height ) {
 	m_viewportWidth = width;
 	m_viewportHeight = height;
-	m_modelViewportWidthHeight->setText( QString( "@ %1, %2" ).arg( width ).arg( height ) );
+	// Only show if viewport has valid dimensions (mouse is in viewport)
+	if ( width > 0 && height > 0 ) {
+		m_modelViewportWidthHeight->setText( QString( "@ %1, %2" ).arg( width ).arg( height ) );
+	} else {
+		m_modelViewportWidthHeight->setText( "" );
+	}
 }
+
 
 void StatusBarWidget::setFPS( int fps ) {
 	m_currentFPS = fps;
@@ -522,9 +565,14 @@ void StatusBarWidget::setCameraPosition( float x, float y, float z ) {
 	m_cameraX = x;
 	m_cameraY = y;
 	m_cameraZ = z;
-	// Display mouse/cursor position in 3D space
-	m_cameraPosLabel->setText( QString( "x: %1, y: %2, z: %3" ).arg( (int)x ).arg( (int)y ).arg( (int)z ) );
+	// Only show position if at least one value is non-zero (mouse is in viewport)
+	if ( x != 0.0f || y != 0.0f || z != 0.0f ) {
+		m_cameraPosLabel->setText( QString( "x: %1, y: %2, z: %3" ).arg( (int)x ).arg( (int)y ).arg( (int)z ) );
+	} else {
+		m_cameraPosLabel->setText( "" );
+	}
 }
+
 
 void StatusBarWidget::setFOV( float fov ) {
 	m_fov = fov;
@@ -533,8 +581,14 @@ void StatusBarWidget::setFOV( float fov ) {
 
 void StatusBarWidget::setZoomLevel( float zoom ) {
 	m_zoom = zoom;
-	m_zoomLabel->setText( QString( "Zoom: %1%" ).arg( zoom, 0, 'f', 0 ) );
+	// Only show if zoom is valid (non-zero)
+	if ( zoom > 0.0f ) {
+		m_zoomLabel->setText( QString( "Zoom: %1" ).arg( zoom, 0, 'f', 2 ) );
+	} else {
+		m_zoomLabel->setText( "" );
+	}
 }
+
 
 void StatusBarWidget::setViewMode( const QString &mode ) {
 	m_viewMode = mode;
@@ -592,21 +646,26 @@ void StatusBarWidget::clearModelInfo() {
 	m_sequenceCount = 0;
 	m_textureCount = 0;
 
-	m_filePathLabel->setText( "No model" );
+	// Clear all labels (empty string, not "--" - like J.A.C.K editor)
+	m_filePathLabel->setText( "" );
 	m_filePathLabel->setToolTip( "" );
-	m_vertexCountLabel->setText( "Verts: --" );
-	m_triangleCountLabel->setText( "Polys: --" );
-	m_boneCountLabel->setText( "Bones: --" );
-	m_sequenceCountLabel->setText( "Seqs: --" );
-	m_textureCountLabel->setText( "Tex: --" );
-	m_fileSizeLabel->setText( "Size: --" );
-	m_sequenceInfoLabel->setText( "Seq: --" );
-	m_boneNameLabel->setText( "Bone: --" );
-	m_controllerNameLabel->setText( "Ctrl: --" );
-	m_bodygroupLabel->setText( "Body: --" );
-	m_skinLabel->setText( "Skin: --" );
-	m_attachmentLabel->setText( "Attach: --" );
-	m_eventLabel->setText( "Events: --" );
+	m_vertexCountLabel->setText( "" );
+	m_triangleCountLabel->setText( "" );
+	m_boneCountLabel->setText( "" );
+	m_sequenceCountLabel->setText( "" );
+	m_textureCountLabel->setText( "" );
+	m_fileSizeLabel->setText( "" );
+	m_sequenceInfoLabel->setText( "" );
+	m_boneNameLabel->setText( "" );
+	m_controllerNameLabel->setText( "" );
+	m_bodygroupLabel->setText( "" );
+	m_skinLabel->setText( "" );
+	m_attachmentLabel->setText( "" );
+	m_eventLabel->setText( "" );
+
+	// Also clear position and viewport labels when no model
+	m_cameraPosLabel->setText( "" );
+	m_modelViewportWidthHeight->setText( "" );
 }
 
 void StatusBarWidget::setInspectorVisible( bool visible ) {
@@ -782,4 +841,41 @@ void StatusBarWidget::showMemoryContextMenu( const QPoint &pos ) {
 	if ( selected == toggleAction ) {
 		emit memoryToggleRequested();
 	}
+}
+
+QWidget* StatusBarWidget::createSeparator() {
+	QFrame* separator = new QFrame( this );
+	separator->setFrameShape( QFrame::VLine );
+	separator->setFrameShadow( QFrame::Sunken );
+	separator->setFixedWidth( 1 );  // Thicker separator (3px instead of 2px)
+	// Full-height separator with no margin (like J.A.C.K editor)
+	separator->setContentsMargins( 0, 0, 0, 0 );
+	separator->setStyleSheet(
+		"QFrame { "
+		"    background-color: #606060; "  // Darker color for more prominence
+		"    margin: 0px; "
+		"    padding: 2px 2px; "
+		"}" );
+	return separator;
+}
+
+void StatusBarWidget::setHelpText( const QString &text ) {
+	if ( m_helpLabel ) {
+		m_helpLabel->setText( text );
+	}
+}
+
+void StatusBarWidget::clearHelpText() {
+	if ( m_helpLabel ) {
+		m_helpLabel->setText( "Press F1 for Help" );
+	}
+}
+
+void StatusBarWidget::clearViewportInfo() {
+	// Clear all viewport-related labels when mouse leaves viewport
+	// They should be EMPTY, not showing "0" or default values
+	m_gridSizeLabel->setText( "" );
+	m_zoomLabel->setText( "" );
+	m_cameraPosLabel->setText( "" );
+	m_modelViewportWidthHeight->setText( "" );
 }
