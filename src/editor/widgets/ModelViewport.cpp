@@ -42,9 +42,9 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_renderInstance( nullptr ),
 	  m_animationPlaying( false ),
 	  m_animationTimer( nullptr ),
-	  m_cameraPitch( 0.25f ), // ~14° tilt down - matches CLI default
+	  m_cameraPitch( 0.33f ), // ~14° tilt down - matches CLI default
 	  m_cameraYaw( 0.0f ), // Straight front view - model faces camera
-	  m_cameraDistance( 33.0f ), // ~33 units distance - shows full model
+	  m_cameraDistance( 35.0f ), // ~25 units distance - shows full model
 	  m_cameraTarget{ 0.0f, 0.0f, 0.0f },
 	  m_showGrid( true ),
 	  m_wireframeMode( false ),
@@ -111,7 +111,7 @@ void ModelViewport::initializeGL( void ) {
 	}
 
 	// Light cyan/blue background
-	glClearColor( 0.13f, 0.14f, 0.20f, 1.0f );
+	glClearColor( 0.55f, 0.60f, 0.65f, 1.0f );
 
 	glEnable( GL_DEPTH_TEST );
 	glDepthFunc( GL_LESS );
@@ -126,9 +126,9 @@ void ModelViewport::initializeGL( void ) {
 		qCritical() << "ERROR: Failed to create Qt rendering instance!";
 	}
 
-	r_grid_init( 1000.0f, 10.0f );
-	r_ground_init( 1000.0f );
-	r_axes_init( 100.0f );
+	r_grid_init( 100.0f, 5.0f );
+	r_ground_init( 100.0f );
+	r_axes_init( 1000.0f );
 }
 
 void ModelViewport::resizeGL( int width, int height ) {
@@ -421,7 +421,7 @@ void ModelViewport::frameModel() {
 	if ( m_cameraDistance < 1.0f ) m_cameraDistance = 1.0f;
 	if ( m_cameraDistance > 100.0f ) m_cameraDistance = 100.0f;
 
-	m_cameraPitch = 0.3f; // ~17 degrees - look down at model
+	m_cameraPitch = 0.45f; // ~17 degrees - look down at model
 	m_cameraYaw = 0.785f; // 45 degrees - 3/4 view angle
 
 	// Trigger repaint to show new framing
