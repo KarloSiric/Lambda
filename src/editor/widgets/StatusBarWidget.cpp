@@ -55,7 +55,7 @@ StatusBarWidget::StatusBarWidget( QWidget *parent )
 	  m_attachmentCount( 0 ),
 	  m_eventCount( 0 ) {
 	setSizeGripEnabled( false ); // Disable size grip to prevent cutoff
-	setContentsMargins( 4, 0, 4, 0 ); // Add padding on left/right edges
+	setContentsMargins( 12, -1, 12, -1 ); // Add padding on left/right edges
 	setupUI();
 	applyStyles();
 }
@@ -78,15 +78,15 @@ void StatusBarWidget::createModelInfoWidgets() {
 
 	// Essential model statistics (most commonly needed at a glance)
 	m_vertexCountLabel = new QLabel( "Verts: --" );
-	m_vertexCountLabel->setToolTip( "Vertex count" );
+	m_vertexCountLabel->setToolTip( "Model/Object Vertex Count" );
 	addWidget( m_vertexCountLabel );
 
 	m_triangleCountLabel = new QLabel( "Tris: --" );
-	m_triangleCountLabel->setToolTip( "Triangle count" );
+	m_triangleCountLabel->setToolTip( "Model/Object Triangle count" );
 	addWidget( m_triangleCountLabel );
 
 	m_boneCountLabel = new QLabel( "Bones: --" );
-	m_boneCountLabel->setToolTip( "Bone count" );
+	m_boneCountLabel->setToolTip( "Model/Object Bone count" );
 	addWidget( m_boneCountLabel );
 
 	m_fileSizeLabel = new QLabel( "Size: --" );
@@ -226,7 +226,7 @@ void StatusBarWidget::applyStyles() {
 		"    border-left-color: #ffffff; "
 		"    border-right-color: #808080; "
 		"    border-bottom-color: #808080; "
-		"    padding: 2px 6px; "
+		"    padding: 1px 2px; "
 		"} "
 		"QStatusBar::item { border: none; padding: 1px; }" );
 
@@ -237,7 +237,7 @@ void StatusBarWidget::applyStyles() {
 		"   color: #101010; "
 		"   background-color: #c0c0c0; "
 		// "   border: 2px solid #9A9999; "
-		"   border: 0.5px solid #959595; "
+		"   border: 1px solid #959595; "
 		"}";
 
 	m_filePathLabel->setStyleSheet( cellStyle );
