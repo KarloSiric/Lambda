@@ -1089,9 +1089,11 @@ void render_loop( void ) {
 				glm_rotate( Ry, model_rotation_y, (vec3){ 0, 1, 0 } );
 				glm_mat4_mul( M, Ry, M );
 
-				// 3) NO rotation needed - Half-Life models face -Y (backward) in HL space
-				// After shader axis remap: HL -Y → GL +Z (toward camera)
-				// Model already faces the camera correctly without rotation!
+				// 3) Rotate model to face camera (blue Z axis)
+				// Half-Life models face +Y after axis remap, need -90° Y rotation to face +Z
+				mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
+				glm_rotate( RyFace, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
+				glm_mat4_mul( M, RyFace, M );
 
 				// 4) Scale LAST because HL units are large
 				mat4 S = GLM_MAT4_IDENTITY_INIT;
@@ -1185,9 +1187,11 @@ void render_model( studiohdr_t *header, unsigned char *data ) {
 	glm_rotate( Ry, model_rotation_y, (vec3){ 0, 1, 0 } );
 	glm_mat4_mul( M, Ry, M );
 
-	// 3) NO rotation needed - Half-Life models face -Y (backward) in HL space
-	// After shader axis remap: HL -Y → GL +Z (toward camera)
-	// Model already faces the camera correctly without rotation!
+	// 3) Rotate model to face camera (blue Z axis)
+	// Half-Life models face +Y after axis remap, need -90° Y rotation to face +Z
+	mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
+	glm_rotate( RyFace, -MATH_PI * 0.5f, (vec3){ 0, 1, 0 } );
+	glm_mat4_mul( M, RyFace, M );
 
 	// 4) Scale LAST because HL units are large
 	mat4 S = GLM_MAT4_IDENTITY_INIT;

@@ -1776,9 +1776,10 @@ void MainWindow::createViewportContainer() {
 	tabWidget->setDocumentMode(false);   // Keep traditional tabs for classic look
 
 	// Apply classic tab styling with better X close buttons
+	// Compact tabs like BSP editor
 	QString tabStyle =
 		"QTabWidget::pane { "
-		"    border: 2px solid; "
+		"    border: 1px solid; "
 		"    border-top-color: #808080; "
 		"    border-left-color: #808080; "
 		"    border-right-color: #ffffff; "
@@ -1788,31 +1789,32 @@ void MainWindow::createViewportContainer() {
 		"} "
 		"QTabBar::tab { "
 		"    background-color: #c0c0c0; "
-		"    border: 2px solid; "
+		"    border: 1px solid; "
 		"    border-top-color: #ffffff; "
 		"    border-left-color: #ffffff; "
 		"    border-right-color: #808080; "
 		"    border-bottom: none; "
-		"    padding: 6px 20px 6px 10px; "  // Extra padding for close button
-		"    margin-right: 2px; "
+		"    padding: 2px 14px 2px 6px; "
+		"    margin-right: 1px; "
 		"    color: #000000; "
-		"    min-width: 80px; "
-		"    max-width: 200px; "
-		"    min-height: 24px; "  // Fixed height
-		"    max-height: 24px; "  // Fixed height
+		"    font-size: 10px; "
+		"    min-width: 50px; "
+		"    max-width: 150px; "
+		"    min-height: 16px; "
+		"    max-height: 16px; "
 		"} "
-		"QTabBar::tab:first { "  // First tab same size as others
-		"    padding: 6px 20px 6px 10px; "  // Same padding as others
-		"    min-width: 80px; "
-		"    min-height: 24px; "  // Fixed height
-		"    max-height: 24px; "  // Fixed height
+		"QTabBar::tab:first { "
+		"    padding: 2px 14px 2px 6px; "
+		"    min-width: 50px; "
+		"    min-height: 16px; "
+		"    max-height: 16px; "
 		"} "
 		"QTabBar::tab:selected { "
-		"    background-color: #0a246a; "  // Classic blue for active tab
+		"    background-color: #0a246a; "
 		"    border-top-color: #0d2d85; "
 		"    border-left-color: #0d2d85; "
 		"    border-right-color: #081d55; "
-		"    border-bottom: 2px solid #0a246a; "
+		"    border-bottom: 1px solid #0a246a; "
 		"    color: #ffffff; "
 		"    font-weight: bold; "
 		"} "
@@ -1821,17 +1823,17 @@ void MainWindow::createViewportContainer() {
 		"} "
 		"QTabBar::close-button { "
 		"    subcontrol-position: center right; "
-		"    width: 14px; "
-		"    height: 14px; "
-		"    margin-right: 3px; "
+		"    width: 10px; "
+		"    height: 10px; "
+		"    margin-right: 2px; "
 		"    background-color: transparent; "
 		"    border: none; "
-		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiPjxwYXRoIGQ9Ik0zLDMgTDExLDExIE0zLDExIEwxMSwzIiBzdHJva2U9IiM2MDYwNjAiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==); "
+		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiPjxwYXRoIGQ9Ik0yLDIgTDgsOCBNMiw4IEw4LDIiIHN0cm9rZT0iIzYwNjA2MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=); "
 		"} "
 		"QTabBar::close-button:hover { "
 		"    background-color: #d04040; "
 		"    border: 1px solid #a03030; "
-		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiPjxwYXRoIGQ9Ik0zLDMgTDExLDExIE0zLDExIEwxMSwzIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPjwvc3ZnPg==); "
+		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiPjxwYXRoIGQ9Ik0yLDIgTDgsOCBNMiw4IEw4LDIiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=); "
 		"}";
 
 	tabWidget->setStyleSheet(tabStyle);
@@ -2333,16 +2335,25 @@ void MainWindow::onStatusBarUpdate() {
 	m_statusBar->setFPS((int)m_lastFps);
 	m_statusBar->setFrameTime(m_lastFps > 0 ? 1000.0f / m_lastFps : 0.0f);
 
-	// Update camera position
-	float camX, camY, camZ;
-	viewport->getCameraPosition(camX, camY, camZ);
-	m_statusBar->setCameraPosition(camX, camY, camZ);
+	// Update mouse position in viewport (window coordinates)
+	QPoint globalPos = QCursor::pos();
+	QPoint localPos = viewport->mapFromGlobal(globalPos);
 
-	// Update zoom level (camera distance)
-	m_statusBar->setZoomLevel(100.0f);  // Default zoom percentage
+	// Only show valid coordinates when mouse is inside the viewport
+	if (viewport->rect().contains(localPos)) {
+		m_statusBar->setCameraPosition((float)localPos.x(), (float)localPos.y(), 0.0f);
+	} else {
+		m_statusBar->setCameraPosition(0.0f, 0.0f, 0.0f);
+	}
 
-	// Update viewport resolution
-	m_statusBar->setResolution(viewport->width(), viewport->height());
+	// Update zoom level based on camera distance
+	float defaultDistance = 50.0f;  // Default camera distance
+	float currentDistance = viewport->getCameraDistance();
+	float zoomPercent = (currentDistance > 0.0f) ? (defaultDistance / currentDistance) * 100.0f : 100.0f;
+	m_statusBar->setZoomLevel(zoomPercent);
+
+	// Update viewport size (uses the visible label)
+	m_statusBar->setViewportSize(viewport->width(), viewport->height());
 
 	// Update grid size (default 10)
 	m_statusBar->setGridSize(10.0f);

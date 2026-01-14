@@ -55,7 +55,7 @@ StatusBarWidget::StatusBarWidget( QWidget *parent )
 	  m_attachmentCount( 0 ),
 	  m_eventCount( 0 ) {
 	setSizeGripEnabled( false ); // Disable size grip to prevent cutoff
-	setContentsMargins( 12, -1, 12, -1 ); // Add padding on left/right edges
+	setContentsMargins( 12, 1, 12, 1 ); // Add padding on left/right edges
 	setupUI();
 	applyStyles();
 }
@@ -73,24 +73,29 @@ void StatusBarWidget::createModelInfoWidgets() {
 	// File path with smart truncation
 	m_filePathLabel = new QLabel( "No model" );
 	m_filePathLabel->setMinimumWidth( 150 );
-	m_filePathLabel->setMaximumWidth( 500 );
+	m_filePathLabel->setMaximumWidth( 700 );
 	addWidget( m_filePathLabel );
 
 	// Essential model statistics (most commonly needed at a glance)
+	// Fixed minimum widths prevent layout shifts when values change
 	m_vertexCountLabel = new QLabel( "Verts: --" );
 	m_vertexCountLabel->setToolTip( "Model/Object Vertex Count" );
+	m_vertexCountLabel->setFixedWidth( 90 );
 	addWidget( m_vertexCountLabel );
 
-	m_triangleCountLabel = new QLabel( "Tris: --" );
-	m_triangleCountLabel->setToolTip( "Model/Object Triangle count" );
+	m_triangleCountLabel = new QLabel( "Polys: --" );
+	m_triangleCountLabel->setToolTip( "Model/Object Polygon count" );
+	m_triangleCountLabel->setFixedWidth( 90 );
 	addWidget( m_triangleCountLabel );
 
 	m_boneCountLabel = new QLabel( "Bones: --" );
 	m_boneCountLabel->setToolTip( "Model/Object Bone count" );
+	m_boneCountLabel->setFixedWidth( 85 );
 	addWidget( m_boneCountLabel );
 
 	m_fileSizeLabel = new QLabel( "Size: --" );
 	m_fileSizeLabel->setToolTip( "File size" );
+	m_fileSizeLabel->setFixedWidth( 120 );
 	addWidget( m_fileSizeLabel );
 
 	// Create placeholder widgets for other info (will be hidden but kept for API compatibility)
@@ -120,9 +125,10 @@ void StatusBarWidget::createModelInfoWidgets() {
 }
 
 void StatusBarWidget::createViewInfoWidgets() {
-	// Performance metrics
-	m_fpsLabel = new QLabel( "FPS: 60, 16.7ms" );
-	m_fpsLabel->setToolTip( "Frames per second, frame time ( miliseconds )" );
+	// Performance metrics - FIXED widths prevent layout shifts
+	m_fpsLabel = new QLabel( "FPS: 60" );
+	m_fpsLabel->setToolTip( "Frames per second" );
+	m_fpsLabel->setFixedWidth( 65 );
 	addPermanentWidget( m_fpsLabel );
 
 	m_cpuUsageLabel = new QLabel( );
@@ -131,13 +137,15 @@ void StatusBarWidget::createViewInfoWidgets() {
 
 	m_ramUsageLabel = new QLabel( );
 
-	// Viewport essentials
+	// Viewport essentials - FIXED widths prevent layout shifts
 	m_gridSizeLabel = new QLabel( "Grid: 10" );
 	m_gridSizeLabel->setToolTip( "Grid size" );
+	m_gridSizeLabel->setFixedWidth( 65 );
 	addPermanentWidget( m_gridSizeLabel );
 
 	m_zoomLabel = new QLabel( "Zoom: 100%" );
 	m_zoomLabel->setToolTip( "Zoom level" );
+	m_zoomLabel->setFixedWidth( 120 );
 	addPermanentWidget( m_zoomLabel );
 
 	// Create placeholder widgets for API compatibility (hidden - belong in Inspector/overlays)
@@ -147,13 +155,16 @@ void StatusBarWidget::createViewInfoWidgets() {
 	m_fovLabel = new QLabel();
 	m_playbackSpeedLabel = new QLabel();
 
-	// This is important to add
-	m_cameraPosLabel = new QLabel( "@ 0.53, 0.23 15.23" );
-	m_cameraPosLabel->setToolTip( "Camera Position" );
+	// Mouse/cursor 3D position - FIXED width to prevent layout shifts
+	m_cameraPosLabel = new QLabel( "x: 0, y: 0, z: 0" );
+	m_cameraPosLabel->setToolTip( "Cursor position (3D)" );
+	m_cameraPosLabel->setFixedWidth( 150 );
 	addPermanentWidget( m_cameraPosLabel );
 
-	m_modelViewportWidthHeight = new QLabel( "@ 1520, 950" );
+	// Viewport size - FIXED width to prevent layout shifts
+	m_modelViewportWidthHeight = new QLabel( "@ 0, 0" );
 	m_modelViewportWidthHeight->setToolTip( "Model Viewport Window Resolution" );
+	m_modelViewportWidthHeight->setMinimumWidth( 90 );
 	addPermanentWidget( m_modelViewportWidthHeight );
     
 	m_cameraDistLabel = new QLabel();
@@ -233,11 +244,11 @@ void StatusBarWidget::applyStyles() {
 	// Adding style for the items in the status bar
 	const QString cellStyle =
 		"QLabel { "
-		"   padding: 1px 10px; "
+		"   padding: 0px 6px; "
 		"   color: #101010; "
 		"   background-color: #c0c0c0; "
 		// "   border: 2px solid #9A9999; "
-		"   border: 1px solid #959595; "
+		"   border: 1.5px solid #a9a9a9; "
 		"}";
 
 	m_filePathLabel->setStyleSheet( cellStyle );
@@ -382,7 +393,7 @@ void StatusBarWidget::setModelInfo( const QString &filePath, int vertexCount,
 	m_filePathLabel->setToolTip( filePath ); // Full path always in tooltip
 
 	m_vertexCountLabel->setText( QString( "Verts: %L1" ).arg( vertexCount ) );
-	m_triangleCountLabel->setText( QString( "Tris: %L1" ).arg( triangleCount ) );
+	m_triangleCountLabel->setText( QString( "Polys: %L1" ).arg( triangleCount ) );
 	m_boneCountLabel->setText( QString( "Bones: %1" ).arg( boneCount ) );
 	m_sequenceCountLabel->setText( QString( "Seqs: %1" ).arg( sequenceCount ) );
 	m_textureCountLabel->setText( QString( "Tex: %1" ).arg( textureCount ) );
@@ -450,6 +461,12 @@ void StatusBarWidget::setResolution( int width, int height ) {
 	m_resolutionLabel->setText( QString( "Res: %1x%2" ).arg( width ).arg( height ) );
 }
 
+void StatusBarWidget::setViewportSize( int width, int height ) {
+	m_viewportWidth = width;
+	m_viewportHeight = height;
+	m_modelViewportWidthHeight->setText( QString( "@ %1, %2" ).arg( width ).arg( height ) );
+}
+
 void StatusBarWidget::setFPS( int fps ) {
 	m_currentFPS = fps;
 	m_fpsLabel->setText( QString( "FPS: %1" ).arg( fps ) );
@@ -505,7 +522,8 @@ void StatusBarWidget::setCameraPosition( float x, float y, float z ) {
 	m_cameraX = x;
 	m_cameraY = y;
 	m_cameraZ = z;
-	m_cameraPosLabel->setText( QString( "x %1,y %2,z %3" ).arg( x, 0, 'f', 3 ).arg( y, 0, 'f', 3 ).arg( z, 0, 'f', 3 ) );
+	// Display mouse/cursor position in 3D space
+	m_cameraPosLabel->setText( QString( "x: %1, y: %2, z: %3" ).arg( (int)x ).arg( (int)y ).arg( (int)z ) );
 }
 
 void StatusBarWidget::setFOV( float fov ) {
@@ -577,7 +595,7 @@ void StatusBarWidget::clearModelInfo() {
 	m_filePathLabel->setText( "No model" );
 	m_filePathLabel->setToolTip( "" );
 	m_vertexCountLabel->setText( "Verts: --" );
-	m_triangleCountLabel->setText( "Tris: --" );
+	m_triangleCountLabel->setText( "Polys: --" );
 	m_boneCountLabel->setText( "Bones: --" );
 	m_sequenceCountLabel->setText( "Seqs: --" );
 	m_textureCountLabel->setText( "Tex: --" );
@@ -721,8 +739,6 @@ void StatusBarWidget::showConsoleContextMenu( const QPoint &pos ) {
 
 	QAction *toggleAction = menu.addAction( "Toggle Console" );
 	QAction *clearAction = menu.addAction( "Clear Console" );
-	menu.addSeparator();
-	QAction *logLevelAction = menu.addAction( "Set Log Level..." );
 
 	QAction *selected = menu.exec( m_consoleToggle->mapToGlobal( pos ) );
 	if ( selected == toggleAction ) {

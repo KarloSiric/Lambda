@@ -50,6 +50,7 @@ public:
     void setFPS(int fps);
     void setFrameTime(float milliseconds);
     void setResolution(int width, int height);
+    void setViewportSize(int width, int height);
     void setCameraPosition(float x, float y, float z);
     void setFOV(float fov);
     void setZoomLevel(float zoom);

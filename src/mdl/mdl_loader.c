@@ -860,7 +860,7 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 	if ( model->header->numbodyparts == 0 ) {
 		if ( model->header->numtextures > 0 ) {
 			// This is a texture-only MDL file (like fungust.mdl or scientist01t.mdl)
-			CONSOLE_ERROR( "Texture-only MDL file - load the main model instead" );
+			CONSOLE_ERROR( "Texture-only MDL file '%s' - load the main model instead", model_path );
 			free( model->data );
 			free( model );
 			return MDL_INFO_TEXTURE_MODEL_FILE;

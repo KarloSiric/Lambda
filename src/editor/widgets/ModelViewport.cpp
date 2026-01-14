@@ -191,9 +191,11 @@ void ModelViewport::paintGL() {
 	glm_scale( S, (vec3){ modelScale, modelScale, modelScale } );
 	glm_mat4_mul( S, modelMatrix, modelMatrix );
 
-	// Step 2: NO rotation needed - Half-Life models face -Y (backward) in HL space
-	// After shader axis remap: HL -Y → GL +Z (toward camera)
-	// Model already faces the camera correctly without rotation!
+	// Step 2: Rotate model to face camera (blue Z axis)
+	// Half-Life models face +Y after axis remap, need -90° Y rotation to face +Z
+	mat4 RyFace = GLM_MAT4_IDENTITY_INIT;
+	glm_rotate( RyFace, -GLM_PI * 0.5f, (vec3){ 0, 1, 0 } );
+	glm_mat4_mul( RyFace, modelMatrix, modelMatrix );
 
 	// Step 3: Ground alignment - translate model up so feet touch Y=0
 	// Use sequence bounding box bbmin.z (HL Z = up, becomes GL Y)
@@ -417,6 +419,10 @@ void ModelViewport::getCameraPosition( float &x, float &y, float &z ) const {
 	x = m_cameraTarget[0] + dist * cosf( pitch ) * sinf( yaw );
 	y = m_cameraTarget[1] + dist * sinf( pitch );
 	z = m_cameraTarget[2] + dist * cosf( pitch ) * cosf( yaw );
+}
+
+float ModelViewport::getCameraDistance() const {
+	return m_cameraDistance;
 }
 
 int ModelViewport::getVertexCount() const {

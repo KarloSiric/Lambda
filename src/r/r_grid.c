@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #define GRID_SIZE 50         // Grid extends 50 units in each direction
-#define GRID_SPACING 1.0f    // 1 unit between grid lines
+#define GRID_SPACING 0.5f    // 0.5 units between grid lines (finer grid)
 
 static GLuint grid_vao = 0;
 static GLuint grid_vbo = 0;
@@ -259,19 +259,20 @@ void r_ground_draw( mat4 view, mat4 projection, float ground_y ) {
 
 void r_axes_init( float size ) {
 	// 3 lines: X (red), Y (green), Z (blue)
+	// Each line extends in both directions: -size to +size
 	// Each line: 2 vertices * (3 pos + 3 color) = 6 floats per vertex
 	float vertices[] = {
-		// X axis - RED
-		0.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // Origin
-		size, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // +X direction
+		// X axis - RED (bidirectional)
+		-size, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // -X end
+		 size, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,  // +X end
 
-		// Y axis - GREEN
-		0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // Origin
-		0.0f, size, 0.0f,  0.0f, 1.0f, 0.0f,  // +Y direction
+		// Y axis - GREEN (bidirectional)
+		0.0f, -size, 0.0f,  0.0f, 1.0f, 0.0f,  // -Y end
+		0.0f,  size, 0.0f,  0.0f, 1.0f, 0.0f,  // +Y end
 
-		// Z axis - BLUE
-		0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f,  // Origin
-		0.0f, 0.0f, size,  0.0f, 0.0f, 1.0f   // +Z direction
+		// Z axis - BLUE (bidirectional)
+		0.0f, 0.0f, -size,  0.0f, 0.0f, 1.0f,  // -Z end
+		0.0f, 0.0f,  size,  0.0f, 0.0f, 1.0f   // +Z end
 	};
 
 	glGenVertexArrays( 1, &axes_vao );
