@@ -2049,8 +2049,8 @@ void MainWindow::createDocks() {
 	setDockNestingEnabled(false);  // Cleaner separation
 
 	// Set initial dock sizes - inspector wider for tab panels, console taller for logs
-	resizeDocks({rightDock}, {650}, Qt::Horizontal);
-	resizeDocks({bottomDock}, {350}, Qt::Vertical);
+	resizeDocks({rightDock}, {600}, Qt::Horizontal);
+	resizeDocks({bottomDock}, {250}, Qt::Vertical);
 
 	// Create status bar widget
 	m_statusBar = new StatusBarWidget(this);

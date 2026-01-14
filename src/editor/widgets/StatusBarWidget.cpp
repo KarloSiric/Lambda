@@ -56,7 +56,7 @@ StatusBarWidget::StatusBarWidget( QWidget *parent )
 	  m_attachmentCount( 0 ),
 	  m_eventCount( 0 ) {
 	setSizeGripEnabled( false ); // Disable size grip to prevent cutoff
-	setContentsMargins( 12, 1, 12, 1 ); // Add padding on left/right edges
+	setContentsMargins( 12, -2, 12, -1 ); // Add padding on left/right edges
 	setupUI();
 	applyStyles();
 }
@@ -145,13 +145,13 @@ void StatusBarWidget::createViewInfoWidgets() {
 	m_ramUsageLabel = new QLabel();
 
 	// Viewport essentials - Empty by default
-	m_gridSizeLabel = new QLabel();
+	m_gridSizeLabel = new QLabel( );
 	m_gridSizeLabel->setToolTip( "Grid size" );
 	m_gridSizeLabel->setFixedWidth( 65 );
 	addPermanentWidget( m_gridSizeLabel );
 	addPermanentWidget( createSeparator() );
 
-	m_zoomLabel = new QLabel();
+	m_zoomLabel = new QLabel( );
 	m_zoomLabel->setToolTip( "Zoom level" );
 	m_zoomLabel->setFixedWidth( 120 );
 	addPermanentWidget( m_zoomLabel );
@@ -582,8 +582,10 @@ void StatusBarWidget::setFOV( float fov ) {
 void StatusBarWidget::setZoomLevel( float zoom ) {
 	m_zoom = zoom;
 	// Only show if zoom is valid (non-zero)
+	// Display as multiplier (e.g., 1.23 instead of 123)
 	if ( zoom > 0.0f ) {
-		m_zoomLabel->setText( QString( "Zoom: %1" ).arg( zoom, 0, 'f', 2 ) );
+		float multiplier = zoom / 100.0f;  // Convert to multiplier
+		m_zoomLabel->setText( QString( "Zoom: %1" ).arg( multiplier, 0, 'f', 2 ) );
 	} else {
 		m_zoomLabel->setText( "" );
 	}
@@ -849,12 +851,12 @@ QWidget* StatusBarWidget::createSeparator() {
 	separator->setFrameShadow( QFrame::Sunken );
 	separator->setFixedWidth( 1 );  // Thicker separator (3px instead of 2px)
 	// Full-height separator with no margin (like J.A.C.K editor)
-	separator->setContentsMargins( 0, 0, 0, 0 );
+	separator->setContentsMargins( 10, 0, 10, 0 );
 	separator->setStyleSheet(
 		"QFrame { "
 		"    background-color: #606060; "  // Darker color for more prominence
-		"    margin: 0px; "
-		"    padding: 2px 2px; "
+		"    margin: 0px 0px; "
+		"    padding: 0px; "
 		"}" );
 	return separator;
 }
