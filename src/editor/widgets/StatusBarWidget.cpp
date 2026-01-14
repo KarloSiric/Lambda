@@ -73,16 +73,8 @@ void StatusBarWidget::createModelInfoWidgets() {
 	// File path with smart truncation
 	m_filePathLabel = new QLabel( "No model" );
 	m_filePathLabel->setMinimumWidth( 150 );
-	m_filePathLabel->setMaximumWidth( 750 );
+	m_filePathLabel->setMaximumWidth( 500 );
 	addWidget( m_filePathLabel );
-
-	// // Copy path button
-	// m_copyPathButton = new QPushButton();
-	// m_copyPathButton->setText( "📋" );
-	// m_copyPathButton->setFixedSize( 20, 20 );
-	// m_copyPathButton->setToolTip( "Copy full path to clipboard" );
-	// connect( m_copyPathButton, &QPushButton::clicked, this, &StatusBarWidget::onCopyFilePathClicked );
-	// addWidget( m_copyPathButton );
 
 	// Essential model statistics (most commonly needed at a glance)
 	m_vertexCountLabel = new QLabel( "Verts: --" );
@@ -241,11 +233,11 @@ void StatusBarWidget::applyStyles() {
 	// Adding style for the items in the status bar
 	const QString cellStyle =
 		"QLabel { "
-		"   padding: 2px 5px; "
+		"   padding: 1px 10px; "
 		"   color: #101010; "
 		"   background-color: #c0c0c0; "
 		// "   border: 2px solid #9A9999; "
-		"   border: 0.5px solid #808080; "
+		"   border: 0.5px solid #959595; "
 		"}";
 
 	m_filePathLabel->setStyleSheet( cellStyle );
@@ -513,7 +505,7 @@ void StatusBarWidget::setCameraPosition( float x, float y, float z ) {
 	m_cameraX = x;
 	m_cameraY = y;
 	m_cameraZ = z;
-	m_cameraPosLabel->setText( QString( "Cam: %1,%2,%3" ).arg( x, 0, 'f', 1 ).arg( y, 0, 'f', 1 ).arg( z, 0, 'f', 1 ) );
+	m_cameraPosLabel->setText( QString( "x %1,y %2,z %3" ).arg( x, 0, 'f', 3 ).arg( y, 0, 'f', 3 ).arg( z, 0, 'f', 3 ) );
 }
 
 void StatusBarWidget::setFOV( float fov ) {
