@@ -2320,10 +2320,10 @@ void MainWindow::onStatusBarUpdate() {
 		return;
 	}
 
-	m_statusBar->setFPS( (int)viewport->getCurrentFps() );
+    float fps = viewport->getCurrentFps();
 
 	// Update FPS display (always shown)
-	m_statusBar->setFPS( (int)m_lastFps );
+	m_statusBar->setFPS( (int)fps );
 
 	// Check if mouse is inside the viewport
 	QPoint globalPos = QCursor::pos();

@@ -872,10 +872,11 @@ void StatusBarWidget::clearHelpText() {
 }
 
 void StatusBarWidget::clearViewportInfo() {
-	// Clear all viewport-related labels when mouse leaves viewport
-	// They should be EMPTY, not showing "0" or default values
+    // @Note( Karlo )
+	//         Clear all viewport-related labels when mouse leaves viewport
+	//         They should be EMPTY, not showing "0" or default values
+
 	m_gridSizeLabel->setText( "" );
 	m_zoomLabel->setText( "" );
 	m_cameraPosLabel->setText( "" );
-	m_modelViewportWidthHeight->setText( "" );
 }

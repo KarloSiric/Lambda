@@ -63,7 +63,9 @@ ModelViewport::ModelViewport( QWidget *parent )
 	m_animationTimer->setInterval( 16 );
 
 	connect( m_animationTimer, &QTimer::timeout, this, &ModelViewport::onAnimationTick );
-
+    
+    m_animationTimer->start();
+    
 	//  Look at the origin
 	math_vec3_t target = { 0.0f, 0.0f, 0.0f };
 
@@ -242,7 +244,9 @@ void ModelViewport::paintGL() {
     }       
 }
 
-void ModelViewport::onAnimationTick() {
+void ModelViewport::onAnimationTick() 
+{ 
+    update(); 
 }
 
 
