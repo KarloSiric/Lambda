@@ -28,27 +28,34 @@
 #include "util_messages.h"
 #include "util_console.h"
 #include <QDebug>
+#include <QtCore/qdatetime.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlogging.h>
 #include <QtCore/qnamespace.h>
+#include <QtCore/qobject.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qstringview.h>
+#include <QtCore/qtypes.h>
 #include <cmath>
 
 ModelViewport::ModelViewport( QWidget *parent )
 	: QOpenGLWidget( parent ),
 	  m_model( nullptr ),
-	  m_statusBar( nullptr ),
 	  m_renderInstance( nullptr ),
 	  m_animationPlaying( false ),
 	  m_animationTimer( nullptr ),
-	  m_cameraPitch( 0.33f ), // ~14° tilt down - matches CLI default
-	  m_cameraYaw( 0.0f ), // Straight front view - model faces camera
-	  m_cameraDistance( 35.0f ), // ~25 units distance - shows full model
-	  m_cameraTarget{ 0.0f, 0.0f, 0.0f },
-	  m_showGrid( true ),
-	  m_wireframeMode( false ),
-	  m_groundHeight( 0.0f ) {
+	  m_cameraPitch( 0.33f ),
+	  m_cameraYaw( 0.0f ), // ~14° tilt down - matches CLI default
+	  m_cameraDistance( 35.0f ), // Straight front view - model faces camera
+	  m_cameraTarget{ 0.0f, 0.0f, 0.0f }, // ~25 units distance - shows full model
+	  m_frameCount( 0 ),
+	  m_lastFpsTime( 0 ),
+	  m_currentFps( 0.0f ),
+	  m_showGrid( true ), 
+      m_wireframeMode( false ),
+      m_groundHeight( 0.0f ),
+      m_statusBar( nullptr )
+      {
 	mdl_animation_init( &m_animState );
 
 	// Create the new animationTimer so 60 fps ~16.66 ms ~16 ms
@@ -111,7 +118,7 @@ void ModelViewport::initializeGL( void ) {
 	}
 
 	// Light cyan/blue background
-	glClearColor( 0.55f, 0.60f, 0.65f, 1.0f );
+	glClearColor( 0.45f, 0.55f, 0.60f, 1.0f );
 
 	glEnable( GL_DEPTH_TEST );
 	glDepthFunc( GL_LESS );
@@ -217,10 +224,35 @@ void ModelViewport::paintGL() {
 	if ( m_renderInstance && m_model && m_model->header && m_model->data ) {
 		r_qt_render_with_matrices( m_renderInstance, m_viewMatrix, m_projMatrix, modelMatrix );
 	}
+    
+    // @Note( Karlo ): Adding fps calculation
+    m_frameCount++;
+    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+    
+    if ( m_lastFpsTime == 0) {
+        m_lastFpsTime = currentTime;
+    }
+    
+    qint64 elapsed = currentTime - m_lastFpsTime;
+    
+    if ( elapsed >= 1000 ) {
+        m_currentFps = static_cast<float>( m_frameCount ) * 1000.0f / static_cast<float>( elapsed );
+        m_frameCount = 0;
+        m_lastFpsTime = currentTime;      
+    }       
 }
 
 void ModelViewport::onAnimationTick() {
 }
+
+
+float ModelViewport::getCurrentFps() const
+{ 
+    return m_currentFps; 
+}
+
+
+
 
 void ModelViewport::mousePressEvent( QMouseEvent *event ) {
 	// @Note: here we are adding button mouse support

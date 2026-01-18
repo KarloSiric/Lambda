@@ -843,15 +843,17 @@ void StatusBarWidget::showMemoryContextMenu( const QPoint &pos ) {
 
 QWidget* StatusBarWidget::createSeparator() {
 	QFrame* separator = new QFrame( this );
-	separator->setFrameShape( QFrame::VLine );
-	separator->setFrameShadow( QFrame::Sunken );
-	separator->setFixedWidth( 1 );  // Thicker separator (3px instead of 2px)
-	// Full-height separator with no margin (like J.A.C.K editor)
-	separator->setContentsMargins( 10, 0, 10, 0 );
+	separator->setFrameShape( QFrame::NoFrame );  // Let stylesheet handle everything
+	separator->setFrameShadow( QFrame::Plain );
+	separator->setFixedWidth( 3 );  // 3px total width for the groove
+	separator->setContentsMargins( 0, 0, 0, 0 );
+	// Classic Windows groove: dark line | light line | middle (creates depth)
 	separator->setStyleSheet(
 		"QFrame { "
-		"    background-color: #606060; "  // Darker color for more prominence
-		"    margin: 0px 0px; "
+		"    background-color: #c0c0c0; "
+		"    border-left: 1px solid #404040; "    // Dark shadow
+		"    border-right: 1px solid #ffffff; "   // Light highlight
+		"    margin: 0px; "
 		"    padding: 0px; "
 		"}" );
 	return separator;

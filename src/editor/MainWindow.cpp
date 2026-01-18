@@ -111,9 +111,11 @@ MainWindow::MainWindow( QWidget *parent )
 	setupViewports();
 
 	// Set up real-time status bar update timer (60 Hz)
-	m_statusUpdateTimer = new QTimer(this);
-	m_statusUpdateTimer->setInterval(16);  // ~60 FPS
-	connect(m_statusUpdateTimer, &QTimer::timeout, this, &MainWindow::onStatusBarUpdate);
+	m_statusUpdateTimer = new QTimer( this );
+	// Setting the timer update interval time to be 100 ms and not 16.7 like before
+	// @Note: Improvement on performance for re-rendering the status bar text update
+	m_statusUpdateTimer->setInterval( 100 ); // ~10 FPS
+	connect( m_statusUpdateTimer, &QTimer::timeout, this, &MainWindow::onStatusBarUpdate );
 	m_statusUpdateTimer->start();
 
 	// Initialize FPS tracking
@@ -131,7 +133,6 @@ void MainWindow::setupMenus() {
 	createBonesMenu();
 	createSequencesMenu();
 	createTexturesMenu();
-	// createToolsMenu();
 	createDebugMenu();
 	createWindowMenu();
 	createHelpMenu();
@@ -1134,13 +1135,13 @@ void MainWindow::createFileMenu() {
 
 	// New Tab - Opens a new empty tab for loading another model
 	QAction *newTabAction = fileMenu->addAction( "New Tab" );
-	newTabAction->setShortcut(QKeySequence("Ctrl+T"));
+	newTabAction->setShortcut( QKeySequence( "Ctrl+T" ) );
 	connect( newTabAction, &QAction::triggered, this, &MainWindow::onNewTab );
 
 	fileMenu->addSeparator();
 
 	QAction *openAction = fileMenu->addAction( "Open Model" );
-	openAction->setShortcut(QKeySequence::Open);  // Ctrl+O
+	openAction->setShortcut( QKeySequence::Open ); // Ctrl+O
 	connect( openAction, &QAction::triggered, this, &MainWindow::onOpenModel );
 	QMenu *recentMenu = fileMenu->addMenu( "Open recent" );
 	recentMenu->addAction( "barney.mdl" );
@@ -1728,8 +1729,8 @@ void MainWindow::createWindowMenu() {
 
 	// Tab Management
 	QAction *newTabAction = winMenu->addAction( "New Tab" );
-	newTabAction->setShortcut(QKeySequence("Ctrl+T"));
-	connect(newTabAction, &QAction::triggered, this, &MainWindow::onNewTab);
+	newTabAction->setShortcut( QKeySequence( "Ctrl+T" ) );
+	connect( newTabAction, &QAction::triggered, this, &MainWindow::onNewTab );
 
 	winMenu->addSeparator();
 
@@ -1752,10 +1753,10 @@ void MainWindow::createHelpMenu() {
 
 void MainWindow::createViewportContainer() {
 	// Create container widget with frame for viewport panel
-	QWidget *viewportContainer = new QWidget(this);
-	QVBoxLayout *containerLayout = new QVBoxLayout(viewportContainer);
-	containerLayout->setContentsMargins(4, 4, 4, 4);
-	containerLayout->setSpacing(0);
+	QWidget *viewportContainer = new QWidget( this );
+	QVBoxLayout *containerLayout = new QVBoxLayout( viewportContainer );
+	containerLayout->setContentsMargins( 4, 4, 4, 4 );
+	containerLayout->setSpacing( 0 );
 
 	// Apply frame style to container (raised 3D border)
 	viewportContainer->setStyleSheet(
@@ -1766,14 +1767,13 @@ void MainWindow::createViewportContainer() {
 		"    border-left-color: #ffffff; "
 		"    border-right-color: #808080; "
 		"    border-bottom-color: #808080; "
-		"}"
-	);
+		"}" );
 
 	// Create tab widget for multi-model support
-	tabWidget = new QTabWidget(viewportContainer);
-	tabWidget->setTabsClosable(true);    // Enable close buttons
-	tabWidget->setMovable(true);         // Allow tab reordering
-	tabWidget->setDocumentMode(false);   // Keep traditional tabs for classic look
+	tabWidget = new QTabWidget( viewportContainer );
+	tabWidget->setTabsClosable( true ); // Enable close buttons
+	tabWidget->setMovable( true ); // Allow tab reordering
+	tabWidget->setDocumentMode( false ); // Keep traditional tabs for classic look
 
 	// Apply classic tab styling with better X close buttons
 	// Compact tabs like BSP editor
@@ -1836,26 +1836,26 @@ void MainWindow::createViewportContainer() {
 		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiPjxwYXRoIGQ9Ik0yLDIgTDgsOCBNMiw4IEw4LDIiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=); "
 		"}";
 
-	tabWidget->setStyleSheet(tabStyle);
+	tabWidget->setStyleSheet( tabStyle );
 
 	// Connect tab close signal
-	connect(tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::onCloseTab);
+	connect( tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::onCloseTab );
 
 	// Connect tab switch signal (fixes multi-tab rendering bug)
-	connect(tabWidget, &QTabWidget::currentChanged, this, &MainWindow::onTabChanged);
+	connect( tabWidget, &QTabWidget::currentChanged, this, &MainWindow::onTabChanged );
 
 	// Add tab widget to container layout
-	containerLayout->addWidget(tabWidget);
+	containerLayout->addWidget( tabWidget );
 
 	// Set viewport container as central widget (not just tab widget)
-	setCentralWidget(viewportContainer);
+	setCentralWidget( viewportContainer );
 
 	// Create initial tab with empty viewport
-	addViewportTab("Untitled");
+	addViewportTab( "Untitled" );
 
 	// Remove close button from first tab completely (first tab always stays open)
-	tabWidget->tabBar()->setTabButton(0, QTabBar::RightSide, nullptr);
-	tabWidget->tabBar()->setTabButton(0, QTabBar::LeftSide, nullptr);
+	tabWidget->tabBar()->setTabButton( 0, QTabBar::RightSide, nullptr );
+	tabWidget->tabBar()->setTabButton( 0, QTabBar::LeftSide, nullptr );
 }
 
 void MainWindow::createDocks() {
@@ -1890,8 +1890,7 @@ void MainWindow::createDocks() {
 		"QLabel { "
 		"    color: #c0c0c0; "
 		"    border: none; "
-		"}"
-	);
+		"}" );
 
 	rightDock->setWidget( inspectorPanel );
 	addDockWidget( Qt::RightDockWidgetArea, rightDock );
@@ -1913,7 +1912,7 @@ void MainWindow::createDocks() {
 
 	// Create tab widget for Console and Memory
 	QTabWidget *bottomTabs = new QTabWidget();
-	bottomTabs->setDocumentMode(false);  // Classic tabs
+	bottomTabs->setDocumentMode( false ); // Classic tabs
 
 	// Console panel - simple output area (no log filtering)
 	QWidget *consolePanel = new QWidget();
@@ -1934,8 +1933,7 @@ void MainWindow::createDocks() {
 		"    color: #c0c0c0; "
 		"    border: none; "
 		"    padding: 4px; "
-		"}"
-	);
+		"}" );
 
 	// Memory panel
 	QWidget *memoryPanel = new QWidget();
@@ -1950,12 +1948,11 @@ void MainWindow::createDocks() {
 		"QLabel { "
 		"    color: #c0c0c0; "
 		"    border: none; "
-		"}"
-	);
+		"}" );
 
 	// Add tabs
-	bottomTabs->addTab(consolePanel, "Console");
-	bottomTabs->addTab(memoryPanel, "Memory");
+	bottomTabs->addTab( consolePanel, "Console" );
+	bottomTabs->addTab( memoryPanel, "Memory" );
 
 	// Style the tabs to match window tabs (classic with blue active)
 	QString bottomTabStyle =
@@ -1980,7 +1977,7 @@ void MainWindow::createDocks() {
 		"    min-width: 80px; "
 		"} "
 		"QTabBar::tab:selected { "
-		"    background-color: #0a246a; "  // Classic blue for active tab
+		"    background-color: #0a246a; " // Classic blue for active tab
 		"    border-top-color: #0d2d85; "
 		"    border-left-color: #0d2d85; "
 		"    border-right-color: #081d55; "
@@ -1992,7 +1989,7 @@ void MainWindow::createDocks() {
 		"    background-color: #a8a8a8; "
 		"}";
 
-	bottomTabs->setStyleSheet(bottomTabStyle);
+	bottomTabs->setStyleSheet( bottomTabStyle );
 
 	bottomDock->setWidget( bottomTabs );
 	addDockWidget( Qt::BottomDockWidgetArea, bottomDock );
@@ -2037,49 +2034,48 @@ void MainWindow::createDocks() {
 		"}";
 
 	// Inspector dock with prominent border
-	QString inspectorStyle = dockStyle +
-		"QDockWidget > QWidget { "
-		"    background-color: #505050; "
-		"}";
+	QString inspectorStyle = dockStyle + "QDockWidget > QWidget { "
+										 "    background-color: #505050; "
+										 "}";
 
-	rightDock->setStyleSheet(inspectorStyle);
-	bottomDock->setStyleSheet(dockStyle);
+	rightDock->setStyleSheet( inspectorStyle );
+	bottomDock->setStyleSheet( dockStyle );
 
 	// Add spacing between docks and central widget
-	setDockNestingEnabled(false);  // Cleaner separation
+	setDockNestingEnabled( false ); // Cleaner separation
 
 	// Set initial dock sizes - inspector wider for tab panels, console taller for logs
-	resizeDocks({rightDock}, {600}, Qt::Horizontal);
-	resizeDocks({bottomDock}, {250}, Qt::Vertical);
+	resizeDocks( { rightDock }, { 600 }, Qt::Horizontal );
+	resizeDocks( { bottomDock }, { 250 }, Qt::Vertical );
 
 	// Create status bar widget
-	m_statusBar = new StatusBarWidget(this);
-	setStatusBar(m_statusBar);
+	m_statusBar = new StatusBarWidget( this );
+	setStatusBar( m_statusBar );
 
 	// Connect status bar signals to dock visibility
-	connect(m_statusBar, &StatusBarWidget::inspectorToggleRequested, this, [this]() {
+	connect( m_statusBar, &StatusBarWidget::inspectorToggleRequested, this, [this]() {
 		bool visible = !rightDock->isVisible();
-		rightDock->setVisible(visible);
-		m_statusBar->setInspectorVisible(visible);
-	});
+		rightDock->setVisible( visible );
+		m_statusBar->setInspectorVisible( visible );
+	} );
 
-	connect(m_statusBar, &StatusBarWidget::consoleToggleRequested, this, [this, bottomTabs]() {
+	connect( m_statusBar, &StatusBarWidget::consoleToggleRequested, this, [this, bottomTabs]() {
 		bool visible = !bottomDock->isVisible();
-		bottomDock->setVisible(visible);
-		if (visible) {
-			bottomTabs->setCurrentIndex(0);  // Switch to Console tab
+		bottomDock->setVisible( visible );
+		if ( visible ) {
+			bottomTabs->setCurrentIndex( 0 ); // Switch to Console tab
 		}
-		m_statusBar->setConsoleVisible(visible);
-	});
+		m_statusBar->setConsoleVisible( visible );
+	} );
 
-	connect(m_statusBar, &StatusBarWidget::memoryToggleRequested, this, [this, bottomTabs]() {
+	connect( m_statusBar, &StatusBarWidget::memoryToggleRequested, this, [this, bottomTabs]() {
 		bool visible = !bottomDock->isVisible();
-		bottomDock->setVisible(visible);
-		if (visible) {
-			bottomTabs->setCurrentIndex(1);  // Switch to Memory tab
+		bottomDock->setVisible( visible );
+		if ( visible ) {
+			bottomTabs->setCurrentIndex( 1 ); // Switch to Memory tab
 		}
-		m_statusBar->setMemoryVisible(visible);
-	});
+		m_statusBar->setMemoryVisible( visible );
+	} );
 }
 
 void MainWindow::setupTheme( void ) {
@@ -2100,62 +2096,62 @@ void MainWindow::setupToolbars( void ) {
 
 void MainWindow::onOpenModel() {
 	// SAFETY: Ensure tab widget exists
-	if (!tabWidget) {
+	if ( !tabWidget ) {
 		qCritical() << "ERROR: Tab widget is null!";
 		return;
 	}
 
 	// Get current viewport (or create new tab if none exist)
 	ModelViewport *viewport = getCurrentViewport();
-	if (!viewport) {
+	if ( !viewport ) {
 		qDebug() << "No viewport found, creating new tab...";
-		addViewportTab("New Model");
+		addViewportTab( "New Model" );
 		viewport = getCurrentViewport();
 	}
 
 	// SAFETY: Double-check viewport creation succeeded
-	if (!viewport) {
+	if ( !viewport ) {
 		qCritical() << "ERROR: Failed to create viewport!";
-		QMessageBox::critical(this, "Error", "Failed to create viewport. Please restart the application.");
+		QMessageBox::critical( this, "Error", "Failed to create viewport. Please restart the application." );
 		return;
 	}
 
 	// Open file dialog
-	QString filePath = QFileDialog::getOpenFileName(this, "Open Half-Life Model", "", "Half-Life Models (*.mdl)");
+	QString filePath = QFileDialog::getOpenFileName( this, "Open Half-Life Model", "", "Half-Life Models (*.mdl)" );
 
-	if (filePath.isEmpty()) {
+	if ( filePath.isEmpty() ) {
 		qDebug() << "Model loading cancelled by user";
 		return;
 	}
 
 	// SAFETY: Check if file actually exists
-	QFileInfo fileInfo(filePath);
-	if (!fileInfo.exists()) {
+	QFileInfo fileInfo( filePath );
+	if ( !fileInfo.exists() ) {
 		qCritical() << "ERROR: File does not exist:" << filePath;
-		QMessageBox::critical(this, "File Not Found", "The selected file does not exist:\n" + filePath);
+		QMessageBox::critical( this, "File Not Found", "The selected file does not exist:\n" + filePath );
 		return;
 	}
 
 	// SAFETY: Check if it's actually a .mdl file
-	if (fileInfo.suffix().toLower() != "mdl") {
+	if ( fileInfo.suffix().toLower() != "mdl" ) {
 		qCritical() << "ERROR: Not a .mdl file:" << filePath;
-		QMessageBox::critical(this, "Invalid File Type", "Please select a Half-Life model file (.mdl):\n" + filePath);
+		QMessageBox::critical( this, "Invalid File Type", "Please select a Half-Life model file (.mdl):\n" + filePath );
 		return;
 	}
 
 	// Load model in current viewport
-	bool success = viewport->loadModel(filePath);
+	bool success = viewport->loadModel( filePath );
 
-	if (!success) {
-		QMessageBox::critical(this, "Error Loading Model",
-			"Failed to load model. The file may be corrupted or invalid:\n\n" + filePath);
+	if ( !success ) {
+		QMessageBox::critical( this, "Error Loading Model",
+							   "Failed to load model. The file may be corrupted or invalid:\n\n" + filePath );
 		return;
 	}
 
 	// Success! Update tab title to show model name
 	int currentIndex = tabWidget->currentIndex();
-	if (currentIndex >= 0) {
-		tabWidget->setTabText(currentIndex, fileInfo.fileName());
+	if ( currentIndex >= 0 ) {
+		tabWidget->setTabText( currentIndex, fileInfo.fileName() );
 	}
 
 	// Store model info for this tab - get actual values from viewport
@@ -2175,49 +2171,48 @@ void MainWindow::onOpenModel() {
 	info.activeController = "";
 
 	// Update status bar with model info
-	m_statusBar->setModelInfo(filePath, info.vertexCount, info.triangleCount,
-	                          info.boneCount, info.sequenceCount, info.textureCount);
-	m_statusBar->setFileSize(info.fileSize);
-
+	m_statusBar->setModelInfo( filePath, info.vertexCount, info.triangleCount,
+							   info.boneCount, info.sequenceCount, info.textureCount );
+	m_statusBar->setFileSize( info.fileSize );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Tab Management Helper Functions
 // ═══════════════════════════════════════════════════════════════════════════
 
-ModelViewport* MainWindow::createNewViewport() {
+ModelViewport *MainWindow::createNewViewport() {
 	try {
-		ModelViewport *viewport = new ModelViewport(this);
-		if (!viewport) {
+		ModelViewport *viewport = new ModelViewport( this );
+		if ( !viewport ) {
 			qCritical() << "ERROR: Failed to allocate ModelViewport!";
 			return nullptr;
 		}
 		return viewport;
-	} catch (const std::exception &e) {
+	} catch ( const std::exception &e ) {
 		qCritical() << "EXCEPTION creating viewport:" << e.what();
 		return nullptr;
 	}
 }
 
-ModelViewport* MainWindow::getCurrentViewport() {
-	if (!tabWidget) {
+ModelViewport *MainWindow::getCurrentViewport() {
+	if ( !tabWidget ) {
 		qWarning() << "WARNING: tabWidget is null in getCurrentViewport()";
 		return nullptr;
 	}
 
-	if (tabWidget->count() == 0) {
+	if ( tabWidget->count() == 0 ) {
 		qDebug() << "No tabs available";
 		return nullptr;
 	}
 
 	QWidget *widget = tabWidget->currentWidget();
-	if (!widget) {
+	if ( !widget ) {
 		qWarning() << "WARNING: currentWidget() returned null";
 		return nullptr;
 	}
 
-	ModelViewport *viewport = qobject_cast<ModelViewport*>(widget);
-	if (!viewport) {
+	ModelViewport *viewport = qobject_cast<ModelViewport *>( widget );
+	if ( !viewport ) {
 		qWarning() << "WARNING: Current widget is not a ModelViewport!";
 		return nullptr;
 	}
@@ -2225,139 +2220,132 @@ ModelViewport* MainWindow::getCurrentViewport() {
 	return viewport;
 }
 
-int MainWindow::addViewportTab(const QString &title) {
-	if (!tabWidget) {
+int MainWindow::addViewportTab( const QString &title ) {
+	if ( !tabWidget ) {
 		qCritical() << "ERROR: Cannot add tab - tabWidget is null!";
 		return -1;
 	}
 
 	ModelViewport *viewport = createNewViewport();
-	if (!viewport) {
+	if ( !viewport ) {
 		qCritical() << "ERROR: Failed to create viewport for new tab!";
 		return -1;
 	}
 
 	// Connect viewport to status bar for hover updates
-	viewport->setStatusBar(m_statusBar);
+	viewport->setStatusBar( m_statusBar );
 
-	int index = tabWidget->addTab(viewport, title);
-	tabWidget->setCurrentIndex(index);
+	int index = tabWidget->addTab( viewport, title );
+	tabWidget->setCurrentIndex( index );
 	return index;
 }
 
 void MainWindow::onNewTab() {
-	int index = addViewportTab("Untitled");
-	if (index < 0) {
-		QMessageBox::warning(this, "Error", "Failed to create new tab!");
+	int index = addViewportTab( "Untitled" );
+	if ( index < 0 ) {
+		QMessageBox::warning( this, "Error", "Failed to create new tab!" );
 	}
 }
 
-void MainWindow::onCloseTab(int index) {
-	if (!tabWidget) {
+void MainWindow::onCloseTab( int index ) {
+	if ( !tabWidget ) {
 		qWarning() << "WARNING: tabWidget is null in onCloseTab()";
 		return;
 	}
 
-	if (tabWidget->count() <= 1) {
+	if ( tabWidget->count() <= 1 ) {
 		return;
 	}
 
-	if (index < 0 || index >= tabWidget->count()) {
+	if ( index < 0 || index >= tabWidget->count() ) {
 		qWarning() << "WARNING: Invalid tab index:" << index;
 		return;
 	}
 
-	QWidget *widget = tabWidget->widget(index);
-	tabWidget->removeTab(index);
+	QWidget *widget = tabWidget->widget( index );
+	tabWidget->removeTab( index );
 
 	// Remove this tab's model info
-	m_tabModelInfo.remove(index);
+	m_tabModelInfo.remove( index );
 
-	if (widget) {
+	if ( widget ) {
 		widget->deleteLater();
 	}
 }
 
-void MainWindow::onTabChanged(int index) {
+void MainWindow::onTabChanged( int index ) {
 	// WORKAROUND: Reload model data when switching tabs (fixes multi-tab rendering bug)
 	// This is needed because the renderer uses global static variables for model data
 
-	if (!tabWidget) {
+	if ( !tabWidget ) {
 		qWarning() << "WARNING: tabWidget is null in onTabChanged()";
 		return;
 	}
 
-	if (index < 0 || index >= tabWidget->count()) {
+	if ( index < 0 || index >= tabWidget->count() ) {
 		return;
 	}
 
 	// Get the viewport for the new tab
-	ModelViewport *viewport = qobject_cast<ModelViewport*>(tabWidget->widget(index));
+	ModelViewport *viewport = qobject_cast<ModelViewport *>( tabWidget->widget( index ) );
 
-	if (!viewport) {
+	if ( !viewport ) {
 		qWarning() << "WARNING: Widget at index" << index << "is not a ModelViewport!";
 		return;
 	}
 
 	// Update status bar with this tab's model info
-	if (m_tabModelInfo.contains(index)) {
+	if ( m_tabModelInfo.contains( index ) ) {
 		const TabModelInfo &info = m_tabModelInfo[index];
-		m_statusBar->setModelInfo(info.filePath, info.vertexCount, info.triangleCount,
-		                          info.boneCount, info.sequenceCount, info.textureCount);
-		m_statusBar->setFileSize(info.fileSize);
-		m_statusBar->setSequenceInfo(info.currentSequence, info.currentFrame, info.totalFrames);
-		m_statusBar->setBoneName(info.selectedBone);
-		m_statusBar->setControllerName(info.activeController);
+		m_statusBar->setModelInfo( info.filePath, info.vertexCount, info.triangleCount,
+								   info.boneCount, info.sequenceCount, info.textureCount );
+		m_statusBar->setFileSize( info.fileSize );
+		m_statusBar->setSequenceInfo( info.currentSequence, info.currentFrame, info.totalFrames );
+		m_statusBar->setBoneName( info.selectedBone );
+		m_statusBar->setControllerName( info.activeController );
 	} else {
 		// No model loaded in this tab
 		m_statusBar->clearModelInfo();
 	}
 
-	if (viewport->hasModelLoaded()) {
+	if ( viewport->hasModelLoaded() ) {
 		viewport->update();
 	}
 }
 
 void MainWindow::onStatusBarUpdate() {
-	// Calculate FPS
-	m_frameCount++;
-	qint64 elapsed = m_fpsTimer.elapsed();
-	if (elapsed >= 1000) {
-		m_lastFps = (float)m_frameCount * 1000.0f / (float)elapsed;
-		m_frameCount = 0;
-		m_fpsTimer.restart();
-	}
-
 	// Get current viewport
 	ModelViewport *viewport = getCurrentViewport();
-	if (!viewport) {
+	if ( !viewport ) {
 		return;
 	}
 
+	m_statusBar->setFPS( (int)viewport->getCurrentFps() );
+
 	// Update FPS display (always shown)
-	m_statusBar->setFPS((int)m_lastFps);
+	m_statusBar->setFPS( (int)m_lastFps );
 
 	// Check if mouse is inside the viewport
 	QPoint globalPos = QCursor::pos();
-	QPoint localPos = viewport->mapFromGlobal(globalPos);
-	bool mouseInViewport = viewport->rect().contains(localPos);
+	QPoint localPos = viewport->mapFromGlobal( globalPos );
+	bool mouseInViewport = viewport->rect().contains( localPos );
 
-	// Only update viewport-specific info when mouse is inside
-	if (mouseInViewport) {
+	// Viewport size ALWAYS visible (not cursor-dependent)
+	m_statusBar->setViewportSize( viewport->width(), viewport->height() );
+
+	// Only update cursor-dependent info when mouse is inside
+	if ( mouseInViewport ) {
 		// Update mouse position (screen coordinates for now)
-		m_statusBar->setCameraPosition((float)localPos.x(), (float)localPos.y(), 0.0f);
+		m_statusBar->setCameraPosition( (float)localPos.x(), (float)localPos.y(), 0.0f );
 
 		// Update zoom level based on camera distance
 		float defaultDistance = 50.0f;
 		float currentDistance = viewport->getCameraDistance();
-		float zoomPercent = (currentDistance > 0.0f) ? (defaultDistance / currentDistance) * 100.0f : 100.0f;
-		m_statusBar->setZoomLevel(zoomPercent);
-
-		// Update viewport size
-		m_statusBar->setViewportSize(viewport->width(), viewport->height());
+		float zoomPercent = ( currentDistance > 0.0f ) ? ( defaultDistance / currentDistance ) * 100.0f : 100.0f;
+		m_statusBar->setZoomLevel( zoomPercent );
 
 		// Update grid size
-		m_statusBar->setGridSize(10.0f);
+		m_statusBar->setGridSize( 10.0f );
 	}
 	// When mouse leaves viewport, clearViewportInfo() is called via leaveEvent
 }
