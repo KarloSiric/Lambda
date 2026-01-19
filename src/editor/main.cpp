@@ -70,7 +70,6 @@ void printOpenGLInfo() {
 	}
 }
 
-
 void printLoadingSuccess( void ) {
 	CONSOLE_SUCCESS( "Initialization Complete" );
 	console_print_raw( "\n" );
