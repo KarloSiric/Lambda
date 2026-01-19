@@ -21,11 +21,13 @@
  */
 
 #include "MainWindow.h"
+#include "ModelViewport.h"
 #include "theme/ThemeManager.h"
 #include "util_console.h"
 #include "util_logger.h"
 #include <QApplication>
 #include <QWidget>
+#include <QTimer>
 #include <QSurfaceFormat>
 #include <QSysInfo>
 #include <QDateTime>
@@ -37,67 +39,85 @@
 #define LAMBDA_BUILD_TIME __TIME__
 
 // Function to print startup banner - can be called anytime
-  void printStartupBanner() {
-      console_print_raw( "\n" );
-      console_print_raw( "Lambda - Half-Life Model Viewer/Editor\n" );
-      console_print_raw( "Version %s\n", LAMBDA_VERSION );
-      console_print_raw( "\n" );
+void printStartupBanner( void ) {
+	console_print_raw( "\n" );
+	console_print_raw( "Lambda - Half-Life Model Viewer/Editor\n" );
+	console_print_raw( "Version %s\n", LAMBDA_VERSION );
+	console_print_raw( "\n" );
 
-      QDateTime now = QDateTime::currentDateTime();
-      CONSOLE_INFO( "Started: %s", now.toString( "dddd, MMMM d yyyy - hh:mm:ss" ).toUtf8().constData() );
-      CONSOLE_INFO( "Build: %s %s", LAMBDA_BUILD_DATE, LAMBDA_BUILD_TIME );
-      CONSOLE_INFO( "OS: %s %s (%s)",
-          QSysInfo::productType().toUtf8().constData(),
-          QSysInfo::productVersion().toUtf8().constData(),
-          QSysInfo::currentCpuArchitecture().toUtf8().constData() );
-      CONSOLE_INFO( "Kernel: %s %s",
-          QSysInfo::kernelType().toUtf8().constData(),
-          QSysInfo::kernelVersion().toUtf8().constData() );
-      console_print_raw( "\n" );
-  }
+	QDateTime now = QDateTime::currentDateTime();
+	CONSOLE_INFO( "Started: %s", now.toString( "dddd, MMMM d yyyy - hh:mm:ss" ).toUtf8().constData() );
+	CONSOLE_INFO( "Build: %s %s", LAMBDA_BUILD_DATE, LAMBDA_BUILD_TIME );
+	CONSOLE_INFO( "OS: %s %s (%s)",
+				  QSysInfo::productType().toUtf8().constData(),
+				  QSysInfo::productVersion().toUtf8().constData(),
+				  QSysInfo::currentCpuArchitecture().toUtf8().constData() );
+	CONSOLE_INFO( "Kernel: %s %s",
+				  QSysInfo::kernelType().toUtf8().constData(),
+				  QSysInfo::kernelVersion().toUtf8().constData() );
+	console_print_raw( "\n" );
+}
 
-  int main( int argc, char *argv[] ) {
-      // Initialize systems
-      console_init();
+void printOpenGLInfo() {
+	if ( ModelViewport::s_glInfoReady ) {
+		CONSOLE_INFO( "GPU: %s", ModelViewport::s_gpuRenderer.toUtf8().constData() );
+		CONSOLE_INFO( "Vendor: %s", ModelViewport::s_gpuVendor.toUtf8().constData() );
+		CONSOLE_INFO( "OpenGL: %s", ModelViewport::s_glVersion.toUtf8().constData() );
+		CONSOLE_INFO( "GLSL: %s", ModelViewport::s_glslVersion.toUtf8().constData() );
+		console_print_raw( "\n" );
+	}
+}
 
-      t_log_options log_opts = {0};
-      log_opts.console_level = LOG_FATAL;
-      log_opts.use_colors = true;
-      logger_init( &log_opts );
-
-      // OpenGL setup
-      QSurfaceFormat format;
-      format.setVersion( 4, 1 );
-      format.setProfile( QSurfaceFormat::CoreProfile );
-      format.setDepthBufferSize( 24 );
-      format.setStencilBufferSize( 8 );
-      format.setSamples( 4 );
-      QSurfaceFormat::setDefaultFormat( format );
-
-      QApplication app( argc, argv );
-
-      MainWindow window;
-      
-      ThemeManager::applyThemeLight( app );
-
-      // Print startup banner AFTER window exists (so console widget receives it)
-      printStartupBanner();
-
-      window.show();
-
-      int result = app.exec();
-
-      logger_shutdown();
-      console_shutdown();
-
-      return result;
-  }
+void printLoadingSuccess( void ) {
+    
+    CONSOLE_SUCCESS( "Initialization Complete" );
+    console_print_raw( "\n" );
+}
 
 
+int main( int argc, char *argv[] ) {
+	// Initialize systems
+	console_init();
 
+	t_log_options log_opts = { 0 };
+	log_opts.console_level = LOG_FATAL;
+	log_opts.use_colors = true;
+	logger_init( &log_opts );
 
+	QSurfaceFormat format;
+	format.setVersion( 4, 1 );
+	format.setProfile( QSurfaceFormat::CoreProfile );
+	format.setDepthBufferSize( 24 );
+	format.setStencilBufferSize( 8 );
+	format.setSamples( 4 );
+	QSurfaceFormat::setDefaultFormat( format );
+	QApplication app( argc, argv );
 
+	MainWindow window;
 
+	ThemeManager::applyThemeLight( app );
 
+	// Print startup banner AFTER window exists (so console widget receives it)
 
+    // Delayed startup sequence (professional look)
+	QTimer::singleShot( 600, [&]() {
+		printStartupBanner();
 
+		QTimer::singleShot( 400, [&]() {
+			printOpenGLInfo();
+
+			QTimer::singleShot( 300, [&]() {
+                printLoadingSuccess();
+			} );
+		} );
+	} );
+
+	window.show();
+
+	int result = app.exec();
+
+	logger_shutdown();
+	console_shutdown();
+
+	return result;
+}

@@ -38,6 +38,15 @@
 #include <QtCore/qtypes.h>
 #include <cmath>
 
+
+// Static OpenGL info storage
+QString ModelViewport::s_gpuRenderer;
+QString ModelViewport::s_gpuVendor;
+QString ModelViewport::s_glVersion;
+QString ModelViewport::s_glslVersion;
+bool ModelViewport::s_glInfoReady = false;
+
+
 ModelViewport::ModelViewport( QWidget *parent )
 	: QOpenGLWidget( parent ),
 	  m_model( nullptr ),
@@ -51,11 +60,10 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_frameCount( 0 ),
 	  m_lastFpsTime( 0 ),
 	  m_currentFps( 0.0f ),
-	  m_showGrid( true ), 
-      m_wireframeMode( false ),
-      m_groundHeight( 0.0f ),
-      m_statusBar( nullptr )
-      {
+	  m_showGrid( true ),
+	  m_wireframeMode( false ),
+	  m_groundHeight( 0.0f ),
+	  m_statusBar( nullptr ) {
 	mdl_animation_init( &m_animState );
 
 	// Create the new animationTimer so 60 fps ~16.66 ms ~16 ms
@@ -63,9 +71,9 @@ ModelViewport::ModelViewport( QWidget *parent )
 	m_animationTimer->setInterval( 16 );
 
 	connect( m_animationTimer, &QTimer::timeout, this, &ModelViewport::onAnimationTick );
-    
-    m_animationTimer->start();
-    
+
+	m_animationTimer->start();
+
 	//  Look at the origin
 	math_vec3_t target = { 0.0f, 0.0f, 0.0f };
 
@@ -100,25 +108,18 @@ ModelViewport::~ModelViewport() {
 void ModelViewport::initializeGL( void ) {
 	initializeOpenGLFunctions();
 
-	// Print OpenGL info once (first viewport only)
-	static bool s_glInfoPrinted = false;
-	if ( !s_glInfoPrinted ) {
-		s_glInfoPrinted = true;
-
+	if ( !s_glInfoReady ) {
 		const char *vendor = (const char *)glGetString( GL_VENDOR );
 		const char *renderer = (const char *)glGetString( GL_RENDERER );
 		const char *version = (const char *)glGetString( GL_VERSION );
 		const char *glslVersion = (const char *)glGetString( GL_SHADING_LANGUAGE_VERSION );
 
-		console_print( CONSOLE_INFO, "GPU: %s", renderer ? renderer : "Unknown" );
-		console_print( CONSOLE_INFO, "Vendor: %s", vendor ? vendor : "Unknown" );
-		console_print( CONSOLE_INFO, "OpenGL: %s", version ? version : "Unknown" );
-		console_print( CONSOLE_INFO, "GLSL: %s", glslVersion ? glslVersion : "Unknown" );
-		console_print_raw( "\n" );
-		console_print( CONSOLE_SUCCESS, "Initialization complete" );
-		console_print_raw( "\n" );
+		s_gpuVendor = QString::fromUtf8( vendor ? vendor : "Unknown" );
+		s_gpuRenderer = QString::fromUtf8( renderer ? renderer : "Unknown" );
+		s_glVersion = QString::fromUtf8( version ? version : "Unknown" );
+		s_glslVersion = QString::fromUtf8( glslVersion ? glslVersion : "Unknown" );
+		s_glInfoReady = true;
 	}
-
 	// Light cyan/blue background
 	glClearColor( 0.45f, 0.55f, 0.60f, 1.0f );
 
@@ -226,37 +227,31 @@ void ModelViewport::paintGL() {
 	if ( m_renderInstance && m_model && m_model->header && m_model->data ) {
 		r_qt_render_with_matrices( m_renderInstance, m_viewMatrix, m_projMatrix, modelMatrix );
 	}
-    
-    // @Note( Karlo ): Adding fps calculation
-    m_frameCount++;
-    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
-    
-    if ( m_lastFpsTime == 0) {
-        m_lastFpsTime = currentTime;
-    }
-    
-    qint64 elapsed = currentTime - m_lastFpsTime;
-    
-    if ( elapsed >= 1000 ) {
-        m_currentFps = static_cast<float>( m_frameCount ) * 1000.0f / static_cast<float>( elapsed );
-        m_frameCount = 0;
-        m_lastFpsTime = currentTime;      
-    }       
+
+	// @Note( Karlo ): Adding fps calculation
+	m_frameCount++;
+	qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+
+	if ( m_lastFpsTime == 0 ) {
+		m_lastFpsTime = currentTime;
+	}
+
+	qint64 elapsed = currentTime - m_lastFpsTime;
+
+	if ( elapsed >= 1000 ) {
+		m_currentFps = static_cast<float>( m_frameCount ) * 1000.0f / static_cast<float>( elapsed );
+		m_frameCount = 0;
+		m_lastFpsTime = currentTime;
+	}
 }
 
-void ModelViewport::onAnimationTick() 
-{ 
-    update(); 
+void ModelViewport::onAnimationTick() {
+	update();
 }
 
-
-float ModelViewport::getCurrentFps() const
-{ 
-    return m_currentFps; 
+float ModelViewport::getCurrentFps() const {
+	return m_currentFps;
 }
-
-
-
 
 void ModelViewport::mousePressEvent( QMouseEvent *event ) {
 	// @Note: here we are adding button mouse support

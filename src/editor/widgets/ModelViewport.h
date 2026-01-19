@@ -75,6 +75,13 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
     // @Note: For fps getter and setters
     float getCurrentFps() const;
     
+    // OpenGL info storage (for delayed printing)
+    static QString s_gpuRenderer;
+    static QString s_gpuVendor;
+    static QString s_glVersion;
+    static QString s_glslVersion;
+    static bool s_glInfoReady;
+    
 
 	// @Note: Rendering toggles - uses C backend r_draw and r_grid API
 	void setWireframeMode( bool enabled );
