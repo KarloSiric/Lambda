@@ -31,6 +31,8 @@
 #include <QSurfaceFormat>
 #include <QSysInfo>
 #include <QDateTime>
+#include <QDir>
+#include <QStandardPaths>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmainwindow.h>
 
@@ -68,22 +70,36 @@ void printOpenGLInfo() {
 	}
 }
 
+
 void printLoadingSuccess( void ) {
-    
-    CONSOLE_SUCCESS( "Initialization Complete" );
-    console_print_raw( "\n" );
+	CONSOLE_SUCCESS( "Initialization Complete" );
+	console_print_raw( "\n" );
 }
 
-
 int main( int argc, char *argv[] ) {
-	// Initialize systems
+	QApplication app( argc, argv );
+	app.setApplicationName( "Lambda" );
+	app.setOrganizationName( "Lambda" );
+
+	QString appDataPath = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+	QString logDir = appDataPath + "/logs";
+	QDir().mkpath( logDir );
+	QString logFilePath = logDir + "/lambda.log";
+
 	console_init();
 
+	// IMPORTANT @NOTE: logFilePathBytes must stay alive while logger is active
+	QByteArray logFilePathBytes = logFilePath.toUtf8();
+
 	t_log_options log_opts = { 0 };
+	log_opts.file_path = logFilePathBytes.constData();
 	log_opts.console_level = LOG_FATAL;
 	log_opts.use_colors = true;
+	log_opts.max_bytes = 5 * 1024 * 1024; // 5 MB
+	log_opts.max_files = 3;
 	logger_init( &log_opts );
 
+	// 5. OpenGL format setup
 	QSurfaceFormat format;
 	format.setVersion( 4, 1 );
 	format.setProfile( QSurfaceFormat::CoreProfile );
@@ -91,29 +107,30 @@ int main( int argc, char *argv[] ) {
 	format.setStencilBufferSize( 8 );
 	format.setSamples( 4 );
 	QSurfaceFormat::setDefaultFormat( format );
-	QApplication app( argc, argv );
 
+	// 6. Create window
 	MainWindow window;
-
-	ThemeManager::applyThemeLight( app );
-
-	// Print startup banner AFTER window exists (so console widget receives it)
-
-    // Delayed startup sequence (professional look)
-	QTimer::singleShot( 600, [&]() {
+    ThemeManager::applyThemeLight( app );
+ 
+	// Delayed startup sequence (professional look)
+	QTimer::singleShot( 1000, [&]() {
 		printStartupBanner();
 
-		QTimer::singleShot( 400, [&]() {
+		QTimer::singleShot( 700, [&]() {
 			printOpenGLInfo();
+            
+            // Show log file location
+            CONSOLE_INFO( "Log file: %s", logFilePath.toUtf8().constData() );
+            console_print_raw( "\n" );
 
-			QTimer::singleShot( 300, [&]() {
-                printLoadingSuccess();
+			QTimer::singleShot( 400, [&]() {
+				printLoadingSuccess();
 			} );
 		} );
 	} );
 
 	window.show();
-
+    
 	int result = app.exec();
 
 	logger_shutdown();
