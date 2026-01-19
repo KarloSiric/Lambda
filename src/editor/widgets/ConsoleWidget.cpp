@@ -30,6 +30,12 @@ ConsoleWidget::ConsoleWidget( QWidget *parent )
         applyStyles();
 }
 
+ConsoleWidget::~ConsoleWidget() {
+    // DESTRUCTOR
+    
+    
+}
+
 
 void ConsoleWidget::setupUI( void )
 {

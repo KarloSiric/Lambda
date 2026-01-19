@@ -1,7 +1,7 @@
 #ifndef CONSOLEBRIDGE_H
 #define CONSOLEBRIDGE_H 
 
-// Forward declaration
+// Forward declaration, dont need to include 100 lines of code for nothing
 class ConsoleWidget;
 
 namespace ConsoleBridge {

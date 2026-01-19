@@ -42,7 +42,7 @@ endif()
 #   Project Definition
 # ═══════════════════════════════════════════════════════════════════════════
 
-project(Lambda VERSION 0.3.0 LANGUAGES C CXX)
+project(Lambda VERSION 0.7.0 LANGUAGES C CXX)
 
 # Set C standard
 set(CMAKE_C_STANDARD 99)
@@ -293,6 +293,7 @@ file(GLOB SRC_EDITOR CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/src/editor/panels/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/editor/widgets/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/editor/dialogs/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/editor/bridge/*.cpp"
 )
 
 file(GLOB SRC_EDITOR_THEME CONFIGURE_DEPENDS
@@ -441,7 +442,7 @@ if(Qt6_FOUND)
         src/editor/widgets/ModelViewport.cpp
         src/editor/widgets/StatusBarWidget.cpp
         src/editor/widgets/ConsoleWidget.cpp
-        src/editor/widgets/ConsoleBridge.cpp
+        src/editor/bridge/ConsoleBridge.cpp
         
     )
 
@@ -450,7 +451,7 @@ if(Qt6_FOUND)
         src/editor/widgets/ModelViewport.h
         src/editor/widgets/StatusBarWidget.h
         src/editor/widgets/ConsoleWidget.h
-        src/editor/widgets/ConsoleBridge.h
+        src/editor/bridge/ConsoleBridge.h
     )
 
     #
@@ -487,7 +488,7 @@ if(Qt6_FOUND)
         ${CMAKE_SOURCE_DIR}/src/editor/panels
         ${CMAKE_SOURCE_DIR}/src/editor/widgets
         ${CMAKE_SOURCE_DIR}/src/editor/dialogs
-        ${CMAKE_SOURCE_DIR}/src/bridge
+        ${CMAKE_SOURCE_DIR}/src/editor/bridge
         # C backend includes (same as Lambda)
         ${CMAKE_SOURCE_DIR}/src/cl
         ${CMAKE_SOURCE_DIR}/src/r

@@ -21,7 +21,8 @@
  */
 
 #include "MainWindow.h"
-#include "widgets/ModelViewport.h"
+#include "ModelViewport.h"
+#include "ConsoleBridge.h"
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>

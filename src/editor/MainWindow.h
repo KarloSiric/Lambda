@@ -3,7 +3,8 @@
 
 
 #include "ModelViewport.h"
-#include "widgets/StatusBarWidget.h"
+#include "StatusBarWidget.h"
+#include "ConsoleWidget.h"
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QWidget>
