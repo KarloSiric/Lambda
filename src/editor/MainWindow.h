@@ -12,6 +12,7 @@
 #include <QMap>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QtWidgets/qtextedit.h>
 
 
 #define MW_WIDTH 1920
@@ -65,7 +66,6 @@ class MainWindow : public QMainWindow {
 	void createToolbarUpper();
     void createToolbarLower();
 
-
 	void createDocks();
 	void createViewportContainer();
 
@@ -75,6 +75,7 @@ class MainWindow : public QMainWindow {
 	int addViewportTab(const QString &title = "New Model");
 
 	StatusBarWidget *m_statusBar;
+    QTextEdit *m_consoleOutput;
 	QDockWidget *leftDock;
 	QDockWidget *rightDock;
 	QDockWidget *bottomDock;

@@ -38,6 +38,7 @@
 #include <QTabBar>
 #include <QPushButton>
 #include <QLineEdit>
+#include <QtWidgets/qtextedit.h>
 #include <exception>
 #include <QtCore/qcontainerfwd.h>
 #include <QtCore/qnamespace.h>
@@ -1917,23 +1918,25 @@ void MainWindow::createDocks() {
 	// Console panel - simple output area (no log filtering)
 	QWidget *consolePanel = new QWidget();
 	QVBoxLayout *consoleLayout = new QVBoxLayout( consolePanel );
-	consoleLayout->setContentsMargins( 4, 4, 4, 4 );
+	consoleLayout->setContentsMargins( 0, 0, 0, 0 );
 	consoleLayout->setSpacing( 0 );
-
-	// Console content area - placeholder for now
-	QLabel *consoleLabel = new QLabel( "Console output will appear here..." );
-	consoleLabel->setAlignment( Qt::AlignTop | Qt::AlignLeft );
-
-	consoleLayout->addWidget( consoleLabel, 1 );
-	consolePanel->setStyleSheet(
-		"QWidget { "
-		"    background-color: #353535; "
-		"} "
-		"QLabel { "
-		"    color: #c0c0c0; "
-		"    border: none; "
-		"    padding: 4px; "
-		"}" );
+    
+    m_consoleOutput = new QTextEdit();
+    m_consoleOutput->setReadOnly( true );
+    m_consoleOutput->setLineWrapMode( QTextEdit::NoWrap );
+    m_consoleOutput->setAcceptRichText( true );
+    
+    consolePanel->setStyleSheet(
+    "QWidget { "
+    "    background-color: #353535; "
+    "} "
+    "QLabel { "
+    "    color: #c0c0c0; "
+    "    border: none; "
+    "    padding: 4px; "
+    "}" );
+    
+    consoleLayout->addWidget( m_consoleOutput, 1 );
 
 	// Memory panel
 	QWidget *memoryPanel = new QWidget();
