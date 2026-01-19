@@ -102,7 +102,7 @@ void ConsoleWidget::appendMessage( int type, const QString &message )
     }
     
     
-    QString htmlMessage = QString( "<span style=\"color: %1;\">%2%3</span>" )
+    QString htmlMessage = QString( "<span style=\"color: %1;\">%2 %3</span>" )
                           .arg( color )
                           .arg( prefix )
                           .arg( message.toHtmlEscaped() );

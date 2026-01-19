@@ -1,19 +1,24 @@
-/*======================================================================
-   File: ConsoleBridge.cpp
-   Project: ModelViewer
-   Author: karlosiric <email@example.com>
-   Created: 2026-01-19 12:06:17
-   Last Modified by: karlosiric
-   Last Modified: 2026-01-19 12:13:15
-   ---------------------------------------------------------------------
-   Description:
-       
-   ---------------------------------------------------------------------
-   License: 
-   Company: 
-   Version: 0.1.0
- ======================================================================
-                                                                       */
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *   Half-Life Model Viewer/Editor ~ Lambda
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *   Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+ *
+ *   This product contains software technology licensed from Id
+ *   Software, Inc. ("Id Technology"). Id Technology (c) 1996 Id Software, Inc.
+ *   All Rights Reserved.
+ *
+ *   Use, distribution, and modification of this source code and/or resulting
+ *   object code is restricted to non-commercial enhancements to products from
+ *   Valve LLC. All other use, distribution, or modification is prohibited
+ *   without written permission from Valve LLC.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ *   Author: Karlo Siric
+ *   Purpose: Console Bridge used for bridging the C backend and C++ Qt Frontend
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
 
 
 #include "ConsoleBridge.h"

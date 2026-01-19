@@ -36,65 +36,62 @@
 #define LAMBDA_BUILD_DATE __DATE__
 #define LAMBDA_BUILD_TIME __TIME__
 
-int main(int argc, char *argv[])
-{
-    // Initialize console system
-    console_init();
+// Function to print startup banner - can be called anytime
+  void printStartupBanner() {
+      console_print_raw( "\n" );
+      console_print_raw( "Lambda - Half-Life Model Viewer/Editor\n" );
+      console_print_raw( "Version %s\n", LAMBDA_VERSION );
+      console_print_raw( "\n" );
 
-    // Initialize logger with console output disabled (only file/GUI)
-    t_log_options log_opts = {0};
-    log_opts.console_level = LOG_FATAL;  // Suppress LOG_* from terminal
-    log_opts.use_colors = true;
-    logger_init( &log_opts );
+      QDateTime now = QDateTime::currentDateTime();
+      CONSOLE_INFO( "Started: %s", now.toString( "dddd, MMMM d yyyy - hh:mm:ss" ).toUtf8().constData() );
+      CONSOLE_INFO( "Build: %s %s", LAMBDA_BUILD_DATE, LAMBDA_BUILD_TIME );
+      CONSOLE_INFO( "OS: %s %s (%s)",
+          QSysInfo::productType().toUtf8().constData(),
+          QSysInfo::productVersion().toUtf8().constData(),
+          QSysInfo::currentCpuArchitecture().toUtf8().constData() );
+      CONSOLE_INFO( "Kernel: %s %s",
+          QSysInfo::kernelType().toUtf8().constData(),
+          QSysInfo::kernelVersion().toUtf8().constData() );
+      console_print_raw( "\n" );
+  }
 
-    // Print startup banner
-    console_print_raw( "\n" );
-    console_print_raw( "Lambda - Half-Life Model Viewer/Editor\n" );
-    console_print_raw( "Version %s\n", LAMBDA_VERSION );
-    console_print_raw( "\n" );
+  int main( int argc, char *argv[] ) {
+      // Initialize systems
+      console_init();
 
-    // Print build info
-    QDateTime now = QDateTime::currentDateTime();
-    console_print( CONSOLE_INFO, "Started: %s", now.toString( "dddd, MMMM d yyyy - hh:mm:ss" ).toUtf8().constData() );
-    console_print( CONSOLE_INFO, "Build: %s %s", LAMBDA_BUILD_DATE, LAMBDA_BUILD_TIME );
+      t_log_options log_opts = {0};
+      log_opts.console_level = LOG_FATAL;
+      log_opts.use_colors = true;
+      logger_init( &log_opts );
 
-    // Print OS info
-    console_print( CONSOLE_INFO, "OS: %s %s (%s)",
-        QSysInfo::productType().toUtf8().constData(),
-        QSysInfo::productVersion().toUtf8().constData(),
-        QSysInfo::currentCpuArchitecture().toUtf8().constData() );
-    console_print( CONSOLE_INFO, "Kernel: %s %s",
-        QSysInfo::kernelType().toUtf8().constData(),
-        QSysInfo::kernelVersion().toUtf8().constData() );
+      // OpenGL setup
+      QSurfaceFormat format;
+      format.setVersion( 4, 1 );
+      format.setProfile( QSurfaceFormat::CoreProfile );
+      format.setDepthBufferSize( 24 );
+      format.setStencilBufferSize( 8 );
+      format.setSamples( 4 );
+      QSurfaceFormat::setDefaultFormat( format );
 
-    console_print_raw( "\n" );
+      QApplication app( argc, argv );
 
-    // Request OpenGL 4.1 Core Profile BEFORE creating QApplication
-    QSurfaceFormat format;
-    format.setVersion( 4, 1 );                    // OpenGL 4.1
-    format.setProfile( QSurfaceFormat::CoreProfile );  // Core profile (modern OpenGL)
-    format.setDepthBufferSize( 24 );              // 24-bit depth buffer
-    format.setStencilBufferSize( 8 );             // 8-bit stencil buffer
-    format.setSamples( 4 );                       // 4x MSAA (anti-aliasing)
-    QSurfaceFormat::setDefaultFormat( format );   // Apply to all OpenGL widgets
+      MainWindow window;
+      
+      ThemeManager::applyThemeLight( app );
 
-    QApplication app( argc, argv );
+      // Print startup banner AFTER window exists (so console widget receives it)
+      printStartupBanner();
 
-    MainWindow window;
+      window.show();
 
-    ThemeManager::applyThemeLight( app );
+      int result = app.exec();
 
-    window.show();
+      logger_shutdown();
+      console_shutdown();
 
-    int result = app.exec();
-
-    // Cleanup
-    logger_shutdown();
-    console_shutdown();
-
-    return result;
-}
-
+      return result;
+  }
 
 
 

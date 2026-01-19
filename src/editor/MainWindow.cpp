@@ -21,6 +21,7 @@
  */
 
 #include "MainWindow.h"
+#include "ConsoleWidget.h"
 #include "ModelViewport.h"
 #include "ConsoleBridge.h"
 #include <QLabel>
@@ -56,6 +57,11 @@
 
 MainWindow::MainWindow( QWidget *parent )
 	: QMainWindow( parent ) {
+        
+        
+    // initializing the pointer to nullptr
+    m_consoleWidget = nullptr;
+    
 	setWindowTitle( "Lambda MDL Editor" );
 	resize( MW_WIDTH, MW_HEIGHT );
 
@@ -119,6 +125,8 @@ MainWindow::MainWindow( QWidget *parent )
 	m_statusUpdateTimer->setInterval( 100 ); // ~10 FPS
 	connect( m_statusUpdateTimer, &QTimer::timeout, this, &MainWindow::onStatusBarUpdate );
 	m_statusUpdateTimer->start();
+    
+    ConsoleBridge::init( m_consoleWidget );
 
 	// Initialize FPS tracking
 	m_fpsTimer.start();
@@ -1917,27 +1925,7 @@ void MainWindow::createDocks() {
 	bottomTabs->setDocumentMode( false ); // Classic tabs
 
 	// Console panel - simple output area (no log filtering)
-	QWidget *consolePanel = new QWidget();
-	QVBoxLayout *consoleLayout = new QVBoxLayout( consolePanel );
-	consoleLayout->setContentsMargins( 0, 0, 0, 0 );
-	consoleLayout->setSpacing( 0 );
-    
-    m_consoleOutput = new QTextEdit();
-    m_consoleOutput->setReadOnly( true );
-    m_consoleOutput->setLineWrapMode( QTextEdit::NoWrap );
-    m_consoleOutput->setAcceptRichText( true );
-    
-    consolePanel->setStyleSheet(
-    "QWidget { "
-    "    background-color: #353535; "
-    "} "
-    "QLabel { "
-    "    color: #c0c0c0; "
-    "    border: none; "
-    "    padding: 4px; "
-    "}" );
-    
-    consoleLayout->addWidget( m_consoleOutput, 1 );
+    m_consoleWidget = new ConsoleWidget();
 
 	// Memory panel
 	QWidget *memoryPanel = new QWidget();
@@ -1955,7 +1943,7 @@ void MainWindow::createDocks() {
 		"}" );
 
 	// Add tabs
-	bottomTabs->addTab( consolePanel, "Console" );
+	bottomTabs->addTab( m_consoleWidget, "Console" );
 	bottomTabs->addTab( memoryPanel, "Memory" );
 
 	// Style the tabs to match window tabs (classic with blue active)

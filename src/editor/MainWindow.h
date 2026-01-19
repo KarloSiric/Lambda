@@ -76,7 +76,7 @@ class MainWindow : public QMainWindow {
 	int addViewportTab(const QString &title = "New Model");
 
 	StatusBarWidget *m_statusBar;
-    QTextEdit *m_consoleOutput;
+    ConsoleWidget *m_consoleWidget;
 	QDockWidget *leftDock;
 	QDockWidget *rightDock;
 	QDockWidget *bottomDock;

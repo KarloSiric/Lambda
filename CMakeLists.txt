@@ -489,6 +489,7 @@ if(Qt6_FOUND)
         ${CMAKE_SOURCE_DIR}/src/editor/widgets
         ${CMAKE_SOURCE_DIR}/src/editor/dialogs
         ${CMAKE_SOURCE_DIR}/src/editor/bridge
+        ${CMAKE_SOURCE_DIR}/src/editor/theme
         # C backend includes (same as Lambda)
         ${CMAKE_SOURCE_DIR}/src/cl
         ${CMAKE_SOURCE_DIR}/src/r
