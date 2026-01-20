@@ -52,10 +52,6 @@ class MainWindow : public QMainWindow {
     void setupToolbars();
     void setupTheme();
 
-	// Toolbar creation (will be moved to ToolbarFactory)
-	void createToolbarUpper();
-    void createToolbarLower();
-
 	void createDocks();
 	void createViewportContainer();
 

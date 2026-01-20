@@ -21,7 +21,8 @@
  */
 
 #include "MainWindow.h"
-#include "menus/MenuFactory.h"
+#include "MenuFactory.h"
+#include "ToolbarFactory.h"
 #include "ConsoleWidget.h"
 #include "ModelViewport.h"
 #include "ConsoleBridge.h"
@@ -136,82 +137,10 @@ MainWindow::MainWindow( QWidget *parent )
 void MainWindow::setupMenus() {
 	MenuFactory::createMenus( this );
 }
-void MainWindow::createToolbarUpper() {
-	QToolBar *toolBar = addToolBar( "Main Toolbar" );
-	toolBar->setMovable( false );
-	toolBar->setIconSize( QSize( 18, 18 ) );
-
-	QAction *actionOpen = toolBar->addAction( QIcon( ":/icons/open_folder.png" ), "Open Folder" );
-
-	// FILE
-	QAction *actionNew = toolBar->addAction( QIcon( ":/icons/new_file.png" ), "New File" );
-	// toolBar->addAction( "New" );
-	toolBar->addAction( "Open" );
-	toolBar->addAction( "Save" );
-	toolBar->addSeparator();
-
-	// UNDO / REDO
-	toolBar->addAction( "Undo" );
-	toolBar->addAction( "Redo" );
-	toolBar->addSeparator();
-
-	// CAMERA
-	toolBar->addAction( "Orbit" );
-	toolBar->addAction( "Pan" );
-	toolBar->addAction( "Zoom" );
-	toolBar->addAction( "Reset Camera" );
-	toolBar->addSeparator();
-
-	// VIEW
-	toolBar->addAction( "Wireframe" );
-	toolBar->addAction( "Flat" );
-	toolBar->addAction( "Textured" );
-	toolBar->addAction( "Fullbright" );
-	toolBar->addAction( "Bones" );
-	toolBar->addAction( "Hitboxes" );
-	toolBar->addAction( "Grid" );
-	toolBar->addSeparator();
-
-	// MODEL EDIT
-	toolBar->addAction( "Scale" );
-	toolBar->addAction( "Rotate" );
-	toolBar->addAction( "Translate" );
-	toolBar->addAction( "Mirror" );
-	toolBar->addAction( "Reset Pose" );
-	toolBar->addSeparator();
-
-	// ANIMATION
-	toolBar->addAction( "Play" );
-	toolBar->addAction( "Pause" );
-	toolBar->addAction( "Stop" );
-	toolBar->addAction( "Prev Frame" );
-	toolBar->addAction( "Next Frame" );
-	toolBar->addAction( "Loop" );
-	toolBar->addSeparator();
-
-	// COMPILER
-	toolBar->addAction( "Compile" );
-	toolBar->addAction( "Decompile" );
-
-	// @Note: Adding second toolbar
-	QToolBar *secondary = addToolBar( "Secondary" );
-	secondary->setMovable( false );
-	secondary->setIconSize( QSize( 20, 20 ) );
-
-	secondary->setObjectName( "Secondary" );
-}
-
-// Menu creation moved to MenuFactory::createMenus()
-
-// All menu functions moved to menus/MenuFactory.cpp
-// The following functions have been removed:
-// - createFileMenu, createEditMenu, createViewMenu, createModelMenu
-// - createBodypartMenu, createBonesMenu, createSequencesMenu
-// - createTexturesMenu, createToolsMenu, createDebugMenu
-// - createWindowMenu, createHelpMenu
 
 // ═══════════════════════════════════════════════════════════════════════════
-// END OF MENU SECTION - All menu creation is now in MenuFactory
+// Menu creation: see menus/MenuFactory.cpp
+// Toolbar creation: see toolbars/ToolbarFactory.cpp
 // ═══════════════════════════════════════════════════════════════════════════
 
 void MainWindow::createViewportContainer() {
@@ -536,7 +465,7 @@ void MainWindow::setupDocks( void ) {
 }
 
 void MainWindow::setupToolbars( void ) {
-	createToolbarUpper();
+	ToolbarFactory::createToolbars( this );
 }
 
 void MainWindow::onOpenModel() {

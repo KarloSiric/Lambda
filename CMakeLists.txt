@@ -294,6 +294,8 @@ file(GLOB SRC_EDITOR CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/src/editor/widgets/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/editor/dialogs/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/editor/bridge/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/editor/menus/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/editor/toolbars/*.cpp"
 )
 
 file(GLOB SRC_EDITOR_THEME CONFIGURE_DEPENDS
@@ -440,6 +442,7 @@ if(Qt6_FOUND)
         src/editor/main.cpp
         src/editor/MainWindow.cpp
         src/editor/menus/MenuFactory.cpp
+        src/editor/toolbars/ToolbarFactory.cpp
         src/editor/widgets/ModelViewport.cpp
         src/editor/widgets/StatusBarWidget.cpp
         src/editor/widgets/ConsoleWidget.cpp
@@ -450,6 +453,7 @@ if(Qt6_FOUND)
     set(EDITOR_HEADERS
         src/editor/MainWindow.h
         src/editor/menus/MenuFactory.h
+        src/editor/toolbars/ToolbarFactory.h
         src/editor/widgets/ModelViewport.h
         src/editor/widgets/StatusBarWidget.h
         src/editor/widgets/ConsoleWidget.h
@@ -492,6 +496,8 @@ if(Qt6_FOUND)
         ${CMAKE_SOURCE_DIR}/src/editor/dialogs
         ${CMAKE_SOURCE_DIR}/src/editor/bridge
         ${CMAKE_SOURCE_DIR}/src/editor/theme
+        ${CMAKE_SOURCE_DIR}/src/editor/toolbars
+        ${CMAKE_SOURCE_DIR}/src/editor/menus
         # C backend includes (same as Lambda)
         ${CMAKE_SOURCE_DIR}/src/cl
         ${CMAKE_SOURCE_DIR}/src/r
