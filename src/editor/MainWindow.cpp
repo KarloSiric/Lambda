@@ -24,8 +24,10 @@
 #include "MenuFactory.h"
 #include "ToolbarFactory.h"
 #include "ConsoleWidget.h"
+#include "LogWidget.h"
 #include "ModelViewport.h"
 #include "ConsoleBridge.h"
+#include "LoggerBridge.h"
 #include "util_console.h"
 #include <QLabel>
 #include <QMenu>
@@ -128,6 +130,7 @@ MainWindow::MainWindow( QWidget *parent )
 	m_statusUpdateTimer->start();
     
     ConsoleBridge::init( m_consoleWidget );
+    LoggerBridge::init( m_logWidget );
 
 	// Initialize FPS tracking
 	m_fpsTimer.start();
@@ -309,6 +312,9 @@ void MainWindow::createDocks() {
 	// Console panel - simple output area (no log filtering)
     m_consoleWidget = new ConsoleWidget();
 
+	// Log panel - detailed logging with filtering
+	m_logWidget = new LogWidget();
+
 	// Memory panel
 	QWidget *memoryPanel = new QWidget();
 	QVBoxLayout *memoryLayout = new QVBoxLayout( memoryPanel );
@@ -326,6 +332,7 @@ void MainWindow::createDocks() {
 
 	// Add tabs
 	bottomTabs->addTab( m_consoleWidget, "Console" );
+	bottomTabs->addTab( m_logWidget, "Log" );
 	bottomTabs->addTab( memoryPanel, "Memory" );
 
 	// Style the tabs to match window tabs (classic with blue active)

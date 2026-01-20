@@ -5,6 +5,7 @@
 #include "ModelViewport.h"
 #include "StatusBarWidget.h"
 #include "ConsoleWidget.h"
+#include "LogWidget.h"
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QWidget>
@@ -62,6 +63,7 @@ class MainWindow : public QMainWindow {
 
 	StatusBarWidget *m_statusBar;
     ConsoleWidget *m_consoleWidget;
+    LogWidget *m_logWidget;
 	QDockWidget *leftDock;
 	QDockWidget *rightDock;
 	QDockWidget *bottomDock;

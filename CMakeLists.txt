@@ -446,7 +446,9 @@ if(Qt6_FOUND)
         src/editor/widgets/ModelViewport.cpp
         src/editor/widgets/StatusBarWidget.cpp
         src/editor/widgets/ConsoleWidget.cpp
+        src/editor/widgets/LogWidget.cpp
         src/editor/bridge/ConsoleBridge.cpp
+        src/editor/bridge/LoggerBridge.cpp
 
     )
 
@@ -457,7 +459,9 @@ if(Qt6_FOUND)
         src/editor/widgets/ModelViewport.h
         src/editor/widgets/StatusBarWidget.h
         src/editor/widgets/ConsoleWidget.h
+        src/editor/widgets/LogWidget.h
         src/editor/bridge/ConsoleBridge.h
+        src/editor/bridge/LoggerBridge.h
     )
 
     #
