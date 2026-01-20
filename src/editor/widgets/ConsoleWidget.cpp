@@ -87,6 +87,7 @@ void ConsoleWidget::appendMessageInternal( int type, const QString &message ) {
 	case 2: // CONSOLE WARNING
 		color = "#e6db74";
 		prefix = "[!]";
+        break;
 	case 3: // CONSOLE ERROR
 		color = "#f44747";
 		prefix = "[ERROR]";
@@ -137,7 +138,7 @@ void ConsoleWidget::processQueue() {
 	appendMessageInternal( msg.type, msg.message );
 
 	if ( !m_messageQueue.isEmpty() ) {
-		m_queueTimer->start( m_delayEnabled );
+		m_queueTimer->start( m_delayInterval );
 	}
 }
 

@@ -78,7 +78,7 @@ void printLoadingSuccess( void ) {
 int main( int argc, char *argv[] ) {
 	QApplication app( argc, argv );
 	app.setApplicationName( "Lambda" );
-	app.setOrganizationName( "Lambda" );
+	app.setOrganizationName( "kSoftware" );
 
 	QString appDataPath = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
 	QString logDir = appDataPath + "/logs";

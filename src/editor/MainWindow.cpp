@@ -24,6 +24,7 @@
 #include "ConsoleWidget.h"
 #include "ModelViewport.h"
 #include "ConsoleBridge.h"
+#include "util_console.h"
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -2103,8 +2104,7 @@ void MainWindow::onOpenModel() {
 
 	// SAFETY: Double-check viewport creation succeeded
 	if ( !viewport ) {
-		qCritical() << "ERROR: Failed to create viewport!";
-		QMessageBox::critical( this, "Error", "Failed to create viewport. Please restart the application." );
+        CONSOLE_ERROR( "Failed to create viewport. Please restart the application." );
 		return;
 	}
 
@@ -2119,15 +2119,13 @@ void MainWindow::onOpenModel() {
 	// SAFETY: Check if file actually exists
 	QFileInfo fileInfo( filePath );
 	if ( !fileInfo.exists() ) {
-		qCritical() << "ERROR: File does not exist:" << filePath;
-		QMessageBox::critical( this, "File Not Found", "The selected file does not exist:\n" + filePath );
+        CONSOLE_ERROR( "File not found: %s",  filePath.toUtf8().constData() );
 		return;
 	}
 
 	// SAFETY: Check if it's actually a .mdl file
 	if ( fileInfo.suffix().toLower() != "mdl" ) {
-		qCritical() << "ERROR: Not a .mdl file:" << filePath;
-		QMessageBox::critical( this, "Invalid File Type", "Please select a Half-Life model file (.mdl):\n" + filePath );
+        CONSOLE_ERROR( "Invalid file type. Please select a .mdl file: %s", filePath.toUtf8().constData() );
 		return;
 	}
 
@@ -2135,8 +2133,9 @@ void MainWindow::onOpenModel() {
 	bool success = viewport->loadModel( filePath );
 
 	if ( !success ) {
-		QMessageBox::critical( this, "Error Loading Model",
-							   "Failed to load model. The file may be corrupted or invalid:\n\n" + filePath );
+        CONSOLE_ERROR( "Failed to load model. File may be corrupted or invalid: %s",
+                      filePath.toUtf8().constData() );
+        m_statusBar->clearModelInfo();
 		return;
 	}
 
@@ -2235,7 +2234,7 @@ int MainWindow::addViewportTab( const QString &title ) {
 void MainWindow::onNewTab() {
 	int index = addViewportTab( "Untitled" );
 	if ( index < 0 ) {
-		QMessageBox::warning( this, "Error", "Failed to create new tab!" );
+        CONSOLE_ERROR( "Failed to create a new tab" );
 	}
 }
 
