@@ -21,6 +21,7 @@
  */
 
 #include "MainWindow.h"
+#include "menus/MenuFactory.h"
 #include "ConsoleWidget.h"
 #include "ModelViewport.h"
 #include "ConsoleBridge.h"
@@ -36,7 +37,6 @@
 #include <QDockWidget>
 #include <QOpenGLWidget>
 #include <QFileDialog>
-#include <QMessageBox>
 #include <QFileInfo>
 #include <QTabBar>
 #include <QPushButton>
@@ -53,7 +53,6 @@
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qmenu.h>
-#include <QtWidgets/qmessagebox.h>
 #include <QtWidgets/qtoolbar.h>
 
 MainWindow::MainWindow( QWidget *parent )
@@ -135,18 +134,7 @@ MainWindow::MainWindow( QWidget *parent )
 	m_lastFps = 0.0f;
 }
 void MainWindow::setupMenus() {
-	createFileMenu();
-	createEditMenu();
-	createViewMenu();
-	createToolsMenu();
-	createModelMenu();
-	createBodypartMenu();
-	createBonesMenu();
-	createSequencesMenu();
-	createTexturesMenu();
-	createDebugMenu();
-	createWindowMenu();
-	createHelpMenu();
+	MenuFactory::createMenus( this );
 }
 void MainWindow::createToolbarUpper() {
 	QToolBar *toolBar = addToolBar( "Main Toolbar" );
@@ -213,167 +201,10 @@ void MainWindow::createToolbarUpper() {
 	secondary->setObjectName( "Secondary" );
 }
 
-void MainWindow::createModelMenu() {
-	QMenu *modelMenu = menuBar()->addMenu( tr( "&Model" ) );
+// Menu creation moved to MenuFactory::createMenus()
 
-	// ═══════════════════════════════════════════════════════
-	// MODEL INFO
-	// ═══════════════════════════════════════════════════════
-
-	modelMenu->addAction( "Model Properties..." ); // Opens dialog
-	modelMenu->addAction( "Model Statistics..." ); // Vertex/tri count, etc.
-
-	modelMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// MODEL OPERATIONS
-	// ═══════════════════════════════════════════════════════
-
-	modelMenu->addAction( "Validate Model..." ); // Check for errors
-	modelMenu->addAction( "Optimize Model..." ); // Reduce poly count
-	modelMenu->addAction( "Fix Issues..." ); // Auto-fix common problems
-
-	modelMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// MODEL METADATA
-	// ═══════════════════════════════════════════════════════
-
-	modelMenu->addAction( "Set Eye Position..." );
-	modelMenu->addAction( "Set Bounding Box..." );
-	modelMenu->addAction( "Set Collision Hull..." );
-
-	modelMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// LIST SUBMENUS (Browse model contents)
-	// ═══════════════════════════════════════════════════════
-
-	QMenu *listMenu = modelMenu->addMenu( "List" );
-	listMenu->addAction( "List Bones..." ); // Opens dialog with all bones
-	listMenu->addAction( "List Sequences..." );
-	listMenu->addAction( "List Bodyparts..." );
-	listMenu->addAction( "List Textures..." );
-	listMenu->addAction( "List Hitboxes..." );
-	listMenu->addAction( "List Attachments..." );
-	listMenu->addAction( "List Events..." );
-
-	modelMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// ADVANCED
-	// ═══════════════════════════════════════════════════════
-
-	modelMenu->addAction( "Generate LODs..." ); // Level of Detail models
-	modelMenu->addAction( "Bake Vertex Colors..." );
-	modelMenu->addAction( "Convert to Source 2..." ); // Future feature
-}
-
-void MainWindow::createBodypartMenu() {
-	QMenu *bodypartMenu = menuBar()->addMenu( tr( "&Bodyparts" ) );
-
-	// ═══════════════════════════════════════════════════════
-	// SELECT BODYPART (Will be populated dynamically from model)
-	// ═══════════════════════════════════════════════════════
-
-	QMenu *selectBodypartMenu = bodypartMenu->addMenu( "Select Bodypart" );
-	// NOTE: In a real implementation, you'll populate this from the loaded model's bodyparts“
-	// For now, we'll add placeholders
-
-	selectBodypartMenu->addAction( "Body (3 submdoels)" );
-	selectBodypartMenu->addAction( "Head (2 submodels)" );
-	selectBodypartMenu->addAction( "Weapon (4 submodels)" );
-	selectBodypartMenu->addSeparator();
-	selectBodypartMenu->addAction( "Refresh List" );
-
-	bodypartMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// SUBMODEL SELECTION (Changes variant of selected bodypart)
-	// ═══════════════════════════════════════════════════════
-
-	QMenu *submodelMenu = bodypartMenu->addMenu( "Select Submodel" );
-	// this is the radio button behavior
-	QActionGroup *submodelGroup = new QActionGroup( this );
-
-	QAction *submodel0 = submodelMenu->addAction( "Submodel 0 (Default)" );
-	submodel0->setCheckable( true );
-	submodel0->setChecked( true );
-	submodelGroup->addAction( submodel0 );
-
-	QAction *submodel1 = submodelMenu->addAction( "Submodel 1" );
-	submodel1->setCheckable( true );
-	submodelGroup->addAction( submodel1 );
-
-	QAction *submodel2 = submodelMenu->addAction( "Submodel 2" );
-	submodel2->setCheckable( true );
-	submodelGroup->addAction( submodel2 );
-
-	submodelMenu->addSeparator();
-	submodelMenu->addAction( "Randomize" );
-	submodelMenu->addAction( "Reset to Default" );
-
-	bodypartMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// VISIBILITY OPTIONS
-	// ═══════════════════════════════════════════════════════
-
-	QAction *showBodyparts = bodypartMenu->addAction( "Show All Bodyparts" );
-	showBodyparts->setCheckable( true );
-	showBodyparts->setChecked( true );
-
-	QAction *showBodypartNames = bodypartMenu->addAction( "Show Bodypart Names" );
-	showBodypartNames->setCheckable( true );
-
-	QAction *showSubmodelBounds = bodypartMenu->addAction( "Show Submodel Bounds" );
-	showSubmodelBounds->setCheckable( true );
-
-	QAction *highlightSelected = bodypartMenu->addAction( "Highlight Selected" );
-	highlightSelected->setCheckable( true );
-
-	bodypartMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// BODYGROUP PRESETS (Common combinations)
-	// ═══════════════════════════════════════════════════════
-
-	QMenu *presetsMenu = bodypartMenu->addMenu( "Bodygroup Presets" );
-	presetsMenu->addAction( "Default Loadout" );
-	presetsMenu->addAction( "All Variants Visible" );
-	presetsMenu->addAction( "Custom Preset 1..." );
-	presetsMenu->addAction( "Custom Preset 2..." );
-	presetsMenu->addSeparator();
-	presetsMenu->addAction( "Save Current as Preset..." );
-
-	bodypartMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// IMPORT/EXPORT BODYPARTS
-	// ═══════════════════════════════════════════════════════
-
-	QMenu *importBodypartMenu = bodypartMenu->addMenu( "Import Bodypart" );
-	importBodypartMenu->addAction( "Import from SMD..." );
-	importBodypartMenu->addAction( "Import from OBJ..." );
-	importBodypartMenu->addAction( "Import from FBX..." );
-
-	QMenu *exportBodypartMenu = bodypartMenu->addMenu( "Export Bodypart" );
-	exportBodypartMenu->addAction( "Export Selected to SMD..." );
-	exportBodypartMenu->addAction( "Export Selected to OBJ..." );
-	exportBodypartMenu->addAction( "Export All Bodyparts..." );
-
-	bodypartMenu->addSeparator();
-
-	// ═══════════════════════════════════════════════════════
-	// BODYPART INFORMATION
-	// ═══════════════════════════════════════════════════════
-
-	bodypartMenu->addAction( "List All Bodyparts..." ); // Opens dialog
-	bodypartMenu->addAction( "Bodypart Properties..." ); // Shows selected bodypart info
-}
-
-void MainWindow::createBonesMenu() {
-	QMenu *bonesMenu = menuBar()->addMenu( tr( "&Bones" ) );
+void MENU_PLACEHOLDER_TO_DELETE() {
+	// Placeholder to be deleted
 
 	// ═══════════════════════════════════════════════════════
 	// BONE VISIBILITY
@@ -1759,9 +1590,6 @@ void MainWindow::createHelpMenu() {
 
 	helpMenu->addAction( "Documentation" );
 	helpMenu->addAction( "Report Issue" );
-	helpMenu->addAction( "About Lambda MDL Editor" );
-}
-
 void MainWindow::createViewportContainer() {
 	// Create container widget with frame for viewport panel
 	QWidget *viewportContainer = new QWidget( this );
