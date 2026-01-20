@@ -136,61 +136,89 @@ void LogWidget::setupUI() {
 }
 
 void LogWidget::applyStyles() {
-	// Toolbar styling
-	QString toolbarStyle =
-		"QWidget { background-color: #2d2d2d; } "
+	// Classic Windows 95/98 style - match the rest of the app
+	setStyleSheet( "QWidget { background-color: #c0c0c0; }" );
+
+	// Classic raised button/control style
+	QString controlStyle =
 		"QComboBox { "
-		"    background-color: #3c3c3c; "
-		"    color: #cccccc; "
-		"    border: 1px solid #555555; "
-		"    padding: 2px 4px; "
+		"    background-color: #ffffff; "
+		"    color: #000000; "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    padding: 1px 4px; "
 		"    font-size: 11px; "
 		"} "
-		"QComboBox::drop-down { border: none; } "
 		"QComboBox QAbstractItemView { "
-		"    background-color: #3c3c3c; "
-		"    color: #cccccc; "
-		"    selection-background-color: #094771; "
+		"    background-color: #ffffff; "
+		"    color: #000000; "
+		"    selection-background-color: #000080; "
+		"    selection-color: #ffffff; "
 		"} "
 		"QLineEdit { "
-		"    background-color: #3c3c3c; "
-		"    color: #cccccc; "
-		"    border: 1px solid #555555; "
-		"    padding: 2px 4px; "
+		"    background-color: #ffffff; "
+		"    color: #000000; "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"    padding: 1px 4px; "
 		"    font-size: 11px; "
 		"} "
 		"QPushButton { "
-		"    background-color: #3c3c3c; "
-		"    color: #cccccc; "
-		"    border: 1px solid #555555; "
-		"    padding: 3px 8px; "
+		"    background-color: #c0c0c0; "
+		"    color: #000000; "
+		"    border: 2px solid; "
+		"    border-top-color: #ffffff; "
+		"    border-left-color: #ffffff; "
+		"    border-right-color: #808080; "
+		"    border-bottom-color: #808080; "
+		"    padding: 2px 8px; "
 		"    font-size: 11px; "
 		"} "
-		"QPushButton:hover { background-color: #4c4c4c; } "
-		"QPushButton:pressed { background-color: #2c2c2c; } "
-		"QCheckBox::indicator { "
-		"    width: 12px; "
-		"    height: 12px; "
-		"    background-color: #3c3c3c; "
-		"    border: 1px solid #555555; "
+		"QPushButton:pressed { "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
 		"} "
-		"QCheckBox::indicator:checked { background-color: #094771; }";
+		"QLabel { color: #000000; } "
+		"QCheckBox { color: #000000; } "
+		"QCheckBox::indicator { "
+		"    width: 13px; "
+		"    height: 13px; "
+		"    background-color: #ffffff; "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"}";
 
-	// Apply to children
-	for ( QWidget *child : findChildren<QWidget *>() ) {
-		if ( child != m_logView ) {
-			child->setStyleSheet( toolbarStyle );
-		}
-	}
+	m_levelFilter->setStyleSheet( controlStyle );
+	m_searchFilter->setStyleSheet( controlStyle );
+	m_autoScrollCheck->setStyleSheet( controlStyle );
+	m_timestampCheck->setStyleSheet( controlStyle );
+	m_clearBtn->setStyleSheet( controlStyle );
+	m_copyBtn->setStyleSheet( controlStyle );
+	m_saveBtn->setStyleSheet( controlStyle );
 
-	// Log view styling
+	// Log view - dark sunken area
 	m_logView->setStyleSheet(
 		"QTextEdit { "
 		"    background-color: #1e1e1e; "
 		"    color: #cccccc; "
-		"    border: none; "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
 		"    font-family: 'Monaco', 'Menlo', 'Consolas', monospace; "
-		"    font-size: 11px; "
+		"    font-size: 12px; "
 		"    padding: 4px; "
 		"}" );
 }

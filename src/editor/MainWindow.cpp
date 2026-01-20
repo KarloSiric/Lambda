@@ -132,6 +132,11 @@ MainWindow::MainWindow( QWidget *parent )
     ConsoleBridge::init( m_consoleWidget );
     LoggerBridge::init( m_logWidget );
 
+	// Log startup messages
+	log_info( "App", "Lambda MDL Editor started" );
+	log_info( "App", "Initializing subsystems..." );
+	log_debug( "OpenGL", "Setting up rendering context" );
+
 	// Initialize FPS tracking
 	m_fpsTimer.start();
 	m_frameCount = 0;
@@ -478,20 +483,21 @@ void MainWindow::setupToolbars( void ) {
 void MainWindow::onOpenModel() {
 	// SAFETY: Ensure tab widget exists
 	if ( !tabWidget ) {
-		qCritical() << "ERROR: Tab widget is null!";
+		log_error( "UI", "Tab widget is null!" );
 		return;
 	}
 
 	// Get current viewport (or create new tab if none exist)
 	ModelViewport *viewport = getCurrentViewport();
 	if ( !viewport ) {
-		qDebug() << "No viewport found, creating new tab...";
+		log_debug( "UI", "No viewport found, creating new tab..." );
 		addViewportTab( "New Model" );
 		viewport = getCurrentViewport();
 	}
 
 	// SAFETY: Double-check viewport creation succeeded
 	if ( !viewport ) {
+		log_error( "UI", "Failed to create viewport" );
         CONSOLE_ERROR( "Failed to create viewport. Please restart the application." );
 		return;
 	}
@@ -500,7 +506,7 @@ void MainWindow::onOpenModel() {
 	QString filePath = QFileDialog::getOpenFileName( this, "Open Half-Life Model", "", "Half-Life Models (*.mdl)" );
 
 	if ( filePath.isEmpty() ) {
-		qDebug() << "Model loading cancelled by user";
+		log_debug( "UI", "Model loading cancelled by user" );
 		return;
 	}
 
@@ -518,14 +524,18 @@ void MainWindow::onOpenModel() {
 	}
 
 	// Load model in current viewport
+	log_info( "MDL", "Loading model: %s", filePath.toUtf8().constData() );
 	bool success = viewport->loadModel( filePath );
 
 	if ( !success ) {
+		log_error( "MDL", "Failed to load model: %s", filePath.toUtf8().constData() );
         CONSOLE_ERROR( "Failed to load model. File may be corrupted or invalid: %s",
                       filePath.toUtf8().constData() );
         m_statusBar->clearModelInfo();
 		return;
 	}
+
+	log_info( "MDL", "Model loaded successfully: %s", fileInfo.fileName().toUtf8().constData() );
 
 	// Success! Update tab title to show model name
 	int currentIndex = tabWidget->currentIndex();
@@ -543,6 +553,12 @@ void MainWindow::onOpenModel() {
 	info.boneCount = viewport->getBoneCount();
 	info.sequenceCount = viewport->getSequenceCount();
 	info.textureCount = viewport->getTextureCount();
+
+	// Log model statistics
+	log_debug( "MDL", "  Vertices: %d, Triangles: %d, Bones: %d",
+		info.vertexCount, info.triangleCount, info.boneCount );
+	log_debug( "MDL", "  Sequences: %d, Textures: %d, Size: %lld bytes",
+		info.sequenceCount, info.textureCount, (long long)info.fileSize );
 	info.currentSequence = "";
 	info.currentFrame = 0;
 	info.totalFrames = 0;
