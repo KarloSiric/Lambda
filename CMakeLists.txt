@@ -439,15 +439,17 @@ if(Qt6_FOUND)
     set(EDITOR_SOURCES
         src/editor/main.cpp
         src/editor/MainWindow.cpp
+        src/editor/menus/MenuFactory.cpp
         src/editor/widgets/ModelViewport.cpp
         src/editor/widgets/StatusBarWidget.cpp
         src/editor/widgets/ConsoleWidget.cpp
         src/editor/bridge/ConsoleBridge.cpp
-        
+
     )
 
     set(EDITOR_HEADERS
         src/editor/MainWindow.h
+        src/editor/menus/MenuFactory.h
         src/editor/widgets/ModelViewport.h
         src/editor/widgets/StatusBarWidget.h
         src/editor/widgets/ConsoleWidget.h

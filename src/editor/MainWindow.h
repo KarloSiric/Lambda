@@ -33,10 +33,10 @@ class MainWindow : public QMainWindow {
 	Q_OBJECT
     
   public:
-    
+
 	explicit MainWindow( QWidget *parent = nullptr );
-    
-  private slots:
+
+  public slots:
 
     void onOpenModel();
     void onNewTab();
@@ -51,19 +51,8 @@ class MainWindow : public QMainWindow {
 	void setupDocks();
     void setupToolbars();
     void setupTheme();
-     
-	void createFileMenu();
-	void createEditMenu();
-	void createViewMenu();
-    void createModelMenu();
-    void createBodypartMenu();
-    void createBonesMenu();
-    void createSequencesMenu();
-    void createTexturesMenu();
-	void createToolsMenu();
-	void createDebugMenu();
-	void createWindowMenu();
-	void createHelpMenu();
+
+	// Toolbar creation (will be moved to ToolbarFactory)
 	void createToolbarUpper();
     void createToolbarLower();
 
