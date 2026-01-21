@@ -22,6 +22,7 @@
 
 #include "ModelViewport.h"
 #include "StatusBarWidget.h"
+#include "LoggerBridge.h"
 #include "math_vector.h"
 #include "mdl_loader.h"
 #include "r_draw.h"
@@ -246,7 +247,116 @@ void ModelViewport::paintGL() {
 }
 
 void ModelViewport::onAnimationTick() {
+	// Only advance animation if playing and model loaded
+	if ( m_animationPlaying && m_model && m_model->header ) {
+		// Calculate delta time (timer fires every 16ms = 0.016 seconds)
+		float deltaTime = 0.016f;
+
+		// Get the current sequence to check FPS
+		if ( m_animState.current_sequence >= 0 &&
+			 m_animState.current_sequence < m_model->header->numseq ) {
+
+			// Update animation frame (arg order: state, delta_time, header, data, seqgroups)
+			mdl_animation_update( &m_animState, deltaTime, m_model->header, m_model->data, m_model->seqgroups );
+
+			// Sync animation state to render instance for bone calculation
+			if ( m_renderInstance ) {
+				r_qt_set_animation_state( m_renderInstance, &m_animState );
+				r_qt_set_animation_enabled( m_renderInstance, true );
+			}
+
+			// Emit frame changed signal for UI updates
+			emit frameChanged( m_animState.current_frame );
+		}
+	}
+
+	// Always request redraw
 	update();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Animation Control Methods
+// ═══════════════════════════════════════════════════════════════════════════
+
+void ModelViewport::setSequence( int sequenceIndex ) {
+	if ( !m_model || !m_model->header ) return;
+
+	// Validate sequence index
+	if ( sequenceIndex < 0 || sequenceIndex >= m_model->header->numseq ) {
+		log_warning( "Animation", "Invalid sequence index: %d (max: %d)",
+			sequenceIndex, m_model->header->numseq - 1 );
+		return;
+	}
+
+	// Set the sequence using C backend
+	mdl_animation_set_sequence( &m_animState, sequenceIndex, m_model->header,
+		m_model->data, m_model->seqgroups );
+
+	// Sync animation state to render instance
+	if ( m_renderInstance ) {
+		r_qt_set_animation_state( m_renderInstance, &m_animState );
+		r_qt_set_animation_enabled( m_renderInstance, true );
+	}
+
+	log_info( "Animation", "Sequence changed to %d", sequenceIndex );
+
+	// Emit signal for UI updates
+	emit sequenceChanged( sequenceIndex );
+	emit frameChanged( m_animState.current_frame );
+
+	// Request redraw
+	update();
+}
+
+void ModelViewport::playAnimation( bool play ) {
+	m_animationPlaying = play;
+
+	if ( play ) {
+		log_debug( "Animation", "Animation started" );
+	} else {
+		log_debug( "Animation", "Animation paused" );
+	}
+
+	emit animationPlayStateChanged( play );
+}
+
+void ModelViewport::setAnimationFrame( float frame ) {
+	if ( !m_model || !m_model->header ) return;
+
+	// Clamp frame to valid range
+	if ( m_animState.current_sequence >= 0 &&
+		 m_animState.current_sequence < m_model->header->numseq ) {
+
+		mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( m_model->data + m_model->header->seqindex );
+		mstudioseqdesc_t *seq = &sequences[m_animState.current_sequence];
+
+		int numFrames = seq->numframes;
+		if ( frame < 0 ) frame = 0;
+		if ( frame >= numFrames ) frame = numFrames - 1;
+
+		m_animState.current_frame = frame;
+
+		// Sync animation state to render instance
+		if ( m_renderInstance ) {
+			r_qt_set_animation_state( m_renderInstance, &m_animState );
+			r_qt_set_animation_enabled( m_renderInstance, true );
+		}
+
+		emit frameChanged( frame );
+		update();
+	}
+}
+
+int ModelViewport::getCurrentSequence() const {
+	return m_animState.current_sequence;
+}
+
+float ModelViewport::getCurrentFrame() const {
+	return m_animState.current_frame;
+}
+
+bool ModelViewport::isAnimationPlaying() const {
+	return m_animationPlaying;
 }
 
 float ModelViewport::getCurrentFps() const {
@@ -392,6 +502,18 @@ bool ModelViewport::loadModel( const QString &modelPath ) {
 							 m_model->seqgroups, m_model->num_seqgroups );
 	} else {
 		qCritical() << "ERROR: No render instance available!";
+	}
+
+	// Initialize animation state with sequence 0 (usually idle/reference)
+	if ( m_model->header->numseq > 0 ) {
+		mdl_animation_set_sequence( &m_animState, 0, m_model->header,
+			m_model->data, m_model->seqgroups );
+
+		// Sync to render instance
+		if ( m_renderInstance ) {
+			r_qt_set_animation_state( m_renderInstance, &m_animState );
+			r_qt_set_animation_enabled( m_renderInstance, true );
+		}
 	}
 
 	// NOTE: Camera does NOT auto-adjust on model load

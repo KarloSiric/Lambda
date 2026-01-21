@@ -64,7 +64,8 @@ MainWindow::MainWindow( QWidget *parent )
         
     // initializing the pointer to nullptr
     m_consoleWidget = nullptr;
-    
+    m_sequenceSelector = nullptr;
+
 	setWindowTitle( "Lambda MDL Editor" );
 	resize( MW_WIDTH, MW_HEIGHT );
 
@@ -113,9 +114,13 @@ MainWindow::MainWindow( QWidget *parent )
 		"    background-color: #a0a0a0; "
 		"}" );
 
+	// Initialize animation state
+	m_loopAnimation = true;
+
 	// Setting up all the major componenents
 	setupMenus();
 	setupToolbars();
+	connectToolbarActions();
 
 	// Setting up the docks and the main window for viewing things
 	setupDocks();
@@ -743,4 +748,156 @@ void MainWindow::onStatusBarUpdate() {
 		m_statusBar->setGridSize( 10.0f );
 	}
 	// When mouse leaves viewport, clearViewportInfo() is called via leaveEvent
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Toolbar Action Connections
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::connectToolbarActions() {
+	// Find the main toolbar
+	QToolBar *mainToolbar = findChild<QToolBar *>( "Main Toolbar" );
+	if ( !mainToolbar ) {
+		// Try to find first toolbar if named lookup fails
+		QList<QToolBar *> toolbars = findChildren<QToolBar *>();
+		if ( !toolbars.isEmpty() ) {
+			mainToolbar = toolbars.first();
+		}
+	}
+
+	if ( !mainToolbar ) {
+		log_warning( "UI", "Main toolbar not found for action connections" );
+		return;
+	}
+
+	// Connect animation control actions
+	for ( QAction *action : mainToolbar->actions() ) {
+		QString text = action->text();
+
+		if ( text == "Play" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onPlayAnimation );
+		} else if ( text == "Pause" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onPauseAnimation );
+		} else if ( text == "Stop" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onStopAnimation );
+		} else if ( text == "Prev Frame" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onPrevFrame );
+		} else if ( text == "Next Frame" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onNextFrame );
+		} else if ( text == "Loop" ) {
+			action->setCheckable( true );
+			action->setChecked( m_loopAnimation );
+			connect( action, &QAction::triggered, this, &MainWindow::onToggleLoop );
+		}
+	}
+
+	// Create and add sequence selector dropdown to the secondary toolbar
+	QToolBar *secondaryToolbar = findChild<QToolBar *>( "Secondary" );
+	if ( secondaryToolbar ) {
+		// Add label
+		QLabel *seqLabel = new QLabel( " Sequence: ", secondaryToolbar );
+		seqLabel->setStyleSheet( "color: #000000; background: transparent;" );
+		secondaryToolbar->addWidget( seqLabel );
+
+		// Create sequence selector combobox
+		m_sequenceSelector = new QComboBox( secondaryToolbar );
+		m_sequenceSelector->setMinimumWidth( 180 );
+		m_sequenceSelector->setMaximumWidth( 300 );
+		m_sequenceSelector->addItem( "(No model loaded)" );
+		m_sequenceSelector->setEnabled( false );
+
+		// Apply classic Windows 95 style
+		m_sequenceSelector->setStyleSheet(
+			"QComboBox { "
+			"    background-color: #ffffff; "
+			"    color: #000000; "
+			"    border: 2px solid; "
+			"    border-top-color: #808080; "
+			"    border-left-color: #808080; "
+			"    border-right-color: #ffffff; "
+			"    border-bottom-color: #ffffff; "
+			"    padding: 1px 4px; "
+			"    font-size: 11px; "
+			"} "
+			"QComboBox QAbstractItemView { "
+			"    background-color: #ffffff; "
+			"    color: #000000; "
+			"    selection-background-color: #000080; "
+			"    selection-color: #ffffff; "
+			"}" );
+
+		secondaryToolbar->addWidget( m_sequenceSelector );
+
+		// Connect sequence selection signal
+		connect( m_sequenceSelector, QOverload<int>::of( &QComboBox::currentIndexChanged ),
+			this, &MainWindow::onSequenceChanged );
+	}
+
+	log_debug( "UI", "Toolbar actions connected" );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Animation Control Slots
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::onPlayAnimation() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( !viewport || !viewport->hasModelLoaded() ) {
+		log_warning( "Animation", "No model loaded - cannot play animation" );
+		return;
+	}
+
+	viewport->playAnimation( true );
+	log_info( "Animation", "Animation playback started" );
+}
+
+void MainWindow::onPauseAnimation() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( !viewport ) return;
+
+	viewport->playAnimation( false );
+	log_info( "Animation", "Animation paused" );
+}
+
+void MainWindow::onStopAnimation() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( !viewport ) return;
+
+	viewport->playAnimation( false );
+	viewport->setAnimationFrame( 0.0f );
+	log_info( "Animation", "Animation stopped and reset to frame 0" );
+}
+
+void MainWindow::onPrevFrame() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( !viewport || !viewport->hasModelLoaded() ) return;
+
+	// Pause animation when stepping through frames manually
+	viewport->playAnimation( false );
+
+	float currentFrame = viewport->getCurrentFrame();
+	float newFrame = currentFrame - 1.0f;
+	if ( newFrame < 0 ) newFrame = 0;
+
+	viewport->setAnimationFrame( newFrame );
+	log_debug( "Animation", "Frame: %.1f", newFrame );
+}
+
+void MainWindow::onNextFrame() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( !viewport || !viewport->hasModelLoaded() ) return;
+
+	// Pause animation when stepping through frames manually
+	viewport->playAnimation( false );
+
+	float currentFrame = viewport->getCurrentFrame();
+	viewport->setAnimationFrame( currentFrame + 1.0f );
+	log_debug( "Animation", "Frame: %.1f", currentFrame + 1.0f );
+}
+
+void MainWindow::onToggleLoop() {
+	m_loopAnimation = !m_loopAnimation;
+
+	// TODO: Pass loop setting to viewport animation state when mdl_animation supports looping
+	log_info( "Animation", "Loop %s", m_loopAnimation ? "enabled" : "disabled" );
 }

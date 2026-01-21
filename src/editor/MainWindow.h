@@ -11,6 +11,7 @@
 #include <QWidget>
 #include <QOpenGLWidget>
 #include <QTabWidget>
+#include <QComboBox>
 #include <QMap>
 #include <QTimer>
 #include <QElapsedTimer>
@@ -44,6 +45,15 @@ class MainWindow : public QMainWindow {
     void onCloseTab( int index );
     void onTabChanged( int index );
     void onStatusBarUpdate();
+
+    // Animation control slots
+    void onPlayAnimation();
+    void onPauseAnimation();
+    void onStopAnimation();
+    void onPrevFrame();
+    void onNextFrame();
+    void onToggleLoop();
+    void onSequenceChanged( int index );
 
   private:
      
@@ -91,6 +101,18 @@ class MainWindow : public QMainWindow {
 	QElapsedTimer m_fpsTimer;
 	int m_frameCount;
 	float m_lastFps;
+
+	// Animation state
+	bool m_loopAnimation;
+
+	// Sequence selector combobox (in toolbar)
+	QComboBox *m_sequenceSelector;
+
+	// Helper to connect toolbar actions
+	void connectToolbarActions();
+
+	// Helper to update sequence list when model changes
+	void updateSequenceList( ModelViewport *viewport );
 };
 
 #endif

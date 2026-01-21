@@ -2199,3 +2199,25 @@ void r_qt_render_with_matrices(
 		glDrawArrays(GL_TRIANGLES, inst->ranges[r].first, inst->ranges[r].count);
 	}
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// QT ANIMATION STATE FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+void r_qt_set_animation_state( r_qt_instance_t *inst, const mdl_animation_state_t *state ) {
+	if ( !inst || !state ) return;
+
+	// Copy the animation state from viewport to render instance
+	inst->anim_state.current_sequence = state->current_sequence;
+	inst->anim_state.current_frame = state->current_frame;
+	inst->anim_state.previous_frame = state->previous_frame;
+	inst->anim_state.is_looping = state->is_looping;
+
+	// Mark bones as needing recalculation
+	inst->t_pose_bones_calculated = false;
+}
+
+void r_qt_set_animation_enabled( r_qt_instance_t *inst, bool enabled ) {
+	if ( !inst ) return;
+	inst->animation_enabled = enabled;
+}

@@ -208,4 +208,12 @@ void r_qt_render_with_matrices(
 	mat4 proj,
 	mat4 model );
 
+// Set animation state for Qt instance (syncs viewport animation state to renderer)
+void r_qt_set_animation_state(
+	r_qt_instance_t *inst,
+	const mdl_animation_state_t *state );
+
+// Enable/disable animation for Qt instance
+void r_qt_set_animation_enabled( r_qt_instance_t *inst, bool enabled );
+
 #endif
