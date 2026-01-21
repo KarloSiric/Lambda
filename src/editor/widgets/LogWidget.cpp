@@ -70,37 +70,35 @@ void LogWidget::setupUI() {
 
 	// Level filter dropdown
 	QLabel *levelLabel = new QLabel( "Level:" );
-	levelLabel->setStyleSheet( "QLabel { color: #cccccc; font-size: 11px; }" );
 	m_levelFilter = new QComboBox();
 	m_levelFilter->addItem( "Trace", static_cast<int>( LogLevel::Trace ) );
 	m_levelFilter->addItem( "Debug", static_cast<int>( LogLevel::Debug ) );
 	m_levelFilter->addItem( "Info", static_cast<int>( LogLevel::Info ) );
 	m_levelFilter->addItem( "Warning", static_cast<int>( LogLevel::Warning ) );
 	m_levelFilter->addItem( "Error", static_cast<int>( LogLevel::Error ) );
+	m_levelFilter->addItem( "Fatal", static_cast<int>( LogLevel::Fatal ) );
 	m_levelFilter->setCurrentIndex( 0 ); // Show all by default
 	connect( m_levelFilter, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &LogWidget::onFilterChanged );
 
-	// Search filter
-	QLabel *searchLabel = new QLabel( "Filter:" );
-	searchLabel->setStyleSheet( "QLabel { color: #cccccc; font-size: 11px; }" );
+	// Search filter - searches in message text
+	QLabel *searchLabel = new QLabel( "Search:" );
 	m_searchFilter = new QLineEdit();
-	m_searchFilter->setPlaceholderText( "Search logs..." );
+	m_searchFilter->setPlaceholderText( "Filter text..." );
 	m_searchFilter->setMaximumWidth( 150 );
 	connect( m_searchFilter, &QLineEdit::textChanged, this, &LogWidget::onFilterChanged );
 
 	// Options
 	m_autoScrollCheck = new QCheckBox( "Auto-scroll" );
 	m_autoScrollCheck->setChecked( true );
-	m_autoScrollCheck->setStyleSheet( "QCheckBox { color: #cccccc; font-size: 11px; }" );
 	connect( m_autoScrollCheck, &QCheckBox::toggled, this, [this]( bool checked ) {
 		m_autoScroll = checked;
 	} );
 
 	m_timestampCheck = new QCheckBox( "Timestamps" );
 	m_timestampCheck->setChecked( true );
-	m_timestampCheck->setStyleSheet( "QCheckBox { color: #cccccc; font-size: 11px; }" );
 	connect( m_timestampCheck, &QCheckBox::toggled, this, [this]( bool checked ) {
 		m_showTimestamp = checked;
+		refreshDisplay();
 	} );
 
 	// Buttons
@@ -139,8 +137,8 @@ void LogWidget::applyStyles() {
 	// Classic Windows 95/98 style - match the rest of the app
 	setStyleSheet( "QWidget { background-color: #c0c0c0; }" );
 
-	// Classic raised button/control style
-	QString controlStyle =
+	// Combobox style
+	QString comboStyle =
 		"QComboBox { "
 		"    background-color: #ffffff; "
 		"    color: #000000; "
@@ -157,7 +155,10 @@ void LogWidget::applyStyles() {
 		"    color: #000000; "
 		"    selection-background-color: #000080; "
 		"    selection-color: #ffffff; "
-		"} "
+		"}";
+
+	// Line edit style
+	QString lineEditStyle =
 		"QLineEdit { "
 		"    background-color: #ffffff; "
 		"    color: #000000; "
@@ -168,7 +169,10 @@ void LogWidget::applyStyles() {
 		"    border-bottom-color: #ffffff; "
 		"    padding: 1px 4px; "
 		"    font-size: 11px; "
-		"} "
+		"}";
+
+	// Button style
+	QString buttonStyle =
 		"QPushButton { "
 		"    background-color: #c0c0c0; "
 		"    color: #000000; "
@@ -185,13 +189,29 @@ void LogWidget::applyStyles() {
 		"    border-left-color: #808080; "
 		"    border-right-color: #ffffff; "
 		"    border-bottom-color: #ffffff; "
+		"}";
+
+	// Checkbox style - use native Qt checkmark by not overriding indicator:checked image
+	QString checkboxStyle =
+		"QCheckBox { "
+		"    color: #000000; "
+		"    spacing: 4px; "
+		"    font-size: 11px; "
 		"} "
-		"QLabel { color: #000000; } "
-		"QCheckBox { color: #000000; } "
 		"QCheckBox::indicator { "
 		"    width: 13px; "
 		"    height: 13px; "
+		"} "
+		"QCheckBox::indicator:unchecked { "
 		"    background-color: #ffffff; "
+		"    border: 2px solid; "
+		"    border-top-color: #808080; "
+		"    border-left-color: #808080; "
+		"    border-right-color: #ffffff; "
+		"    border-bottom-color: #ffffff; "
+		"} "
+		"QCheckBox::indicator:checked { "
+		"    background-color: #000080; "
 		"    border: 2px solid; "
 		"    border-top-color: #808080; "
 		"    border-left-color: #808080; "
@@ -199,13 +219,21 @@ void LogWidget::applyStyles() {
 		"    border-bottom-color: #ffffff; "
 		"}";
 
-	m_levelFilter->setStyleSheet( controlStyle );
-	m_searchFilter->setStyleSheet( controlStyle );
-	m_autoScrollCheck->setStyleSheet( controlStyle );
-	m_timestampCheck->setStyleSheet( controlStyle );
-	m_clearBtn->setStyleSheet( controlStyle );
-	m_copyBtn->setStyleSheet( controlStyle );
-	m_saveBtn->setStyleSheet( controlStyle );
+	// Label style
+	QString labelStyle = "QLabel { color: #000000; background: transparent; }";
+
+	m_levelFilter->setStyleSheet( comboStyle );
+	m_searchFilter->setStyleSheet( lineEditStyle );
+	m_clearBtn->setStyleSheet( buttonStyle );
+	m_copyBtn->setStyleSheet( buttonStyle );
+	m_saveBtn->setStyleSheet( buttonStyle );
+	m_autoScrollCheck->setStyleSheet( checkboxStyle );
+	m_timestampCheck->setStyleSheet( checkboxStyle );
+
+	// Find and style the labels
+	for ( QLabel *label : findChildren<QLabel *>() ) {
+		label->setStyleSheet( labelStyle );
+	}
 
 	// Log view - dark sunken area
 	m_logView->setStyleSheet(
@@ -240,18 +268,32 @@ void LogWidget::log( LogLevel level, const QString &message, const QString &cate
 void LogWidget::flushLogQueue() {
 	while ( !m_logQueue.isEmpty() ) {
 		LogEntry entry = m_logQueue.dequeue();
-		if ( shouldDisplay( entry.level, entry.category ) ) {
+
+		// Store ALL logs for later filtering
+		m_allLogs.append( entry );
+
+		// Limit stored logs
+		while ( m_allLogs.size() > MAX_LOG_ENTRIES ) {
+			m_allLogs.removeFirst();
+		}
+
+		// Display if matches current filter
+		if ( shouldDisplay( entry.level, entry.message, entry.category ) ) {
 			appendLogEntry( entry.level, entry.message, entry.category, entry.timestamp );
 		}
 	}
+}
 
-	// Limit log size
-	QTextDocument *doc = m_logView->document();
-	if ( doc->blockCount() > MAX_LOG_LINES ) {
-		QTextCursor cursor( doc );
-		cursor.movePosition( QTextCursor::Start );
-		cursor.movePosition( QTextCursor::Down, QTextCursor::KeepAnchor, doc->blockCount() - MAX_LOG_LINES );
-		cursor.removeSelectedText();
+void LogWidget::refreshDisplay() {
+	// Clear display and re-render all logs that match current filter
+	if ( !m_logView ) return;
+
+	m_logView->clear();
+
+	for ( const LogEntry &entry : m_allLogs ) {
+		if ( shouldDisplay( entry.level, entry.message, entry.category ) ) {
+			appendLogEntry( entry.level, entry.message, entry.category, entry.timestamp );
+		}
 	}
 }
 
@@ -294,14 +336,16 @@ void LogWidget::appendLogEntry( LogLevel level, const QString &message, const QS
 	}
 }
 
-bool LogWidget::shouldDisplay( LogLevel level, const QString &category ) const {
+bool LogWidget::shouldDisplay( LogLevel level, const QString &message, const QString &category ) const {
 	// Check level filter
 	if ( level < m_minLevel ) return false;
 
-	// Check search filter
+	// Check search filter - search in both message and category
 	QString filter = m_searchFilter ? m_searchFilter->text() : "";
 	if ( !filter.isEmpty() ) {
-		if ( !category.contains( filter, Qt::CaseInsensitive ) ) {
+		bool foundInMessage = message.contains( filter, Qt::CaseInsensitive );
+		bool foundInCategory = category.contains( filter, Qt::CaseInsensitive );
+		if ( !foundInMessage && !foundInCategory ) {
 			return false;
 		}
 	}
@@ -363,6 +407,7 @@ void LogWidget::clear() {
 		m_logView->clear();
 	}
 	m_logQueue.clear();
+	m_allLogs.clear();
 }
 
 void LogWidget::setMinLevel( LogLevel level ) {
@@ -396,7 +441,8 @@ QString LogWidget::getHtml() const {
 
 void LogWidget::onFilterChanged() {
 	m_minLevel = static_cast<LogLevel>( m_levelFilter->currentData().toInt() );
-	m_categoryFilter = m_searchFilter->text();
+	// Refresh display with new filter
+	refreshDisplay();
 }
 
 void LogWidget::onClearClicked() {
