@@ -87,7 +87,7 @@ class LogWidget : public QWidget {
 	void appendLogEntry( LogLevel level, const QString &message, const QString &category, const QDateTime &timestamp );
 	QString levelToString( LogLevel level ) const;
 	QString levelToColor( LogLevel level ) const;
-	bool shouldDisplay( LogLevel level, const QString &category ) const;
+	bool shouldDisplay( LogLevel level, const QString &message, const QString &category ) const;
 
 	struct LogEntry {
 		LogLevel level;
@@ -110,13 +110,18 @@ class LogWidget : public QWidget {
 	LogLevel m_minLevel;
 	bool m_autoScroll;
 	bool m_showTimestamp;
-	QString m_categoryFilter;
 
-	// Message queue for batching
+	// All log entries stored for real-time filtering
+	QList<LogEntry> m_allLogs;
+	static const int MAX_LOG_ENTRIES = 10000;
+
+	// Message queue for batching incoming logs
 	QQueue<LogEntry> m_logQueue;
 	QTimer *m_flushTimer;
 	static const int FLUSH_INTERVAL = 50; // ms
-	static const int MAX_LOG_LINES = 10000;
+
+	// Refresh the display based on current filters
+	void refreshDisplay();
 
   private slots:
 

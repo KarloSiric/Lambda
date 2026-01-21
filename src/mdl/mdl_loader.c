@@ -895,7 +895,7 @@ mdl_result_t create_mdl_model( const char *model_path, mdl_model_t **model_out )
 	int file_size_kb = model->header->length / 1024;
 
 	CONSOLE_SUCCESS( "Loaded: %s", model_path );
-	CONSOLE_INFO( "   File: %d KB, %d polygons, %d vertices",
+	CONSOLE_INFO( "   File: %d KB, %d triangles, %d vertices",
 		file_size_kb,
 		total_triangles,
 		total_vertices );
