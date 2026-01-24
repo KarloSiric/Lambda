@@ -2,7 +2,7 @@
 #define MDL_LOADER_H
 
 #include "studio.h"
-#include "util/util_messages.h"
+#include "util_messages.h"
 
 #include <stddef.h>
 #include <stdio.h>
