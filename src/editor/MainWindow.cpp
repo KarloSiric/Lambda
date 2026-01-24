@@ -574,6 +574,9 @@ void MainWindow::onOpenModel() {
 	m_statusBar->setModelInfo( filePath, info.vertexCount, info.triangleCount,
 							   info.boneCount, info.sequenceCount, info.textureCount );
 	m_statusBar->setFileSize( info.fileSize );
+
+	// Update sequence selector dropdown with model's sequences
+	updateSequenceList( viewport );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -707,6 +710,9 @@ void MainWindow::onTabChanged( int index ) {
 		// No model loaded in this tab
 		m_statusBar->clearModelInfo();
 	}
+
+	// Update sequence selector for the new tab's model
+	updateSequenceList( viewport );
 
 	if ( viewport->hasModelLoaded() ) {
 		viewport->update();
@@ -900,4 +906,63 @@ void MainWindow::onToggleLoop() {
 
 	// TODO: Pass loop setting to viewport animation state when mdl_animation supports looping
 	log_info( "Animation", "Loop %s", m_loopAnimation ? "enabled" : "disabled" );
+}
+
+void MainWindow::onSequenceChanged( int index ) {
+	if ( index < 0 ) return;
+
+	ModelViewport *viewport = getCurrentViewport();
+	if ( !viewport || !viewport->hasModelLoaded() ) return;
+
+	// Set the sequence on the viewport
+	viewport->setSequence( index );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Sequence List Management
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::updateSequenceList( ModelViewport *viewport ) {
+	if ( !m_sequenceSelector ) return;
+
+	// Block signals while updating to prevent triggering onSequenceChanged
+	m_sequenceSelector->blockSignals( true );
+	m_sequenceSelector->clear();
+
+	if ( !viewport || !viewport->hasModelLoaded() ) {
+		m_sequenceSelector->addItem( "(No model loaded)" );
+		m_sequenceSelector->setEnabled( false );
+		m_sequenceSelector->blockSignals( false );
+		return;
+	}
+
+	// Get sequence count from viewport
+	int seqCount = viewport->getSequenceCount();
+	if ( seqCount <= 0 ) {
+		m_sequenceSelector->addItem( "(No sequences)" );
+		m_sequenceSelector->setEnabled( false );
+		m_sequenceSelector->blockSignals( false );
+		return;
+	}
+
+	// Populate the dropdown with actual sequence names from the model
+	for ( int i = 0; i < seqCount; i++ ) {
+		QString seqName = viewport->getSequenceName( i );
+		if ( seqName.isEmpty() ) {
+			seqName = QString( "Sequence %1" ).arg( i );
+		}
+		m_sequenceSelector->addItem( QString( "%1: %2" ).arg( i ).arg( seqName ) );
+	}
+
+	m_sequenceSelector->setEnabled( true );
+
+	// Set current selection to match viewport's current sequence
+	int currentSeq = viewport->getCurrentSequence();
+	if ( currentSeq >= 0 && currentSeq < seqCount ) {
+		m_sequenceSelector->setCurrentIndex( currentSeq );
+	}
+
+	m_sequenceSelector->blockSignals( false );
+
+	log_debug( "UI", "Sequence list updated: %d sequences", seqCount );
 }

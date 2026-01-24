@@ -654,3 +654,16 @@ int ModelViewport::getBodypartCount() const {
 	if ( !m_model || !m_model->header ) return 0;
 	return m_model->header->numbodyparts;
 }
+
+QString ModelViewport::getSequenceName( int index ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) {
+		return QString();
+	}
+
+	if ( index < 0 || index >= m_model->header->numseq ) {
+		return QString();
+	}
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( m_model->data + m_model->header->seqindex );
+	return QString::fromLatin1( sequences[index].label );
+}
