@@ -797,47 +797,8 @@ void MainWindow::connectToolbarActions() {
 		}
 	}
 
-	// Create and add sequence selector dropdown to the secondary toolbar
-	QToolBar *secondaryToolbar = findChild<QToolBar *>( "Secondary" );
-	if ( secondaryToolbar ) {
-		// Add label
-		QLabel *seqLabel = new QLabel( " Sequence: ", secondaryToolbar );
-		seqLabel->setStyleSheet( "color: #000000; background: transparent;" );
-		secondaryToolbar->addWidget( seqLabel );
-
-		// Create sequence selector combobox
-		m_sequenceSelector = new QComboBox( secondaryToolbar );
-		m_sequenceSelector->setMinimumWidth( 180 );
-		m_sequenceSelector->setMaximumWidth( 300 );
-		m_sequenceSelector->addItem( "(No model loaded)" );
-		m_sequenceSelector->setEnabled( false );
-
-		// Apply classic Windows 95 style
-		m_sequenceSelector->setStyleSheet(
-			"QComboBox { "
-			"    background-color: #ffffff; "
-			"    color: #000000; "
-			"    border: 2px solid; "
-			"    border-top-color: #808080; "
-			"    border-left-color: #808080; "
-			"    border-right-color: #ffffff; "
-			"    border-bottom-color: #ffffff; "
-			"    padding: 1px 4px; "
-			"    font-size: 11px; "
-			"} "
-			"QComboBox QAbstractItemView { "
-			"    background-color: #ffffff; "
-			"    color: #000000; "
-			"    selection-background-color: #000080; "
-			"    selection-color: #ffffff; "
-			"}" );
-
-		secondaryToolbar->addWidget( m_sequenceSelector );
-
-		// Connect sequence selection signal
-		connect( m_sequenceSelector, QOverload<int>::of( &QComboBox::currentIndexChanged ),
-			this, &MainWindow::onSequenceChanged );
-	}
+	// NOTE: Sequence selector will be added to Inspector panel later
+	// The logic (onSequenceChanged, updateSequenceList) is kept for future use
 
 	log_debug( "UI", "Toolbar actions connected" );
 }
