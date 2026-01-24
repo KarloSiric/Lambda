@@ -44,4 +44,8 @@ void Camera_UpdateTransforms( r_camera_t *camera );
 
 const math_mat4_t *Camera_GetViewMatrix( r_camera_t *camera );
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif // CAMERA_H

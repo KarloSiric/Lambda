@@ -41,18 +41,18 @@ class StatusBarWidget;
 // @Note: C backend includes - everything is coevered in these includes
 extern "C" {
 
-#include "mdl/mdl_loader.h"
-#include "mdl/mdl_animations.h"
-#include "r/r_draw.h"
-#include "r/r_grid.h"
-#include "r/r_camera.h"
-#include "math/math_types.h"
-#include "math/math_matrix.h"
-#include "math/math_vector.h"
+#include "mdl_loader.h"
+#include "mdl_animations.h"
+#include "r_draw.h"
+#include "r_grid.h"
+#include "r_camera.h"
+#include "math_types.h"
+#include "math_matrix.h"
+#include "math_vector.h"
 #include <cglm/cglm.h>
 }
-}
 
+    
 class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	Q_OBJECT
   public:
@@ -96,6 +96,7 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void setCameraDistance( float distance );
 	float getCameraDistance() const;
 	void getCameraPosition( float &x, float &y, float &z ) const;
+	void frameModel(); // Auto-frame camera to fit loaded model
 
 	// @Note: Model info getters for status bar
 	int getVertexCount() const;
@@ -196,7 +197,5 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void updateAnimationState( float deltaTime );
 	void setupProjectionMatrix( int width, int height );
 	void renderScene();
-	void frameModel(); // Auto-frame camera to fit loaded model
 };
-
 #endif

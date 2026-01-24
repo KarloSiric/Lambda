@@ -667,3 +667,43 @@ QString ModelViewport::getSequenceName( int index ) const {
 	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( m_model->data + m_model->header->seqindex );
 	return QString::fromLatin1( sequences[index].label );
 }
+
+void ModelViewport::resetCamera() {
+	m_cameraPitch = 0.33f;
+	m_cameraYaw = 0.0f;
+	m_cameraDistance = 35.0f;
+	m_cameraTarget[0] = 0.0f;
+	m_cameraTarget[1] = 0.0f;
+	m_cameraTarget[2] = 0.0f;
+	update();
+}
+
+void ModelViewport::setWireframeMode( bool enabled ) {
+	m_wireframeMode = enabled;
+	update();
+}
+
+void ModelViewport::setShowGrid( bool show ) {
+	m_showGrid = show;
+	update();
+}
+
+void ModelViewport::setShowGround( bool show ) {
+	m_showGround = show;
+	update();
+}
+
+void ModelViewport::setShowAxes( bool show ) {
+	m_showAxes = show;
+	update();
+}
+
+void ModelViewport::setShowBones( bool show ) {
+	m_showBones = show;
+	update();
+}
+
+void ModelViewport::setShowHitboxes( bool show ) {
+	m_showHitboxes = show;
+	update();
+}
