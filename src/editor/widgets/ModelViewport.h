@@ -104,6 +104,7 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	int getSequenceCount() const;
 	int getTextureCount() const;
 	int getBodypartCount() const;
+	QString getSequenceName( int index ) const;
 
 	// @Note: Status bar integration
 	void setStatusBar( StatusBarWidget *statusBar );
