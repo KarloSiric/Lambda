@@ -52,8 +52,28 @@ class MainWindow : public QMainWindow {
     void onStopAnimation();
     void onPrevFrame();
     void onNextFrame();
-    void onToggleLoop();
+    void onToggleLoop( bool checked );
     void onSequenceChanged( int index );
+
+    // View toggle slots
+    void onToggleWireframe( bool checked );
+    void onToggleTextured( bool checked );
+    void onToggleBones( bool checked );
+    void onToggleHitboxes( bool checked );
+    void onToggleAttachments( bool checked );
+    void onToggleNormals( bool checked );
+    void onToggleGrid( bool checked );
+    void onToggleAxes( bool checked );
+    void onToggleGround( bool checked );
+    void onToggleLighting( bool checked );
+
+    // Camera control slots
+    void onResetCamera();
+    void onCenterModel();
+
+    // Utility slots
+    void onScreenshot();
+    void onBackgroundColor();
 
   private:
      

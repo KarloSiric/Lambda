@@ -41,6 +41,7 @@
 #include <QOpenGLWidget>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QColorDialog>
 #include <QTabBar>
 #include <QPushButton>
 #include <QLineEdit>
@@ -776,31 +777,95 @@ void MainWindow::connectToolbarActions() {
 		return;
 	}
 
-	// Connect animation control actions
+	// Connect all toolbar actions
 	for ( QAction *action : mainToolbar->actions() ) {
 		QString text = action->text();
 
-		if ( text == "Play" ) {
+		// ─────────────────────────────────────────────────────────────────────
+		// FILE SECTION
+		// ─────────────────────────────────────────────────────────────────────
+		if ( text == "Open" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onOpenModel );
+		}
+
+		// ─────────────────────────────────────────────────────────────────────
+		// VIEW TOGGLES SECTION
+		// ─────────────────────────────────────────────────────────────────────
+		else if ( text == "Wireframe" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleWireframe );
+		}
+		else if ( text == "Textured" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleTextured );
+		}
+		else if ( text == "Bones" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleBones );
+		}
+		else if ( text == "Hitboxes" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleHitboxes );
+		}
+		else if ( text == "Attachments" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleAttachments );
+		}
+		else if ( text == "Normals" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleNormals );
+		}
+		else if ( text == "Grid" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleGrid );
+		}
+		else if ( text == "Axes" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleAxes );
+		}
+		else if ( text == "Ground" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleGround );
+		}
+
+		// ─────────────────────────────────────────────────────────────────────
+		// CAMERA SECTION
+		// ─────────────────────────────────────────────────────────────────────
+		else if ( text == "Reset Camera" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onResetCamera );
+		}
+		else if ( text == "Center Model" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onCenterModel );
+		}
+
+		// ─────────────────────────────────────────────────────────────────────
+		// ANIMATION SECTION
+		// ─────────────────────────────────────────────────────────────────────
+		else if ( text == "Play" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onPlayAnimation );
-		} else if ( text == "Pause" ) {
+		}
+		else if ( text == "Pause" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onPauseAnimation );
-		} else if ( text == "Stop" ) {
+		}
+		else if ( text == "Stop" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onStopAnimation );
-		} else if ( text == "Prev Frame" ) {
+		}
+		else if ( text == "Prev Frame" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onPrevFrame );
-		} else if ( text == "Next Frame" ) {
+		}
+		else if ( text == "Next Frame" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onNextFrame );
-		} else if ( text == "Loop" ) {
-			action->setCheckable( true );
-			action->setChecked( m_loopAnimation );
-			connect( action, &QAction::triggered, this, &MainWindow::onToggleLoop );
+		}
+		else if ( text == "Loop" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleLoop );
+		}
+
+		// ─────────────────────────────────────────────────────────────────────
+		// UTILITY SECTION
+		// ─────────────────────────────────────────────────────────────────────
+		else if ( text == "Screenshot" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onScreenshot );
+		}
+		else if ( text == "Background" ) {
+			connect( action, &QAction::triggered, this, &MainWindow::onBackgroundColor );
+		}
+		else if ( text == "Lighting" ) {
+			connect( action, &QAction::toggled, this, &MainWindow::onToggleLighting );
 		}
 	}
 
-	// NOTE: Sequence selector will be added to Inspector panel later
-	// The logic (onSequenceChanged, updateSequenceList) is kept for future use
-
-	log_debug( "UI", "Toolbar actions connected" );
+	log_info( "UI", "Toolbar actions connected (21 actions)" );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -862,8 +927,8 @@ void MainWindow::onNextFrame() {
 	log_debug( "Animation", "Frame: %.1f", currentFrame + 1.0f );
 }
 
-void MainWindow::onToggleLoop() {
-	m_loopAnimation = !m_loopAnimation;
+void MainWindow::onToggleLoop( bool checked ) {
+	m_loopAnimation = checked;
 
 	// TODO: Pass loop setting to viewport animation state when mdl_animation supports looping
 	log_info( "Animation", "Loop %s", m_loopAnimation ? "enabled" : "disabled" );
@@ -926,4 +991,140 @@ void MainWindow::updateSequenceList( ModelViewport *viewport ) {
 	m_sequenceSelector->blockSignals( false );
 
 	log_debug( "UI", "Sequence list updated: %d sequences", seqCount );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// View Toggle Slots
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::onToggleWireframe( bool checked ) {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->setWireframeMode( checked );
+		log_info( "View", "Wireframe %s", checked ? "enabled" : "disabled" );
+	}
+}
+
+void MainWindow::onToggleTextured( bool checked ) {
+	// TODO: Implement textured toggle in viewport
+	log_info( "View", "Textured %s", checked ? "enabled" : "disabled" );
+}
+
+void MainWindow::onToggleBones( bool checked ) {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->setShowBones( checked );
+		log_info( "View", "Bones %s", checked ? "enabled" : "disabled" );
+	}
+}
+
+void MainWindow::onToggleHitboxes( bool checked ) {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->setShowHitboxes( checked );
+		log_info( "View", "Hitboxes %s", checked ? "enabled" : "disabled" );
+	}
+}
+
+void MainWindow::onToggleAttachments( bool checked ) {
+	// TODO: Implement attachments toggle in viewport
+	log_info( "View", "Attachments %s", checked ? "enabled" : "disabled" );
+}
+
+void MainWindow::onToggleNormals( bool checked ) {
+	// TODO: Implement normals toggle in viewport
+	log_info( "View", "Normals %s", checked ? "enabled" : "disabled" );
+}
+
+void MainWindow::onToggleGrid( bool checked ) {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->setShowGrid( checked );
+		log_info( "View", "Grid %s", checked ? "enabled" : "disabled" );
+	}
+}
+
+void MainWindow::onToggleAxes( bool checked ) {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->setShowAxes( checked );
+		log_info( "View", "Axes %s", checked ? "enabled" : "disabled" );
+	}
+}
+
+void MainWindow::onToggleGround( bool checked ) {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->setShowGround( checked );
+		log_info( "View", "Ground %s", checked ? "enabled" : "disabled" );
+	}
+}
+
+void MainWindow::onToggleLighting( bool checked ) {
+	// TODO: Implement lighting toggle in viewport
+	log_info( "View", "Lighting %s", checked ? "enabled" : "disabled" );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Camera Control Slots
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::onResetCamera() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->resetCamera();
+		log_info( "Camera", "Camera reset to default position" );
+	}
+}
+
+void MainWindow::onCenterModel() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport && viewport->hasModelLoaded() ) {
+		viewport->frameModel();
+		log_info( "Camera", "Camera centered on model" );
+	} else {
+		log_warning( "Camera", "No model loaded to center on" );
+	}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Utility Slots
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::onScreenshot() {
+	ModelViewport *viewport = getCurrentViewport();
+	if ( !viewport ) {
+		log_warning( "Screenshot", "No viewport available" );
+		return;
+	}
+
+	// Get save file path from user
+	QString filePath = QFileDialog::getSaveFileName(
+		this,
+		"Save Screenshot",
+		"screenshot.png",
+		"PNG Images (*.png);;JPEG Images (*.jpg);;All Files (*)"
+	);
+
+	if ( filePath.isEmpty() ) {
+		return;
+	}
+
+	// Grab the viewport framebuffer
+	QImage screenshot = viewport->grabFramebuffer();
+	if ( screenshot.save( filePath ) ) {
+		log_info( "Screenshot", "Saved to: %s", filePath.toUtf8().constData() );
+	} else {
+		log_error( "Screenshot", "Failed to save screenshot" );
+	}
+}
+
+void MainWindow::onBackgroundColor() {
+	// TODO: Implement background color picker
+	// For now, show a color dialog and log the selection
+	QColor color = QColorDialog::getColor( Qt::gray, this, "Select Background Color" );
+	if ( color.isValid() ) {
+		log_info( "View", "Background color changed to: %s", color.name().toUtf8().constData() );
+		// TODO: Apply to viewport - need to add setBackgroundColor method
+	}
 }
