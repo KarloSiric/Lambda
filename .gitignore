@@ -71,4 +71,7 @@ docs/DEVELOPMENT_INFO.md
 roadmap.md
 ROADMAP.md
 
+# Ignoring anything regarding additional tools used
+.serena/
+
 

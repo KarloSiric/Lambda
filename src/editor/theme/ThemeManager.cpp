@@ -30,33 +30,271 @@
 #include <QtWidgets/qapplication.h>
 #include <QStyleFactory>
 
-void ThemeManager::applyThemeLight( QApplication &app ) {
-    
-	app.setStyle( QStyleFactory::create( "Fusion" ) );
+// ═══════════════════════════════════════════════════════════════════════════
+// CLASSIC THEME (Windows 95/2000 Style)
+// ═══════════════════════════════════════════════════════════════════════════
 
-	// Use system default font - works on all platforms
-	app.setFont( QFont( app.font().family(), 11 ) );
+void ThemeManager::applyClassicTheme( QApplication *app ) {
+    if ( !app ) return;
 
-	// ----------------------------
-	// CUSTOM PALETTE
-	// ----------------------------
-	QPalette pal;
-	pal.setColor( QPalette::Window, QColor( 245, 245, 245 ) ); // panels
-	pal.setColor( QPalette::Base, QColor( 250, 250, 250 ) ); // text areas
-	pal.setColor( QPalette::AlternateBase, QColor( 235, 235, 235 ) );
-	pal.setColor( QPalette::ToolTipBase, Qt::white );
-	pal.setColor( QPalette::ToolTipText, Qt::black );
-	pal.setColor( QPalette::Text, Qt::black );
-	pal.setColor( QPalette::Button, QColor( 240, 240, 240 ) );
-	pal.setColor( QPalette::ButtonText, Qt::black );
-	pal.setColor( QPalette::Highlight, QColor( 70, 120, 255 ) ); // blue selection
-	pal.setColor( QPalette::HighlightedText, Qt::white );
-	app.setPalette( pal );
+    // Use Windows style as base
+    app->setStyle( QStyleFactory::create( "Windows" ) );
 
-	// ----------------------------
-	// STYLESHEET (modern + hammered)
-	// ----------------------------
-	QString style = R"(
+    // Set classic Windows font (Tahoma 12pt - Windows 2000 style)
+    // Fallback chain: Tahoma → MS Sans Serif → System Default
+    QFont classicFont;
+    classicFont.setFamily( "Tahoma" );
+    classicFont.setPointSize( 12 );
+    classicFont.setStyleHint( QFont::SansSerif );
+    app->setFont( classicFont );
+
+    // Note: Individual component styles are applied per-widget
+    // Main window calls getClassicMainWindowStyle(), etc.
+}
+
+QString ThemeManager::getClassicMainWindowStyle() {
+    return R"(
+        QMainWindow {
+            background-color: #c0c0c0;
+        }
+        QMenuBar {
+            background-color: #d0d0d0;
+            color: #000000;
+            border-bottom: 1px solid #808080;
+        }
+        QMenuBar::item {
+            background-color: transparent;
+            padding: 4px 8px;
+        }
+        QMenuBar::item:selected {
+            background-color: #000080;
+            color: #ffffff;
+        }
+        QToolBar {
+            background-color: #d0d0d0;
+            border: 1px solid #808080;
+            spacing: 3px;
+            padding: 2px;
+        }
+        QToolButton {
+            background-color: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #ffffff;
+            border-left-color: #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            padding: 3px;
+            margin: 1px;
+        }
+        QToolButton:hover {
+            background-color: #d0d0d0;
+        }
+        QToolButton:pressed {
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            background-color: #a0a0a0;
+        }
+        QToolButton:checked {
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            background-color: #a0a0a0;
+        }
+    )";
+}
+
+QString ThemeManager::getClassicViewportContainerStyle() {
+    return R"(
+        QWidget {
+            background-color: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #ffffff;
+            border-left-color: #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+        }
+    )";
+}
+
+QString ThemeManager::getClassicTabWidgetStyle() {
+    return R"(
+        QTabWidget::pane {
+            border: 1px solid;
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            background-color: #c0c0c0;
+            margin: 0px;
+        }
+        QTabBar::tab {
+            background-color: #c0c0c0;
+            border: 1px solid;
+            border-top-color: #ffffff;
+            border-left-color: #ffffff;
+            border-right-color: #808080;
+            border-bottom: none;
+            padding: 2px 14px 2px 6px;
+            margin-right: 1px;
+            color: #000000;
+            font-size: 10px;
+            min-width: 50px;
+            max-width: 150px;
+            min-height: 16px;
+            max-height: 16px;
+        }
+        QTabBar::tab:first {
+            padding: 2px 14px 2px 6px;
+            min-width: 50px;
+            min-height: 16px;
+            max-height: 16px;
+        }
+        QTabBar::tab:selected {
+            background-color: #0a246a;
+            border-top-color: #0d2d85;
+            border-left-color: #0d2d85;
+            border-right-color: #081d55;
+            border-bottom: 1px solid #0a246a;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        QTabBar::tab:hover {
+            background-color: #a8a8a8;
+        }
+        QTabBar::close-button {
+            subcontrol-position: center right;
+            width: 10px;
+            height: 10px;
+            margin-right: 2px;
+            background-color: transparent;
+            border: none;
+            image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiPjxwYXRoIGQ9Ik0yLDIgTDgsOCBNMiw4IEw4LDIiIHN0cm9rZT0iIzYwNjA2MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=);
+        }
+        QTabBar::close-button:hover {
+            background-color: #d04040;
+            border: 1px solid #a03030;
+            image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiPjxwYXRoIGQ9Ik0yLDIgTDgsOCBNMiw4IEw4LDIiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=);
+        }
+    )";
+}
+
+QString ThemeManager::getClassicBottomTabsStyle() {
+    return R"(
+        QTabWidget::pane {
+            border: 2px solid;
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            background-color: #353535;
+        }
+        QTabBar::tab {
+            background-color: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #ffffff;
+            border-left-color: #ffffff;
+            border-right-color: #808080;
+            border-bottom: none;
+            padding: 4px 12px;
+            margin-right: 2px;
+            color: #000000;
+            min-width: 80px;
+        }
+        QTabBar::tab:selected {
+            background-color: #0a246a;
+            border-top-color: #0d2d85;
+            border-left-color: #0d2d85;
+            border-right-color: #081d55;
+            border-bottom: 2px solid #0a246a;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        QTabBar::tab:hover {
+            background-color: #a8a8a8;
+        }
+    )";
+}
+
+QString ThemeManager::getClassicDockStyle() {
+    return R"(
+        QDockWidget {
+            background-color: #c0c0c0;
+            border: 3px solid;
+            border-top-color: #ffffff;
+            border-left-color: #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+        }
+        QDockWidget::title {
+            background-color: #0a246a;
+            color: #ffffff;
+            padding: 4px 6px;
+            text-align: left;
+            font-weight: bold;
+        }
+        QDockWidget > QWidget {
+            border: 2px solid;
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #f0f0f0;
+            border-bottom-color: #f0f0f0;
+            background-color: #353535;
+        }
+    )";
+}
+
+QString ThemeManager::getClassicInspectorStyle() {
+    return R"(
+        QWidget {
+            background-color: #505050;
+            border: 2px solid;
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #f0f0f0;
+            border-bottom-color: #f0f0f0;
+        }
+        QLabel {
+            color: #c0c0c0;
+            border: none;
+        }
+    )";
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODERN LIGHT THEME
+// ═══════════════════════════════════════════════════════════════════════════
+
+void ThemeManager::applyModernLightTheme( QApplication *app ) {
+    if ( !app ) return;
+
+    app->setStyle( QStyleFactory::create( "Fusion" ) );
+
+    // Use system default font - works on all platforms
+    app->setFont( QFont( app->font().family(), 11 ) );
+
+    // ----------------------------
+    // CUSTOM PALETTE
+    // ----------------------------
+    QPalette pal;
+    pal.setColor( QPalette::Window, QColor( 245, 245, 245 ) ); // panels
+    pal.setColor( QPalette::Base, QColor( 250, 250, 250 ) ); // text areas
+    pal.setColor( QPalette::AlternateBase, QColor( 235, 235, 235 ) );
+    pal.setColor( QPalette::ToolTipBase, Qt::white );
+    pal.setColor( QPalette::ToolTipText, Qt::black );
+    pal.setColor( QPalette::Text, Qt::black );
+    pal.setColor( QPalette::Button, QColor( 240, 240, 240 ) );
+    pal.setColor( QPalette::ButtonText, Qt::black );
+    pal.setColor( QPalette::Highlight, QColor( 70, 120, 255 ) ); // blue selection
+    pal.setColor( QPalette::HighlightedText, Qt::white );
+    app->setPalette( pal );
+
+    // ----------------------------
+    // STYLESHEET (modern + hammered)
+    // ----------------------------
+    QString style = R"(
         QMainWindow {
             background: #f5f5f5;
         }
@@ -82,18 +320,18 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
         QToolButton:checked {
             background: #D0E4FF;
             border: 1px solid #7AAFFF;
-        }        
-        
+        }
+
         QToolButton:pressed {
             background: #8FFFFF;
             border-radius: 4px;
         }
-        
+
         QToolBar::separator {
             width: 1px;               /* thickness */
             height: 5px;
             background: #8A8A8A;      /* light gray */
-            margin: 4px; 
+            margin: 4px;
         }
 
 
@@ -139,7 +377,7 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
             background: #efefef;
             border-top: 1px solid #c8c8c8;
         }
-        
+
         /* Global */
         QWidget {
             background-color: #f5f5f5;
@@ -163,21 +401,21 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
             border-bottom: 1px solid #b5b5b5;
             font-weight: bold;
         }
-        
-        
+
+
         QWidget#ViewportContainer {
             border-left: 1px solid #C0C0C0;
             border-right: 1px solid #C0C0C0;
             border-top: 1px solid #C0C0C0;
             background: #1E1E1E;
         }
-        
-        
+
+
         /* TOOLBAR SECONDARY */
         QToolBar#Secondary {
             border-top: 1px solid #C0C0C0;
         }
-        
+
         QMainWindow::separator {
             width: 4px;
             height: 10px;
@@ -193,7 +431,7 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
             border: 1px solid #C6C6C6;
             background: #1E1E1E; /* dark viewport */
         }
-        
+
 
         QSplitter::handle {
             background: #C6C6C6;       /* separator color */
@@ -206,31 +444,36 @@ void ThemeManager::applyThemeLight( QApplication &app ) {
         QSplitter::handle:vertical {
             height: 3px;
         }
-        
-        
+
+
         #ConsoleDock {
             border-top: 1px solid #C6C6C6;
             background: #FFFFFF;
         }
-        
-        
+
+
         /* Bottom console separator line */
         #Console {
             border-top: 1px solid #b5b5b5;
         }
-        
+
         #InspectorPanel {
             background: #efefef;
             border-left: 1px solid #b5b5b5;
         }
-        
-        
-        
+
+
+
     )";
 
-	app.setStyleSheet( style );
+    app->setStyleSheet( style );
 }
 
-void ThemeManager::applyThemeDark( QApplication &app ) {
-	// TODO: need to implement it
+// ═══════════════════════════════════════════════════════════════════════════
+// MODERN DARK THEME (TODO)
+// ═══════════════════════════════════════════════════════════════════════════
+
+void ThemeManager::applyModernDarkTheme( QApplication *app ) {
+    // TODO: Implement dark theme
+    Q_UNUSED( app );
 }
