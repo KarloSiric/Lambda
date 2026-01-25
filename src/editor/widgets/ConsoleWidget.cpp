@@ -61,7 +61,7 @@ void ConsoleWidget::applyStyles( void ) {
 		"    color: #cccccc; "
 		"    border: none; "
 		"    font-family: 'Monaco', 'Menlo', 'Consolas', monospace; "
-		"    font-size: 12px; "
+		"    font-size: 13px; "
 		"    padding: 4px; "
 		"}" );
 }
