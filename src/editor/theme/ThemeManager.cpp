@@ -40,11 +40,11 @@ void ThemeManager::applyClassicTheme( QApplication *app ) {
     // Use Windows style as base
     app->setStyle( QStyleFactory::create( "Windows" ) );
 
-    // Set classic Windows font (Tahoma 12pt - Windows 2000 style)
+    // Set classic Windows font (Tahoma 14pt - readable size)
     // Fallback chain: Tahoma → MS Sans Serif → System Default
     QFont classicFont;
     classicFont.setFamily( "Tahoma" );
-    classicFont.setPointSize( 12 );
+    classicFont.setPointSize( 14 );
     classicFont.setStyleHint( QFont::SansSerif );
     app->setFont( classicFont );
 
