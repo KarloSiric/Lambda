@@ -23,6 +23,7 @@
 #include "MainWindow.h"
 #include "MenuFactory.h"
 #include "ToolbarFactory.h"
+#include "ThemeManager.h"
 #include "ConsoleWidget.h"
 #include "LogWidget.h"
 #include "ModelViewport.h"
@@ -70,50 +71,8 @@ MainWindow::MainWindow( QWidget *parent )
 	setWindowTitle( "Lambda MDL Editor" );
 	resize( MW_WIDTH, MW_HEIGHT );
 
-	// Apply classic window styling
-	setStyleSheet(
-		"QMainWindow { "
-		"    background-color: #c0c0c0; "
-		"} "
-		"QMenuBar { "
-		"    background-color: #d0d0d0; "
-		"    color: #000000; "
-		"    border-bottom: 1px solid #808080; "
-		"} "
-		"QMenuBar::item { "
-		"    background-color: transparent; "
-		"    padding: 4px 8px; "
-		"} "
-		"QMenuBar::item:selected { "
-		"    background-color: #000080; "
-		"    color: #ffffff; "
-		"} "
-		"QToolBar { "
-		"    background-color: #d0d0d0; "
-		"    border: 1px solid #808080; "
-		"    spacing: 3px; "
-		"    padding: 2px; "
-		"} "
-		"QToolButton { "
-		"    background-color: #c0c0c0; "
-		"    border: 2px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom-color: #808080; "
-		"    padding: 3px; "
-		"    margin: 1px; "
-		"} "
-		"QToolButton:hover { "
-		"    background-color: #d0d0d0; "
-		"} "
-		"QToolButton:pressed { "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #ffffff; "
-		"    border-bottom-color: #ffffff; "
-		"    background-color: #a0a0a0; "
-		"}" );
+	// Apply classic window styling (Windows 95/2000)
+	setStyleSheet( ThemeManager::getClassicMainWindowStyle() );
 
 	// Initialize animation state
 	m_loopAnimation = true;
@@ -164,16 +123,8 @@ void MainWindow::createViewportContainer() {
 	containerLayout->setContentsMargins( 4, 4, 4, 4 );
 	containerLayout->setSpacing( 0 );
 
-	// Apply frame style to container (raised 3D border)
-	viewportContainer->setStyleSheet(
-		"QWidget { "
-		"    background-color: #c0c0c0; "
-		"    border: 2px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom-color: #808080; "
-		"}" );
+	// Apply classic frame style to container (raised 3D border)
+	viewportContainer->setStyleSheet( ThemeManager::getClassicViewportContainerStyle() );
 
 	// Create tab widget for multi-model support
 	tabWidget = new QTabWidget( viewportContainer );
@@ -181,68 +132,8 @@ void MainWindow::createViewportContainer() {
 	tabWidget->setMovable( true ); // Allow tab reordering
 	tabWidget->setDocumentMode( false ); // Keep traditional tabs for classic look
 
-	// Apply classic tab styling with better X close buttons
-	// Compact tabs like BSP editor
-	QString tabStyle =
-		"QTabWidget::pane { "
-		"    border: 1px solid; "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #ffffff; "
-		"    border-bottom-color: #ffffff; "
-		"    background-color: #c0c0c0; "
-		"    margin: 0px; "
-		"} "
-		"QTabBar::tab { "
-		"    background-color: #c0c0c0; "
-		"    border: 1px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom: none; "
-		"    padding: 2px 14px 2px 6px; "
-		"    margin-right: 1px; "
-		"    color: #000000; "
-		"    font-size: 10px; "
-		"    min-width: 50px; "
-		"    max-width: 150px; "
-		"    min-height: 16px; "
-		"    max-height: 16px; "
-		"} "
-		"QTabBar::tab:first { "
-		"    padding: 2px 14px 2px 6px; "
-		"    min-width: 50px; "
-		"    min-height: 16px; "
-		"    max-height: 16px; "
-		"} "
-		"QTabBar::tab:selected { "
-		"    background-color: #0a246a; "
-		"    border-top-color: #0d2d85; "
-		"    border-left-color: #0d2d85; "
-		"    border-right-color: #081d55; "
-		"    border-bottom: 1px solid #0a246a; "
-		"    color: #ffffff; "
-		"    font-weight: bold; "
-		"} "
-		"QTabBar::tab:hover { "
-		"    background-color: #a8a8a8; "
-		"} "
-		"QTabBar::close-button { "
-		"    subcontrol-position: center right; "
-		"    width: 10px; "
-		"    height: 10px; "
-		"    margin-right: 2px; "
-		"    background-color: transparent; "
-		"    border: none; "
-		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiPjxwYXRoIGQ9Ik0yLDIgTDgsOCBNMiw4IEw4LDIiIHN0cm9rZT0iIzYwNjA2MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=); "
-		"} "
-		"QTabBar::close-button:hover { "
-		"    background-color: #d04040; "
-		"    border: 1px solid #a03030; "
-		"    image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiPjxwYXRoIGQ9Ik0yLDIgTDgsOCBNMiw4IEw4LDIiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=); "
-		"}";
-
-	tabWidget->setStyleSheet( tabStyle );
+	// Apply classic tab styling (compact tabs like BSP editor)
+	tabWidget->setStyleSheet( ThemeManager::getClassicTabWidgetStyle() );
 
 	// Connect tab close signal
 	connect( tabWidget, &QTabWidget::tabCloseRequested, this, &MainWindow::onCloseTab );
@@ -283,20 +174,8 @@ void MainWindow::createDocks() {
 	inspectorPanel->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
 	inspectorPanel->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
 
-	// Add inner frame to inspector panel
-	inspectorPanel->setStyleSheet(
-		"QWidget { "
-		"    background-color: #505050; "
-		"    border: 2px solid; "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #f0f0f0; "
-		"    border-bottom-color: #f0f0f0; "
-		"} "
-		"QLabel { "
-		"    color: #c0c0c0; "
-		"    border: none; "
-		"}" );
+	// Apply classic inspector panel styling
+	inspectorPanel->setStyleSheet( ThemeManager::getClassicInspectorStyle() );
 
 	rightDock->setWidget( inspectorPanel );
 	addDockWidget( Qt::RightDockWidgetArea, rightDock );
@@ -346,42 +225,8 @@ void MainWindow::createDocks() {
 	bottomTabs->addTab( m_logWidget, "Log" );
 	bottomTabs->addTab( memoryPanel, "Memory" );
 
-	// Style the tabs to match window tabs (classic with blue active)
-	QString bottomTabStyle =
-		"QTabWidget::pane { "
-		"    border: 2px solid; "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #ffffff; "
-		"    border-bottom-color: #ffffff; "
-		"    background-color: #353535; "
-		"} "
-		"QTabBar::tab { "
-		"    background-color: #c0c0c0; "
-		"    border: 2px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom: none; "
-		"    padding: 4px 12px; "
-		"    margin-right: 2px; "
-		"    color: #000000; "
-		"    min-width: 80px; "
-		"} "
-		"QTabBar::tab:selected { "
-		"    background-color: #0a246a; " // Classic blue for active tab
-		"    border-top-color: #0d2d85; "
-		"    border-left-color: #0d2d85; "
-		"    border-right-color: #081d55; "
-		"    border-bottom: 2px solid #0a246a; "
-		"    color: #ffffff; "
-		"    font-weight: bold; "
-		"} "
-		"QTabBar::tab:hover { "
-		"    background-color: #a8a8a8; "
-		"}";
-
-	bottomTabs->setStyleSheet( bottomTabStyle );
+	// Apply classic bottom tab styling (Console/Log/Memory)
+	bottomTabs->setStyleSheet( ThemeManager::getClassicBottomTabsStyle() );
 
 	bottomDock->setWidget( bottomTabs );
 	addDockWidget( Qt::BottomDockWidgetArea, bottomDock );
@@ -399,39 +244,9 @@ void MainWindow::createDocks() {
 	rightDock->setTitleBarWidget( new QWidget() );
 	bottomDock->setTitleBarWidget( new QWidget() );
 
-	// Apply classic dock styling with visible borders for separation
-	QString dockStyle =
-		"QDockWidget { "
-		"    background-color: #c0c0c0; "
-		"    border: 3px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom-color: #808080; "
-		"} "
-		"QDockWidget::title { "
-		"    background-color: #0a246a; "
-		"    color: #ffffff; "
-		"    padding: 4px 6px; "
-		"    text-align: left; "
-		"    font-weight: bold; "
-		"} "
-		"QDockWidget > QWidget { "
-		"    border: 2px solid; "
-		"    border-top-color: #808080; "
-		"    border-left-color: #808080; "
-		"    border-right-color: #f0f0f0; "
-		"    border-bottom-color: #f0f0f0; "
-		"    background-color: #353535; "
-		"}";
-
-	// Inspector dock with prominent border
-	QString inspectorStyle = dockStyle + "QDockWidget > QWidget { "
-										 "    background-color: #505050; "
-										 "}";
-
-	rightDock->setStyleSheet( inspectorStyle );
-	bottomDock->setStyleSheet( dockStyle );
+	// Apply classic dock styling
+	rightDock->setStyleSheet( ThemeManager::getClassicDockStyle() );
+	bottomDock->setStyleSheet( ThemeManager::getClassicDockStyle() );
 
 	// Add spacing between docks and central widget
 	setDockNestingEnabled( false ); // Cleaner separation

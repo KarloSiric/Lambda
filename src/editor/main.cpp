@@ -107,9 +107,11 @@ int main( int argc, char *argv[] ) {
 	format.setSamples( 4 );
 	QSurfaceFormat::setDefaultFormat( format );
 
-	// 6. Create window
+	// 6. Apply Classic Windows 95/2000 theme
+	ThemeManager::applyClassicTheme( &app );
+
+	// 7. Create main window
 	MainWindow window;
-    ThemeManager::applyThemeLight( app );
  
 	// Delayed startup sequence (professional look)
 	QTimer::singleShot( 1000, [&]() {
