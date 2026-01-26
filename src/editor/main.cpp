@@ -92,7 +92,7 @@ int main( int argc, char *argv[] ) {
 
 	t_log_options log_opts = { 0 };
 	log_opts.file_path = logFilePathBytes.constData();
-	log_opts.console_level = LOG_FATAL;
+	log_opts.console_level = LOG_ERROR;
 	log_opts.use_colors = true;
 	log_opts.max_bytes = 5 * 1024 * 1024; // 5 MB
 	log_opts.max_files = 3;
@@ -113,16 +113,29 @@ int main( int argc, char *argv[] ) {
 	// 7. Create main window
 	MainWindow window;
  
-	// Delayed startup sequence (professional look)
 	QTimer::singleShot( 1000, [&]() {
 		printStartupBanner();
 
 		QTimer::singleShot( 700, [&]() {
 			printOpenGLInfo();
             
-            // Show log file location
-            CONSOLE_INFO( "Log file: %s", logFilePath.toUtf8().constData() );
-            console_print_raw( "\n" );
+            
+            
+#ifdef _WIN32 
+            // For Windows OS 
+            QString displayPath = logFilePath;
+#else
+            // for MacOS/Linux or UNIX like OS we need different slashes format
+            QString displayPath = logFilePath;
+            displayPath.replace( " ", "\\ " );
+#endif
+            CONSOLE_INFO( "Log file: %s", displayPath.toUtf8().constData() );
+            
+            
+            
+            
+            
+            
 
 			QTimer::singleShot( 400, [&]() {
 				printLoadingSuccess();
