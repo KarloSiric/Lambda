@@ -63,24 +63,19 @@ static void log_impl( int level, const char *category, const char *format, va_li
 	vsnprintf( buffer, sizeof( buffer ), format, args );
 
 	// Also print to stdout/stderr for debugging
-	FILE *output = ( level >= LOG_LEVEL_WARNING ) ? stderr : stdout;
-	const char *levelStr = "???";
-	switch ( level ) {
-		case LOG_LEVEL_TRACE:   levelStr = "TRACE"; break;
-		case LOG_LEVEL_DEBUG:   levelStr = "DEBUG"; break;
-		case LOG_LEVEL_INFO:    levelStr = "INFO"; break;
-		case LOG_LEVEL_WARNING: levelStr = "WARN"; break;
-		case LOG_LEVEL_ERROR:   levelStr = "ERROR"; break;
-		case LOG_LEVEL_FATAL:   levelStr = "FATAL"; break;
-	}
+	FILE *output = ( level >= LOG_LEVEL_ERROR ) ? stderr : stdout;
+    if ( level >= LOG_LEVEL_ERROR ) {
+        
+        const char *levelStr = ( level == LOG_LEVEL_ERROR ) ? "ERROR" : "FATAL";
 
-	if ( category && category[0] ) {
-		fprintf( output, "[%s][%s] %s\n", levelStr, category, buffer );
-	} else {
-		fprintf( output, "[%s] %s\n", levelStr, buffer );
-	}
-	fflush( output );
+    	if ( category && category[0] ) {
+    		fprintf( output, "[%s][%s] %s\n", levelStr, category, buffer );
+    	} else {
+    		fprintf( output, "[%s] %s\n", levelStr, buffer );
+    	}
+    	fflush( output );
 
+    }
 	// Send to LogWidget if available
 	if ( g_logWidget ) {
 		QString msg = QString::fromUtf8( buffer );
