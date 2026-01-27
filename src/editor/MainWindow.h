@@ -15,6 +15,7 @@
 #include <QMap>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QtCore/qtmetamacros.h>
 #include <QtWidgets/qtextedit.h>
 
 
@@ -132,7 +133,8 @@ class MainWindow : public QMainWindow {
 	void connectToolbarActions();
 
 	// Helper to update sequence list when model changes
-	void updateSequenceList( ModelViewport *viewport );
+	void updateSequenceList( ModelViewport *viewport ); 
+    
 };
 
 #endif

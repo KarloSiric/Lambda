@@ -42,7 +42,7 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	// ═══════════════════════════════════════════════════════════════════════
 	// FILE SECTION (1 icon)
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionOpen = toolBar->addAction( "Open" );
+	QAction *actionOpen = toolBar->addAction( QIcon( ":/icons/open_folder.png" ), "Open" );
 	actionOpen->setToolTip( "Open Model (Ctrl+O)" );
 	actionOpen->setShortcut( QKeySequence( "Ctrl+O" ) );
 
@@ -51,7 +51,7 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	// ═══════════════════════════════════════════════════════════════════════
 	// VIEW TOGGLES SECTION (9 icons)
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionWireframe = toolBar->addAction( "Wireframe" );
+	QAction *actionWireframe = toolBar->addAction( QIcon( ":/icons/wireframe.png" ), "Wireframe" );
 	actionWireframe->setCheckable( true );
 	actionWireframe->setToolTip( "Toggle Wireframe (W)" );
 	actionWireframe->setShortcut( QKeySequence( "W" ) );
@@ -62,7 +62,7 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	actionTextured->setToolTip( "Toggle Textured View (T)" );
 	actionTextured->setShortcut( QKeySequence( "T" ) );
 
-	QAction *actionBones = toolBar->addAction( "Bones" );
+	QAction *actionBones = toolBar->addAction( QIcon( ":/icons/bone.png" ), "Bones" );
 	actionBones->setCheckable( true );
 	actionBones->setToolTip( "Toggle Bones/Skeleton (B)" );
 	actionBones->setShortcut( QKeySequence( "B" ) );
@@ -82,13 +82,13 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	actionNormals->setToolTip( "Toggle Normals (N)" );
 	actionNormals->setShortcut( QKeySequence( "N" ) );
 
-	QAction *actionGrid = toolBar->addAction( "Grid" );
+	QAction *actionGrid = toolBar->addAction( QIcon( ":/icons/grid.png" ), "Grid" );
 	actionGrid->setCheckable( true );
 	actionGrid->setChecked( true ); // Default on
 	actionGrid->setToolTip( "Toggle Grid (G)" );
 	actionGrid->setShortcut( QKeySequence( "G" ) );
 
-	QAction *actionAxes = toolBar->addAction( "Axes" );
+	QAction *actionAxes = toolBar->addAction( QIcon( ":/icons/axis.png" ), "Axes" );
 	actionAxes->setCheckable( true );
 	actionAxes->setChecked( true ); // Default on
 	actionAxes->setToolTip( "Toggle Axes (X)" );
@@ -148,11 +148,11 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	// ═══════════════════════════════════════════════════════════════════════
 	// UTILITY SECTION (3 icons)
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionScreenshot = toolBar->addAction( "Screenshot" );
+	QAction *actionScreenshot = toolBar->addAction( QIcon( ":/icons/screenshot.png" ), "Screenshot" );
 	actionScreenshot->setToolTip( "Take Screenshot (F12)" );
 	actionScreenshot->setShortcut( QKeySequence( "F12" ) );
 
-	QAction *actionBackground = toolBar->addAction( "Background" );
+	QAction *actionBackground = toolBar->addAction( QIcon( ":/icons/background.png" ), "Background" );
 	actionBackground->setToolTip( "Change Background Color" );
 
 	QAction *actionLighting = toolBar->addAction( "Lighting" );
