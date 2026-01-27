@@ -1,5 +1,41 @@
 <RCC>
     <qresource prefix="/">
+        <!-- File Operations -->
         <file>icons/open_folder.png</file>
+        <file>icons/open-folder-icon.png</file>
+        <file>icons/folder-open-icon.png</file>
+        <file>icons/opening-filepack-icon.png</file>
+        <file>icons/save.png</file>
+        <file>icons/save2.png</file>
+        <file>icons/new.png</file>
+
+        <!-- View Toggles -->
+        <file>icons/wireframe.png</file>
+        <file>icons/bone.png</file>
+        <file>icons/bone_2.png</file>
+        <file>icons/bone_3.png</file>
+
+        <!-- Grid Icons -->
+        <file>icons/grid.png</file>
+        <file>icons/grid_2.png</file>
+        <file>icons/grid_3.png</file>
+        <file>icons/grid_4.png</file>
+        <file>icons/grid_5.png</file>
+        <file>icons/grid_6.png</file>
+        <file>icons/grid_7.png</file>
+
+        <!-- Axes -->
+        <file>icons/axis.png</file>
+        <file>icons/axis_2.png</file>
+        <file>icons/axis_3.png</file>
+        <file>icons/arrows.png</file>
+
+        <!-- Utility -->
+        <file>icons/screenshot.png</file>
+        <file>icons/background.png</file>
+        <file>icons/sound-toggle-icon.png</file>
+        <file>icons/aplify-sound-icon.png</file>
+        <file>icons/toggle-console-memory-bottom-dock-icon.png</file>
+        <file>icons/help-question-mark-icon.png</file>
     </qresource>
 </RCC>
