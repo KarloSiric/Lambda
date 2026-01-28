@@ -27,7 +27,6 @@
 #include "mdl_loader.h"
 #include "r_draw.h"
 #include "util_messages.h"
-#include "util_console.h"
 #include <QDebug>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qdebug.h>
