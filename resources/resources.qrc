@@ -1,41 +1,45 @@
 <RCC>
     <qresource prefix="/">
+        <!-- Application -->
+        <file>icons/logo-icon-finalized.png</file>
+
         <!-- File Operations -->
-        <file>icons/open_folder.png</file>
         <file>icons/open-folder-icon.png</file>
-        <file>icons/folder-open-icon.png</file>
-        <file>icons/opening-filepack-icon.png</file>
         <file>icons/save.png</file>
-        <file>icons/save2.png</file>
         <file>icons/new.png</file>
 
         <!-- View Toggles -->
-        <file>icons/wireframe.png</file>
-        <file>icons/bone.png</file>
-        <file>icons/bone_2.png</file>
-        <file>icons/bone_3.png</file>
-
-        <!-- Grid Icons -->
+        <file>icons/wireframe-icon.png</file>
+        <file>icons/textured-icon.png</file>
+        <file>icons/draw-bones-icon.png</file>
+        <file>icons/draw-hitboxes-icon.png</file>
+        <file>icons/draw-attachments-icon.png</file>
+        <file>icons/draw-normals-icon.png</file>
         <file>icons/grid.png</file>
-        <file>icons/grid_2.png</file>
-        <file>icons/grid_3.png</file>
-        <file>icons/grid_4.png</file>
-        <file>icons/grid_5.png</file>
-        <file>icons/grid_6.png</file>
-        <file>icons/grid_7.png</file>
+        <file>icons/draw-axis-icon.png</file>
+        <file>icons/draw-ground-icon.png</file>
 
-        <!-- Axes -->
-        <file>icons/axis.png</file>
-        <file>icons/axis_2.png</file>
-        <file>icons/axis_3.png</file>
-        <file>icons/arrows.png</file>
+        <!-- Camera / View Controls -->
+        <file>icons/camera-reset-icon.png</file>
+        <file>icons/xy-view-icon.png</file>
+        <file>icons/xz-view-icon.png</file>
+        <file>icons/zy-view-icon.png</file>
+
+        <!-- Animation Controls -->
+        <file>icons/play-icon.png</file>
+        <file>icons/pause-icon.png</file>
+        <file>icons/stop-icon.png</file>
+        <file>icons/previous-frame-icon.png</file>
+        <file>icons/next-frame-icon.png</file>
+        <file>icons/loop-icon.png</file>
 
         <!-- Utility -->
         <file>icons/screenshot.png</file>
         <file>icons/background.png</file>
-        <file>icons/sound-toggle-icon.png</file>
-        <file>icons/aplify-sound-icon.png</file>
+
+        <!-- UI Toggles -->
         <file>icons/toggle-console-memory-bottom-dock-icon.png</file>
+        <file>icons/toggle-inspector-icon.png</file>
         <file>icons/help-question-mark-icon.png</file>
     </qresource>
 </RCC>
