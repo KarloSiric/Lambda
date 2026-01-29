@@ -36,146 +36,111 @@ void createToolbars( QMainWindow *mainWindow ) {
 void createMainToolbar( QMainWindow *mainWindow ) {
 	QToolBar *toolBar = mainWindow->addToolBar( "Main Toolbar" );
 	toolBar->setMovable( false );
-	toolBar->setIconSize( QSize( 24, 24 ) );  // Increased from 20x20 to 24x24
+	toolBar->setIconSize( QSize( 32, 32 ) );  // Larger icons for better visibility
 	toolBar->setToolButtonStyle( Qt::ToolButtonIconOnly );
 	toolBar->setObjectName( "Main Toolbar" );
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// FILE SECTION (1 icon)
+	// FILE OPERATIONS - Removed open folder (use File menu instead)
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionOpen = toolBar->addAction( QIcon( ":/icons/open-folder-icon.png" ), "Open" );
-	actionOpen->setToolTip( "Open Model (Ctrl+O)" );
-	actionOpen->setShortcut( QKeySequence( "Ctrl+O" ) );
-
-	toolBar->addSeparator();
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// VIEW TOGGLES SECTION (9 icons)
+	// RENDER MODES
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionWireframe = toolBar->addAction( QIcon( ":/icons/wireframe-icon.png" ), "Wireframe" );
+	QAction *actionWireframe = toolBar->addAction( QIcon( ":/icons/wireframe-icon.png" ), "" );
 	actionWireframe->setCheckable( true );
-	actionWireframe->setToolTip( "Toggle Wireframe (W)" );
+	actionWireframe->setToolTip( "Wireframe (W)" );
 	actionWireframe->setShortcut( QKeySequence( "W" ) );
 
-	QAction *actionTextured = toolBar->addAction( QIcon( ":/icons/textured-icon.png" ), "Textured" );
+	QAction *actionTextured = toolBar->addAction( QIcon( ":/icons/textured-icon.png" ), "" );
 	actionTextured->setCheckable( true );
-	actionTextured->setChecked( true ); // Default on
-	actionTextured->setToolTip( "Toggle Textured View (T)" );
+	actionTextured->setChecked( true );
+	actionTextured->setToolTip( "Textured (T)" );
 	actionTextured->setShortcut( QKeySequence( "T" ) );
 
-	toolBar->addSeparator();  // Separate rendering modes from overlay toggles
+	toolBar->addSeparator();
 
-	QAction *actionBones = toolBar->addAction( QIcon( ":/icons/draw-bones-icon.png" ), "Bones" );
+	// ═══════════════════════════════════════════════════════════════════════
+	// OVERLAY TOGGLES
+	// ═══════════════════════════════════════════════════════════════════════
+	QAction *actionBones = toolBar->addAction( QIcon( ":/icons/draw-bones-icon.png" ), "" );
 	actionBones->setCheckable( true );
-	actionBones->setToolTip( "Toggle Bones/Skeleton (B)" );
+	actionBones->setToolTip( "Bones (B)" );
 	actionBones->setShortcut( QKeySequence( "B" ) );
 
-	QAction *actionHitboxes = toolBar->addAction( QIcon( ":/icons/draw-hitboxes-icon.png" ), "Hitboxes" );
+	QAction *actionHitboxes = toolBar->addAction( QIcon( ":/icons/draw-hitboxes-icon.png" ), "" );
 	actionHitboxes->setCheckable( true );
-	actionHitboxes->setToolTip( "Toggle Hitboxes (H)" );
+	actionHitboxes->setToolTip( "Hitboxes (H)" );
 	actionHitboxes->setShortcut( QKeySequence( "H" ) );
 
-	QAction *actionAttachments = toolBar->addAction( QIcon( ":/icons/draw-attachments-icon.png" ), "Attachments" );
+	QAction *actionAttachments = toolBar->addAction( QIcon( ":/icons/draw-attachments-icon.png" ), "" );
 	actionAttachments->setCheckable( true );
-	actionAttachments->setToolTip( "Toggle Attachment Points (A)" );
+	actionAttachments->setToolTip( "Attachments (A)" );
 	actionAttachments->setShortcut( QKeySequence( "A" ) );
 
-	QAction *actionNormals = toolBar->addAction( QIcon( ":/icons/draw-normals-icon.png" ), "Normals" );
-	actionNormals->setCheckable( true );
-	actionNormals->setToolTip( "Toggle Normals (N)" );
-	actionNormals->setShortcut( QKeySequence( "N" ) );
+	toolBar->addSeparator();
 
-	toolBar->addSeparator();  // Separate overlays from scene helpers
-
-	QAction *actionGrid = toolBar->addAction( QIcon( ":/icons/grid.png" ), "Grid" );
+	// ═══════════════════════════════════════════════════════════════════════
+	// SCENE HELPERS
+	// ═══════════════════════════════════════════════════════════════════════
+	QAction *actionGrid = toolBar->addAction( QIcon( ":/icons/grid.png" ), "" );
 	actionGrid->setCheckable( true );
-	actionGrid->setChecked( true ); // Default on
-	actionGrid->setToolTip( "Toggle Grid (G)" );
+	actionGrid->setChecked( true );
+	actionGrid->setToolTip( "Grid (G)" );
 	actionGrid->setShortcut( QKeySequence( "G" ) );
 
-	QAction *actionAxes = toolBar->addAction( QIcon( ":/icons/draw-axis-icon.png" ), "Axes" );
+	QAction *actionAxes = toolBar->addAction( QIcon( ":/icons/draw-axis-icon.png" ), "" );
 	actionAxes->setCheckable( true );
-	actionAxes->setChecked( true ); // Default on
-	actionAxes->setToolTip( "Toggle Axes (X)" );
+	actionAxes->setChecked( true );
+	actionAxes->setToolTip( "Axes (X)" );
 	actionAxes->setShortcut( QKeySequence( "X" ) );
 
-	QAction *actionGround = toolBar->addAction( QIcon( ":/icons/draw-ground-icon.png" ), "Ground" );
+	QAction *actionGround = toolBar->addAction( QIcon( ":/icons/draw-ground-icon.png" ), "" );
 	actionGround->setCheckable( true );
-	actionGround->setToolTip( "Toggle Ground Plane (Shift+G)" );
+	actionGround->setToolTip( "Ground (Shift+G)" );
 	actionGround->setShortcut( QKeySequence( "Shift+G" ) );
 
+	// TODO: Add grid increase/decrease icons when created
+	// QAction *actionGridIncrease = toolBar->addAction( QIcon( ":/icons/grid-increase.png" ), "" );
+	// actionGridIncrease->setToolTip( "Increase Grid Size (+)" );
+	// actionGridIncrease->setShortcut( QKeySequence( "+" ) );
+
+	// QAction *actionGridDecrease = toolBar->addAction( QIcon( ":/icons/grid-decrease.png" ), "" );
+	// actionGridDecrease->setToolTip( "Decrease Grid Size (-)" );
+	// actionGridDecrease->setShortcut( QKeySequence( "-" ) );
+
 	toolBar->addSeparator();
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// CAMERA / VIEW SECTION (4 icons)
+	// CAMERA / VIEWS
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionResetCamera = toolBar->addAction( QIcon( ":/icons/camera-reset-icon.png" ), "Reset Camera" );
-	actionResetCamera->setToolTip( "Reset Camera to Default (Home)" );
+	QAction *actionResetCamera = toolBar->addAction( QIcon( ":/icons/camera-reset-icon.png" ), "" );
+	actionResetCamera->setToolTip( "Reset Camera (Home)" );
 	actionResetCamera->setShortcut( QKeySequence( "Home" ) );
 
-	QAction *actionViewXY = toolBar->addAction( QIcon( ":/icons/xy-view-icon.png" ), "Front" );
-	actionViewXY->setToolTip( "Front View (XY Plane)" );
+	// TODO: Add 3D perspective view icon when created
+	// QAction *actionView3D = toolBar->addAction( QIcon( ":/icons/3d-view-icon.png" ), "" );
+	// actionView3D->setToolTip( "3D Perspective (Ctrl+0)" );
+	// actionView3D->setShortcut( QKeySequence( "Ctrl+0" ) );
+
+	QAction *actionViewXY = toolBar->addAction( QIcon( ":/icons/xy-view-icon.png" ), "" );
+	actionViewXY->setToolTip( "Front View (Ctrl+1)" );
 	actionViewXY->setShortcut( QKeySequence( "Ctrl+1" ) );
 
-	QAction *actionViewXZ = toolBar->addAction( QIcon( ":/icons/xz-view-icon.png" ), "Top" );
-	actionViewXZ->setToolTip( "Top View (XZ Plane)" );
+	QAction *actionViewXZ = toolBar->addAction( QIcon( ":/icons/xz-view-icon.png" ), "" );
+	actionViewXZ->setToolTip( "Top View (Ctrl+2)" );
 	actionViewXZ->setShortcut( QKeySequence( "Ctrl+2" ) );
 
-	QAction *actionViewZY = toolBar->addAction( QIcon( ":/icons/zy-view-icon.png" ), "Side" );
-	actionViewZY->setToolTip( "Side View (ZY Plane)" );
+	QAction *actionViewZY = toolBar->addAction( QIcon( ":/icons/zy-view-icon.png" ), "" );
+	actionViewZY->setToolTip( "Side View (Ctrl+3)" );
 	actionViewZY->setShortcut( QKeySequence( "Ctrl+3" ) );
 
-	toolBar->addSeparator();
-
-	// ═══════════════════════════════════════════════════════════════════════
-	// ANIMATION SECTION (6 icons)
-	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionPlay = toolBar->addAction( QIcon( ":/icons/play-icon.png" ), "Play" );
-	actionPlay->setToolTip( "Play Animation (Space)" );
-	actionPlay->setShortcut( QKeySequence( "Space" ) );
-
-	QAction *actionPause = toolBar->addAction( QIcon( ":/icons/pause-icon.png" ), "Pause" );
-	actionPause->setToolTip( "Pause Animation (P)" );
-	actionPause->setShortcut( QKeySequence( "P" ) );
-
-	QAction *actionStop = toolBar->addAction( QIcon( ":/icons/stop-icon.png" ), "Stop" );
-	actionStop->setToolTip( "Stop Animation (S)" );
-	actionStop->setShortcut( QKeySequence( "S" ) );
-
-	QAction *actionPrevFrame = toolBar->addAction( QIcon( ":/icons/previous-frame-icon.png" ), "Prev Frame" );
-	actionPrevFrame->setToolTip( "Previous Frame (Left)" );
-	actionPrevFrame->setShortcut( QKeySequence( "Left" ) );
-
-	QAction *actionNextFrame = toolBar->addAction( QIcon( ":/icons/next-frame-icon.png" ), "Next Frame" );
-	actionNextFrame->setToolTip( "Next Frame (Right)" );
-	actionNextFrame->setShortcut( QKeySequence( "Right" ) );
-
-	QAction *actionLoop = toolBar->addAction( QIcon( ":/icons/loop-icon.png" ), "Loop" );
-	actionLoop->setCheckable( true );
-	actionLoop->setChecked( true ); // Default on
-	actionLoop->setToolTip( "Toggle Loop (L)" );
-	actionLoop->setShortcut( QKeySequence( "L" ) );
-
-	toolBar->addSeparator();
-
-	// ═══════════════════════════════════════════════════════════════════════
-	// UTILITY SECTION (2 icons)
-	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionScreenshot = toolBar->addAction( QIcon( ":/icons/screenshot.png" ), "Screenshot" );
-	actionScreenshot->setToolTip( "Take Screenshot (F12)" );
-	actionScreenshot->setShortcut( QKeySequence( "F12" ) );
-
-	QAction *actionBackground = toolBar->addAction( QIcon( ":/icons/background.png" ), "Background" );
-	actionBackground->setToolTip( "Change Background Color" );
-
 	// Suppress unused variable warnings
-	Q_UNUSED( actionOpen );
 	Q_UNUSED( actionWireframe );
 	Q_UNUSED( actionTextured );
 	Q_UNUSED( actionBones );
 	Q_UNUSED( actionHitboxes );
 	Q_UNUSED( actionAttachments );
-	Q_UNUSED( actionNormals );
 	Q_UNUSED( actionGrid );
 	Q_UNUSED( actionAxes );
 	Q_UNUSED( actionGround );
@@ -183,14 +148,6 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	Q_UNUSED( actionViewXY );
 	Q_UNUSED( actionViewXZ );
 	Q_UNUSED( actionViewZY );
-	Q_UNUSED( actionPlay );
-	Q_UNUSED( actionPause );
-	Q_UNUSED( actionStop );
-	Q_UNUSED( actionPrevFrame );
-	Q_UNUSED( actionNextFrame );
-	Q_UNUSED( actionLoop );
-	Q_UNUSED( actionScreenshot );
-	Q_UNUSED( actionBackground );
 }
 
 void createSecondaryToolbar( QMainWindow *mainWindow ) {

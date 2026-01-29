@@ -33,6 +33,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QStandardPaths>
+#include <QIcon>
 #include <QtWidgets/qapplication.h>
 #include <QtWidgets/qmainwindow.h>
 
@@ -79,6 +80,7 @@ int main( int argc, char *argv[] ) {
 	QApplication app( argc, argv );
 	app.setApplicationName( "Lambda" );
 	app.setOrganizationName( "kSoftware" );
+	app.setWindowIcon( QIcon( ":/icons/logo-icon-finalized.png" ) );
 
 	QString appDataPath = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
 	QString logDir = appDataPath + "/logs";

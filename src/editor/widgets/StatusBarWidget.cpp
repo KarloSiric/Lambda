@@ -207,20 +207,11 @@ void StatusBarWidget::createToggleButtons() {
 	leftSpacer->setFixedWidth( 4 );
 	addPermanentWidget( leftSpacer );
 
-	m_inspectorToggle = new QPushButton();
-	m_inspectorToggle->setText( "I" );
-	m_inspectorToggle->setFixedSize( 28, 24 );
-	m_inspectorToggle->setCheckable( true );
-	m_inspectorToggle->setChecked( true );
-	m_inspectorToggle->setToolTip( "Inspector Panel (Right-click for options)" );
-	m_inspectorToggle->setContextMenuPolicy( Qt::CustomContextMenu );
-	connect( m_inspectorToggle, &QPushButton::clicked, this, &StatusBarWidget::onInspectorButtonClicked );
-	connect( m_inspectorToggle, &QPushButton::customContextMenuRequested, this, &StatusBarWidget::showInspectorContextMenu );
-	addPermanentWidget( m_inspectorToggle );
-
+	// Console toggle FIRST (before inspector)
 	m_consoleToggle = new QPushButton();
-	m_consoleToggle->setText( "C" );
-	m_consoleToggle->setFixedSize( 28, 24 );
+	m_consoleToggle->setIcon( QIcon( ":/icons/toggle-console-memory-bottom-dock-icon.png" ) );
+	m_consoleToggle->setIconSize( QSize( 22, 22 ) );  // Bigger icons for better visibility
+	m_consoleToggle->setFixedSize( 32, 26 );  // Larger button size
 	m_consoleToggle->setCheckable( true );
 	m_consoleToggle->setChecked( true );
 	m_consoleToggle->setToolTip( "Console Panel (Right-click for options)" );
@@ -229,16 +220,20 @@ void StatusBarWidget::createToggleButtons() {
 	connect( m_consoleToggle, &QPushButton::customContextMenuRequested, this, &StatusBarWidget::showConsoleContextMenu );
 	addPermanentWidget( m_consoleToggle );
 
-	m_memoryToggle = new QPushButton();
-	m_memoryToggle->setText( "M" );
-	m_memoryToggle->setFixedSize( 28, 24 );
-	m_memoryToggle->setCheckable( true );
-	m_memoryToggle->setChecked( false );
-	m_memoryToggle->setToolTip( "Memory Panel (Right-click for options)" );
-	m_memoryToggle->setContextMenuPolicy( Qt::CustomContextMenu );
-	connect( m_memoryToggle, &QPushButton::clicked, this, &StatusBarWidget::onMemoryButtonClicked );
-	connect( m_memoryToggle, &QPushButton::customContextMenuRequested, this, &StatusBarWidget::showMemoryContextMenu );
-	addPermanentWidget( m_memoryToggle );
+	// Inspector toggle SECOND
+	m_inspectorToggle = new QPushButton();
+	m_inspectorToggle->setIcon( QIcon( ":/icons/toggle-inspector-icon.png" ) );
+	m_inspectorToggle->setIconSize( QSize( 22, 22 ) );  // Bigger icons for better visibility
+	m_inspectorToggle->setFixedSize( 32, 26 );  // Larger button size
+	m_inspectorToggle->setCheckable( true );
+	m_inspectorToggle->setChecked( true );
+	m_inspectorToggle->setToolTip( "Inspector Panel (Right-click for options)" );
+	m_inspectorToggle->setContextMenuPolicy( Qt::CustomContextMenu );
+	connect( m_inspectorToggle, &QPushButton::clicked, this, &StatusBarWidget::onInspectorButtonClicked );
+	connect( m_inspectorToggle, &QPushButton::customContextMenuRequested, this, &StatusBarWidget::showInspectorContextMenu );
+	addPermanentWidget( m_inspectorToggle );
+
+	// Memory toggle REMOVED - memory is part of console now
 
 	// Add small spacer after buttons to prevent cutoff at right edge
 	QWidget *rightSpacer = new QWidget();
@@ -315,12 +310,13 @@ void StatusBarWidget::applyStyles() {
 	m_cameraPosLabel->setStyleSheet( cellStyle );
 	m_modelViewportWidthHeight->setStyleSheet( cellStyle );
 
-	// Help label with slightly different style to stand out
+	// Help label with bold AND italic font to stand out when showing dynamic tooltips
 	QString helpStyle =
 		"QLabel { "
 		"   padding: 2px 6px; "
-		"   color: #404040; "
+		"   color: #202020; "
 		"   background-color: #c0c0c0; "
+		"   font-weight: bold; "
 		"   font-style: italic; "
 		"}";
 	if ( m_helpLabel ) {
@@ -362,7 +358,6 @@ void StatusBarWidget::applyStyles() {
 
 	m_inspectorToggle->setStyleSheet( buttonStyle );
 	m_consoleToggle->setStyleSheet( buttonStyle );
-	m_memoryToggle->setStyleSheet( buttonStyle );
 
 	// Copy button style (smaller, compact)
 	QString copyButtonStyle =
@@ -674,20 +669,12 @@ void StatusBarWidget::setConsoleVisible( bool visible ) {
 	m_consoleToggle->setChecked( visible );
 }
 
-void StatusBarWidget::setMemoryVisible( bool visible ) {
-	m_memoryToggle->setChecked( visible );
-}
-
 void StatusBarWidget::onInspectorButtonClicked() {
 	emit inspectorToggleRequested();
 }
 
 void StatusBarWidget::onConsoleButtonClicked() {
 	emit consoleToggleRequested();
-}
-
-void StatusBarWidget::onMemoryButtonClicked() {
-	emit memoryToggleRequested();
 }
 
 void StatusBarWidget::onCopyFilePathClicked() {
@@ -800,44 +787,6 @@ void StatusBarWidget::showConsoleContextMenu( const QPoint &pos ) {
 	QAction *selected = menu.exec( m_consoleToggle->mapToGlobal( pos ) );
 	if ( selected == toggleAction ) {
 		emit consoleToggleRequested();
-	}
-}
-
-void StatusBarWidget::showMemoryContextMenu( const QPoint &pos ) {
-	QMenu menu( this );
-	menu.setStyleSheet(
-		"QMenu { "
-		"    background-color: #d0d0d0; "
-		"    color: #000000; "
-		"    border: 2px solid; "
-		"    border-top-color: #ffffff; "
-		"    border-left-color: #ffffff; "
-		"    border-right-color: #808080; "
-		"    border-bottom-color: #808080; "
-		"    padding: 2px; "
-		"} "
-		"QMenu::item { "
-		"    padding: 4px 24px; "
-		"    background-color: transparent; "
-		"} "
-		"QMenu::item:selected { "
-		"    background-color: #000080; "
-		"    color: #ffffff; "
-		"} "
-		"QMenu::separator { "
-		"    height: 1px; "
-		"    background-color: #808080; "
-		"    margin: 2px 0px; "
-		"}" );
-
-	QAction *toggleAction = menu.addAction( "Toggle Memory View" );
-	menu.addSeparator();
-	QAction *hexAction = menu.addAction( "Show Hex Dump" );
-	QAction *structAction = menu.addAction( "Show Structure View" );
-
-	QAction *selected = menu.exec( m_memoryToggle->mapToGlobal( pos ) );
-	if ( selected == toggleAction ) {
-		emit memoryToggleRequested();
 	}
 }
 

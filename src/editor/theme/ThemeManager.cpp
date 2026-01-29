@@ -73,8 +73,8 @@ QString ThemeManager::getClassicMainWindowStyle() {
         QToolBar {
             background-color: #d0d0d0;
             border: 1px solid #808080;
-            spacing: 3px;
-            padding: 2px;
+            spacing: 4px;
+            padding: 4px;
         }
         QToolButton {
             background-color: #c0c0c0;
@@ -83,8 +83,8 @@ QString ThemeManager::getClassicMainWindowStyle() {
             border-left-color: #ffffff;
             border-right-color: #808080;
             border-bottom-color: #808080;
-            padding: 3px;
-            margin: 1px;
+            padding: 5px;
+            margin: 2px;
         }
         QToolButton:hover {
             background-color: #d0d0d0;
