@@ -63,20 +63,16 @@ class StatusBarWidget : public QStatusBar {
 
 	void setInspectorVisible( bool visible );
 	void setConsoleVisible( bool visible );
-	void setMemoryVisible( bool visible );
 
   signals:
 	void inspectorToggleRequested();
 	void consoleToggleRequested();
-	void memoryToggleRequested();
 
   private slots:
 	void onInspectorButtonClicked();
 	void onConsoleButtonClicked();
-	void onMemoryButtonClicked();
 	void showInspectorContextMenu( const QPoint &pos );
 	void showConsoleContextMenu( const QPoint &pos );
-	void showMemoryContextMenu( const QPoint &pos );
 	void onCopyFilePathClicked();
   protected:
 	void resizeEvent( QResizeEvent *event ) override;
@@ -124,7 +120,6 @@ class StatusBarWidget : public QStatusBar {
 
 	QPushButton *m_inspectorToggle;
 	QPushButton *m_consoleToggle;
-	QPushButton *m_memoryToggle;
 	QPushButton *m_copyPathButton;
 
 	QString m_currentFilePath;

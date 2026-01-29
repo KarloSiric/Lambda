@@ -69,6 +69,7 @@ MainWindow::MainWindow( QWidget *parent )
     m_sequenceSelector = nullptr;
 
 	setWindowTitle( "Lambda MDL Editor" );
+	setWindowIcon( QIcon( ":/icons/logo-icon-finalized.png" ) );
 	resize( MW_WIDTH, MW_HEIGHT );
 
 	// Apply classic window styling (Windows 95/2000)
@@ -273,15 +274,6 @@ void MainWindow::createDocks() {
 			bottomTabs->setCurrentIndex( 0 ); // Switch to Console tab
 		}
 		m_statusBar->setConsoleVisible( visible );
-	} );
-
-	connect( m_statusBar, &StatusBarWidget::memoryToggleRequested, this, [this, bottomTabs]() {
-		bool visible = !bottomDock->isVisible();
-		bottomDock->setVisible( visible );
-		if ( visible ) {
-			bottomTabs->setCurrentIndex( 1 ); // Switch to Memory tab
-		}
-		m_statusBar->setMemoryVisible( visible );
 	} );
 }
 
