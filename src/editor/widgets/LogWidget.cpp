@@ -520,4 +520,5 @@ void LogWidget::onSaveClicked() {
 		stream << getPlainText();
 		file.close();
 	}
+    
 }

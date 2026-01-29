@@ -28,6 +28,10 @@
 #include <QTimer>
 #include <QMouseEvent>
 #include <QWheelEvent>
+#include <QKeyEvent>
+#include <QFocusEvent>
+#include <QSet>
+#include <QElapsedTimer>
 #include <QtCore/qobject.h>
 #include <QtCore/qtmetamacros.h>
 #include <QtCore/qtypes.h>
@@ -139,9 +143,15 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void enterEvent( QEnterEvent *event ) override;
 	void leaveEvent( QEvent *event ) override;
 
+	// @Note: Keyboard events for WASD camera movement
+	void keyPressEvent( QKeyEvent *event ) override;
+	void keyReleaseEvent( QKeyEvent *event ) override;
+	void focusOutEvent( QFocusEvent *event ) override;
+
   private slots:
 
 	void onAnimationTick();
+	void onCameraMovementUpdate();
   private:
 	// @Note: model is owned by Qt but C backend manages it
 	mdl_model_t *m_model;
@@ -193,9 +203,15 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	// Status bar pointer for updating viewport info
 	StatusBarWidget *m_statusBar;
 
+	// WASD camera movement
+	QTimer *m_movementTimer;
+	QSet<int> m_pressedKeys;  // Track which keys are currently pressed
+	qint64 m_lastMovementTime;  // For delta time calculation
+
 	// Helper functions
 	void updateAnimationState( float deltaTime );
 	void setupProjectionMatrix( int width, int height );
 	void renderScene();
+	void updateCameraMovement( float deltaTime );
 };
 #endif

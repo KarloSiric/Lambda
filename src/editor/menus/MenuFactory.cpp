@@ -21,7 +21,7 @@
  */
 
 #include "MenuFactory.h"
-#include "../MainWindow.h"
+#include "MainWindow.h"
 
 #include <QMainWindow>
 #include <QMenuBar>
@@ -61,7 +61,9 @@ void createFileMenu( QMainWindow *mainWindow ) {
 	if ( mw ) {
 		QObject::connect( newTabAction, &QAction::triggered, mw, &MainWindow::onNewTab );
 	}
-
+    
+    
+    
 	fileMenu->addSeparator();
 
 	QAction *openAction = fileMenu->addAction( "Open Model" );
@@ -72,9 +74,9 @@ void createFileMenu( QMainWindow *mainWindow ) {
 	QMenu *recentMenu = fileMenu->addMenu( "Open recent" );
 	recentMenu->addAction( "barney.mdl" );
 	recentMenu->addAction( "player.mdl" );
-	recentMenu->addAction( "scientist.mdl" );
+    recentMenu->addAction( "scientist.mdl" );
 
-	fileMenu->addAction( "Open project (.pak)" );
+    fileMenu->addAction( "Open project (.pak)" );
 
 	fileMenu->addSeparator();
 
@@ -139,7 +141,7 @@ void createFileMenu( QMainWindow *mainWindow ) {
 	// EXIT SECTION
 	// ==================================
 
-	QAction *actionExit = fileMenu->addAction( "Exit" );
+    QAction *actionExit = fileMenu->addAction( "Exit" );
 	QObject::connect( actionExit, &QAction::triggered, qApp, &QApplication::exit );
 }
 
@@ -560,7 +562,7 @@ void createBodypartMenu( QMainWindow *mainWindow ) {
 
 	QAction *submodel0 = submodelMenu->addAction( "Submodel 0 (Default)" );
 	submodel0->setCheckable( true );
-	submodel0->setChecked( true );
+    submodel0->setChecked( true );
 	submodelGroup->addAction( submodel0 );
 
 	QAction *submodel1 = submodelMenu->addAction( "Submodel 1" );
@@ -600,7 +602,7 @@ void createBodypartMenu( QMainWindow *mainWindow ) {
 	// BODYGROUP PRESETS (Common combinations)
 	// ==================================
 
-	QMenu *presetsMenu = bodypartMenu->addMenu( "Bodygroup Presets" );
+	QMenu *presetsMenu= bodypartMenu->addMenu( "Bodygroup Presets" );
 	presetsMenu->addAction( "Default Loadout" );
 	presetsMenu->addAction( "All Variants Visible" );
 	presetsMenu->addAction( "Custom Preset 1..." );
@@ -745,11 +747,10 @@ void createBonesMenu( QMainWindow *mainWindow ) {
 	QAction *hitboxCustom1 = hitboxSetMenu->addAction( "Custom Set 1" );
 	hitboxCustom1->setCheckable( true );
 	hitboxSetGroup->addAction( hitboxCustom1 );
-
-	QAction *hitboxCustom2 = hitboxSetMenu->addAction( "Custom Set 2" );
+     
+    QAction *hitboxCustom2 = hitboxSetMenu->addAction( "Custom Set 2" );
 	hitboxCustom2->setCheckable( true );
 	hitboxSetGroup->addAction( hitboxCustom2 );
-
 	hitboxMenu->addSeparator();
 	hitboxMenu->addAction( "Edit Hitbox..." ); // Opens hitbox editor dialog
 	hitboxMenu->addAction( "Add New Hitbox..." );
@@ -867,7 +868,7 @@ void createSequencesMenu( QMainWindow *mainWindow ) {
 	sequencesMenu->addAction( "Jump to Start" );
 	sequencesMenu->addAction( "Jump to End" );
 
-	sequencesMenu->addSeparator();
+    sequencesMenu->addSeparator();
 
 	// ==================================
 	// PLAYBACK OPTIONS
@@ -1044,7 +1045,7 @@ void createSequencesMenu( QMainWindow *mainWindow ) {
 	filterMove->setCheckable( true );
 
 	QAction *filterAttack = filterTypeMenu->addAction( "Attack/Action" );
-	filterAttack->setCheckable( true );
+	filterAttack->setCheckable( true );    
 
 	QAction *filterCustom = filterTypeMenu->addAction( "Custom Filter..." );
 	filterCustom->setCheckable( true );
@@ -1428,27 +1429,27 @@ void createDebugMenu( QMainWindow *mainWindow ) {
 
 	// ==================================
 	// DEBUGGING TOOLS
-	// ==================================
+    // ==================================
 
 	debugMenu->addAction( "Print Model Info to Console..." );
 	debugMenu->addAction( "Dump Vertices to File..." );
 	debugMenu->addAction( "Dump Bones to File..." );
 	debugMenu->addAction( "Dump Sequence to File..." );
 	debugMenu->addAction( "Export Debug Log..." );
-
-	debugMenu->addSeparator();
+    
+    debugMenu->addSeparator();
 
 	// ==================================
 	// OPENGL DEBUG
 	// ==================================
 
 	QMenu *glDebugMenu = debugMenu->addMenu( "OpenGL Debug" );
-
 	QAction *showGLInfo = glDebugMenu->addAction( "Show GL Info" );
 	showGLInfo->setCheckable( true );
 
-	QAction *wireframeOverlay = glDebugMenu->addAction( "Wireframe Overlay" );
+	QAction*wireframeOverlay = glDebugMenu->addAction( "Wireframe Overlay" );
 	wireframeOverlay->setCheckable( true );
+    
 
 	QAction *showDrawCalls = glDebugMenu->addAction( "Show Draw Calls" );
 	showDrawCalls->setCheckable( true );
@@ -1490,7 +1491,7 @@ void createDebugMenu( QMainWindow *mainWindow ) {
 	logError->setCheckable( true );
 	logLevelGroup->addAction( logError );
 
-	QAction *logWarning = logLevelMenu->addAction( "Warning" );
+	QAction *logWarning= logLevelMenu->addAction( "Warning" );
 	logWarning->setCheckable( true );
 	logLevelGroup->addAction( logWarning );
 
@@ -1587,7 +1588,7 @@ void createWindowMenu( QMainWindow *mainWindow ) {
 		QObject::connect( newTabAction, &QAction::triggered, mw, &MainWindow::onNewTab );
 	}
 
-	winMenu->addSeparator();
+    winMenu->addSeparator();
 
 	// Panels
 	winMenu->addAction( "Texture Browser" );

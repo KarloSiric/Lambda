@@ -20,8 +20,8 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-#include "cl/cl_app.h"
-#include "mdl/mdl_report.h"
+#include "cl_app.h"
+#include "mdl_report.h"
 #include "util/util_args.h"
 
 #include <stdio.h>

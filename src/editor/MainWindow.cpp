@@ -112,6 +112,30 @@ void MainWindow::setupMenus() {
 	MenuFactory::createMenus( this );
 }
 
+MainWindow::~MainWindow()
+{
+
+
+    // TODO(Karlo): Ensuring proper cleanup so that we dont have app issues
+    if ( m_statusUpdateTimer && m_statusUpdateTimer->isActive() ) 
+    {
+        m_statusUpdateTimer->stop();    
+    }
+    
+    if ( tabWidget )
+    {
+        while( tabWidget->count() > 0 )
+        {
+            QWidget *widget = tabWidget->widget( 0 );
+            tabWidget->removeTab( 0 );
+            delete widget;   
+        }       
+    }
+    
+    
+}
+
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Menu creation: see menus/MenuFactory.cpp
 // Toolbar creation: see toolbars/ToolbarFactory.cpp

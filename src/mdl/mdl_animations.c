@@ -21,7 +21,6 @@
  */
 
 #include "mdl_animations.h"
-#include "mdl_bones.h"
 #include "mdl_loader.h"
 #include "mdl_audio.h"
 
@@ -396,42 +395,39 @@ mdl_result_t mdl_animation_calculate_bones(
 			glm_mat4_copy( local, bone_transformations[i] );
 		}
 	}
-    
+
 	return MDL_SUCCESS;
 }
-
 
 // Converts a GoldSrc (Half-Life) bone matrix into OpenGL coordinate space.
 // Half-Life:  X = right, Y = forward, Z = up
 // OpenGL:     X = right, Y = up,     Z = backward
 // Transform: (x, y, z) → (x, z, -y)
-static void ConvertBoneMatrixToGL(mat4 M)
-{
-    mat4 T;
-    glm_mat4_copy(M, T);
+static void ConvertBoneMatrixToGL( mat4 M ) {
+	mat4 T;
+	glm_mat4_copy( M, T );
 
-    // === ROTATION PART ===
-    // New Y row = old Z row
-    M[1][0] = T[2][0];
-    M[1][1] = T[2][1];
-    M[1][2] = T[2][2];
+	// === ROTATION PART ===
+	// New Y row = old Z row
+	M[1][0] = T[2][0];
+	M[1][1] = T[2][1];
+	M[1][2] = T[2][2];
 
-    // New Z row = -old Y row
-    M[2][0] = -T[1][0];
-    M[2][1] = -T[1][1];
-    M[2][2] = -T[1][2];
+	// New Z row = -old Y row
+	M[2][0] = -T[1][0];
+	M[2][1] = -T[1][1];
+	M[2][2] = -T[1][2];
 
-    // === TRANSLATION PART ===
-    // Old translation is T[3][0..2]
-    float oldY = T[3][1];
+	// === TRANSLATION PART ===
+	// Old translation is T[3][0..2]
+	float oldY = T[3][1];
 
-    // Z → Y
-    M[3][1] = T[3][2];
+	// Z → Y
+	M[3][1] = T[3][2];
 
-    // Y → -Z
-    M[3][2] = -oldY;
+	// Y → -Z
+	M[3][2] = -oldY;
 }
-
 
 void transform_vertex_by_bone( vec3_t result, vec3_t vertex, float bone_matrix[3][4] ) {
 	// bone_matrix is in ROW-MAJOR format: bone_matrix[row][col]
