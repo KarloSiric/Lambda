@@ -123,18 +123,22 @@ void MainWindow::setupMenus() {
 }
 
 MainWindow::~MainWindow() {
-	// TODO(Karlo): Ensuring proper cleanup so that we dont have app issues
-	if ( m_statusUpdateTimer && m_statusUpdateTimer->isActive() ) {
-		m_statusUpdateTimer->stop();
-	}
+    ConsoleBridge::shutdown();
+    LoggerBridge::shutdown();
 
-	if ( tabWidget ) {
-		while ( tabWidget->count() > 0 ) {
-			QWidget *widget = tabWidget->widget( 0 );
-			tabWidget->removeTab( 0 );
-			delete widget;
-		}
-	}
+    // Stop status timer
+    if ( m_statusUpdateTimer && m_statusUpdateTimer->isActive() ) {
+        m_statusUpdateTimer->stop();
+    }
+
+    // Delete all viewport tabs
+    if ( tabWidget ) {
+        while ( tabWidget->count() > 0 ) {
+            QWidget *widget = tabWidget->widget( 0 );
+            tabWidget->removeTab( 0 );
+            delete widget;
+        }
+    }	
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -189,13 +193,13 @@ void MainWindow::createDocks() {
 	rightDock = new QDockWidget( "Inspector", this );
 	rightDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
 
-	QWidget *inspectorPanel = new QWidget();
+	QWidget *inspectorPanel = new QWidget( this );
 	// TODO: Here we can add more panels they will all be active and necessary
 	//       Will decide going on how and what is necessary to add
 
 	QVBoxLayout *inspLayout = new QVBoxLayout( inspectorPanel );
 
-	inspLayout->addWidget( new QLabel( "Inspector Panel Placeholder, will fill more panels" ) );
+	inspLayout->addWidget( new QLabel( "Inspector Panel Placeholder, will fill more panels", inspectorPanel ) );
 	inspectorPanel->setLayout( inspLayout );
 	inspectorPanel->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
 	inspectorPanel->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
@@ -222,19 +226,19 @@ void MainWindow::createDocks() {
 	bottomDock->setMaximumHeight( MW_CONSOLE_MAX_HEIGHT );
 
 	// Create tab widget for Console and Memory
-	QTabWidget *bottomTabs = new QTabWidget();
+	QTabWidget *bottomTabs = new QTabWidget( this );
 	bottomTabs->setDocumentMode( false ); // Classic tabs
 
 	// Console panel - simple output area (no log filtering)
-	m_consoleWidget = new ConsoleWidget();
+	m_consoleWidget = new ConsoleWidget( this );
 
 	// Log panel - detailed logging with filtering
-	m_logWidget = new LogWidget();
+	m_logWidget = new LogWidget( this );
 
 	// Memory panel
-	QWidget *memoryPanel = new QWidget();
+	QWidget *memoryPanel = new QWidget( this );
 	QVBoxLayout *memoryLayout = new QVBoxLayout( memoryPanel );
-	QLabel *memoryLabel = new QLabel( "Memory Panel - Hex Dump and Structure View" );
+	QLabel *memoryLabel = new QLabel( "Memory Panel - Hex Dump and Structure View", memoryPanel );
 	memoryLabel->setStyleSheet( "QLabel { color: #c0c0c0; }" );
 	memoryLayout->addWidget( memoryLabel );
 	memoryPanel->setStyleSheet(
@@ -267,8 +271,8 @@ void MainWindow::createDocks() {
 	bottomDock->setFeatures( QDockWidget::NoDockWidgetFeatures );
 
 	// Remove title bar from inspector and console for cleaner look
-	rightDock->setTitleBarWidget( new QWidget() );
-	bottomDock->setTitleBarWidget( new QWidget() );
+	rightDock->setTitleBarWidget( new QWidget( this ) );
+	bottomDock->setTitleBarWidget( new QWidget( this ) );
 
 	// Apply classic dock styling
 	rightDock->setStyleSheet( ThemeManager::getClassicDockStyle() );
@@ -302,7 +306,8 @@ void MainWindow::createDocks() {
 	} );
 }
 
-void MainWindow::setupTheme( void ) {
+void MainWindow::setupTheme( void ) 
+{
 	// here we will add the app reference instead of in the main
 }
 
