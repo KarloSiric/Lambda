@@ -178,6 +178,9 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
     qint64 m_lastFpsTime;
     float m_currentFps;
 
+    // Animation timing for frame-rate independent playback
+    qint64 m_lastAnimTime;
+
 	// View/projection matrices for rendering
 	math_mat4_t m_viewMatrix;
 	math_mat4_t m_projMatrix;

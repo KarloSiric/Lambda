@@ -60,6 +60,7 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_frameCount( 0 ),
 	  m_lastFpsTime( 0 ),
 	  m_currentFps( 0.0f ),
+	  m_lastAnimTime( 0 ),
 	  m_showGrid( true ),
 	  m_wireframeMode( false ),
 	  m_groundHeight( 0.0f ),
@@ -270,8 +271,19 @@ void ModelViewport::onAnimationTick() {
 	// Only advance animation if playing and model loaded
 	if ( m_animationPlaying && m_model && m_model->header ) {
 		// Calculate delta time (timer fires every 16ms = 0.016 seconds)
-		float deltaTime = 0.016f;
-
+        
+        qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+        float deltaTime = ( m_lastAnimTime > 0 ) 
+                            ? ( currentTime - m_lastAnimTime ) / 1000.0f
+                            : 0.016f;
+        m_lastAnimTime = currentTime;
+        
+        // TODO(karlo): clamping values so we dont have any huge jumps
+        if ( deltaTime > 0.05f )
+        {
+            deltaTime = 0.05f;
+        }
+         
 		// Get the current sequence to check FPS
 		if ( m_animState.current_sequence >= 0 &&
 			 m_animState.current_sequence < m_model->header->numseq ) {
@@ -288,10 +300,10 @@ void ModelViewport::onAnimationTick() {
 			// Emit frame changed signal for UI updates
 			emit frameChanged( m_animState.current_frame );
 		}
-	}
 
-	// Always request redraw
-	update();
+		// Only request redraw when animation is actually playing
+		update();
+	}
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -421,7 +433,7 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 
 		// Calculate camera-relative right vector (perpendicular to view direction)
 		math_vec3_t right;
-		right[0] = -cosf( m_cameraYaw );
+		right[0] = -cosf( m_cameraYaw );  
 		right[1] = 0.0f;
 		right[2] = sinf( m_cameraYaw );
 
