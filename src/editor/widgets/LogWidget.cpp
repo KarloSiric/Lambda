@@ -54,7 +54,13 @@ LogWidget::LogWidget( QWidget *parent )
 	connect( m_flushTimer, &QTimer::timeout, this, &LogWidget::flushLogQueue );
 }
 
-LogWidget::~LogWidget() {
+LogWidget::~LogWidget() 
+{
+    
+    if ( m_flushTimer && m_flushTimer->isActive() ) 
+    {
+        m_flushTimer->stop();
+    } 
 }
 
 void LogWidget::setupUI() {

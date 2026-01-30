@@ -31,7 +31,9 @@ public:
     void setDelayEnabled( bool enabled );
     void setDelayInterval( int miliseconds );
     void flushQueue();
+    
 private slots:
+
     void processQueue();
     
 private:

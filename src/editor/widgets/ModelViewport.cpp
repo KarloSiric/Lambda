@@ -97,14 +97,28 @@ ModelViewport::ModelViewport( QWidget *parent )
 }
 
 ModelViewport::~ModelViewport() {
+    
+    // TODO(Karlo): Some issues when application is closing
+    if ( m_animationTimer && m_animationTimer->isActive() )
+    {
+        m_animationTimer->stop();
+    }
+    
+    if ( m_animationTimer && m_movementTimer->isActive() )
+    { 
+        m_animationTimer->stop(); 
+    }
+    
 	makeCurrent();
 
-	if ( m_model ) {
+	if ( m_model ) 
+    {
 		free_model( m_model );
 		m_model = nullptr;
 	}
 
-	if ( m_renderInstance ) {
+	if ( m_renderInstance ) 
+    {
 		r_qt_destroy_instance( m_renderInstance );
 		m_renderInstance = nullptr;
 	}

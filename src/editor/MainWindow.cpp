@@ -62,11 +62,13 @@
 
 MainWindow::MainWindow( QWidget *parent )
 	: QMainWindow( parent ) {
-        
-        
-    // initializing the pointer to nullptr
-    m_consoleWidget = nullptr;
-    m_sequenceSelector = nullptr;
+	// initializing the pointer to nullptr
+	m_consoleWidget = nullptr;
+
+	m_sequenceSelector = new QComboBox( this );
+	m_sequenceSelector->setObjectName( "SequenceSelector" );
+	m_sequenceSelector->setMinimumWidth( 150 );
+	m_sequenceSelector->setToolTip( "Select animation sequence" );
 
 	setWindowTitle( "Lambda MDL Editor" );
 	setWindowIcon( QIcon( ":/icons/logo-icon-finalized.png" ) );
@@ -80,6 +82,14 @@ MainWindow::MainWindow( QWidget *parent )
 
 	// Setting up all the major componenents
 	setupMenus();
+    
+    QToolBar *secondaryToolbar = findChild<QToolBar*>( "Secondary" );
+    if ( secondaryToolbar ) 
+    {
+        secondaryToolbar->addWidget( new QLabel( " Sequence: ", this ) );
+        secondaryToolbar->addWidget( m_sequenceSelector );
+    }
+    
 	setupToolbars();
 	connectToolbarActions();
 
@@ -94,9 +104,9 @@ MainWindow::MainWindow( QWidget *parent )
 	m_statusUpdateTimer->setInterval( 100 ); // ~10 FPS
 	connect( m_statusUpdateTimer, &QTimer::timeout, this, &MainWindow::onStatusBarUpdate );
 	m_statusUpdateTimer->start();
-    
-    ConsoleBridge::init( m_consoleWidget );
-    LoggerBridge::init( m_logWidget );
+
+	ConsoleBridge::init( m_consoleWidget );
+	LoggerBridge::init( m_logWidget );
 
 	// Log startup messages
 	log_info( "App", "Lambda MDL Editor started" );
@@ -112,29 +122,20 @@ void MainWindow::setupMenus() {
 	MenuFactory::createMenus( this );
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
+	// TODO(Karlo): Ensuring proper cleanup so that we dont have app issues
+	if ( m_statusUpdateTimer && m_statusUpdateTimer->isActive() ) {
+		m_statusUpdateTimer->stop();
+	}
 
-
-    // TODO(Karlo): Ensuring proper cleanup so that we dont have app issues
-    if ( m_statusUpdateTimer && m_statusUpdateTimer->isActive() ) 
-    {
-        m_statusUpdateTimer->stop();    
-    }
-    
-    if ( tabWidget )
-    {
-        while( tabWidget->count() > 0 )
-        {
-            QWidget *widget = tabWidget->widget( 0 );
-            tabWidget->removeTab( 0 );
-            delete widget;   
-        }       
-    }
-    
-    
+	if ( tabWidget ) {
+		while ( tabWidget->count() > 0 ) {
+			QWidget *widget = tabWidget->widget( 0 );
+			tabWidget->removeTab( 0 );
+			delete widget;
+		}
+	}
 }
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Menu creation: see menus/MenuFactory.cpp
@@ -225,7 +226,7 @@ void MainWindow::createDocks() {
 	bottomTabs->setDocumentMode( false ); // Classic tabs
 
 	// Console panel - simple output area (no log filtering)
-    m_consoleWidget = new ConsoleWidget();
+	m_consoleWidget = new ConsoleWidget();
 
 	// Log panel - detailed logging with filtering
 	m_logWidget = new LogWidget();
@@ -335,7 +336,7 @@ void MainWindow::onOpenModel() {
 	// SAFETY: Double-check viewport creation succeeded
 	if ( !viewport ) {
 		log_error( "UI", "Failed to create viewport" );
-        CONSOLE_ERROR( "Failed to create viewport. Please restart the application." );
+		CONSOLE_ERROR( "Failed to create viewport. Please restart the application." );
 		return;
 	}
 
@@ -350,13 +351,13 @@ void MainWindow::onOpenModel() {
 	// SAFETY: Check if file actually exists
 	QFileInfo fileInfo( filePath );
 	if ( !fileInfo.exists() ) {
-        CONSOLE_ERROR( "File not found: %s",  filePath.toUtf8().constData() );
+		CONSOLE_ERROR( "File not found: %s", filePath.toUtf8().constData() );
 		return;
 	}
 
 	// SAFETY: Check if it's actually a .mdl file
 	if ( fileInfo.suffix().toLower() != "mdl" ) {
-        CONSOLE_ERROR( "Invalid file type. Please select a .mdl file: %s", filePath.toUtf8().constData() );
+		CONSOLE_ERROR( "Invalid file type. Please select a .mdl file: %s", filePath.toUtf8().constData() );
 		return;
 	}
 
@@ -366,9 +367,9 @@ void MainWindow::onOpenModel() {
 
 	if ( !success ) {
 		log_error( "MDL", "Failed to load model: %s", filePath.toUtf8().constData() );
-        CONSOLE_ERROR( "Failed to load model. File may be corrupted or invalid: %s",
-                      filePath.toUtf8().constData() );
-        m_statusBar->clearModelInfo();
+		CONSOLE_ERROR( "Failed to load model. File may be corrupted or invalid: %s",
+					   filePath.toUtf8().constData() );
+		m_statusBar->clearModelInfo();
 		return;
 	}
 
@@ -393,9 +394,9 @@ void MainWindow::onOpenModel() {
 
 	// Log model statistics
 	log_debug( "MDL", "  Vertices: %d, Triangles: %d, Bones: %d",
-		info.vertexCount, info.triangleCount, info.boneCount );
+			   info.vertexCount, info.triangleCount, info.boneCount );
 	log_debug( "MDL", "  Sequences: %d, Textures: %d, Size: %lld bytes",
-		info.sequenceCount, info.textureCount, (long long)info.fileSize );
+			   info.sequenceCount, info.textureCount, (long long)info.fileSize );
 	info.currentSequence = "";
 	info.currentFrame = 0;
 	info.totalFrames = 0;
@@ -478,7 +479,7 @@ int MainWindow::addViewportTab( const QString &title ) {
 void MainWindow::onNewTab() {
 	int index = addViewportTab( "Untitled" );
 	if ( index < 0 ) {
-        CONSOLE_ERROR( "Failed to create a new tab" );
+		CONSOLE_ERROR( "Failed to create a new tab" );
 	}
 }
 
@@ -558,7 +559,7 @@ void MainWindow::onStatusBarUpdate() {
 		return;
 	}
 
-    float fps = viewport->getCurrentFps();
+	float fps = viewport->getCurrentFps();
 
 	// Update FPS display (always shown)
 	m_statusBar->setFPS( (int)fps );
@@ -607,7 +608,7 @@ void MainWindow::connectToolbarActions() {
 		log_warning( "UI", "Main toolbar not found for action connections" );
 		return;
 	}
-
+    
 	// Connect all toolbar actions
 	for ( QAction *action : mainToolbar->actions() ) {
 		QString text = action->text();
@@ -624,29 +625,21 @@ void MainWindow::connectToolbarActions() {
 		// ─────────────────────────────────────────────────────────────────────
 		else if ( text == "Wireframe" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleWireframe );
-		}
-		else if ( text == "Textured" ) {
+		} else if ( text == "Textured" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleTextured );
-		}
-		else if ( text == "Bones" ) {
+		} else if ( text == "Bones" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleBones );
-		}
-		else if ( text == "Hitboxes" ) {
+		} else if ( text == "Hitboxes" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleHitboxes );
-		}
-		else if ( text == "Attachments" ) {
+		} else if ( text == "Attachments" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleAttachments );
-		}
-		else if ( text == "Normals" ) {
+		} else if ( text == "Normals" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleNormals );
-		}
-		else if ( text == "Grid" ) {
+		} else if ( text == "Grid" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleGrid );
-		}
-		else if ( text == "Axes" ) {
+		} else if ( text == "Axes" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleAxes );
-		}
-		else if ( text == "Ground" ) {
+		} else if ( text == "Ground" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleGround );
 		}
 
@@ -655,8 +648,7 @@ void MainWindow::connectToolbarActions() {
 		// ─────────────────────────────────────────────────────────────────────
 		else if ( text == "Reset Camera" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onResetCamera );
-		}
-		else if ( text == "Center Model" ) {
+		} else if ( text == "Center Model" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onCenterModel );
 		}
 
@@ -665,20 +657,15 @@ void MainWindow::connectToolbarActions() {
 		// ─────────────────────────────────────────────────────────────────────
 		else if ( text == "Play" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onPlayAnimation );
-		}
-		else if ( text == "Pause" ) {
+		} else if ( text == "Pause" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onPauseAnimation );
-		}
-		else if ( text == "Stop" ) {
+		} else if ( text == "Stop" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onStopAnimation );
-		}
-		else if ( text == "Prev Frame" ) {
+		} else if ( text == "Prev Frame" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onPrevFrame );
-		}
-		else if ( text == "Next Frame" ) {
+		} else if ( text == "Next Frame" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onNextFrame );
-		}
-		else if ( text == "Loop" ) {
+		} else if ( text == "Loop" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleLoop );
 		}
 
@@ -687,11 +674,9 @@ void MainWindow::connectToolbarActions() {
 		// ─────────────────────────────────────────────────────────────────────
 		else if ( text == "Screenshot" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onScreenshot );
-		}
-		else if ( text == "Background" ) {
+		} else if ( text == "Background" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onBackgroundColor );
-		}
-		else if ( text == "Lighting" ) {
+		} else if ( text == "Lighting" ) {
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleLighting );
 		}
 	}
@@ -934,8 +919,7 @@ void MainWindow::onScreenshot() {
 		this,
 		"Save Screenshot",
 		"screenshot.png",
-		"PNG Images (*.png);;JPEG Images (*.jpg);;All Files (*)"
-	);
+		"PNG Images (*.png);;JPEG Images (*.jpg);;All Files (*)" );
 
 	if ( filePath.isEmpty() ) {
 		return;
