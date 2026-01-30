@@ -28,7 +28,6 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 
 // ============================================================================
 // STUDIO MODEL CONSTANTS

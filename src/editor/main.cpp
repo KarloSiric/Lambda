@@ -80,6 +80,7 @@ int main( int argc, char *argv[] ) {
 	QApplication app( argc, argv );
 	app.setApplicationName( "Lambda" );
 	app.setOrganizationName( "kSoftware" );
+    app.setQuitOnLastWindowClosed( true );
 	app.setWindowIcon( QIcon( ":/icons/logo-icon-finalized.png" ) );
 
 	QString appDataPath = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
@@ -120,9 +121,7 @@ int main( int argc, char *argv[] ) {
 
 		QTimer::singleShot( 700, [&]() {
 			printOpenGLInfo();
-            
-            
-            
+             
 #ifdef _WIN32 
             // For Windows OS 
             QString displayPath = logFilePath;
@@ -140,11 +139,20 @@ int main( int argc, char *argv[] ) {
 	} );
 
 	window.show();
-    
+
+	qDebug() << "\n========================================";
+	qDebug() << "Entering Qt event loop...";
+	qDebug() << "========================================\n";
+
 	int result = app.exec();
+
+	qDebug() << "\n========================================";
+	qDebug() << "Qt event loop EXITED with code:" << result;
+	qDebug() << "========================================\n";
 
 	logger_shutdown();
 	console_shutdown();
 
+	qDebug() << "Application shutting down completely";
 	return result;
 }

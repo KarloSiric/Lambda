@@ -46,7 +46,7 @@ void ConsoleWidget::setupUI( void ) {
 	v_layout->setContentsMargins( 0, 0, 0, 0 );
 	v_layout->setSpacing( 0 );
 
-	m_textEdit = new QTextEdit();
+	m_textEdit = new QTextEdit( this );
 	m_textEdit->setReadOnly( true );
 	m_textEdit->setLineWrapMode( QTextEdit::NoWrap );
 	m_textEdit->setAcceptRichText( true );

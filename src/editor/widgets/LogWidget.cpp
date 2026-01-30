@@ -69,14 +69,14 @@ void LogWidget::setupUI() {
 	mainLayout->setSpacing( 0 );
 
 	// Toolbar row
-	QWidget *toolbar = new QWidget();
+	QWidget *toolbar = new QWidget( this );
 	QHBoxLayout *toolbarLayout = new QHBoxLayout( toolbar );
 	toolbarLayout->setContentsMargins( 4, 2, 4, 2 );
 	toolbarLayout->setSpacing( 4 );
 
 	// Level filter dropdown
-	QLabel *levelLabel = new QLabel( "Level:" );
-	m_levelFilter = new QComboBox();
+	QLabel *levelLabel = new QLabel( "Level:", toolbar );
+	m_levelFilter = new QComboBox( toolbar );
 	m_levelFilter->addItem( "Trace", static_cast<int>( LogLevel::Trace ) );
 	m_levelFilter->addItem( "Debug", static_cast<int>( LogLevel::Debug ) );
 	m_levelFilter->addItem( "Info", static_cast<int>( LogLevel::Info ) );
@@ -87,20 +87,20 @@ void LogWidget::setupUI() {
 	connect( m_levelFilter, QOverload<int>::of( &QComboBox::currentIndexChanged ), this, &LogWidget::onFilterChanged );
 
 	// Search filter - searches in message text
-	QLabel *searchLabel = new QLabel( "Search:" );
-	m_searchFilter = new QLineEdit();
+	QLabel *searchLabel = new QLabel( "Search:", toolbar );
+	m_searchFilter = new QLineEdit( toolbar );
 	m_searchFilter->setPlaceholderText( "Filter text..." );
 	m_searchFilter->setMaximumWidth( 150 );
 	connect( m_searchFilter, &QLineEdit::textChanged, this, &LogWidget::onFilterChanged );
 
 	// Options
-	m_autoScrollCheck = new QCheckBox( "Auto-scroll" );
+	m_autoScrollCheck = new QCheckBox( "Auto-scroll", toolbar );
 	m_autoScrollCheck->setChecked( true );
 	connect( m_autoScrollCheck, &QCheckBox::toggled, this, [this]( bool checked ) {
 		m_autoScroll = checked;
 	} );
 
-	m_timestampCheck = new QCheckBox( "Timestamps" );
+	m_timestampCheck = new QCheckBox( "Timestamps", toolbar );
 	m_timestampCheck->setChecked( true );
 	connect( m_timestampCheck, &QCheckBox::toggled, this, [this]( bool checked ) {
 		m_showTimestamp = checked;
@@ -108,9 +108,9 @@ void LogWidget::setupUI() {
 	} );
 
 	// Buttons
-	m_clearBtn = new QPushButton( "Clear" );
-	m_copyBtn = new QPushButton( "Copy" );
-	m_saveBtn = new QPushButton( "Save" );
+	m_clearBtn = new QPushButton( "Clear", toolbar );
+	m_copyBtn = new QPushButton( "Copy", toolbar );
+	m_saveBtn = new QPushButton( "Save", toolbar );
 	connect( m_clearBtn, &QPushButton::clicked, this, &LogWidget::onClearClicked );
 	connect( m_copyBtn, &QPushButton::clicked, this, &LogWidget::onCopyClicked );
 	connect( m_saveBtn, &QPushButton::clicked, this, &LogWidget::onSaveClicked );
@@ -130,7 +130,7 @@ void LogWidget::setupUI() {
 	toolbarLayout->addWidget( m_saveBtn );
 
 	// Log view
-	m_logView = new QTextEdit();
+	m_logView = new QTextEdit( this );
 	m_logView->setReadOnly( true );
 	m_logView->setLineWrapMode( QTextEdit::NoWrap );
 	m_logView->setAcceptRichText( true );

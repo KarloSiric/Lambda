@@ -72,7 +72,7 @@ void StatusBarWidget::setupUI() {
 
 void StatusBarWidget::createModelInfoWidgets() {
 	// File path with smart truncation
-	m_filePathLabel = new QLabel();  // Empty by default
+	m_filePathLabel = new QLabel( this );  // Empty by default
 	m_filePathLabel->setMinimumWidth( 150 );
 	m_filePathLabel->setMaximumWidth( 700 );
 	addWidget( m_filePathLabel );
@@ -80,25 +80,25 @@ void StatusBarWidget::createModelInfoWidgets() {
 
 	// Essential model statistics (most commonly needed at a glance)
 	// Empty by default - only show when model is loaded
-	m_vertexCountLabel = new QLabel();
+	m_vertexCountLabel = new QLabel( this );
 	m_vertexCountLabel->setToolTip( "Model/Object Vertex Count" );
 	m_vertexCountLabel->setFixedWidth( 90 );
 	addWidget( m_vertexCountLabel );
 	addWidget( createSeparator() );
 
-	m_triangleCountLabel = new QLabel();
+	m_triangleCountLabel = new QLabel( this );
 	m_triangleCountLabel->setToolTip( "Model/Object Polygon count" );
 	m_triangleCountLabel->setFixedWidth( 90 );
 	addWidget( m_triangleCountLabel );
 	addWidget( createSeparator() );
 
-	m_boneCountLabel = new QLabel();
+	m_boneCountLabel = new QLabel( this );
 	m_boneCountLabel->setToolTip( "Model/Object Bone count" );
 	m_boneCountLabel->setFixedWidth( 85 );
 	addWidget( m_boneCountLabel );
 	addWidget( createSeparator() );
 
-	m_fileSizeLabel = new QLabel();
+	m_fileSizeLabel = new QLabel( this );
 	m_fileSizeLabel->setToolTip( "File size" );
 	m_fileSizeLabel->setFixedWidth( 120 );
 	addWidget( m_fileSizeLabel );
@@ -107,15 +107,15 @@ void StatusBarWidget::createModelInfoWidgets() {
 	addWidget( createSeparator() );
 
 	// Create placeholder widgets for other info (will be hidden but kept for API compatibility)
-	m_sequenceCountLabel = new QLabel();
-	m_textureCountLabel = new QLabel();
-	m_sequenceInfoLabel = new QLabel();
-	m_bodygroupLabel = new QLabel();
-	m_skinLabel = new QLabel();
-	m_attachmentLabel = new QLabel();
-	m_eventLabel = new QLabel();
-	m_boneNameLabel = new QLabel();
-	m_controllerNameLabel = new QLabel();
+	m_sequenceCountLabel = new QLabel( this );
+	m_textureCountLabel = new QLabel( this );
+	m_sequenceInfoLabel = new QLabel( this );
+	m_bodygroupLabel = new QLabel( this );
+	m_skinLabel = new QLabel( this );
+	m_attachmentLabel = new QLabel( this );
+	m_eventLabel = new QLabel( this );
+	m_boneNameLabel = new QLabel( this );
+	m_controllerNameLabel = new QLabel( this );
 
 	// Hide these - they belong in Inspector panel
 	m_sequenceCountLabel->hide();
@@ -129,62 +129,62 @@ void StatusBarWidget::createModelInfoWidgets() {
 	m_controllerNameLabel->hide();
 
 	// Stretch spacer to push performance info and toggle buttons to the right
-	addPermanentWidget( new QWidget(), 1 );
+	addPermanentWidget( new QWidget( this ), 1 );
 }
 
 void StatusBarWidget::createViewInfoWidgets() {
 	// Performance metrics - Empty by default
-	m_fpsLabel = new QLabel();
+	m_fpsLabel = new QLabel( this );
 	m_fpsLabel->setToolTip( "Frames per second" );
 	m_fpsLabel->setFixedWidth( 65 );
 	addPermanentWidget( m_fpsLabel );
 	addPermanentWidget( createSeparator() );
 
-	m_cpuUsageLabel = new QLabel();
-	m_gpuUsageLabel = new QLabel();
-	m_ramUsageLabel = new QLabel();
+	m_cpuUsageLabel = new QLabel( this );
+	m_gpuUsageLabel = new QLabel( this );
+	m_ramUsageLabel = new QLabel( this );
 
 	// Viewport essentials - Empty by default, FIXED size so they don't shrink
-	m_gridSizeLabel = new QLabel();
+	m_gridSizeLabel = new QLabel( this );
 	m_gridSizeLabel->setToolTip( "Grid size" );
 	m_gridSizeLabel->setFixedSize( 65, 20 );
 	addPermanentWidget( m_gridSizeLabel );
 	addPermanentWidget( createSeparator() );
 
-	m_zoomLabel = new QLabel();
+	m_zoomLabel = new QLabel( this );
 	m_zoomLabel->setToolTip( "Zoom level" );
 	m_zoomLabel->setFixedSize( 90, 20 );
 	addPermanentWidget( m_zoomLabel );
 	addPermanentWidget( createSeparator() );
 
 	// Create placeholder widgets for API compatibility (hidden - belong in Inspector/overlays)
-	m_frameTimeLabel = new QLabel();
-	m_resolutionLabel = new QLabel();
-	m_viewModeLabel = new QLabel();
-	m_fovLabel = new QLabel();
-	m_playbackSpeedLabel = new QLabel();
+	m_frameTimeLabel = new QLabel( this );
+	m_resolutionLabel = new QLabel( this );
+	m_viewModeLabel = new QLabel( this );
+	m_fovLabel = new QLabel( this );
+	m_playbackSpeedLabel = new QLabel( this );
 
 	// Mouse/cursor 3D position - Empty by default, FIXED size
-	m_cameraPosLabel = new QLabel();
+	m_cameraPosLabel = new QLabel( this );
 	m_cameraPosLabel->setToolTip( "Cursor position (3D)" );
 	m_cameraPosLabel->setFixedSize( 200, 20 );
 	addPermanentWidget( m_cameraPosLabel );
 	addPermanentWidget( createSeparator() );
 
 	// Viewport size - Empty by default, FIXED size
-	m_modelViewportWidthHeight = new QLabel();
+	m_modelViewportWidthHeight = new QLabel( this );
 	m_modelViewportWidthHeight->setToolTip( "Model Viewport Window Resolution" );
 	m_modelViewportWidthHeight->setFixedSize( 140, 20 );
 	addPermanentWidget( m_modelViewportWidthHeight );
 	addPermanentWidget( createSeparator() );
 
 	// Dynamic help text section (like J.A.C.K's "Press F1 for Help")
-	m_helpLabel = new QLabel( "Press F1 for Help" );
+	m_helpLabel = new QLabel( "Press F1 for Help", this );
 	m_helpLabel->setToolTip( "Context-sensitive help (press F1)" );
 	m_helpLabel->setMinimumWidth( 120 );
 	addPermanentWidget( m_helpLabel );
 
-	m_cameraDistLabel = new QLabel();
+	m_cameraDistLabel = new QLabel( this );
 
 	// Hide non-essential viewport info
 	m_frameTimeLabel->hide();

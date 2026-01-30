@@ -22,7 +22,7 @@
 
 #include "cl_app.h"
 #include "mdl_report.h"
-#include "util/util_args.h"
+#include "util_args.h"
 
 #include <stdio.h>
 #include <stdlib.h>
