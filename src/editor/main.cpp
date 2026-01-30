@@ -133,12 +133,6 @@ int main( int argc, char *argv[] ) {
 #endif
             CONSOLE_INFO( "Log file: %s", displayPath.toUtf8().constData() );
             
-            
-            
-            
-            
-            
-
 			QTimer::singleShot( 400, [&]() {
 				printLoadingSuccess();
 			} );

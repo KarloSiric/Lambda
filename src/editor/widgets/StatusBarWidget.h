@@ -20,6 +20,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
+
 #ifndef STATUSBARWIDGET_H
 #define STATUSBARWIDGET_H
 
@@ -59,7 +60,7 @@ class StatusBarWidget : public QStatusBar {
 	void clearModelInfo();
 	void setHelpText( const QString &text );
 	void clearHelpText();
-	void clearViewportInfo(); // Clear grid, zoom, position, viewport size when mouse leaves viewport
+    void clearViewportInfo(); // Clear grid, zoom, position, viewport size when mouse leaves viewport
 
 	void setInspectorVisible( bool visible );
 	void setConsoleVisible( bool visible );

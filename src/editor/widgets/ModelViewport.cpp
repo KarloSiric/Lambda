@@ -87,17 +87,38 @@ ModelViewport::ModelViewport( QWidget *parent )
 
 	// Enable mouse tracking for hover detection (status bar updates)
 	setMouseTracking( true );
+
+	// WASD camera movement setup
+	m_movementTimer = new QTimer( this );
+	m_movementTimer->setInterval( 16 );  // ~60 FPS for smooth movement
+	connect( m_movementTimer, &QTimer::timeout, this, &ModelViewport::onCameraMovementUpdate );
+	m_lastMovementTime = QDateTime::currentMSecsSinceEpoch();
+	setFocusPolicy( Qt::StrongFocus );  // Allow keyboard focus
 }
 
 ModelViewport::~ModelViewport() {
+    
+    // TODO(Karlo): Some issues when application is closing
+    if ( m_animationTimer && m_animationTimer->isActive() )
+    {
+        m_animationTimer->stop();
+    }
+    
+    if ( m_animationTimer && m_movementTimer->isActive() )
+    { 
+        m_animationTimer->stop(); 
+    }
+    
 	makeCurrent();
 
-	if ( m_model ) {
+	if ( m_model ) 
+    {
 		free_model( m_model );
 		m_model = nullptr;
 	}
 
-	if ( m_renderInstance ) {
+	if ( m_renderInstance ) 
+    {
 		r_qt_destroy_instance( m_renderInstance );
 		m_renderInstance = nullptr;
 	}
@@ -476,6 +497,150 @@ void ModelViewport::leaveEvent( QEvent *event ) {
 		m_statusBar->clearViewportInfo();
 	}
 	event->accept();
+}
+
+void ModelViewport::keyPressEvent( QKeyEvent *event ) {
+	// Don't process if auto-repeat (key held down)
+	if ( event->isAutoRepeat() ) {
+		event->accept();
+		return;
+	}
+
+	int key = event->key();
+	m_pressedKeys.insert( key );
+
+	// Start movement timer if not already running
+	if ( !m_movementTimer->isActive() ) {
+		m_lastMovementTime = QDateTime::currentMSecsSinceEpoch();
+		m_movementTimer->start();
+	}
+
+	event->accept();
+}
+
+void ModelViewport::keyReleaseEvent( QKeyEvent *event ) {
+	// Don't process if auto-repeat
+	if ( event->isAutoRepeat() ) {
+		event->accept();
+		return;
+	}
+
+	int key = event->key();
+	m_pressedKeys.remove( key );
+
+	// Stop movement timer if no keys pressed
+	if ( m_pressedKeys.isEmpty() && m_movementTimer->isActive() ) {
+		m_movementTimer->stop();
+	}
+
+	event->accept();
+}
+
+void ModelViewport::focusOutEvent( QFocusEvent *event ) {
+	// Clear all pressed keys when losing focus
+	m_pressedKeys.clear();
+	if ( m_movementTimer->isActive() ) {
+		m_movementTimer->stop();
+	}
+	QOpenGLWidget::focusOutEvent( event );
+}
+
+void ModelViewport::onCameraMovementUpdate() {
+	if ( m_pressedKeys.isEmpty() ) {
+		return;
+	}
+
+	// Calculate delta time
+	qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+	float deltaTime = ( currentTime - m_lastMovementTime ) / 1000.0f;
+	m_lastMovementTime = currentTime;
+
+	// Clamp delta time to prevent huge jumps
+	if ( deltaTime > 0.1f ) deltaTime = 0.1f;
+
+	updateCameraMovement( deltaTime );
+	update();  // Trigger repaint
+}
+
+void ModelViewport::updateCameraMovement( float deltaTime ) {
+	// Base movement speed (units per second)
+	float baseSpeed = 10.0f;
+	float currentSpeed = baseSpeed;
+
+	// Modifiers
+	if ( m_pressedKeys.contains( Qt::Key_Shift ) ) {
+		currentSpeed *= 3.0f;  // 3x faster with Shift
+	}
+	if ( m_pressedKeys.contains( Qt::Key_Control ) ) {
+		currentSpeed *= 0.3f;  // 0.3x slower with Ctrl
+	}
+
+	// Calculate movement distance this frame
+	float moveDistance = currentSpeed * deltaTime;
+
+	// Calculate camera forward and right vectors based on yaw
+	// Forward = direction camera is looking (horizontal plane only)
+	math_vec3_t forward;
+	forward[0] = sinf( m_cameraYaw );   // X
+	forward[1] = 0.0f;                   // Y (no vertical in forward)
+	forward[2] = cosf( m_cameraYaw );   // Z
+
+	// Right = perpendicular to forward (90 degrees clockwise)
+	math_vec3_t right;
+	right[0] = -cosf( m_cameraYaw );    // X
+	right[1] = 0.0f;                     // Y
+	right[2] = sinf( m_cameraYaw );     // Z
+
+	// Up vector (world Y-axis)
+	math_vec3_t up = { 0.0f, 1.0f, 0.0f };
+
+	// Movement accumulator
+	math_vec3_t movement = { 0.0f, 0.0f, 0.0f };
+
+	// WASD movement
+	if ( m_pressedKeys.contains( Qt::Key_W ) ) {
+		// Move forward
+		movement[0] += forward[0] * moveDistance;
+		movement[1] += forward[1] * moveDistance;
+		movement[2] += forward[2] * moveDistance;
+	}
+	if ( m_pressedKeys.contains( Qt::Key_S ) ) {
+		// Move backward
+		movement[0] -= forward[0] * moveDistance;
+		movement[1] -= forward[1] * moveDistance;
+		movement[2] -= forward[2] * moveDistance;
+	}
+	if ( m_pressedKeys.contains( Qt::Key_A ) ) {
+		// Strafe left
+		movement[0] -= right[0] * moveDistance;
+		movement[1] -= right[1] * moveDistance;
+		movement[2] -= right[2] * moveDistance;
+	}
+	if ( m_pressedKeys.contains( Qt::Key_D ) ) {
+		// Strafe right
+		movement[0] += right[0] * moveDistance;
+		movement[1] += right[1] * moveDistance;
+		movement[2] += right[2] * moveDistance;
+	}
+
+	// Vertical movement
+	if ( m_pressedKeys.contains( Qt::Key_Space ) ) {
+		// Move up
+		movement[0] += up[0] * moveDistance;
+		movement[1] += up[1] * moveDistance;
+		movement[2] += up[2] * moveDistance;
+	}
+	if ( m_pressedKeys.contains( Qt::Key_C ) ) {
+		// Move down
+		movement[0] -= up[0] * moveDistance;
+		movement[1] -= up[1] * moveDistance;
+		movement[2] -= up[2] * moveDistance;
+	}
+
+	// Apply movement to camera target
+	m_cameraTarget[0] += movement[0];
+	m_cameraTarget[1] += movement[1];
+	m_cameraTarget[2] += movement[2];
 }
 
 bool ModelViewport::loadModel( const QString &modelPath ) {

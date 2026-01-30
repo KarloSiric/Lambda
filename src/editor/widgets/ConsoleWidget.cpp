@@ -141,7 +141,7 @@ void ConsoleWidget::appendMessageInternal( int type, const QString &message ) {
 	case 2: // CONSOLE WARNING
 		color = "#e6db74";
 		prefix = "[!]";
-        break;
+		break;
 	case 3: // CONSOLE ERROR
 		color = "#f44747";
 		prefix = "[ERROR]";
