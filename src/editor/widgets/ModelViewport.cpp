@@ -28,6 +28,9 @@
 #include "r_draw.h"
 #include "util_messages.h"
 #include <QDebug>
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <QVector4D>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlogging.h>
@@ -300,10 +303,10 @@ void ModelViewport::onAnimationTick() {
 			// Emit frame changed signal for UI updates
 			emit frameChanged( m_animState.current_frame );
 		}
-
-		// Only request redraw when animation is actually playing
-		update();
 	}
+
+	// Always redraw - needed for FPS counter, camera movement, and mouse tracking
+	update();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -821,14 +824,28 @@ bool ModelViewport::raycastToGround( int screenX, int screenY, float &worldX, fl
 								  farWorld.y() - nearWorld.y(),
 								  farWorld.z() - nearWorld.z() ).normalized();
 
-	// Intersect with ground plane (Y = m_groundHeight)
-	if ( fabsf( rayDir.y() ) < 1e-6f ) return false;  // Ray is horizontal
+	// Intersect with a plane facing the camera that passes through the camera target.
+	// This gives all 3 axes (X, Y, Z) updating as the mouse moves - same as Blender.
+	float camX, camY, camZ;
+	getCameraPosition( camX, camY, camZ );
 
-	float t = ( m_groundHeight - rayOrigin.y() ) / rayDir.y();
+	QVector3D camPos( camX, camY, camZ );
+	QVector3D target( m_cameraTarget[0], m_cameraTarget[1], m_cameraTarget[2] );
+
+	// Plane normal = direction from target toward camera
+	QVector3D planeNormal = ( camPos - target ).normalized();
+
+	// Plane equation: dot(planeNormal, point) = dot(planeNormal, target)
+	float planeD    = QVector3D::dotProduct( planeNormal, target );
+	float rayDotN   = QVector3D::dotProduct( rayDir, planeNormal );
+
+	if ( fabsf( rayDotN ) < 1e-6f ) return false;  // Ray parallel to plane
+
+	float t = ( planeD - QVector3D::dotProduct( rayOrigin, planeNormal ) ) / rayDotN;
 	if ( t < 0.0f ) return false;  // Intersection behind camera
 
 	worldX = rayOrigin.x() + t * rayDir.x();
-	worldY = m_groundHeight;
+	worldY = rayOrigin.y() + t * rayDir.y();
 	worldZ = rayOrigin.z() + t * rayDir.z();
 
 	return true;

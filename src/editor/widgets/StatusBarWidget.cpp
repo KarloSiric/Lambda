@@ -558,7 +558,8 @@ void StatusBarWidget::setCameraPosition( float x, float y, float z ) {
 	m_cameraZ = z;
 	// Only show position if at least one value is non-zero (mouse is in viewport)
 	if ( x != 0.0f || y != 0.0f || z != 0.0f ) {
-		m_cameraPosLabel->setText( QString( "x: %1, y: %2, z: %3" ).arg( (int)x ).arg( (int)y ).arg( (int)z ) );
+		m_cameraPosLabel->setText( QString( "x: %1, y: %2, z: %3" )
+			.arg( x, 0, 'f', 1 ).arg( y, 0, 'f', 1 ).arg( z, 0, 'f', 1 ) );
 	} else {
 		m_cameraPosLabel->setText( "" );
 	}

@@ -579,8 +579,13 @@ void MainWindow::onStatusBarUpdate() {
 
 	// Only update cursor-dependent info when mouse is inside
 	if ( mouseInViewport ) {
-		// Update mouse position (screen coordinates for now)
-		m_statusBar->setCameraPosition( (float)localPos.x(), (float)localPos.y(), 0.0f );
+		// Raycast mouse position to 3D world coordinates
+		float worldX = 0.0f, worldY = 0.0f, worldZ = 0.0f;
+		if ( viewport->raycastToGround( localPos.x(), localPos.y(), worldX, worldY, worldZ ) ) {
+			m_statusBar->setCameraPosition( worldX, worldY, worldZ );
+		} else {
+			m_statusBar->setCameraPosition( 0.0f, 0.0f, 0.0f );
+		}
 
 		// Update zoom level based on camera distance
 		float defaultDistance = 50.0f;
