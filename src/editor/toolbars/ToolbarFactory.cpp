@@ -21,6 +21,7 @@
  */
 
 #include "ToolbarFactory.h"
+#include "IconFactory.h"
 #include <QMainWindow>
 #include <QToolBar>
 #include <QAction>
@@ -47,7 +48,7 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	// ═══════════════════════════════════════════════════════════════════════
 	// RENDER MODES
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionWireframe = toolBar->addAction( QIcon( ":/icons/wireframe-icon.png" ), "" );
+	QAction *actionWireframe = toolBar->addAction( IconFactory::wireframe(), "" );
 	actionWireframe->setCheckable( true );
 	actionWireframe->setToolTip( "Wireframe (W)" );
 	actionWireframe->setShortcut( QKeySequence( "W" ) );
@@ -83,7 +84,7 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	// ═══════════════════════════════════════════════════════════════════════
 	// SCENE HELPERS
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionGrid = toolBar->addAction( QIcon( ":/icons/grid.png" ), "" );
+	QAction *actionGrid = toolBar->addAction( IconFactory::grid(), "" );
 	actionGrid->setCheckable( true );
 	actionGrid->setChecked( true );
 	actionGrid->setToolTip( "Grid (G)" );
@@ -100,14 +101,13 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	actionGround->setToolTip( "Ground (Shift+G)" );
 	actionGround->setShortcut( QKeySequence( "Shift+G" ) );
 
-	// TODO: Add grid increase/decrease icons when created
-	// QAction *actionGridIncrease = toolBar->addAction( QIcon( ":/icons/grid-increase.png" ), "" );
-	// actionGridIncrease->setToolTip( "Increase Grid Size (+)" );
-	// actionGridIncrease->setShortcut( QKeySequence( "+" ) );
+	QAction *actionGridIncrease = toolBar->addAction( IconFactory::gridIncrease(), "" );
+	actionGridIncrease->setToolTip( "Increase Grid Size (])" );
+	actionGridIncrease->setShortcut( QKeySequence( "]" ) );
 
-	// QAction *actionGridDecrease = toolBar->addAction( QIcon( ":/icons/grid-decrease.png" ), "" );
-	// actionGridDecrease->setToolTip( "Decrease Grid Size (-)" );
-	// actionGridDecrease->setShortcut( QKeySequence( "-" ) );
+	QAction *actionGridDecrease = toolBar->addAction( IconFactory::gridDecrease(), "" );
+	actionGridDecrease->setToolTip( "Decrease Grid Size ([)" );
+	actionGridDecrease->setShortcut( QKeySequence( "[" ) );
 
 	toolBar->addSeparator();
 
@@ -118,20 +118,15 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	actionResetCamera->setToolTip( "Reset Camera (Home)" );
 	actionResetCamera->setShortcut( QKeySequence( "Home" ) );
 
-	// TODO: Add 3D perspective view icon when created
-	// QAction *actionView3D = toolBar->addAction( QIcon( ":/icons/3d-view-icon.png" ), "" );
-	// actionView3D->setToolTip( "3D Perspective (Ctrl+0)" );
-	// actionView3D->setShortcut( QKeySequence( "Ctrl+0" ) );
-
-	QAction *actionViewXY = toolBar->addAction( QIcon( ":/icons/xy-view-icon.png" ), "" );
+	QAction *actionViewXY = toolBar->addAction( IconFactory::viewFront(), "" );
 	actionViewXY->setToolTip( "Front View (Ctrl+1)" );
 	actionViewXY->setShortcut( QKeySequence( "Ctrl+1" ) );
 
-	QAction *actionViewXZ = toolBar->addAction( QIcon( ":/icons/xz-view-icon.png" ), "" );
+	QAction *actionViewXZ = toolBar->addAction( IconFactory::viewTop(), "" );
 	actionViewXZ->setToolTip( "Top View (Ctrl+2)" );
 	actionViewXZ->setShortcut( QKeySequence( "Ctrl+2" ) );
 
-	QAction *actionViewZY = toolBar->addAction( QIcon( ":/icons/zy-view-icon.png" ), "" );
+	QAction *actionViewZY = toolBar->addAction( IconFactory::viewSide(), "" );
 	actionViewZY->setToolTip( "Side View (Ctrl+3)" );
 	actionViewZY->setShortcut( QKeySequence( "Ctrl+3" ) );
 
@@ -144,6 +139,8 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	Q_UNUSED( actionGrid );
 	Q_UNUSED( actionAxes );
 	Q_UNUSED( actionGround );
+	Q_UNUSED( actionGridIncrease );
+	Q_UNUSED( actionGridDecrease );
 	Q_UNUSED( actionResetCamera );
 	Q_UNUSED( actionViewXY );
 	Q_UNUSED( actionViewXZ );

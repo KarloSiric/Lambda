@@ -443,6 +443,7 @@ if(Qt6_FOUND)
         src/editor/MainWindow.cpp
         src/editor/menus/MenuFactory.cpp
         src/editor/toolbars/ToolbarFactory.cpp
+        src/editor/toolbars/IconFactory.cpp
         src/editor/widgets/ModelViewport.cpp
         src/editor/widgets/StatusBarWidget.cpp
         src/editor/widgets/ConsoleWidget.cpp
@@ -456,6 +457,7 @@ if(Qt6_FOUND)
         src/editor/MainWindow.h
         src/editor/menus/MenuFactory.h
         src/editor/toolbars/ToolbarFactory.h
+        src/editor/toolbars/IconFactory.h
         src/editor/widgets/ModelViewport.h
         src/editor/widgets/StatusBarWidget.h
         src/editor/widgets/ConsoleWidget.h
