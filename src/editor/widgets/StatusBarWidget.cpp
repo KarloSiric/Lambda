@@ -56,7 +56,7 @@ StatusBarWidget::StatusBarWidget( QWidget *parent )
 	  m_attachmentCount( 0 ),
 	  m_eventCount( 0 ) {
 	setSizeGripEnabled( false ); // Disable size grip to prevent cutoff
-	setContentsMargins( 12, -2, 12, -1 ); // Add padding on left/right edges
+	setContentsMargins( 4, 0, 4, 0 ); // Proper left/right margins, no negative values
 	setupUI();
 	applyStyles();
 }

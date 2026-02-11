@@ -436,9 +436,9 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 
 		// Calculate camera-relative right vector (perpendicular to view direction)
 		math_vec3_t right;
-		right[0] = -cosf( m_cameraYaw );  
+		right[0] = cosf( m_cameraYaw );
 		right[1] = 0.0f;
-		right[2] = sinf( m_cameraYaw );
+		right[2] = -sinf( m_cameraYaw );
 
 		// World up vector (Y-axis in OpenGL)
 		math_vec3_t up;
@@ -522,6 +522,14 @@ void ModelViewport::keyPressEvent( QKeyEvent *event ) {
 	}
 
 	int key = event->key();
+
+	// Space bar: immediate toggle for animation play/pause (not a held key)
+	if ( key == Qt::Key_Space ) {
+		playAnimation( !m_animationPlaying );
+		event->accept();
+		return;
+	}
+
 	m_pressedKeys.insert( key );
 
 	// Start movement timer if not already running
@@ -602,9 +610,9 @@ void ModelViewport::updateCameraMovement( float deltaTime ) {
 
 	// Right = perpendicular to forward (90 degrees clockwise)
 	math_vec3_t right;
-	right[0] = -cosf( m_cameraYaw );    // X
+	right[0] = cosf( m_cameraYaw );     // X
 	right[1] = 0.0f;                     // Y
-	right[2] = sinf( m_cameraYaw );     // Z
+	right[2] = -sinf( m_cameraYaw );    // Z
 
 	// Up vector (world Y-axis)
 	math_vec3_t up = { 0.0f, 1.0f, 0.0f };
@@ -638,8 +646,8 @@ void ModelViewport::updateCameraMovement( float deltaTime ) {
 		movement[2] += right[2] * moveDistance;
 	}
 
-	// Vertical movement
-	if ( m_pressedKeys.contains( Qt::Key_Space ) ) {
+	// Vertical movement (E=up, C=down)
+	if ( m_pressedKeys.contains( Qt::Key_E ) ) {
 		// Move up
 		movement[0] += up[0] * moveDistance;
 		movement[1] += up[1] * moveDistance;
