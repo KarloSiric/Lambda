@@ -776,6 +776,64 @@ float ModelViewport::getCameraDistance() const {
 	return m_cameraDistance;
 }
 
+bool ModelViewport::raycastToGround( int screenX, int screenY, float &worldX, float &worldY, float &worldZ ) {
+	int w = width();
+	int h = height();
+
+	if ( w <= 0 || h <= 0 ) return false;
+
+	// Build QMatrix4x4 from cglm matrices (column-major float[4][4])
+	// cglm mat4: m[col][row], QMatrix4x4 ctor takes row-major
+	QMatrix4x4 proj(
+		m_projMatrix[0][0], m_projMatrix[1][0], m_projMatrix[2][0], m_projMatrix[3][0],
+		m_projMatrix[0][1], m_projMatrix[1][1], m_projMatrix[2][1], m_projMatrix[3][1],
+		m_projMatrix[0][2], m_projMatrix[1][2], m_projMatrix[2][2], m_projMatrix[3][2],
+		m_projMatrix[0][3], m_projMatrix[1][3], m_projMatrix[2][3], m_projMatrix[3][3]
+	);
+
+	QMatrix4x4 view(
+		m_viewMatrix[0][0], m_viewMatrix[1][0], m_viewMatrix[2][0], m_viewMatrix[3][0],
+		m_viewMatrix[0][1], m_viewMatrix[1][1], m_viewMatrix[2][1], m_viewMatrix[3][1],
+		m_viewMatrix[0][2], m_viewMatrix[1][2], m_viewMatrix[2][2], m_viewMatrix[3][2],
+		m_viewMatrix[0][3], m_viewMatrix[1][3], m_viewMatrix[2][3], m_viewMatrix[3][3]
+	);
+
+	bool invertible = false;
+	QMatrix4x4 vpInv = ( proj * view ).inverted( &invertible );
+
+	if ( !invertible ) return false;
+
+	// Convert screen to NDC
+	float ndcX = ( 2.0f * screenX / w ) - 1.0f;
+	float ndcY = 1.0f - ( 2.0f * screenY / h );
+
+	// Unproject near and far clip planes to world space
+	QVector4D nearWorld = vpInv * QVector4D( ndcX, ndcY, -1.0f, 1.0f );
+	QVector4D farWorld  = vpInv * QVector4D( ndcX, ndcY,  1.0f, 1.0f );
+
+	if ( nearWorld.w() == 0.0f || farWorld.w() == 0.0f ) return false;
+
+	nearWorld /= nearWorld.w();
+	farWorld  /= farWorld.w();
+
+	QVector3D rayOrigin( nearWorld.x(), nearWorld.y(), nearWorld.z() );
+	QVector3D rayDir = QVector3D( farWorld.x() - nearWorld.x(),
+								  farWorld.y() - nearWorld.y(),
+								  farWorld.z() - nearWorld.z() ).normalized();
+
+	// Intersect with ground plane (Y = m_groundHeight)
+	if ( fabsf( rayDir.y() ) < 1e-6f ) return false;  // Ray is horizontal
+
+	float t = ( m_groundHeight - rayOrigin.y() ) / rayDir.y();
+	if ( t < 0.0f ) return false;  // Intersection behind camera
+
+	worldX = rayOrigin.x() + t * rayDir.x();
+	worldY = m_groundHeight;
+	worldZ = rayOrigin.z() + t * rayDir.z();
+
+	return true;
+}
+
 int ModelViewport::getVertexCount() const {
 	if ( !m_model || !m_model->header ) return 0;
 

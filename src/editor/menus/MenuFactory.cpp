@@ -808,6 +808,8 @@ void createBonesMenu( QMainWindow *mainWindow ) {
 	// BONE INFORMATION & TOOLS
 	// ==================================
 
+
+
 	bonesMenu->addAction( "List All Bones..." ); // Opens dialog with full bone list
 	bonesMenu->addAction( "Show Bone Properties..." ); // Shows selected bone data
 	bonesMenu->addAction( "Show Bone Hierarchy..." ); // Tree view diagram

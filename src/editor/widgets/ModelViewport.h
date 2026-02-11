@@ -114,6 +114,9 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	// @Note: Status bar integration
 	void setStatusBar( StatusBarWidget *statusBar );
 
+	// @Note: Raycasting - convert screen coordinates to 3D world position
+	bool raycastToGround( int screenX, int screenY, float &worldX, float &worldY, float &worldZ );
+
 	// @Note: Skin family control - uses C backend r_draw API
 	void setSkinFamily( int family );
 	void nextSkinFamily();
