@@ -318,6 +318,7 @@ QIcon IconFactory::cameraReset() {
 }
 
 QIcon IconFactory::viewFront() {
+	// Front view: XY plane (X=red horizontal, Y=green vertical)
 	QPixmap px = makePixmap();
 	QPainter p( &px );
 	p.setRenderHint( QPainter::Antialiasing );
@@ -325,21 +326,23 @@ QIcon IconFactory::viewFront() {
 	p.setBrush( QColor( 235, 235, 235 ) );
 	p.drawRect( M, M, SZ - M * 2 - 1, SZ - M * 2 - 1 );
 
-	// Center cross
-	p.setPen( QPen( QColor( 0, 120, 200 ), 1.2f ) );
-	float cx = SZ / 2.0f, cy = SZ / 2.0f;
-	p.drawLine( QPointF( cx, M + 2 ), QPointF( cx, SZ - M - 2 ) );
-	p.drawLine( QPointF( M + 2, cy ), QPointF( SZ - M - 2, cy ) );
+	// X axis (red, horizontal)
+	p.setPen( QPen( QColor( 200, 40, 40 ), 1.8f ) );
+	p.drawLine( M + 2, SZ / 2, SZ - M - 2, SZ / 2 );
+	// Y axis (green, vertical)
+	p.setPen( QPen( QColor( 40, 160, 40 ), 1.8f ) );
+	p.drawLine( SZ / 2, M + 2, SZ / 2, SZ - M - 2 );
 
-	// Label
+	// Label "XY" in top-left corner
 	p.setPen( INK );
-	p.setFont( QFont( "Arial", 7, QFont::Bold ) );
-	p.drawText( QRect( 0, 0, SZ, SZ ), Qt::AlignCenter, "F" );
+	p.setFont( QFont( "Arial", 6, QFont::Bold ) );
+	p.drawText( QRect( M + 1, M + 1, SZ, 12 ), Qt::AlignLeft, "XY" );
 
 	return QIcon( px );
 }
 
 QIcon IconFactory::viewTop() {
+	// Top view: XZ plane (X=red horizontal, Z=blue vertical)
 	QPixmap px = makePixmap();
 	QPainter p( &px );
 	p.setRenderHint( QPainter::Antialiasing );
@@ -347,19 +350,23 @@ QIcon IconFactory::viewTop() {
 	p.setBrush( QColor( 235, 235, 235 ) );
 	p.drawRect( M, M, SZ - M * 2 - 1, SZ - M * 2 - 1 );
 
-	p.setPen( QPen( QColor( 40, 160, 40 ), 1.2f ) );
-	float cx = SZ / 2.0f, cy = SZ / 2.0f;
-	p.drawLine( QPointF( cx, M + 2 ), QPointF( cx, SZ - M - 2 ) );
-	p.drawLine( QPointF( M + 2, cy ), QPointF( SZ - M - 2, cy ) );
+	// X axis (red, horizontal)
+	p.setPen( QPen( QColor( 200, 40, 40 ), 1.8f ) );
+	p.drawLine( M + 2, SZ / 2, SZ - M - 2, SZ / 2 );
+	// Z axis (blue, vertical)
+	p.setPen( QPen( QColor( 40, 80, 200 ), 1.8f ) );
+	p.drawLine( SZ / 2, M + 2, SZ / 2, SZ - M - 2 );
 
+	// Label "XZ" in top-left corner
 	p.setPen( INK );
-	p.setFont( QFont( "Arial", 7, QFont::Bold ) );
-	p.drawText( QRect( 0, 0, SZ, SZ ), Qt::AlignCenter, "T" );
+	p.setFont( QFont( "Arial", 6, QFont::Bold ) );
+	p.drawText( QRect( M + 1, M + 1, SZ, 12 ), Qt::AlignLeft, "XZ" );
 
 	return QIcon( px );
 }
 
 QIcon IconFactory::viewSide() {
+	// Side view: ZY plane (Z=blue horizontal, Y=green vertical)
 	QPixmap px = makePixmap();
 	QPainter p( &px );
 	p.setRenderHint( QPainter::Antialiasing );
@@ -367,14 +374,17 @@ QIcon IconFactory::viewSide() {
 	p.setBrush( QColor( 235, 235, 235 ) );
 	p.drawRect( M, M, SZ - M * 2 - 1, SZ - M * 2 - 1 );
 
-	p.setPen( QPen( QColor( 200, 40, 40 ), 1.2f ) );
-	float cx = SZ / 2.0f, cy = SZ / 2.0f;
-	p.drawLine( QPointF( cx, M + 2 ), QPointF( cx, SZ - M - 2 ) );
-	p.drawLine( QPointF( M + 2, cy ), QPointF( SZ - M - 2, cy ) );
+	// Z axis (blue, horizontal)
+	p.setPen( QPen( QColor( 40, 80, 200 ), 1.8f ) );
+	p.drawLine( M + 2, SZ / 2, SZ - M - 2, SZ / 2 );
+	// Y axis (green, vertical)
+	p.setPen( QPen( QColor( 40, 160, 40 ), 1.8f ) );
+	p.drawLine( SZ / 2, M + 2, SZ / 2, SZ - M - 2 );
 
+	// Label "ZY" in top-left corner
 	p.setPen( INK );
-	p.setFont( QFont( "Arial", 7, QFont::Bold ) );
-	p.drawText( QRect( 0, 0, SZ, SZ ), Qt::AlignCenter, "S" );
+	p.setFont( QFont( "Arial", 6, QFont::Bold ) );
+	p.drawText( QRect( M + 1, M + 1, SZ, 12 ), Qt::AlignLeft, "ZY" );
 
 	return QIcon( px );
 }

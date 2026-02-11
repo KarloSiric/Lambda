@@ -82,13 +82,23 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	toolBar->addSeparator();
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// SCENE HELPERS
+	// SCENE HELPERS - Grid group together
 	// ═══════════════════════════════════════════════════════════════════════
 	QAction *actionGrid = toolBar->addAction( IconFactory::grid(), "" );
 	actionGrid->setCheckable( true );
 	actionGrid->setChecked( true );
 	actionGrid->setToolTip( "Grid (G)" );
 	actionGrid->setShortcut( QKeySequence( "G" ) );
+
+	QAction *actionGridIncrease = toolBar->addAction( IconFactory::gridIncrease(), "" );
+	actionGridIncrease->setToolTip( "Increase Grid Size (])" );
+	actionGridIncrease->setShortcut( QKeySequence( "]" ) );
+
+	QAction *actionGridDecrease = toolBar->addAction( IconFactory::gridDecrease(), "" );
+	actionGridDecrease->setToolTip( "Decrease Grid Size ([)" );
+	actionGridDecrease->setShortcut( QKeySequence( "[" ) );
+
+	toolBar->addSeparator();
 
 	QAction *actionAxes = toolBar->addAction( QIcon( ":/icons/draw-axis-icon.png" ), "" );
 	actionAxes->setCheckable( true );
@@ -100,14 +110,6 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	actionGround->setCheckable( true );
 	actionGround->setToolTip( "Ground (Shift+G)" );
 	actionGround->setShortcut( QKeySequence( "Shift+G" ) );
-
-	QAction *actionGridIncrease = toolBar->addAction( IconFactory::gridIncrease(), "" );
-	actionGridIncrease->setToolTip( "Increase Grid Size (])" );
-	actionGridIncrease->setShortcut( QKeySequence( "]" ) );
-
-	QAction *actionGridDecrease = toolBar->addAction( IconFactory::gridDecrease(), "" );
-	actionGridDecrease->setToolTip( "Decrease Grid Size ([)" );
-	actionGridDecrease->setShortcut( QKeySequence( "[" ) );
 
 	toolBar->addSeparator();
 
