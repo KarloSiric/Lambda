@@ -84,7 +84,7 @@ class StatusBarWidget : public QStatusBar {
 	void createToggleButtons();
 	void applyStyles();
 	void updateWidgetVisibility();
-	QWidget *createSeparator();
+	QWidget *createSeparator( QWidget *parent = nullptr );
 
 	QLabel *m_filePathLabel;
 	QLabel *m_vertexCountLabel;

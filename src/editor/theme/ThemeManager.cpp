@@ -107,8 +107,11 @@ QString ThemeManager::getClassicMainWindowStyle() {
 }
 
 QString ThemeManager::getClassicViewportContainerStyle() {
+    // Use an explicit class selector so the border only applies to the
+    // container QWidget itself, not every QWidget child (ModelViewport, tabs,
+    // tab bar, etc.) which a bare "QWidget { }" rule would also match.
     return R"(
-        QWidget {
+        QWidget#ViewportContainer {
             background-color: #c0c0c0;
             border: 2px solid;
             border-top-color: #ffffff;

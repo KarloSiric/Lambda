@@ -149,6 +149,7 @@ MainWindow::~MainWindow() {
 void MainWindow::createViewportContainer() {
 	// Create container widget with frame for viewport panel
 	QWidget *viewportContainer = new QWidget( this );
+	viewportContainer->setObjectName( "ViewportContainer" ); // Required for #ViewportContainer CSS selector
 	QVBoxLayout *containerLayout = new QVBoxLayout( viewportContainer );
 	containerLayout->setContentsMargins( 4, 4, 4, 4 );
 	containerLayout->setSpacing( 0 );

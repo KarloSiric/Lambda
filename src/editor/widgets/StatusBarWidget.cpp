@@ -55,10 +55,12 @@ StatusBarWidget::StatusBarWidget( QWidget *parent )
 	  m_totalSkins( 0 ),
 	  m_attachmentCount( 0 ),
 	  m_eventCount( 0 ) {
-	setSizeGripEnabled( false ); // Disable size grip to prevent cutoff
-	setContentsMargins( 4, 0, 4, 0 ); // Proper left/right margins, no negative values
+	setSizeGripEnabled( false );
 	setupUI();
 	applyStyles();
+	// Must be called AFTER applyStyles() — CSS padding would override it if called before.
+	// 12px left is the original working value; positive top/bottom replace the original -2/-1.
+	setContentsMargins( 12, 0, 4, 0 );
 }
 
 StatusBarWidget::~StatusBarWidget() {
@@ -72,14 +74,13 @@ void StatusBarWidget::setupUI() {
 
 void StatusBarWidget::createModelInfoWidgets() {
 	// File path with smart truncation
-	m_filePathLabel = new QLabel( this );  // Empty by default
-	m_filePathLabel->setMinimumWidth( 150 );
-	m_filePathLabel->setMaximumWidth( 700 );
+	m_filePathLabel = new QLabel( this );
+	m_filePathLabel->setMinimumWidth( 200 );
+	m_filePathLabel->setMaximumWidth( 500 );
 	addWidget( m_filePathLabel );
 	addWidget( createSeparator() );
 
-	// Essential model statistics (most commonly needed at a glance)
-	// Empty by default - only show when model is loaded
+	// Essential model statistics
 	m_vertexCountLabel = new QLabel( this );
 	m_vertexCountLabel->setToolTip( "Model/Object Vertex Count" );
 	m_vertexCountLabel->setFixedWidth( 90 );
@@ -102,11 +103,9 @@ void StatusBarWidget::createModelInfoWidgets() {
 	m_fileSizeLabel->setToolTip( "File size" );
 	m_fileSizeLabel->setFixedWidth( 120 );
 	addWidget( m_fileSizeLabel );
-
-	// Separator between left section (model info) and right section (viewport info)
 	addWidget( createSeparator() );
 
-	// Create placeholder widgets for other info (will be hidden but kept for API compatibility)
+	// Placeholder widgets kept for API compatibility (never shown in status bar)
 	m_sequenceCountLabel = new QLabel( this );
 	m_textureCountLabel = new QLabel( this );
 	m_sequenceInfoLabel = new QLabel( this );
@@ -117,7 +116,6 @@ void StatusBarWidget::createModelInfoWidgets() {
 	m_boneNameLabel = new QLabel( this );
 	m_controllerNameLabel = new QLabel( this );
 
-	// Hide these - they belong in Inspector panel
 	m_sequenceCountLabel->hide();
 	m_textureCountLabel->hide();
 	m_sequenceInfoLabel->hide();
@@ -128,8 +126,13 @@ void StatusBarWidget::createModelInfoWidgets() {
 	m_boneNameLabel->hide();
 	m_controllerNameLabel->hide();
 
-	// Stretch spacer to push performance info and toggle buttons to the right
-	addPermanentWidget( new QWidget( this ), 1 );
+	// Stretch spacer between normal (left) and permanent (right) sections.
+	// MUST be addWidget (not addPermanentWidget) so it sits in the normal section
+	// and acts as the natural divider. Using addPermanentWidget here puts the spacer
+	// inside the right section, causing the two sections to overlap when their
+	// combined minimum width exceeds the status bar width.
+	QWidget *spacer = new QWidget( this );
+	addWidget( spacer, 1 );
 }
 
 void StatusBarWidget::createViewInfoWidgets() {
@@ -296,7 +299,7 @@ void StatusBarWidget::applyStyles() {
 	// Apply to all visible model info widgets
 
 	m_filePathLabel->setStyleSheet( cellStyle );
-	m_vertexCountLabel->setStyleSheet( cellStyle );
+    m_vertexCountLabel->setStyleSheet( cellStyle );
 	m_triangleCountLabel->setStyleSheet( cellStyle );
 	m_boneCountLabel->setStyleSheet( cellStyle );
 	m_fileSizeLabel->setStyleSheet( cellStyle );
@@ -398,7 +401,7 @@ void StatusBarWidget::setModelInfo( const QString &filePath, int vertexCount,
 	// Show full path with smart truncation if too long
 	QString displayPath = filePath;
 	QFontMetrics metrics( m_filePathLabel->font() );
-	int maxWidth = m_filePathLabel->maximumWidth() - 12; // Account for padding
+	int maxWidth = m_filePathLabel->width() - 12; // Account for padding
 
 	if ( metrics.horizontalAdvance( displayPath ) > maxWidth ) {
 		// Truncate in the middle, keeping start and end visible
@@ -711,10 +714,8 @@ void StatusBarWidget::updateWidgetVisibility() {
 	m_gridSizeLabel->setVisible( showLevel2 );
 	m_zoomLabel->setVisible( showLevel2 );
 
-	// Level 3: System stats (hide these first when space is tight)
-	m_cpuUsageLabel->setVisible( showLevel3 );
-	m_gpuUsageLabel->setVisible( showLevel3 );
-	m_ramUsageLabel->setVisible( showLevel3 );
+	// Level 3: System stats - CPU/GPU/RAM labels are not in the layout,
+	// so they must NOT be shown via setVisible here (they'd appear at 0,0).
 }
 
 void StatusBarWidget::showInspectorContextMenu( const QPoint &pos ) {
@@ -791,8 +792,8 @@ void StatusBarWidget::showConsoleContextMenu( const QPoint &pos ) {
 	}
 }
 
-QWidget* StatusBarWidget::createSeparator() {
-	QFrame* separator = new QFrame( this );
+QWidget* StatusBarWidget::createSeparator( QWidget *parent ) {
+	QFrame* separator = new QFrame( parent ? parent : this );
 	separator->setFrameShape( QFrame::NoFrame );  // Let stylesheet handle everything
 	separator->setFrameShadow( QFrame::Plain );
 	separator->setFixedWidth( 3 );  // 3px total width for the groove
