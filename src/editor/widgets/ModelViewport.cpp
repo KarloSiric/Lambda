@@ -57,16 +57,23 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_animationPlaying( false ),
 	  m_animationTimer( nullptr ),
 	  m_cameraPitch( 0.33f ),
-	  m_cameraYaw( 0.0f ), // ~14° tilt down - matches CLI default
-	  m_cameraDistance( 35.0f ), // Straight front view - model faces camera
-	  m_cameraTarget{ 0.0f, 0.0f, 0.0f }, // ~25 units distance - shows full model
+	  m_cameraYaw( 0.0f ),
+	  m_cameraDistance( 35.0f ),
+	  m_cameraTarget{ 0.0f, 0.0f, 0.0f },
+	  m_modelOffset{ 0.0f, 0.0f, 0.0f },
 	  m_frameCount( 0 ),
 	  m_lastFpsTime( 0 ),
 	  m_currentFps( 0.0f ),
 	  m_lastAnimTime( 0 ),
 	  m_showGrid( true ),
+	  m_showGround( false ),
+	  m_showAxes( true ),
 	  m_wireframeMode( false ),
+	  m_showBones( false ),
+	  m_showHitboxes( false ),
+	  m_currentSkinFamily( 0 ),
 	  m_groundHeight( 0.0f ),
+	  m_activeButton( Qt::NoButton ),
 	  m_statusBar( nullptr ) {
 	mdl_animation_init( &m_animState );
 
@@ -247,6 +254,12 @@ void ModelViewport::paintGL() {
 	mat4 T = GLM_MAT4_IDENTITY_INIT;
 	glm_translate( T, (vec3){ 0.0f, groundOffset, 0.0f } );
 	glm_mat4_mul( T, modelMatrix, modelMatrix );
+
+	// Step 4: Apply world-space model offset (right-click drag translation)
+	// Applied last so it works in world space regardless of model rotation/scale
+	mat4 TOffset = GLM_MAT4_IDENTITY_INIT;
+	glm_translate( TOffset, (vec3){ m_modelOffset[0], m_modelOffset[1], m_modelOffset[2] } );
+	glm_mat4_mul( TOffset, modelMatrix, modelMatrix );
 
 	// Render the model if loaded
 	if ( m_renderInstance && m_model && m_model->header && m_model->data ) {
@@ -431,8 +444,8 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 		if ( m_cameraPitch < -maxPitch ) m_cameraPitch = -maxPitch;
 	} else if ( isPanning ) {
 		// PAN MODE: Move camera target (Left+Shift OR Middle button)
-		// This is CRITICAL - allows adjusting view height to frame models properly!
-		float panSpeed = 0.01f;
+		// Speed scales with distance so panning feels consistent at all zoom levels
+		float panSpeed = m_cameraDistance * 0.0003f;
 
 		// Calculate camera-relative right vector (perpendicular to view direction)
 		math_vec3_t right;
@@ -441,20 +454,41 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 		right[2] = -sinf( m_cameraYaw );
 
 		// World up vector (Y-axis in OpenGL)
-		math_vec3_t up;
-		up[0] = 0.0f;
-		up[1] = 1.0f;
-		up[2] = 0.0f;
+		math_vec3_t up = { 0.0f, 1.0f, 0.0f };
 
 		// Horizontal drag (X) = move along right vector
 		m_cameraTarget[0] -= right[0] * delta.x() * panSpeed;
-		m_cameraTarget[1] -= right[1] * delta.x() * panSpeed;
 		m_cameraTarget[2] -= right[2] * delta.x() * panSpeed;
 
-		// Vertical drag (Y) = move along up vector (THIS IS KEY FOR HEIGHT ADJUSTMENT!)
-		m_cameraTarget[0] += up[0] * delta.y() * panSpeed;
+		// Vertical drag (Y) = move along up vector
 		m_cameraTarget[1] += up[1] * delta.y() * panSpeed;
-		m_cameraTarget[2] += up[2] * delta.y() * panSpeed;
+
+	} else if ( m_activeButton == Qt::RightButton ) {
+		// MODEL TRANSLATE MODE: Right-click drag moves the model itself in the scene
+		// Speed scales with camera distance (same principle as pan)
+		float moveSpeed = m_cameraDistance * 0.0003f;
+
+		// Camera-relative axes
+		math_vec3_t right;
+		right[0] = cosf( m_cameraYaw );
+		right[1] = 0.0f;
+		right[2] = -sinf( m_cameraYaw );
+
+		math_vec3_t fwd;
+		fwd[0] = sinf( m_cameraYaw );
+		fwd[1] = 0.0f;
+		fwd[2] = cosf( m_cameraYaw );
+
+		if ( event->modifiers() & Qt::ShiftModifier ) {
+			// Shift + Right drag: translate model vertically (Y axis only)
+			m_modelOffset[1] -= delta.y() * moveSpeed;
+		} else {
+			// Right drag: translate model in XZ plane following camera orientation
+			m_modelOffset[0] += right[0] * delta.x() * moveSpeed;
+			m_modelOffset[2] += right[2] * delta.x() * moveSpeed;
+			m_modelOffset[0] -= fwd[0] * delta.y() * moveSpeed;
+			m_modelOffset[2] -= fwd[2] * delta.y() * moveSpeed;
+		}
 	}
 
 	m_lastMousePos = currentPos;
@@ -586,8 +620,11 @@ void ModelViewport::onCameraMovementUpdate() {
 }
 
 void ModelViewport::updateCameraMovement( float deltaTime ) {
-	// Base movement speed (units per second)
-	float baseSpeed = 10.0f;
+	// Speed scales with camera distance so movement feels consistent at all zoom levels:
+	// close in = slow fine movement, far out = fast broad movement
+	float baseSpeed = m_cameraDistance * 0.8f;
+	if ( baseSpeed < 2.0f ) baseSpeed = 2.0f;
+	if ( baseSpeed > 200.0f ) baseSpeed = 200.0f;
 	float currentSpeed = baseSpeed;
 
 	// Modifiers
@@ -935,6 +972,19 @@ void ModelViewport::resetCamera() {
 	m_cameraTarget[1] = 0.0f;
 	m_cameraTarget[2] = 0.0f;
 	update();
+}
+
+void ModelViewport::resetModelPosition() {
+	m_modelOffset[0] = 0.0f;
+	m_modelOffset[1] = 0.0f;
+	m_modelOffset[2] = 0.0f;
+	update();
+}
+
+void ModelViewport::getModelOffset( float &x, float &y, float &z ) const {
+	x = m_modelOffset[0];
+	y = m_modelOffset[1];
+	z = m_modelOffset[2];
 }
 
 void ModelViewport::setWireframeMode( bool enabled ) {

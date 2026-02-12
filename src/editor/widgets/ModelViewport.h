@@ -102,6 +102,10 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void getCameraPosition( float &x, float &y, float &z ) const;
 	void frameModel(); // Auto-frame camera to fit loaded model
 
+	// @Note: Model world-space translation (separate from camera pan)
+	void resetModelPosition();
+	void getModelOffset( float &x, float &y, float &z ) const;
+
 	// @Note: Model info getters for status bar
 	int getVertexCount() const;
 	int getTriangleCount() const;
@@ -175,6 +179,9 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	float m_cameraYaw;
 	float m_cameraDistance;
 	math_vec3_t m_cameraTarget;
+
+	// @Note: Model world-space offset - right-click drag translates this
+	math_vec3_t m_modelOffset;
     
     // Adding fps counter variables
     int m_frameCount;
