@@ -78,14 +78,30 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_lastFpsTime( 0 ),
 	  m_currentFps( 0.0f ),
 	  m_lastAnimTime( 0 ),
+	  m_lastFrameSignalTime( 0 ),
 	  m_showGrid( true ),
 	  m_showGround( false ),
 	  m_showAxes( true ),
 	  m_wireframeMode( false ),
 	  m_showBones( false ),
 	  m_showHitboxes( false ),
+	  m_showAttachments( false ),
 	  m_currentSkinFamily( 0 ),
 	  m_groundHeight( 0.0f ),
+	  m_lightingEnabled( true ),
+	  m_ambientIntensity( 0.2f ),
+	  m_lightDirX( 0.0f ),
+	  m_lightDirY( 0.0f ),
+	  m_lightDirZ( -1.0f ),
+	  m_lightColor( 255, 255, 255 ),
+	  m_chromeEnabled( false ),
+	  m_meshScale( 1.0f ),
+	  m_boneScale( 1.0f ),
+	  m_mirrorX( false ),
+	  m_mirrorY( false ),
+	  m_mirrorZ( false ),
+	  m_fov( 65.0f ),
+	  m_weaponOriginMode( false ),
 	  m_activeButton( Qt::NoButton ),
 	  m_statusBar( nullptr ) {
 	mdl_animation_init( &m_animState );
@@ -195,11 +211,11 @@ void ModelViewport::resizeGL( int width, int height ) {
 	glViewport( 0, 0, width, height );
 
 	float aspect = (float)width / (float)height;
-	float fov = 50.0f;
 	float nearPlane = 0.01f;
 	float farPlane = 1000.0f;
 
-	glm_perspective( glm_rad( fov ), aspect, nearPlane, farPlane, m_projMatrix );
+	// Use m_fov member variable (adjustable via setFov())
+	glm_perspective( glm_rad( m_fov ), aspect, nearPlane, farPlane, m_projMatrix );
 }
 
 void ModelViewport::paintGL() {
@@ -237,10 +253,15 @@ void ModelViewport::paintGL() {
 	// Create view matrix - camera looks at target from offset position
 	Math_Mat4_LookAt( camPos, target, up, m_viewMatrix );
 
-	// Draw grid and axes at Y=0 (ALWAYS when enabled, even without model)
+	// Draw grid, axes, and ground at Y=0 (INDEPENDENTLY - each has its own toggle)
 	if ( m_showGrid ) {
 		r_grid_draw( m_viewMatrix, m_projMatrix, 0.0f );
+	}
+	if ( m_showAxes ) {
 		r_axes_draw( m_viewMatrix, m_projMatrix, 0.0f );
+	}
+	if ( m_showGround ) {
+		r_ground_draw( m_viewMatrix, m_projMatrix, 0.0f );
 	}
 
 	// Build model matrix - Add proper transformations
@@ -250,11 +271,18 @@ void ModelViewport::paintGL() {
 	// CRITICAL: Apply transformations in REVERSE order (last operation first)
 	// This matches CLI: Scale → Rotate → Translate
 
-	// Step 1: Scale down (HL units are huge - 0.1x scale)
-	float modelScale = 0.1f;
+	// Step 1: Scale down (HL units are huge - 0.1x scale) * user mesh scale
+	float modelScale = 0.1f * m_meshScale;
 	mat4 S = GLM_MAT4_IDENTITY_INIT;
 	glm_scale( S, (vec3){ modelScale, modelScale, modelScale } );
 	glm_mat4_mul( S, modelMatrix, modelMatrix );
+
+	// Step 1b: Apply mirror transforms if enabled
+	if ( m_mirrorX || m_mirrorY || m_mirrorZ ) {
+		mat4 M = GLM_MAT4_IDENTITY_INIT;
+		glm_scale( M, (vec3){ m_mirrorX ? -1.0f : 1.0f, m_mirrorY ? -1.0f : 1.0f, m_mirrorZ ? -1.0f : 1.0f } );
+		glm_mat4_mul( M, modelMatrix, modelMatrix );
+	}
 
 	// Step 2: Rotate model to face camera (blue Z axis)
 	// Half-Life models face +Y after axis remap, need -90° Y rotation to face +Z
@@ -291,7 +319,28 @@ void ModelViewport::paintGL() {
 
 	// Render the model if loaded
 	if ( m_renderInstance && m_model && m_model->header && m_model->data ) {
+		// Apply wireframe mode if enabled
+		if ( m_wireframeMode ) {
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		}
+
 		r_qt_render_with_matrices( m_renderInstance, m_viewMatrix, m_projMatrix, modelMatrix );
+
+		// Reset polygon mode to fill
+		if ( m_wireframeMode ) {
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+		}
+
+		// Render overlay elements (bones, hitboxes, attachments)
+		if ( m_showBones ) {
+			renderBoneSkeleton();
+		}
+		if ( m_showHitboxes ) {
+			renderHitboxes();
+		}
+		if ( m_showAttachments ) {
+			renderAttachmentPoints();
+		}
 	}
 
 	// ── Rotation gizmo ───────────────────────────────────────────────────
@@ -394,8 +443,11 @@ void ModelViewport::onAnimationTick() {
 				r_qt_set_animation_enabled( m_renderInstance, true );
 			}
 
-			// Emit frame changed signal for UI updates
-			emit frameChanged( m_animState.current_frame );
+			// Emit frame changed signal for UI updates (throttled to 15 FPS to reduce overhead)
+			if ( currentTime - m_lastFrameSignalTime >= 66 ) {  // ~15 FPS for UI updates
+				m_lastFrameSignalTime = currentTime;
+				emit frameChanged( m_animState.current_frame );
+			}
 		}
 	}
 
@@ -1019,6 +1071,11 @@ float ModelViewport::getCameraDistance() const {
 	return m_cameraDistance;
 }
 
+void ModelViewport::setCameraDistance( float distance ) {
+	m_cameraDistance = qBound( 1.0f, distance, 500.0f );
+	update();
+}
+
 bool ModelViewport::raycastToGround( int screenX, int screenY, float &worldX, float &worldY, float &worldZ ) {
 	int w = width();
 	int h = height();
@@ -1258,6 +1315,54 @@ void ModelViewport::getBoundingBox( float bbmin[3], float bbmax[3] ) const {
 	bbmax[0] = m_model->header->bbmax[0];
 	bbmax[1] = m_model->header->bbmax[1];
 	bbmax[2] = m_model->header->bbmax[2];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Extended Header Info for Model Info Panel
+// ═══════════════════════════════════════════════════════════════════════════
+
+int ModelViewport::getHeaderId() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->id;
+}
+
+QString ModelViewport::getHeaderName() const {
+	if ( !m_model || !m_model->header ) return QString();
+	return QString::fromLatin1( m_model->header->name, 64 ).trimmed();
+}
+
+int ModelViewport::getTransitionCount() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->numtransitions;
+}
+
+int ModelViewport::getSoundGroupCount() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->soundgroups;
+}
+
+int ModelViewport::getSkinRefCount() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->numskinref;
+}
+
+int ModelViewport::getFileLength() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->length;
+}
+
+void ModelViewport::getMovementBox( float min[3], float max[3] ) const {
+	if ( !m_model || !m_model->header ) {
+		min[0] = min[1] = min[2] = 0.0f;
+		max[0] = max[1] = max[2] = 0.0f;
+		return;
+	}
+	min[0] = m_model->header->min[0];
+	min[1] = m_model->header->min[1];
+	min[2] = m_model->header->min[2];
+	max[0] = m_model->header->max[0];
+	max[1] = m_model->header->max[1];
+	max[2] = m_model->header->max[2];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1517,6 +1622,165 @@ int ModelViewport::getNumSkinFamilies() const {
 	return numSkins > 0 ? numSkins : 1;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Lighting Controls
+// ═══════════════════════════════════════════════════════════════════════════
+
+void ModelViewport::setLightingEnabled( bool enabled ) {
+	m_lightingEnabled = enabled;
+	update();
+}
+
+bool ModelViewport::isLightingEnabled() const {
+	return m_lightingEnabled;
+}
+
+void ModelViewport::setAmbientIntensity( float intensity ) {
+	m_ambientIntensity = qBound( 0.0f, intensity, 1.0f );
+	update();
+}
+
+float ModelViewport::getAmbientIntensity() const {
+	return m_ambientIntensity;
+}
+
+void ModelViewport::setLightDirection( float x, float y, float z ) {
+	m_lightDirX = qBound( -1.0f, x, 1.0f );
+	m_lightDirY = qBound( -1.0f, y, 1.0f );
+	m_lightDirZ = qBound( -1.0f, z, 1.0f );
+	update();
+}
+
+void ModelViewport::getLightDirection( float &x, float &y, float &z ) const {
+	x = m_lightDirX;
+	y = m_lightDirY;
+	z = m_lightDirZ;
+}
+
+void ModelViewport::setLightColor( const QColor &color ) {
+	m_lightColor = color;
+	update();
+}
+
+QColor ModelViewport::getLightColor() const {
+	return m_lightColor;
+}
+
+void ModelViewport::setChromeEnabled( bool enabled ) {
+	m_chromeEnabled = enabled;
+	update();
+}
+
+bool ModelViewport::isChromeEnabled() const {
+	return m_chromeEnabled;
+}
+
+void ModelViewport::resetLighting() {
+	m_lightingEnabled = true;
+	m_ambientIntensity = 0.2f;
+	m_lightDirX = 0.0f;
+	m_lightDirY = 0.0f;
+	m_lightDirZ = -1.0f;
+	m_lightColor = QColor( 255, 255, 255 );
+	m_chromeEnabled = false;
+	update();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Scale controls
+// ────────────────────────────────────────────────────────────────────────────
+
+void ModelViewport::setMeshScale( float scale ) {
+	m_meshScale = qBound( 0.1f, scale, 10.0f );
+	update();
+}
+
+float ModelViewport::getMeshScale() const {
+	return m_meshScale;
+}
+
+void ModelViewport::setBoneScale( float scale ) {
+	m_boneScale = qBound( 0.1f, scale, 10.0f );
+	update();
+}
+
+float ModelViewport::getBoneScale() const {
+	return m_boneScale;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Mirror controls
+// ────────────────────────────────────────────────────────────────────────────
+
+void ModelViewport::setMirrorX( bool enabled ) {
+	m_mirrorX = enabled;
+	update();
+}
+
+void ModelViewport::setMirrorY( bool enabled ) {
+	m_mirrorY = enabled;
+	update();
+}
+
+void ModelViewport::setMirrorZ( bool enabled ) {
+	m_mirrorZ = enabled;
+	update();
+}
+
+bool ModelViewport::isMirrorX() const {
+	return m_mirrorX;
+}
+
+bool ModelViewport::isMirrorY() const {
+	return m_mirrorY;
+}
+
+bool ModelViewport::isMirrorZ() const {
+	return m_mirrorZ;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// FOV control
+// ────────────────────────────────────────────────────────────────────────────
+
+void ModelViewport::setFov( float degrees ) {
+	m_fov = qBound( 30.0f, degrees, 120.0f );
+	// Update projection matrix with new FOV
+	makeCurrent();
+	float aspect = (float)width() / (float)height();
+	float nearPlane = 0.01f;
+	float farPlane = 1000.0f;
+	glm_perspective( glm_rad( m_fov ), aspect, nearPlane, farPlane, m_projMatrix );
+	doneCurrent();
+	update();
+}
+
+float ModelViewport::getFov() const {
+	return m_fov;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Weapon origin mode
+// ────────────────────────────────────────────────────────────────────────────
+
+void ModelViewport::setWeaponOriginMode( bool enabled ) {
+	m_weaponOriginMode = enabled;
+	if ( enabled ) {
+		// Position camera for first-person weapon view
+		m_cameraPitch = 0.0f;
+		m_cameraYaw = 0.0f;
+		m_cameraDistance = 20.0f;
+		m_cameraTarget[0] = 0.0f;
+		m_cameraTarget[1] = 0.0f;
+		m_cameraTarget[2] = 0.0f;
+	}
+	update();
+}
+
+bool ModelViewport::isWeaponOriginMode() const {
+	return m_weaponOriginMode;
+}
+
 void ModelViewport::resetCamera() {
 	m_cameraPitch = 0.33f;
 	m_cameraYaw = 0.0f;
@@ -1541,7 +1805,14 @@ void ModelViewport::getModelOffset( float &x, float &y, float &z ) const {
 }
 
 void ModelViewport::resetModelRotation() {
+	m_modelRotationX = 0.0f;
 	m_modelRotationY = 0.0f;
+	m_modelRotationZ = 0.0f;
+	update();
+}
+
+void ModelViewport::setModelRotationX( float radians ) {
+	m_modelRotationX = radians;
 	update();
 }
 
@@ -1550,8 +1821,21 @@ void ModelViewport::setModelRotationY( float radians ) {
 	update();
 }
 
+void ModelViewport::setModelRotationZ( float radians ) {
+	m_modelRotationZ = radians;
+	update();
+}
+
+float ModelViewport::getModelRotationX() const {
+	return m_modelRotationX;
+}
+
 float ModelViewport::getModelRotationY() const {
 	return m_modelRotationY;
+}
+
+float ModelViewport::getModelRotationZ() const {
+	return m_modelRotationZ;
 }
 
 void ModelViewport::setShowGizmo( bool show ) {
@@ -1725,4 +2009,286 @@ void ModelViewport::setShowHitboxes( bool show ) {
 void ModelViewport::setShowAttachments( bool show ) {
 	m_showAttachments = show;
 	update();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OVERLAY RENDERING - Bones, Hitboxes, Attachments
+// ═══════════════════════════════════════════════════════════════════════════
+
+void ModelViewport::renderBoneSkeleton() {
+	if ( !m_renderInstance || !m_model || !m_model->header ) return;
+
+	studiohdr_t *hdr = m_model->header;
+	if ( hdr->numbones <= 0 ) return;
+
+	mstudiobone_t *bones = (mstudiobone_t *)( (uint8_t *)hdr + hdr->boneindex );
+
+	// Use fixed-function pipeline for overlay rendering
+	glDisable( GL_DEPTH_TEST );
+	glUseProgram( 0 );
+
+	// Set up orthographic-like rendering by using the current matrices
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glLoadMatrixf( (const GLfloat *)m_projMatrix );
+
+	glMatrixMode( GL_MODELVIEW );
+	glPushMatrix();
+	glLoadMatrixf( (const GLfloat *)m_viewMatrix );
+
+	// Apply model scale (same as in paintGL)
+	float modelScale = 0.1f;
+	glScalef( modelScale, modelScale, modelScale );
+
+	// Draw bone lines (yellow)
+	glLineWidth( 2.0f );
+	glBegin( GL_LINES );
+	glColor3f( 1.0f, 1.0f, 0.0f ); // Yellow bones
+
+	for ( int i = 0; i < hdr->numbones; i++ ) {
+		if ( bones[i].parent >= 0 && bones[i].parent < hdr->numbones ) {
+			// Get bone position from transformation matrix (position is in the last column)
+			// Note: bone_transformations are mat4 which is column-major, position at [3][x]
+			mat4 *boneMatrix = &m_renderInstance->bone_transformations[i];
+			mat4 *parentMatrix = &m_renderInstance->bone_transformations[bones[i].parent];
+
+			// Extract world positions (last column of the matrix)
+			float bonePos[3] = {
+				( *boneMatrix )[3][0],
+				( *boneMatrix )[3][1],
+				( *boneMatrix )[3][2]
+			};
+			float parentPos[3] = {
+				( *parentMatrix )[3][0],
+				( *parentMatrix )[3][1],
+				( *parentMatrix )[3][2]
+			};
+
+			glVertex3fv( parentPos );
+			glVertex3fv( bonePos );
+		}
+	}
+	glEnd();
+
+	// Draw bone joints as points (red)
+	glPointSize( 6.0f );
+	glBegin( GL_POINTS );
+	glColor3f( 1.0f, 0.0f, 0.0f ); // Red joints
+
+	for ( int i = 0; i < hdr->numbones; i++ ) {
+		mat4 *boneMatrix = &m_renderInstance->bone_transformations[i];
+		float pos[3] = {
+			( *boneMatrix )[3][0],
+			( *boneMatrix )[3][1],
+			( *boneMatrix )[3][2]
+		};
+		glVertex3fv( pos );
+	}
+	glEnd();
+
+	// Restore state
+	glPopMatrix();
+	glMatrixMode( GL_PROJECTION );
+	glPopMatrix();
+	glMatrixMode( GL_MODELVIEW );
+
+	glEnable( GL_DEPTH_TEST );
+}
+
+void ModelViewport::drawWireframeBox( const float boneMatrix[3][4], const float bbmin[3], const float bbmax[3] ) {
+	// Transform 8 corners of the box by the bone matrix
+	float corners[8][3];
+	int idx = 0;
+
+	for ( int iz = 0; iz < 2; iz++ ) {
+		for ( int iy = 0; iy < 2; iy++ ) {
+			for ( int ix = 0; ix < 2; ix++ ) {
+				float local[3] = {
+					ix ? bbmax[0] : bbmin[0],
+					iy ? bbmax[1] : bbmin[1],
+					iz ? bbmax[2] : bbmin[2]
+				};
+
+				// Transform by bone matrix (3x4 affine matrix)
+				corners[idx][0] = boneMatrix[0][0] * local[0] + boneMatrix[0][1] * local[1] +
+								  boneMatrix[0][2] * local[2] + boneMatrix[0][3];
+				corners[idx][1] = boneMatrix[1][0] * local[0] + boneMatrix[1][1] * local[1] +
+								  boneMatrix[1][2] * local[2] + boneMatrix[1][3];
+				corners[idx][2] = boneMatrix[2][0] * local[0] + boneMatrix[2][1] * local[1] +
+								  boneMatrix[2][2] * local[2] + boneMatrix[2][3];
+				idx++;
+			}
+		}
+	}
+
+	// Draw 12 edges of the box
+	// Bottom face (z=0): 0-1, 1-3, 3-2, 2-0
+	// Top face (z=1): 4-5, 5-7, 7-6, 6-4
+	// Vertical edges: 0-4, 1-5, 2-6, 3-7
+	static const int edges[12][2] = {
+		{ 0, 1 }, { 1, 3 }, { 3, 2 }, { 2, 0 }, // Bottom
+		{ 4, 5 }, { 5, 7 }, { 7, 6 }, { 6, 4 }, // Top
+		{ 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }  // Vertical
+	};
+
+	glBegin( GL_LINES );
+	for ( int e = 0; e < 12; e++ ) {
+		glVertex3fv( corners[edges[e][0]] );
+		glVertex3fv( corners[edges[e][1]] );
+	}
+	glEnd();
+}
+
+void ModelViewport::renderHitboxes() {
+	if ( !m_renderInstance || !m_model || !m_model->header ) return;
+
+	studiohdr_t *hdr = m_model->header;
+	if ( hdr->numhitboxes <= 0 ) return;
+
+	mstudiobbox_t *hitboxes = (mstudiobbox_t *)( (uint8_t *)hdr + hdr->hitboxindex );
+
+	// Use fixed-function pipeline for overlay rendering
+	glDisable( GL_DEPTH_TEST );
+	glUseProgram( 0 );
+
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glLoadMatrixf( (const GLfloat *)m_projMatrix );
+
+	glMatrixMode( GL_MODELVIEW );
+	glPushMatrix();
+	glLoadMatrixf( (const GLfloat *)m_viewMatrix );
+
+	// Apply model scale
+	float modelScale = 0.1f;
+	glScalef( modelScale, modelScale, modelScale );
+
+	glLineWidth( 1.0f );
+	glColor3f( 0.0f, 1.0f, 0.0f ); // Green hitboxes
+
+	for ( int i = 0; i < hdr->numhitboxes; i++ ) {
+		mstudiobbox_t *box = &hitboxes[i];
+
+		// Get the bone transformation matrix and convert mat4 to 3x4 format
+		if ( box->bone < 0 || box->bone >= hdr->numbones ) continue;
+
+		mat4 *boneMat4 = &m_renderInstance->bone_transformations[box->bone];
+
+		// Convert from column-major mat4 to row-major 3x4 for our transform function
+		float boneMatrix[3][4];
+		for ( int r = 0; r < 3; r++ ) {
+			for ( int c = 0; c < 4; c++ ) {
+				boneMatrix[r][c] = ( *boneMat4 )[c][r];
+			}
+		}
+
+		drawWireframeBox( boneMatrix, box->bbmin, box->bbmax );
+	}
+
+	// Restore state
+	glPopMatrix();
+	glMatrixMode( GL_PROJECTION );
+	glPopMatrix();
+	glMatrixMode( GL_MODELVIEW );
+
+	glEnable( GL_DEPTH_TEST );
+}
+
+void ModelViewport::renderAttachmentPoints() {
+	if ( !m_renderInstance || !m_model || !m_model->header ) return;
+
+	studiohdr_t *hdr = m_model->header;
+	if ( hdr->numattachments <= 0 ) return;
+
+	mstudioattachment_t *attachments = (mstudioattachment_t *)( (uint8_t *)hdr + hdr->attachmentindex );
+
+	// Use fixed-function pipeline for overlay rendering
+	glDisable( GL_DEPTH_TEST );
+	glUseProgram( 0 );
+
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glLoadMatrixf( (const GLfloat *)m_projMatrix );
+
+	glMatrixMode( GL_MODELVIEW );
+	glPushMatrix();
+	glLoadMatrixf( (const GLfloat *)m_viewMatrix );
+
+	// Apply model scale
+	float modelScale = 0.1f;
+	glScalef( modelScale, modelScale, modelScale );
+
+	// Draw attachment points (orange)
+	glPointSize( 10.0f );
+	glBegin( GL_POINTS );
+	glColor3f( 1.0f, 0.5f, 0.0f ); // Orange
+
+	for ( int i = 0; i < hdr->numattachments; i++ ) {
+		mstudioattachment_t *att = &attachments[i];
+
+		if ( att->bone < 0 || att->bone >= hdr->numbones ) continue;
+
+		// Get bone transformation matrix
+		mat4 *boneMat4 = &m_renderInstance->bone_transformations[att->bone];
+
+		// Transform attachment origin by bone matrix
+		// att->org is the local position relative to the bone
+		float worldPos[3];
+		worldPos[0] = ( *boneMat4 )[0][0] * att->org[0] + ( *boneMat4 )[1][0] * att->org[1] +
+					  ( *boneMat4 )[2][0] * att->org[2] + ( *boneMat4 )[3][0];
+		worldPos[1] = ( *boneMat4 )[0][1] * att->org[0] + ( *boneMat4 )[1][1] * att->org[1] +
+					  ( *boneMat4 )[2][1] * att->org[2] + ( *boneMat4 )[3][1];
+		worldPos[2] = ( *boneMat4 )[0][2] * att->org[0] + ( *boneMat4 )[1][2] * att->org[1] +
+					  ( *boneMat4 )[2][2] * att->org[2] + ( *boneMat4 )[3][2];
+
+		glVertex3fv( worldPos );
+	}
+	glEnd();
+
+	// Draw small axes at each attachment (helps visualize orientation)
+	glLineWidth( 2.0f );
+	for ( int i = 0; i < hdr->numattachments; i++ ) {
+		mstudioattachment_t *att = &attachments[i];
+
+		if ( att->bone < 0 || att->bone >= hdr->numbones ) continue;
+
+		mat4 *boneMat4 = &m_renderInstance->bone_transformations[att->bone];
+
+		// Transform attachment origin
+		float worldPos[3];
+		worldPos[0] = ( *boneMat4 )[0][0] * att->org[0] + ( *boneMat4 )[1][0] * att->org[1] +
+					  ( *boneMat4 )[2][0] * att->org[2] + ( *boneMat4 )[3][0];
+		worldPos[1] = ( *boneMat4 )[0][1] * att->org[0] + ( *boneMat4 )[1][1] * att->org[1] +
+					  ( *boneMat4 )[2][1] * att->org[2] + ( *boneMat4 )[3][1];
+		worldPos[2] = ( *boneMat4 )[0][2] * att->org[0] + ( *boneMat4 )[1][2] * att->org[1] +
+					  ( *boneMat4 )[2][2] * att->org[2] + ( *boneMat4 )[3][2];
+
+		// Draw small axes (5 units long)
+		float axisLen = 5.0f;
+
+		glBegin( GL_LINES );
+		// X axis (red)
+		glColor3f( 1.0f, 0.0f, 0.0f );
+		glVertex3fv( worldPos );
+		glVertex3f( worldPos[0] + axisLen, worldPos[1], worldPos[2] );
+
+		// Y axis (green)
+		glColor3f( 0.0f, 1.0f, 0.0f );
+		glVertex3fv( worldPos );
+		glVertex3f( worldPos[0], worldPos[1] + axisLen, worldPos[2] );
+
+		// Z axis (blue)
+		glColor3f( 0.0f, 0.0f, 1.0f );
+		glVertex3fv( worldPos );
+		glVertex3f( worldPos[0], worldPos[1], worldPos[2] + axisLen );
+		glEnd();
+	}
+
+	// Restore state
+	glPopMatrix();
+	glMatrixMode( GL_PROJECTION );
+	glPopMatrix();
+	glMatrixMode( GL_MODELVIEW );
+
+	glEnable( GL_DEPTH_TEST );
 }

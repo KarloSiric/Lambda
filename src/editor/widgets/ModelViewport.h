@@ -39,6 +39,7 @@
 #include <QtGui/qevent.h>
 #include <QtWidgets/qtabwidget.h>
 #include <QEnterEvent>
+#include <QColor>
 
 // Forward declarations
 class StatusBarWidget;
@@ -121,8 +122,12 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 
 	// @Note: Model rotation (Ctrl+right-drag, or gizmo rings)
 	void resetModelRotation();
+	void setModelRotationX( float radians );
 	void setModelRotationY( float radians );
+	void setModelRotationZ( float radians );
+	float getModelRotationX() const;
 	float getModelRotationY() const;
+	float getModelRotationZ() const;
 
 	// @Note: Rotation gizmo toggle (R key or external call)
 	void setShowGizmo( bool show );
@@ -150,6 +155,15 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	int getHitboxCount() const;
 	void getEyePosition( float &x, float &y, float &z ) const;
 	void getBoundingBox( float bbmin[3], float bbmax[3] ) const;
+
+	// @Note: Extended header info for Model Info panel
+	int getHeaderId() const;                    // MDL magic (IDST)
+	QString getHeaderName() const;              // Internal model name from header
+	int getTransitionCount() const;             // Sequence transitions
+	int getSoundGroupCount() const;             // Sound groups
+	int getSkinRefCount() const;                // Skin references
+	int getFileLength() const;                  // Total file length from header
+	void getMovementBox( float min[3], float max[3] ) const; // Movement bounds (min/max)
 
 	// @Note: Animation control for Sequences panel
 	void setPlaybackSpeed( float multiplier );
@@ -190,6 +204,41 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void prevSkinFamily();
 	int getCurrentSkinFamily() const;
 	int getNumSkinFamilies() const;
+
+	// @Note: Lighting controls for Lighting panel
+	void setLightingEnabled( bool enabled );
+	bool isLightingEnabled() const;
+	void setAmbientIntensity( float intensity );
+	float getAmbientIntensity() const;
+	void setLightDirection( float x, float y, float z );
+	void getLightDirection( float &x, float &y, float &z ) const;
+	void setLightColor( const QColor &color );
+	QColor getLightColor() const;
+	void setChromeEnabled( bool enabled );
+	bool isChromeEnabled() const;
+	void resetLighting();
+
+	// @Note: Scale controls for ModelDisplay panel
+	void setMeshScale( float scale );
+	float getMeshScale() const;
+	void setBoneScale( float scale );
+	float getBoneScale() const;
+
+	// @Note: Mirror controls for ModelDisplay panel
+	void setMirrorX( bool enabled );
+	void setMirrorY( bool enabled );
+	void setMirrorZ( bool enabled );
+	bool isMirrorX() const;
+	bool isMirrorY() const;
+	bool isMirrorZ() const;
+
+	// @Note: FOV control for camera
+	void setFov( float degrees );
+	float getFov() const;
+
+	// @Note: Weapon origin view mode (first-person weapon position)
+	void setWeaponOriginMode( bool enabled );
+	bool isWeaponOriginMode() const;
 
   signals:
 
@@ -269,6 +318,7 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 
     // Animation timing for frame-rate independent playback
     qint64 m_lastAnimTime;
+    qint64 m_lastFrameSignalTime;  // Throttle frameChanged signal to reduce UI overhead
 
 	// View/projection matrices for rendering
 	math_mat4_t m_viewMatrix;
@@ -288,6 +338,30 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 
 	// Ground positioning (automatically set to model's bbmin.z)
 	float m_groundHeight;
+
+	// Lighting settings
+	bool m_lightingEnabled;
+	float m_ambientIntensity;
+	float m_lightDirX;
+	float m_lightDirY;
+	float m_lightDirZ;
+	QColor m_lightColor;
+	bool m_chromeEnabled;
+
+	// Scale settings
+	float m_meshScale;
+	float m_boneScale;
+
+	// Mirror settings
+	bool m_mirrorX;
+	bool m_mirrorY;
+	bool m_mirrorZ;
+
+	// FOV setting
+	float m_fov;
+
+	// Weapon origin mode
+	bool m_weaponOriginMode;
 
 	// Mouse input tracking
 	QPoint m_lastMousePos;

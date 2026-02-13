@@ -16,6 +16,8 @@
 #include <QScrollArea>
 #include <QDialog>
 #include <QMouseEvent>
+#include <QContextMenuEvent>
+#include <QMenu>
 
 // ============================================================================
 // TextureThumbnail
@@ -24,28 +26,30 @@
 TextureThumbnail::TextureThumbnail( int index, const QImage &image, const QString &name, QWidget *parent )
     : QPushButton( parent )
     , m_index( index ) {
-	setFixedSize( 72, 88 );
+	// Square-ish thumbnail like Worldcraft: 68x82 (64x64 image + name)
+	setFixedSize( 68, 82 );
 	setCheckable( true );
 	setAutoExclusive( true );
 
 	// Create layout with image and name
 	QVBoxLayout *layout = new QVBoxLayout( this );
-	layout->setContentsMargins( 4, 4, 4, 4 );
-	layout->setSpacing( 2 );
+	layout->setContentsMargins( 2, 2, 2, 2 );
+	layout->setSpacing( 1 );
 
-	// Thumbnail image
+	// Thumbnail image - 64x64 square (standard power-of-2 texture size)
 	QLabel *imageLabel = new QLabel( this );
-	QPixmap pixmap = QPixmap::fromImage( image.scaled( 64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
+	QPixmap pixmap = QPixmap::fromImage( image.scaled( 64, 64, Qt::IgnoreAspectRatio, Qt::SmoothTransformation ) );
 	imageLabel->setPixmap( pixmap );
 	imageLabel->setAlignment( Qt::AlignCenter );
 	imageLabel->setFixedSize( 64, 64 );
-	imageLabel->setStyleSheet( "border: 1px solid #404040; background: #000000;" );
+	imageLabel->setStyleSheet( "border: none; background: #000000;" );
 
-	// Name label (truncate if too long)
+	// Name label (truncate if too long) - white text for dark background
 	QLabel *nameLabel = new QLabel( name, this );
 	nameLabel->setAlignment( Qt::AlignCenter );
-	nameLabel->setStyleSheet( "color: #000000; font-size: 9px; border: none; background: transparent;" );
+	nameLabel->setStyleSheet( "color: #ffffff; font-size: 8px; border: none; background: transparent;" );
 	nameLabel->setMaximumWidth( 64 );
+	nameLabel->setFixedHeight( 12 );
 
 	// Truncate name
 	QFontMetrics fm( nameLabel->font() );
@@ -55,30 +59,43 @@ TextureThumbnail::TextureThumbnail( int index, const QImage &image, const QStrin
 	layout->addWidget( imageLabel );
 	layout->addWidget( nameLabel );
 
+	// Worldcraft-style: dark background, cyan highlight on selection
 	setStyleSheet(
 	    "QPushButton {"
-	    "    background-color: #c0c0c0;"
-	    "    border: 2px solid;"
-	    "    border-top-color: #ffffff;"
-	    "    border-left-color: #ffffff;"
-	    "    border-right-color: #808080;"
-	    "    border-bottom-color: #808080;"
+	    "    background-color: #404040;"
+	    "    border: 1px solid #606060;"
+	    "    padding: 0px;"
 	    "}"
 	    "QPushButton:hover {"
-	    "    background-color: #d0d0d0;"
+	    "    border: 1px solid #00ffff;"
 	    "}"
 	    "QPushButton:checked {"
-	    "    border-top-color: #808080;"
-	    "    border-left-color: #808080;"
-	    "    border-right-color: #ffffff;"
-	    "    border-bottom-color: #ffffff;"
-	    "    background-color: #a0a0a0;"
+	    "    border: 2px solid #00ffff;"
+	    "    background-color: #505050;"
 	    "}" );
 }
 
 void TextureThumbnail::mouseDoubleClickEvent( QMouseEvent *event ) {
 	QPushButton::mouseDoubleClickEvent( event );
 	emit doubleClicked( m_index );
+}
+
+void TextureThumbnail::contextMenuEvent( QContextMenuEvent *event ) {
+	QMenu menu( this );
+
+	QAction *tabAction = menu.addAction( "Open in New Tab" );
+	tabAction->setToolTip( "Open texture as a new tab in the viewport area" );
+
+	QAction *windowAction = menu.addAction( "Open in Separate Window" );
+	windowAction->setToolTip( "Open texture in a separate preview window" );
+
+	QAction *selected = menu.exec( event->globalPos() );
+
+	if ( selected == tabAction ) {
+		emit openInNewTab( m_index );
+	} else if ( selected == windowAction ) {
+		emit openInSeparateWindow( m_index );
+	}
 }
 
 // ============================================================================
@@ -124,13 +141,18 @@ void TexturesPanel::setupUI() {
 	separator1->setStyleSheet( "background-color: #808080;" );
 	contentLayout->addWidget( separator1 );
 
-	// Scrollable thumbnail grid
+	// Scrollable thumbnail grid - Worldcraft-style dark background
 	QScrollArea *scrollArea = new QScrollArea( m_contentWidget );
 	scrollArea->setWidgetResizable( true );
 	scrollArea->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
 	scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded );
+	scrollArea->setStyleSheet(
+	    "QScrollArea { background-color: #303030; border: 2px inset; "
+	    "border-top-color: #808080; border-left-color: #808080; "
+	    "border-right-color: #ffffff; border-bottom-color: #ffffff; }" );
 
 	m_thumbnailContainer = new QWidget( scrollArea );
+	m_thumbnailContainer->setStyleSheet( "background-color: #303030;" );
 	m_thumbnailLayout = new QGridLayout( m_thumbnailContainer );
 	m_thumbnailLayout->setContentsMargins( 4, 4, 4, 4 );
 	m_thumbnailLayout->setSpacing( 4 );
@@ -198,7 +220,7 @@ void TexturesPanel::populateThumbnails() {
 	if ( !hasModel() ) return;
 
 	int count = m_viewport->getTextureCount();
-	int columns = 3; // 3 thumbnails per row
+	int columns = 2; // 2 thumbnails per row (larger thumbnails)
 
 	// Pre-cache all texture images for performance
 	m_cachedFullImages.clear();
@@ -214,6 +236,8 @@ void TexturesPanel::populateThumbnails() {
 		TextureThumbnail *thumbnail = new TextureThumbnail( i, image, name, m_thumbnailContainer );
 		connect( thumbnail, &QPushButton::clicked, this, &TexturesPanel::onThumbnailClicked );
 		connect( thumbnail, &TextureThumbnail::doubleClicked, this, &TexturesPanel::onThumbnailDoubleClicked );
+		connect( thumbnail, &TextureThumbnail::openInNewTab, this, &TexturesPanel::onOpenInNewTab );
+		connect( thumbnail, &TextureThumbnail::openInSeparateWindow, this, &TexturesPanel::onOpenInSeparateWindow );
 
 		int row = i / columns;
 		int col = i % columns;
@@ -227,6 +251,33 @@ void TexturesPanel::populateThumbnails() {
 }
 
 void TexturesPanel::onThumbnailDoubleClicked( int index ) {
+	showTexturePreview( index );
+}
+
+void TexturesPanel::onOpenInNewTab( int index ) {
+	if ( !hasModel() || index < 0 || index >= m_viewport->getTextureCount() ) {
+		return;
+	}
+
+	// Get texture data
+	QImage image;
+	if ( index < m_cachedFullImages.size() ) {
+		image = m_cachedFullImages[index];
+	} else {
+		image = m_viewport->getTextureImage( index );
+	}
+
+	QString name = m_viewport->getTextureName( index );
+	int width, height;
+	m_viewport->getTextureDimensions( index, width, height );
+	int flags = m_viewport->getTextureFlags( index );
+
+	// Emit signal for MainWindow to create a new tab
+	emit requestTextureTab( image, name, width, height, flags );
+}
+
+void TexturesPanel::onOpenInSeparateWindow( int index ) {
+	// Same as double-click behavior
 	showTexturePreview( index );
 }
 

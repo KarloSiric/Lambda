@@ -15,6 +15,7 @@
 #include <QMap>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QAction>
 #include <QtCore/qtmetamacros.h>
 #include <QtWidgets/qtextedit.h>
 
@@ -27,6 +28,9 @@ class BodypartsPanel;
 class BonesPanel;
 class ModelDisplayPanel;
 class AttachmentsPanel;
+class CameraPanel;
+class TransformPanel;
+class LightingPanel;
 
 
 #define MW_WIDTH 1920
@@ -121,6 +125,9 @@ class MainWindow : public QMainWindow {
 	BonesPanel *m_bonesPanel;
 	ModelDisplayPanel *m_modelDisplayPanel;
 	AttachmentsPanel *m_attachmentsPanel;
+	CameraPanel *m_cameraPanel;
+	TransformPanel *m_transformPanel;
+	LightingPanel *m_lightingPanel;
 
 	// Store per-tab model info for status bar
 	struct TabModelInfo {
@@ -151,8 +158,23 @@ class MainWindow : public QMainWindow {
 	// Sequence selector combobox (in toolbar)
 	QComboBox *m_sequenceSelector;
 
+	// Toolbar toggle actions (stored for syncing with inspector panels)
+	QAction *m_actionWireframe;
+	QAction *m_actionTextured;
+	QAction *m_actionBones;
+	QAction *m_actionHitboxes;
+	QAction *m_actionAttachments;
+	QAction *m_actionNormals;
+	QAction *m_actionGrid;
+	QAction *m_actionAxes;
+	QAction *m_actionGround;
+	QAction *m_actionLighting;
+
 	// Helper to connect toolbar actions
 	void connectToolbarActions();
+
+	// Sync toolbar toggle states with viewport
+	void syncToolbarWithViewport( ModelViewport *viewport );
 
 	// Helper to update sequence list when model changes
 	void updateSequenceList( ModelViewport *viewport );
@@ -162,6 +184,9 @@ class MainWindow : public QMainWindow {
 
 	// Slot for browser panel model selection
 	void onBrowserModelSelected( const QString &path );
+
+	// Slot for texture panel's request to open texture in new tab
+	void onTextureTabRequested( const QImage &image, const QString &name, int width, int height, int flags );
 
 };
 

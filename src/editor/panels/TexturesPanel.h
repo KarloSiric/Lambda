@@ -25,6 +25,8 @@
 #include <QVector>
 #include <QImage>
 
+class QContextMenuEvent;
+
 class TextureThumbnail : public QPushButton {
 	Q_OBJECT
 
@@ -35,9 +37,12 @@ class TextureThumbnail : public QPushButton {
 
   signals:
 	void doubleClicked( int index );
+	void openInNewTab( int index );
+	void openInSeparateWindow( int index );
 
   protected:
 	void mouseDoubleClickEvent( QMouseEvent *event ) override;
+	void contextMenuEvent( QContextMenuEvent *event ) override;
 
   private:
 	int m_index;
@@ -51,10 +56,16 @@ class TexturesPanel : public InspectorPanel {
 
 	void refresh() override;
 
+  signals:
+	// Signal to MainWindow to open texture in a new viewport tab
+	void requestTextureTab( const QImage &image, const QString &name, int width, int height, int flags );
+
   private slots:
 	void onSkinFamilyChanged( int index );
 	void onThumbnailClicked();
 	void onThumbnailDoubleClicked( int index );
+	void onOpenInNewTab( int index );
+	void onOpenInSeparateWindow( int index );
 
   private:
 	void setupUI();

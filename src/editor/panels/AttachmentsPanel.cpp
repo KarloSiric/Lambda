@@ -188,15 +188,15 @@ void AttachmentsPanel::updateInfoBox( int attachmentIndex ) {
 
 	QString info = QString( "<b>%1</b> (Index: %2)<br>"
 	                        "Bone: %3 (%4)<br>"
-	                        "Position: (%.2f, %.2f, %.2f)<br>"
-	                        "Type: %5" )
+	                        "Position: (%5, %6, %7)<br>"
+	                        "Type: %8" )
 	                   .arg( name )
 	                   .arg( attachmentIndex )
 	                   .arg( boneName )
 	                   .arg( boneIndex )
-	                   .arg( x )
-	                   .arg( y )
-	                   .arg( z )
+	                   .arg( x, 0, 'f', 2 )
+	                   .arg( y, 0, 'f', 2 )
+	                   .arg( z, 0, 'f', 2 )
 	                   .arg( type );
 
 	m_infoLabel->setText( info );

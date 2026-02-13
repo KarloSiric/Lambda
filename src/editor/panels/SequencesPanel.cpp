@@ -215,21 +215,58 @@ void SequencesPanel::setupUI() {
 }
 
 void SequencesPanel::setViewport( ModelViewport *viewport ) {
+	// Disconnect old viewport signals
+	disconnectViewportSignals();
+
 	// Call base class
 	InspectorPanel::setViewport( viewport );
 
-	// Connect additional signals
-	if ( m_viewport ) {
-		connect( m_viewport, &ModelViewport::frameChanged,
-		         this, &SequencesPanel::onFrameChanged );
-		connect( m_viewport, &ModelViewport::sequenceChanged,
-		         this, &SequencesPanel::onSequenceChanged );
-		connect( m_viewport, &ModelViewport::animationPlayStateChanged,
-		         this, &SequencesPanel::onAnimationPlayStateChanged );
+	// Connect new viewport signals if visible
+	if ( isVisible() ) {
+		connectViewportSignals();
+	}
 
-		// Initial state
+	// Initial state
+	if ( m_viewport ) {
 		updateTransportButtons();
 	}
+}
+
+void SequencesPanel::connectViewportSignals() {
+	if ( !m_viewport ) return;
+
+	connect( m_viewport, &ModelViewport::frameChanged,
+	         this, &SequencesPanel::onFrameChanged, Qt::UniqueConnection );
+	connect( m_viewport, &ModelViewport::sequenceChanged,
+	         this, &SequencesPanel::onSequenceChanged, Qt::UniqueConnection );
+	connect( m_viewport, &ModelViewport::animationPlayStateChanged,
+	         this, &SequencesPanel::onAnimationPlayStateChanged, Qt::UniqueConnection );
+}
+
+void SequencesPanel::disconnectViewportSignals() {
+	if ( !m_viewport ) return;
+
+	disconnect( m_viewport, &ModelViewport::frameChanged,
+	            this, &SequencesPanel::onFrameChanged );
+	disconnect( m_viewport, &ModelViewport::sequenceChanged,
+	            this, &SequencesPanel::onSequenceChanged );
+	disconnect( m_viewport, &ModelViewport::animationPlayStateChanged,
+	            this, &SequencesPanel::onAnimationPlayStateChanged );
+}
+
+void SequencesPanel::showEvent( QShowEvent *event ) {
+	InspectorPanel::showEvent( event );
+
+	// Connect signals when panel becomes visible
+	connectViewportSignals();
+	refresh();  // Update UI with current state
+}
+
+void SequencesPanel::hideEvent( QHideEvent *event ) {
+	// Disconnect signals when panel is hidden to prevent unnecessary updates
+	disconnectViewportSignals();
+
+	InspectorPanel::hideEvent( event );
 }
 
 void SequencesPanel::refresh() {

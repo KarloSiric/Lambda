@@ -43,8 +43,11 @@ void BrowserPanel::refresh() {
 
 void BrowserPanel::setupUI() {
 	QVBoxLayout *contentLayout = new QVBoxLayout( m_contentWidget );
-	contentLayout->setContentsMargins( 4, 4, 4, 4 );
-	contentLayout->setSpacing( 8 );
+	contentLayout->setContentsMargins( 0, 0, 0, 0 );
+	contentLayout->setSpacing( 4 );
+
+	// Ensure content widget expands to fill space
+	m_contentWidget->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 
 	// Toolbar with Open Folder, Open PAK buttons
 	QHBoxLayout *toolbarLayout = new QHBoxLayout();
@@ -81,10 +84,10 @@ void BrowserPanel::setupUI() {
 	m_openFolderBtn->setToolTip( "Browse for a folder containing MDL model files" );
 	connect( m_openFolderBtn, &QPushButton::clicked, this, &BrowserPanel::onOpenFolder );
 
-	m_openPakBtn = new QPushButton( "Open PAK", m_contentWidget );
+	m_openPakBtn = new QPushButton( "Open PAK/WAD", m_contentWidget );
 	m_openPakBtn->setStyleSheet( buttonStyle );
-	m_openPakBtn->setEnabled( false ); // TODO: Implement PAK support
-	m_openPakBtn->setToolTip( "PAK archive support coming soon" );
+	m_openPakBtn->setEnabled( true ); // Shows info dialog
+	m_openPakBtn->setToolTip( "Browse PAK, WAD, or BSP archives" );
 	connect( m_openPakBtn, &QPushButton::clicked, this, &BrowserPanel::onOpenPak );
 
 	toolbarLayout->addWidget( m_openFolderBtn );
@@ -155,6 +158,9 @@ void BrowserPanel::setupUI() {
 	    "    border-bottom-color: #808080;"
 	    "}" );
 
+	// Ensure tree expands to fill available space
+	m_fileTree->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+
 	connect( m_fileTree, &QTreeWidget::itemDoubleClicked, this, &BrowserPanel::onItemDoubleClicked );
 	connect( m_fileTree, &QTreeWidget::itemExpanded, this, &BrowserPanel::onItemExpanded );
 	contentLayout->addWidget( m_fileTree, 1 );
@@ -173,17 +179,28 @@ void BrowserPanel::onOpenFolder() {
 }
 
 void BrowserPanel::onOpenPak() {
-	QString pakFile = QFileDialog::getOpenFileName(
-	    this,
-	    "Open PAK Archive",
-	    m_currentFolder.isEmpty() ? QDir::homePath() : m_currentFolder,
-	    "PAK Archives (*.pak);;All Files (*)" );
-
-	if ( !pakFile.isEmpty() ) {
-		// TODO: Implement PAK archive browsing
-		QMessageBox::information( this, "Not Implemented",
-		                          "PAK archive browsing will be implemented soon." );
-	}
+	// Show informative dialog about archive support
+	QMessageBox msgBox( this );
+	msgBox.setWindowTitle( "Archive Support - Coming Soon" );
+	msgBox.setIcon( QMessageBox::Information );
+	msgBox.setText( "PAK, WAD, and BSP archive browsing is planned for a future release." );
+	msgBox.setInformativeText(
+	    "This feature will allow you to:\n\n"
+	    "- Browse models inside PAK archives (pak0.pak, etc.)\n"
+	    "- View textures from WAD3 files (halflife.wad, etc.)\n"
+	    "- Extract embedded models from BSP maps\n\n"
+	    "For now, you can use external tools:\n"
+	    "- PakExplorer for PAK files\n"
+	    "- Wally for WAD files\n"
+	    "- BSPSource for BSP extraction" );
+	msgBox.setStyleSheet(
+	    "QMessageBox {"
+	    "    background-color: #c0c0c0;"
+	    "}"
+	    "QMessageBox QLabel {"
+	    "    color: #000000;"
+	    "}" );
+	msgBox.exec();
 }
 
 void BrowserPanel::onSearchTextChanged( const QString &text ) {

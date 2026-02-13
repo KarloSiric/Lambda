@@ -40,6 +40,10 @@
 #include "../panels/BonesPanel.h"
 #include "../panels/ModelDisplayPanel.h"
 #include "../panels/AttachmentsPanel.h"
+#include "../panels/CameraPanel.h"
+#include "../panels/TransformPanel.h"
+#include "../panels/LightingPanel.h"
+#include "../widgets/TextureViewWidget.h"
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -74,6 +78,18 @@ MainWindow::MainWindow( QWidget *parent )
 	: QMainWindow( parent ) {
 	// initializing the pointer to nullptr
 	m_consoleWidget = nullptr;
+
+	// Initialize toolbar action pointers
+	m_actionWireframe = nullptr;
+	m_actionTextured = nullptr;
+	m_actionBones = nullptr;
+	m_actionHitboxes = nullptr;
+	m_actionAttachments = nullptr;
+	m_actionNormals = nullptr;
+	m_actionGrid = nullptr;
+	m_actionAxes = nullptr;
+	m_actionGround = nullptr;
+	m_actionLighting = nullptr;
 
 	m_sequenceSelector = new QComboBox( this );
 	m_sequenceSelector->setObjectName( "SequenceSelector" );
@@ -218,6 +234,9 @@ void MainWindow::createDocks() {
 	m_bonesPanel = new BonesPanel( this );
 	m_modelDisplayPanel = new ModelDisplayPanel( this );
 	m_attachmentsPanel = new AttachmentsPanel( this );
+	m_cameraPanel = new CameraPanel( this );
+	m_transformPanel = new TransformPanel( this );
+	m_lightingPanel = new LightingPanel( this );
 
 	// Add panels as tabs
 	m_inspectorTabs->addTab( m_browserPanel, "Browser" );
@@ -227,11 +246,34 @@ void MainWindow::createDocks() {
 	m_inspectorTabs->addTab( m_bodypartsPanel, "Bodyparts" );
 	m_inspectorTabs->addTab( m_bonesPanel, "Bones" );
 	m_inspectorTabs->addTab( m_attachmentsPanel, "Attach" );
+	m_inspectorTabs->addTab( m_cameraPanel, "Camera" );
+	m_inspectorTabs->addTab( m_transformPanel, "Transform" );
+	m_inspectorTabs->addTab( m_lightingPanel, "Lighting" );
 	m_inspectorTabs->addTab( m_modelDisplayPanel, "Display" );
 
 	// Connect browser panel's model selection signal
 	connect( m_browserPanel, &BrowserPanel::modelFileSelected,
 	         this, &MainWindow::onBrowserModelSelected );
+
+	// Connect textures panel's request to open texture in new tab
+	connect( m_texturesPanel, &TexturesPanel::requestTextureTab,
+	         this, &MainWindow::onTextureTabRequested );
+
+	// Connect ModelDisplayPanel state changes to sync toolbar buttons
+	connect( m_modelDisplayPanel, &ModelDisplayPanel::viewportStateChanged, this, [this]() {
+		ModelViewport *viewport = getCurrentViewport();
+		if ( viewport ) {
+			syncToolbarWithViewport( viewport );
+		}
+	} );
+
+	// Connect LightingPanel state changes to sync toolbar buttons
+	connect( m_lightingPanel, &LightingPanel::viewportStateChanged, this, [this]() {
+		ModelViewport *viewport = getCurrentViewport();
+		if ( viewport ) {
+			syncToolbarWithViewport( viewport );
+		}
+	} );
 
 	// Apply classic inspector panel styling
 	m_inspectorTabs->setStyleSheet( ThemeManager::getClassicInspectorStyle() );
@@ -483,7 +525,8 @@ ModelViewport *MainWindow::getCurrentViewport() {
 
 	ModelViewport *viewport = qobject_cast<ModelViewport *>( widget );
 	if ( !viewport ) {
-		qWarning() << "WARNING: Current widget is not a ModelViewport!";
+		// This is expected when TextureViewWidget or other non-viewport tabs are active
+		// No warning needed - just return null silently
 		return nullptr;
 	}
 
@@ -556,11 +599,14 @@ void MainWindow::onTabChanged( int index ) {
 		return;
 	}
 
-	// Get the viewport for the new tab
+	// Get the viewport for the new tab (may be null for texture tabs)
 	ModelViewport *viewport = qobject_cast<ModelViewport *>( tabWidget->widget( index ) );
 
 	if ( !viewport ) {
-		qWarning() << "WARNING: Widget at index" << index << "is not a ModelViewport!";
+		// This is a non-viewport tab (e.g., TextureViewWidget)
+		// Clear model-specific UI elements
+		m_statusBar->clearModelInfo();
+		updateInspector( nullptr );
 		return;
 	}
 
@@ -580,6 +626,9 @@ void MainWindow::onTabChanged( int index ) {
 
 	// Update sequence selector for the new tab's model
 	updateSequenceList( viewport );
+
+	// Sync toolbar toggle buttons with viewport state
+	syncToolbarWithViewport( viewport );
 
 	// Update inspector panels for the new viewport
 	updateInspector( viewport );
@@ -666,22 +715,31 @@ void MainWindow::connectToolbarActions() {
 		// VIEW TOGGLES SECTION
 		// ─────────────────────────────────────────────────────────────────────
 		else if ( text == "Wireframe" ) {
+			m_actionWireframe = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleWireframe );
 		} else if ( text == "Textured" ) {
+			m_actionTextured = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleTextured );
 		} else if ( text == "Bones" ) {
+			m_actionBones = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleBones );
 		} else if ( text == "Hitboxes" ) {
+			m_actionHitboxes = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleHitboxes );
 		} else if ( text == "Attachments" ) {
+			m_actionAttachments = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleAttachments );
 		} else if ( text == "Normals" ) {
+			m_actionNormals = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleNormals );
 		} else if ( text == "Grid" ) {
+			m_actionGrid = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleGrid );
 		} else if ( text == "Axes" ) {
+			m_actionAxes = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleAxes );
 		} else if ( text == "Ground" ) {
+			m_actionGround = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleGround );
 		}
 
@@ -719,11 +777,62 @@ void MainWindow::connectToolbarActions() {
 		} else if ( text == "Background" ) {
 			connect( action, &QAction::triggered, this, &MainWindow::onBackgroundColor );
 		} else if ( text == "Lighting" ) {
+			m_actionLighting = action;
 			connect( action, &QAction::toggled, this, &MainWindow::onToggleLighting );
 		}
 	}
 
 	log_info( "UI", "Toolbar actions connected (21 actions)" );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Toolbar Sync
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::syncToolbarWithViewport( ModelViewport *viewport ) {
+	if ( !viewport ) return;
+
+	// Block signals to prevent feedback loops when updating
+	auto blockAction = []( QAction *action, bool block ) {
+		if ( action ) action->blockSignals( block );
+	};
+
+	blockAction( m_actionWireframe, true );
+	blockAction( m_actionTextured, true );
+	blockAction( m_actionBones, true );
+	blockAction( m_actionHitboxes, true );
+	blockAction( m_actionAttachments, true );
+	blockAction( m_actionNormals, true );
+	blockAction( m_actionGrid, true );
+	blockAction( m_actionAxes, true );
+	blockAction( m_actionGround, true );
+	blockAction( m_actionLighting, true );
+
+	// Sync checked states from viewport
+	if ( m_actionWireframe ) m_actionWireframe->setChecked( viewport->isWireframeMode() );
+	// Note: Textured mode not yet implemented in ModelViewport
+	// if ( m_actionTextured ) m_actionTextured->setChecked( viewport->isTexturedMode() );
+	if ( m_actionBones ) m_actionBones->setChecked( viewport->isShowBones() );
+	if ( m_actionHitboxes ) m_actionHitboxes->setChecked( viewport->isShowHitboxes() );
+	if ( m_actionAttachments ) m_actionAttachments->setChecked( viewport->isShowAttachments() );
+	// Note: Show normals not yet implemented in ModelViewport
+	// if ( m_actionNormals ) m_actionNormals->setChecked( viewport->isShowNormals() );
+	if ( m_actionGrid ) m_actionGrid->setChecked( viewport->isShowGrid() );
+	if ( m_actionAxes ) m_actionAxes->setChecked( viewport->isShowAxes() );
+	if ( m_actionGround ) m_actionGround->setChecked( viewport->isShowGround() );
+	if ( m_actionLighting ) m_actionLighting->setChecked( viewport->isLightingEnabled() );
+
+	// Unblock signals
+	blockAction( m_actionWireframe, false );
+	blockAction( m_actionTextured, false );
+	blockAction( m_actionBones, false );
+	blockAction( m_actionHitboxes, false );
+	blockAction( m_actionAttachments, false );
+	blockAction( m_actionNormals, false );
+	blockAction( m_actionGrid, false );
+	blockAction( m_actionAxes, false );
+	blockAction( m_actionGround, false );
+	blockAction( m_actionLighting, false );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -885,8 +994,11 @@ void MainWindow::onToggleHitboxes( bool checked ) {
 }
 
 void MainWindow::onToggleAttachments( bool checked ) {
-	// TODO: Implement attachments toggle in viewport
-	log_info( "View", "Attachments %s", checked ? "enabled" : "disabled" );
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		viewport->setShowAttachments( checked );
+		log_info( "View", "Attachments %s", checked ? "enabled" : "disabled" );
+	}
 }
 
 void MainWindow::onToggleNormals( bool checked ) {
@@ -1001,6 +1113,9 @@ void MainWindow::updateInspector( ModelViewport *viewport ) {
 	m_bonesPanel->setViewport( viewport );
 	m_modelDisplayPanel->setViewport( viewport );
 	m_attachmentsPanel->setViewport( viewport );
+	m_cameraPanel->setViewport( viewport );
+	m_transformPanel->setViewport( viewport );
+	m_lightingPanel->setViewport( viewport );
 }
 
 void MainWindow::onBrowserModelSelected( const QString &path ) {
@@ -1040,4 +1155,16 @@ void MainWindow::onBrowserModelSelected( const QString &path ) {
 			log_error( "Browser", "Failed to load model: %s", path.toUtf8().constData() );
 		}
 	}
+}
+
+void MainWindow::onTextureTabRequested( const QImage &image, const QString &name,
+                                         int width, int height, int flags ) {
+	// Create a TextureViewWidget and add it as a new tab
+	TextureViewWidget *textureView = new TextureViewWidget( image, name, width, height, flags, this );
+
+	// Add to tab widget
+	int index = tabWidget->addTab( textureView, QString( "Tex: %1" ).arg( name ) );
+	tabWidget->setCurrentIndex( index );
+
+	log_info( "Textures", "Opened texture '%s' (%dx%d) in new tab", name.toUtf8().constData(), width, height );
 }

@@ -19,6 +19,7 @@
 
 #include "InspectorPanel.h"
 #include <QTableWidget>
+#include <QPushButton>
 
 class ModelInfoPanel : public InspectorPanel {
 	Q_OBJECT
@@ -28,14 +29,23 @@ class ModelInfoPanel : public InspectorPanel {
 
 	void refresh() override;
 
+  private slots:
+	void onDumpModelInfo();
+	void onDumpTextureInfo();
+
   private:
 	void setupUI();
 	void addProperty( const QString &name, const QString &value, bool isSeparator = false );
 	void clearProperties();
 	QString formatFileSize( qint64 bytes ) const;
 	QString formatVector( float x, float y, float z ) const;
+	QString generateModelReport() const;
+	QString generateTextureReport() const;
+	void showDumpDialog( const QString &title, const QString &content );
 
 	QTableWidget *m_propertyTable;
+	QPushButton *m_dumpModelBtn;
+	QPushButton *m_dumpTextureBtn;
 	int m_currentRow;
 };
 

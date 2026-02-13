@@ -371,9 +371,9 @@ QString ThemeManager::getClassicInspectorStyle() {
             color: #808080;
         }
 
-        /* Checkboxes */
+        /* Checkboxes with visible checkmark - Windows 95 style */
         QCheckBox {
-            spacing: 5px;
+            spacing: 6px;
             color: #000000;
         }
         QCheckBox::indicator {
@@ -387,7 +387,24 @@ QString ThemeManager::getClassicInspectorStyle() {
             background-color: #ffffff;
         }
         QCheckBox::indicator:checked {
+            /* Checkmark icon for checked state */
             background-color: #ffffff;
+            image: url(:/icons/checkmark.png);
+        }
+        QCheckBox::indicator:unchecked {
+            background-color: #ffffff;
+        }
+        QCheckBox::indicator:hover {
+            border-top-color: #505050;
+            border-left-color: #505050;
+        }
+        QCheckBox::indicator:disabled {
+            background-color: #c0c0c0;
+            border-top-color: #a0a0a0;
+            border-left-color: #a0a0a0;
+        }
+        QCheckBox::indicator:checked:disabled {
+            background-color: #909090;
         }
 
         /* Radio buttons */

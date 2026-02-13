@@ -24,6 +24,8 @@
 #include <QLabel>
 #include <QTableWidget>
 #include <QCheckBox>
+#include <QShowEvent>
+#include <QHideEvent>
 
 class SequencesPanel : public InspectorPanel {
 	Q_OBJECT
@@ -39,6 +41,10 @@ class SequencesPanel : public InspectorPanel {
 	void onSequenceChanged( int index );
 	void onAnimationPlayStateChanged( bool playing );
 
+  protected:
+	void showEvent( QShowEvent *event ) override;
+	void hideEvent( QHideEvent *event ) override;
+
   private slots:
 	void onPlayClicked();
 	void onStopClicked();
@@ -48,6 +54,8 @@ class SequencesPanel : public InspectorPanel {
 	void onSequenceRowClicked( int row, int column );
 
   private:
+	void connectViewportSignals();
+	void disconnectViewportSignals();
 	void setupUI();
 	void populateSequenceList();
 	void updateFrameLabel();
