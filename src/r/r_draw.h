@@ -216,4 +216,7 @@ void r_qt_set_animation_state(
 // Enable/disable animation for Qt instance
 void r_qt_set_animation_enabled( r_qt_instance_t *inst, bool enabled );
 
+// Rebuild mesh data after bodypart changes (triggers re-process on next frame)
+void r_qt_rebuild_mesh_data( r_qt_instance_t *inst );
+
 #endif

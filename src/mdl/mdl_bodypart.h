@@ -10,6 +10,10 @@
 #include "studio.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Structure to track current bodypart configuration
 typedef struct {
 	int bodygroup; // Packed value encoding all bodypart selections
@@ -56,5 +60,12 @@ const char *bodypart_get_debug_string( void );
 
 // Check if we should render a specific model
 bool bodypart_should_render_model( int bodypart_index, int model_index );
+
+// Set a specific bodypart to a specific submodel index (for Qt panel integration)
+void bodypart_set_submodel( int bodypart_index, int submodel_index );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // BODYPART_MANAGER_H

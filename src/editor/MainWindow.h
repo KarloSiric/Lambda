@@ -18,6 +18,16 @@
 #include <QtCore/qtmetamacros.h>
 #include <QtWidgets/qtextedit.h>
 
+// Forward declarations for inspector panels
+class BrowserPanel;
+class ModelInfoPanel;
+class SequencesPanel;
+class TexturesPanel;
+class BodypartsPanel;
+class BonesPanel;
+class ModelDisplayPanel;
+class AttachmentsPanel;
+
 
 #define MW_WIDTH 1920
 #define MW_HEIGHT 1080
@@ -101,6 +111,17 @@ class MainWindow : public QMainWindow {
 	QDockWidget *bottomDock;
 	QTabWidget *tabWidget;
 
+	// Inspector panel tabs
+	QTabWidget *m_inspectorTabs;
+	BrowserPanel *m_browserPanel;
+	ModelInfoPanel *m_modelInfoPanel;
+	SequencesPanel *m_sequencesPanel;
+	TexturesPanel *m_texturesPanel;
+	BodypartsPanel *m_bodypartsPanel;
+	BonesPanel *m_bonesPanel;
+	ModelDisplayPanel *m_modelDisplayPanel;
+	AttachmentsPanel *m_attachmentsPanel;
+
 	// Store per-tab model info for status bar
 	struct TabModelInfo {
 		QString filePath;
@@ -134,8 +155,14 @@ class MainWindow : public QMainWindow {
 	void connectToolbarActions();
 
 	// Helper to update sequence list when model changes
-	void updateSequenceList( ModelViewport *viewport ); 
-    
+	void updateSequenceList( ModelViewport *viewport );
+
+	// Update inspector panels when viewport changes
+	void updateInspector( ModelViewport *viewport );
+
+	// Slot for browser panel model selection
+	void onBrowserModelSelected( const QString &path );
+
 };
 
 #endif

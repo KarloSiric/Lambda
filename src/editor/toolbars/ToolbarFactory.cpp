@@ -46,13 +46,13 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	// ═══════════════════════════════════════════════════════════════════════
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// RENDER MODES
+	// RENDER MODES - Text must match what connectToolbarActions() expects!
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionWireframe = toolBar->addAction( IconFactory::wireframe(), "" );
+	QAction *actionWireframe = toolBar->addAction( IconFactory::wireframe(), "Wireframe" );
 	actionWireframe->setCheckable( true );
 	actionWireframe->setToolTip( "Wireframe" );
 
-	QAction *actionTextured = toolBar->addAction( QIcon( ":/icons/textured-icon.png" ), "" );
+	QAction *actionTextured = toolBar->addAction( QIcon( ":/icons/textured-icon.png" ), "Textured" );
 	actionTextured->setCheckable( true );
 	actionTextured->setChecked( true );
 	actionTextured->setToolTip( "Textured (T)" );
@@ -61,50 +61,50 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	toolBar->addSeparator();
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// OVERLAY TOGGLES
+	// OVERLAY TOGGLES - Text must match what connectToolbarActions() expects!
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionBones = toolBar->addAction( QIcon( ":/icons/draw-bones-icon.png" ), "" );
+	QAction *actionBones = toolBar->addAction( QIcon( ":/icons/draw-bones-icon.png" ), "Bones" );
 	actionBones->setCheckable( true );
 	actionBones->setToolTip( "Bones (B)" );
 	actionBones->setShortcut( QKeySequence( "B" ) );
 
-	QAction *actionHitboxes = toolBar->addAction( QIcon( ":/icons/draw-hitboxes-icon.png" ), "" );
+	QAction *actionHitboxes = toolBar->addAction( QIcon( ":/icons/draw-hitboxes-icon.png" ), "Hitboxes" );
 	actionHitboxes->setCheckable( true );
 	actionHitboxes->setToolTip( "Hitboxes (H)" );
 	actionHitboxes->setShortcut( QKeySequence( "H" ) );
 
-	QAction *actionAttachments = toolBar->addAction( QIcon( ":/icons/draw-attachments-icon.png" ), "" );
+	QAction *actionAttachments = toolBar->addAction( QIcon( ":/icons/draw-attachments-icon.png" ), "Attachments" );
 	actionAttachments->setCheckable( true );
 	actionAttachments->setToolTip( "Attachments" );
 
 	toolBar->addSeparator();
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// SCENE HELPERS - Grid group together
+	// SCENE HELPERS - Text must match what connectToolbarActions() expects!
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionGrid = toolBar->addAction( IconFactory::grid(), "" );
+	QAction *actionGrid = toolBar->addAction( IconFactory::grid(), "Grid" );
 	actionGrid->setCheckable( true );
 	actionGrid->setChecked( true );
 	actionGrid->setToolTip( "Grid (G)" );
 	actionGrid->setShortcut( QKeySequence( "G" ) );
 
-	QAction *actionGridIncrease = toolBar->addAction( IconFactory::gridIncrease(), "" );
+	QAction *actionGridIncrease = toolBar->addAction( IconFactory::gridIncrease(), "Grid Increase" );
 	actionGridIncrease->setToolTip( "Increase Grid Size (])" );
 	actionGridIncrease->setShortcut( QKeySequence( "]" ) );
 
-	QAction *actionGridDecrease = toolBar->addAction( IconFactory::gridDecrease(), "" );
+	QAction *actionGridDecrease = toolBar->addAction( IconFactory::gridDecrease(), "Grid Decrease" );
 	actionGridDecrease->setToolTip( "Decrease Grid Size ([)" );
 	actionGridDecrease->setShortcut( QKeySequence( "[" ) );
 
 	toolBar->addSeparator();
 
-	QAction *actionAxes = toolBar->addAction( QIcon( ":/icons/draw-axis-icon.png" ), "" );
+	QAction *actionAxes = toolBar->addAction( QIcon( ":/icons/draw-axis-icon.png" ), "Axes" );
 	actionAxes->setCheckable( true );
 	actionAxes->setChecked( true );
 	actionAxes->setToolTip( "Axes (X)" );
 	actionAxes->setShortcut( QKeySequence( "X" ) );
 
-	QAction *actionGround = toolBar->addAction( QIcon( ":/icons/draw-ground-icon.png" ), "" );
+	QAction *actionGround = toolBar->addAction( QIcon( ":/icons/draw-ground-icon.png" ), "Ground" );
 	actionGround->setCheckable( true );
 	actionGround->setToolTip( "Ground (Shift+G)" );
 	actionGround->setShortcut( QKeySequence( "Shift+G" ) );
@@ -112,21 +112,21 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	toolBar->addSeparator();
 
 	// ═══════════════════════════════════════════════════════════════════════
-	// CAMERA / VIEWS
+	// CAMERA / VIEWS - Text must match what connectToolbarActions() expects!
 	// ═══════════════════════════════════════════════════════════════════════
-	QAction *actionResetCamera = toolBar->addAction( QIcon( ":/icons/camera-reset-icon.png" ), "" );
+	QAction *actionResetCamera = toolBar->addAction( QIcon( ":/icons/camera-reset-icon.png" ), "Reset Camera" );
 	actionResetCamera->setToolTip( "Reset Camera (Home)" );
 	actionResetCamera->setShortcut( QKeySequence( "Home" ) );
 
-	QAction *actionViewXY = toolBar->addAction( IconFactory::viewFront(), "" );
+	QAction *actionViewXY = toolBar->addAction( IconFactory::viewFront(), "Front View" );
 	actionViewXY->setToolTip( "Front View (Ctrl+1)" );
 	actionViewXY->setShortcut( QKeySequence( "Ctrl+1" ) );
 
-	QAction *actionViewXZ = toolBar->addAction( IconFactory::viewTop(), "" );
+	QAction *actionViewXZ = toolBar->addAction( IconFactory::viewTop(), "Top View" );
 	actionViewXZ->setToolTip( "Top View (Ctrl+2)" );
 	actionViewXZ->setShortcut( QKeySequence( "Ctrl+2" ) );
 
-	QAction *actionViewZY = toolBar->addAction( IconFactory::viewSide(), "" );
+	QAction *actionViewZY = toolBar->addAction( IconFactory::viewSide(), "Side View" );
 	actionViewZY->setToolTip( "Side View (Ctrl+3)" );
 	actionViewZY->setShortcut( QKeySequence( "Ctrl+3" ) );
 

@@ -25,6 +25,7 @@
 #include "LoggerBridge.h"
 #include "math_vector.h"
 #include "mdl_loader.h"
+#include "mdl_bodypart.h"
 #include "r_draw.h"
 #include "util_messages.h"
 #include <QDebug>
@@ -56,6 +57,8 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_model( nullptr ),
 	  m_renderInstance( nullptr ),
 	  m_animationPlaying( false ),
+	  m_animationLooping( true ),
+	  m_playbackSpeed( 1.0f ),
 	  m_animationTimer( nullptr ),
 	  m_cameraPitch( 0.33f ),
 	  m_cameraYaw( 0.0f ),
@@ -351,25 +354,39 @@ void ModelViewport::onAnimationTick() {
 	// Only advance animation if playing and model loaded
 	if ( m_animationPlaying && m_model && m_model->header ) {
 		// Calculate delta time (timer fires every 16ms = 0.016 seconds)
-        
-        qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
-        float deltaTime = ( m_lastAnimTime > 0 ) 
-                            ? ( currentTime - m_lastAnimTime ) / 1000.0f
-                            : 0.016f;
-        m_lastAnimTime = currentTime;
-        
-        // TODO(karlo): clamping values so we dont have any huge jumps
-        if ( deltaTime > 0.05f )
-        {
-            deltaTime = 0.05f;
-        }
-         
+
+		qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+		float deltaTime = ( m_lastAnimTime > 0 )
+		                    ? ( currentTime - m_lastAnimTime ) / 1000.0f
+		                    : 0.016f;
+		m_lastAnimTime = currentTime;
+
+		// TODO(karlo): clamping values so we dont have any huge jumps
+		if ( deltaTime > 0.05f ) {
+			deltaTime = 0.05f;
+		}
+
+		// Apply playback speed multiplier
+		deltaTime *= m_playbackSpeed;
+
 		// Get the current sequence to check FPS
 		if ( m_animState.current_sequence >= 0 &&
 			 m_animState.current_sequence < m_model->header->numseq ) {
 
+			// Get sequence info for looping check
+			mstudioseqdesc_t* seq = (mstudioseqdesc_t*)((uint8_t*)m_model->header +
+			                         m_model->header->seqindex) + m_animState.current_sequence;
+			int frameCount = seq->numframes;
+
 			// Update animation frame (arg order: state, delta_time, header, data, seqgroups)
 			mdl_animation_update( &m_animState, deltaTime, m_model->header, m_model->data, m_model->seqgroups );
+
+			// Handle looping - if animation reached end and looping is disabled, stop
+			if ( !m_animationLooping && m_animState.current_frame >= frameCount - 1 ) {
+				m_animState.current_frame = (float)( frameCount - 1 );
+				m_animationPlaying = false;
+				emit animationPlayStateChanged( false );
+			}
 
 			// Sync animation state to render instance for bone calculation
 			if ( m_renderInstance ) {
@@ -1142,6 +1159,364 @@ QString ModelViewport::getSequenceName( int index ) const {
 	return QString::fromLatin1( sequences[index].label );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Extended Model Info Getters for Inspector Panels
+// ═══════════════════════════════════════════════════════════════════════════
+
+int ModelViewport::getMDLVersion() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->version;
+}
+
+int ModelViewport::getModelFlags() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->flags;
+}
+
+int ModelViewport::getControllerCount() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->numbonecontrollers;
+}
+
+int ModelViewport::getSeqGroupCount() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->numseqgroups;
+}
+
+int ModelViewport::getAttachmentCount() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->numattachments;
+}
+
+QString ModelViewport::getAttachmentName( int index ) const {
+	if ( !m_model || !m_model->header ) return QString();
+	if ( index < 0 || index >= m_model->header->numattachments ) return QString();
+
+	mstudioattachment_t *attachment = (mstudioattachment_t *)( (uint8_t *)m_model->header +
+	                                                           m_model->header->attachmentindex ) +
+	                                  index;
+	return QString::fromLatin1( attachment->name, strnlen( attachment->name, 32 ) );
+}
+
+int ModelViewport::getAttachmentBone( int index ) const {
+	if ( !m_model || !m_model->header ) return -1;
+	if ( index < 0 || index >= m_model->header->numattachments ) return -1;
+
+	mstudioattachment_t *attachment = (mstudioattachment_t *)( (uint8_t *)m_model->header +
+	                                                           m_model->header->attachmentindex ) +
+	                                  index;
+	return attachment->bone;
+}
+
+int ModelViewport::getAttachmentType( int index ) const {
+	if ( !m_model || !m_model->header ) return 0;
+	if ( index < 0 || index >= m_model->header->numattachments ) return 0;
+
+	mstudioattachment_t *attachment = (mstudioattachment_t *)( (uint8_t *)m_model->header +
+	                                                           m_model->header->attachmentindex ) +
+	                                  index;
+	return attachment->type;
+}
+
+void ModelViewport::getAttachmentPosition( int index, float &x, float &y, float &z ) const {
+	x = y = z = 0.0f;
+	if ( !m_model || !m_model->header ) return;
+	if ( index < 0 || index >= m_model->header->numattachments ) return;
+
+	mstudioattachment_t *attachment = (mstudioattachment_t *)( (uint8_t *)m_model->header +
+	                                                           m_model->header->attachmentindex ) +
+	                                  index;
+	x = attachment->org[0];
+	y = attachment->org[1];
+	z = attachment->org[2];
+}
+
+int ModelViewport::getHitboxCount() const {
+	if ( !m_model || !m_model->header ) return 0;
+	return m_model->header->numhitboxes;
+}
+
+void ModelViewport::getEyePosition( float &x, float &y, float &z ) const {
+	if ( !m_model || !m_model->header ) {
+		x = y = z = 0.0f;
+		return;
+	}
+	x = m_model->header->eyeposition[0];
+	y = m_model->header->eyeposition[1];
+	z = m_model->header->eyeposition[2];
+}
+
+void ModelViewport::getBoundingBox( float bbmin[3], float bbmax[3] ) const {
+	if ( !m_model || !m_model->header ) {
+		bbmin[0] = bbmin[1] = bbmin[2] = 0.0f;
+		bbmax[0] = bbmax[1] = bbmax[2] = 0.0f;
+		return;
+	}
+	bbmin[0] = m_model->header->bbmin[0];
+	bbmin[1] = m_model->header->bbmin[1];
+	bbmin[2] = m_model->header->bbmin[2];
+	bbmax[0] = m_model->header->bbmax[0];
+	bbmax[1] = m_model->header->bbmax[1];
+	bbmax[2] = m_model->header->bbmax[2];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Animation Control for Sequences Panel
+// ═══════════════════════════════════════════════════════════════════════════
+
+void ModelViewport::setPlaybackSpeed( float multiplier ) {
+	m_playbackSpeed = qBound( 0.1f, multiplier, 3.0f );
+}
+
+float ModelViewport::getPlaybackSpeed() const {
+	return m_playbackSpeed;
+}
+
+void ModelViewport::setAnimationLooping( bool loop ) {
+	m_animationLooping = loop;
+}
+
+bool ModelViewport::isAnimationLooping() const {
+	return m_animationLooping;
+}
+
+int ModelViewport::getSequenceFrameCount( int seqIndex ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return 0;
+	if ( seqIndex < 0 || seqIndex >= m_model->header->numseq ) return 0;
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( m_model->data + m_model->header->seqindex );
+	return sequences[seqIndex].numframes;
+}
+
+float ModelViewport::getSequenceFPS( int seqIndex ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return 0.0f;
+	if ( seqIndex < 0 || seqIndex >= m_model->header->numseq ) return 0.0f;
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( m_model->data + m_model->header->seqindex );
+	return sequences[seqIndex].fps;
+}
+
+QString ModelViewport::getSequenceActivityName( int seqIndex ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return QString();
+	if ( seqIndex < 0 || seqIndex >= m_model->header->numseq ) return QString();
+
+	mstudioseqdesc_t *sequences = (mstudioseqdesc_t *)( m_model->data + m_model->header->seqindex );
+	int activity = sequences[seqIndex].activity;
+
+	// Return activity number for now - could map to names later
+	if ( activity > 0 ) {
+		return QString( "ACT_%1" ).arg( activity );
+	}
+	return QString();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Texture Info for Textures Panel
+// ═══════════════════════════════════════════════════════════════════════════
+
+QImage ModelViewport::getTextureImage( int index ) const {
+	if ( !m_model ) return QImage();
+
+	// Determine which header to use (main or texture model)
+	studiohdr_t *texHdr = m_model->texture_header ? m_model->texture_header : m_model->header;
+	unsigned char *texData = m_model->texture_data ? m_model->texture_data : m_model->data;
+
+	if ( !texHdr || !texData ) return QImage();
+	if ( index < 0 || index >= texHdr->numtextures ) return QImage();
+
+	mstudiotexture_t *textures = (mstudiotexture_t *)( texData + texHdr->textureindex );
+	mstudiotexture_t *tex = &textures[index];
+
+	// Get pixel data and palette
+	const uint8_t *pixels = texData + tex->index;
+	const uint8_t *palette = pixels + ( tex->width * tex->height );
+
+	// Create QImage
+	QImage img( tex->width, tex->height, QImage::Format_RGB888 );
+	for ( int y = 0; y < tex->height; ++y ) {
+		for ( int x = 0; x < tex->width; ++x ) {
+			int idx = pixels[y * tex->width + x];
+			img.setPixel( x, y, qRgb( palette[idx * 3], palette[idx * 3 + 1], palette[idx * 3 + 2] ) );
+		}
+	}
+
+	return img;
+}
+
+QString ModelViewport::getTextureName( int index ) const {
+	if ( !m_model ) return QString();
+
+	studiohdr_t *texHdr = m_model->texture_header ? m_model->texture_header : m_model->header;
+	unsigned char *texData = m_model->texture_data ? m_model->texture_data : m_model->data;
+
+	if ( !texHdr || !texData ) return QString();
+	if ( index < 0 || index >= texHdr->numtextures ) return QString();
+
+	mstudiotexture_t *textures = (mstudiotexture_t *)( texData + texHdr->textureindex );
+	return QString::fromLatin1( textures[index].name );
+}
+
+void ModelViewport::getTextureDimensions( int index, int &w, int &h ) const {
+	w = h = 0;
+	if ( !m_model ) return;
+
+	studiohdr_t *texHdr = m_model->texture_header ? m_model->texture_header : m_model->header;
+	unsigned char *texData = m_model->texture_data ? m_model->texture_data : m_model->data;
+
+	if ( !texHdr || !texData ) return;
+	if ( index < 0 || index >= texHdr->numtextures ) return;
+
+	mstudiotexture_t *textures = (mstudiotexture_t *)( texData + texHdr->textureindex );
+	w = textures[index].width;
+	h = textures[index].height;
+}
+
+int ModelViewport::getTextureFlags( int index ) const {
+	if ( !m_model ) return 0;
+
+	studiohdr_t *texHdr = m_model->texture_header ? m_model->texture_header : m_model->header;
+	unsigned char *texData = m_model->texture_data ? m_model->texture_data : m_model->data;
+
+	if ( !texHdr || !texData ) return 0;
+	if ( index < 0 || index >= texHdr->numtextures ) return 0;
+
+	mstudiotexture_t *textures = (mstudiotexture_t *)( texData + texHdr->textureindex );
+	return textures[index].flags;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Bodypart Info for Bodyparts Panel
+// ═══════════════════════════════════════════════════════════════════════════
+
+QString ModelViewport::getBodypartName( int bpIndex ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return QString();
+	if ( bpIndex < 0 || bpIndex >= m_model->header->numbodyparts ) return QString();
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( m_model->data + m_model->header->bodypartindex );
+	return QString::fromLatin1( bodyparts[bpIndex].name );
+}
+
+int ModelViewport::getSubmodelCount( int bpIndex ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return 0;
+	if ( bpIndex < 0 || bpIndex >= m_model->header->numbodyparts ) return 0;
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( m_model->data + m_model->header->bodypartindex );
+	return bodyparts[bpIndex].nummodels;
+}
+
+QString ModelViewport::getSubmodelName( int bpIndex, int subIndex ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return QString();
+	if ( bpIndex < 0 || bpIndex >= m_model->header->numbodyparts ) return QString();
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( m_model->data + m_model->header->bodypartindex );
+	if ( subIndex < 0 || subIndex >= bodyparts[bpIndex].nummodels ) return QString();
+
+	mstudiomodel_t *models = (mstudiomodel_t *)( m_model->data + bodyparts[bpIndex].modelindex );
+	return QString::fromLatin1( models[subIndex].name );
+}
+
+int ModelViewport::getSubmodelVertexCount( int bpIndex, int subIndex ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return 0;
+	if ( bpIndex < 0 || bpIndex >= m_model->header->numbodyparts ) return 0;
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( m_model->data + m_model->header->bodypartindex );
+	if ( subIndex < 0 || subIndex >= bodyparts[bpIndex].nummodels ) return 0;
+
+	mstudiomodel_t *models = (mstudiomodel_t *)( m_model->data + bodyparts[bpIndex].modelindex );
+	return models[subIndex].numverts;
+}
+
+void ModelViewport::setBodypart( int bpIndex, int subIndex ) {
+	if ( !m_model || !m_model->header ) return;
+	if ( bpIndex < 0 || bpIndex >= m_model->header->numbodyparts ) return;
+
+	// Ensure the bodypart manager knows about this model
+	bodypart_set_model( m_model->header, m_model->data );
+
+	// Set the submodel for this bodypart using the C backend
+	bodypart_set_submodel( bpIndex, subIndex );
+
+	// Rebuild render data for the Qt instance with new bodypart selection
+	if ( m_renderInstance ) {
+		r_qt_rebuild_mesh_data( m_renderInstance );
+	}
+
+	update();
+}
+
+int ModelViewport::getActiveSubmodel( int bpIndex ) const {
+	if ( !m_model || !m_model->header ) return 0;
+	if ( bpIndex < 0 || bpIndex >= m_model->header->numbodyparts ) return 0;
+
+	// Get from bodypart manager
+	return bodypart_get_model_index( bpIndex );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Bone Info for Bones Panel
+// ═══════════════════════════════════════════════════════════════════════════
+
+QString ModelViewport::getBoneName( int index ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return QString();
+	if ( index < 0 || index >= m_model->header->numbones ) return QString();
+
+	mstudiobone_t *bones = (mstudiobone_t *)( m_model->data + m_model->header->boneindex );
+	return QString::fromLatin1( bones[index].name );
+}
+
+int ModelViewport::getBoneParent( int index ) const {
+	if ( !m_model || !m_model->header || !m_model->data ) return -1;
+	if ( index < 0 || index >= m_model->header->numbones ) return -1;
+
+	mstudiobone_t *bones = (mstudiobone_t *)( m_model->data + m_model->header->boneindex );
+	return bones[index].parent;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Skin Family Control
+// ═══════════════════════════════════════════════════════════════════════════
+
+void ModelViewport::setSkinFamily( int family ) {
+	if ( !m_model || !m_model->header ) return;
+
+	int numSkins = m_model->header->numskinfamilies;
+	if ( numSkins <= 0 ) numSkins = 1;
+
+	m_currentSkinFamily = qBound( 0, family, numSkins - 1 );
+	update();
+}
+
+void ModelViewport::nextSkinFamily() {
+	if ( !m_model || !m_model->header ) return;
+
+	int numSkins = m_model->header->numskinfamilies;
+	if ( numSkins <= 0 ) numSkins = 1;
+
+	m_currentSkinFamily = ( m_currentSkinFamily + 1 ) % numSkins;
+	update();
+}
+
+void ModelViewport::prevSkinFamily() {
+	if ( !m_model || !m_model->header ) return;
+
+	int numSkins = m_model->header->numskinfamilies;
+	if ( numSkins <= 0 ) numSkins = 1;
+
+	m_currentSkinFamily = ( m_currentSkinFamily - 1 + numSkins ) % numSkins;
+	update();
+}
+
+int ModelViewport::getCurrentSkinFamily() const {
+	return m_currentSkinFamily;
+}
+
+int ModelViewport::getNumSkinFamilies() const {
+	if ( !m_model || !m_model->header ) return 1;
+
+	int numSkins = m_model->header->numskinfamilies;
+	return numSkins > 0 ? numSkins : 1;
+}
+
 void ModelViewport::resetCamera() {
 	m_cameraPitch = 0.33f;
 	m_cameraYaw = 0.0f;
@@ -1344,5 +1719,10 @@ void ModelViewport::setShowBones( bool show ) {
 
 void ModelViewport::setShowHitboxes( bool show ) {
 	m_showHitboxes = show;
+	update();
+}
+
+void ModelViewport::setShowAttachments( bool show ) {
+	m_showAttachments = show;
 	update();
 }

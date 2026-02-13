@@ -266,3 +266,26 @@ bool bodypart_should_render_model( int bodypart_index, int model_index ) {
 	int selected_model = bodypart_get_model_index( bodypart_index );
 	return ( model_index == selected_model );
 }
+
+void bodypart_set_submodel( int bodypart_index, int submodel_index ) {
+	if ( !g_header || !g_data )
+		return;
+	if ( bodypart_index < 0 || bodypart_index >= g_header->numbodyparts )
+		return;
+
+	mstudiobodyparts_t *bodyparts = (mstudiobodyparts_t *)( g_data + g_header->bodypartindex );
+	mstudiobodyparts_t *bp = &bodyparts[bodypart_index];
+
+	// Clamp submodel index to valid range
+	if ( submodel_index < 0 )
+		submodel_index = 0;
+	if ( submodel_index >= bp->nummodels )
+		submodel_index = bp->nummodels - 1;
+
+	// Get current model index for this bodypart
+	int current = bodypart_get_model_index( bodypart_index );
+
+	// Calculate new bodygroup value
+	g_bodypart_state.bodygroup = ( g_bodypart_state.bodygroup - ( current * bp->base ) ) + ( submodel_index * bp->base );
+	g_bodypart_state.submodel_indices[bodypart_index] = submodel_index;
+}

@@ -32,6 +32,7 @@
 #include <QFocusEvent>
 #include <QSet>
 #include <QElapsedTimer>
+#include <QImage>
 #include <QtCore/qobject.h>
 #include <QtCore/qtmetamacros.h>
 #include <QtCore/qtypes.h>
@@ -96,6 +97,16 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void setShowAxes( bool show );
 	void setShowBones( bool show );
 	void setShowHitboxes( bool show );
+	void setShowAttachments( bool show );
+
+	// Getters for rendering toggles
+	bool isWireframeMode() const { return m_wireframeMode; }
+	bool isShowGrid() const { return m_showGrid; }
+	bool isShowGround() const { return m_showGround; }
+	bool isShowAxes() const { return m_showAxes; }
+	bool isShowBones() const { return m_showBones; }
+	bool isShowHitboxes() const { return m_showHitboxes; }
+	bool isShowAttachments() const { return m_showAttachments; }
 
 	// @Note: Camera control - uses C backend r_camera API
 	void resetCamera();
@@ -125,6 +136,47 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	int getTextureCount() const;
 	int getBodypartCount() const;
 	QString getSequenceName( int index ) const;
+
+	// @Note: Extended model info getters for Inspector panels
+	int getMDLVersion() const;
+	int getModelFlags() const;
+	int getControllerCount() const;
+	int getSeqGroupCount() const;
+	int getAttachmentCount() const;
+	QString getAttachmentName( int index ) const;
+	int getAttachmentBone( int index ) const;
+	int getAttachmentType( int index ) const;
+	void getAttachmentPosition( int index, float &x, float &y, float &z ) const;
+	int getHitboxCount() const;
+	void getEyePosition( float &x, float &y, float &z ) const;
+	void getBoundingBox( float bbmin[3], float bbmax[3] ) const;
+
+	// @Note: Animation control for Sequences panel
+	void setPlaybackSpeed( float multiplier );
+	float getPlaybackSpeed() const;
+	void setAnimationLooping( bool loop );
+	bool isAnimationLooping() const;
+	int getSequenceFrameCount( int seqIndex ) const;
+	float getSequenceFPS( int seqIndex ) const;
+	QString getSequenceActivityName( int seqIndex ) const;
+
+	// @Note: Texture info for Textures panel
+	QImage getTextureImage( int index ) const;
+	QString getTextureName( int index ) const;
+	void getTextureDimensions( int index, int &w, int &h ) const;
+	int getTextureFlags( int index ) const;
+
+	// @Note: Bodypart info for Bodyparts panel
+	QString getBodypartName( int bpIndex ) const;
+	int getSubmodelCount( int bpIndex ) const;
+	QString getSubmodelName( int bpIndex, int subIndex ) const;
+	int getSubmodelVertexCount( int bpIndex, int subIndex ) const;
+	void setBodypart( int bpIndex, int subIndex );
+	int getActiveSubmodel( int bpIndex ) const;
+
+	// @Note: Bone info for Bones panel
+	QString getBoneName( int index ) const;
+	int getBoneParent( int index ) const;
 
 	// @Note: Status bar integration
 	void setStatusBar( StatusBarWidget *statusBar );
@@ -180,6 +232,8 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	// @Note: Animatons same thing, C backend manages them all
 	mdl_animation_state_t m_animState;
 	bool m_animationPlaying;
+	bool m_animationLooping;
+	float m_playbackSpeed;
 	QTimer *m_animationTimer;
 
 	// @Note: Camera state
@@ -227,6 +281,7 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	bool m_wireframeMode;
 	bool m_showBones;
 	bool m_showHitboxes;
+	bool m_showAttachments;
 
 	// Skin family selection
 	int m_currentSkinFamily;
@@ -251,6 +306,12 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void setupProjectionMatrix( int width, int height );
 	void renderScene();
 	void updateCameraMovement( float deltaTime );
+
+	// Overlay rendering helpers
+	void renderBoneSkeleton();
+	void renderHitboxes();
+	void renderAttachmentPoints();
+	void drawWireframeBox( const float boneMatrix[3][4], const float bbmin[3], const float bbmax[3] );
 
 	// Gizmo helpers
 	void  buildRayFromMouse( int mx, int my, float origin[3], float dir[3] ) const;

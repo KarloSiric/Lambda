@@ -143,6 +143,7 @@ void r_compass_cleanup( void )
 void r_compass_draw( mat4 view, int vpWidth, int vpHeight )
 {
     if ( !s_shader || !s_vao ) return;
+    ( void )vpHeight;   /* y is fixed at MARGIN from the GL bottom edge */
 
     /* ── Compass viewport: 90×90 px, bottom-right corner, 12 px margin ── */
     const int SIZE   = 90;

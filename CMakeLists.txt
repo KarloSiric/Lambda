@@ -450,6 +450,15 @@ if(Qt6_FOUND)
         src/editor/widgets/LogWidget.cpp
         src/editor/bridge/ConsoleBridge.cpp
         src/editor/bridge/LoggerBridge.cpp
+        src/editor/panels/InspectorPanel.cpp
+        src/editor/panels/BrowserPanel.cpp
+        src/editor/panels/ModelInfoPanel.cpp
+        src/editor/panels/SequencesPanel.cpp
+        src/editor/panels/TexturesPanel.cpp
+        src/editor/panels/BodypartsPanel.cpp
+        src/editor/panels/BonesPanel.cpp
+        src/editor/panels/ModelDisplayPanel.cpp
+        src/editor/panels/AttachmentsPanel.cpp
 
     )
 
@@ -464,6 +473,15 @@ if(Qt6_FOUND)
         src/editor/widgets/LogWidget.h
         src/editor/bridge/ConsoleBridge.h
         src/editor/bridge/LoggerBridge.h
+        src/editor/panels/InspectorPanel.h
+        src/editor/panels/BrowserPanel.h
+        src/editor/panels/ModelInfoPanel.h
+        src/editor/panels/SequencesPanel.h
+        src/editor/panels/TexturesPanel.h
+        src/editor/panels/BodypartsPanel.h
+        src/editor/panels/BonesPanel.h
+        src/editor/panels/ModelDisplayPanel.h
+        src/editor/panels/AttachmentsPanel.h
     )
 
     #

@@ -1852,8 +1852,8 @@ static void r_qt_process_model(r_qt_instance_t *inst) {
 		mstudiobodyparts_t *bpRec = &bodyparts[bp];
 		mstudiomodel_t *models = (mstudiomodel_t *)(inst->data + bpRec->modelindex);
 
-		// Get first model of this bodypart (Qt doesn't support bodypart selection yet)
-		int selected_model_index = 0;
+		// Get selected model for this bodypart from bodypart manager
+		int selected_model_index = bodypart_get_model_index(bp);
 
 		if (selected_model_index < 0 || selected_model_index >= bpRec->nummodels) {
 			selected_model_index = 0;
@@ -2220,4 +2220,14 @@ void r_qt_set_animation_state( r_qt_instance_t *inst, const mdl_animation_state_
 void r_qt_set_animation_enabled( r_qt_instance_t *inst, bool enabled ) {
 	if ( !inst ) return;
 	inst->animation_enabled = enabled;
+}
+
+void r_qt_rebuild_mesh_data( r_qt_instance_t *inst ) {
+	if ( !inst || !inst->header || !inst->data ) return;
+
+	// Mark as needing reprocessing - the mesh data will be rebuilt
+	// next frame when r_qt_process_model is called
+	inst->model_processed = false;
+	inst->total_render_vertices = 0;
+	inst->num_ranges = 0;
 }

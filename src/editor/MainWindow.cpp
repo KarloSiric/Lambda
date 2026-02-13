@@ -30,6 +30,16 @@
 #include "ConsoleBridge.h"
 #include "LoggerBridge.h"
 #include "util_console.h"
+
+// Inspector panels
+#include "../panels/BrowserPanel.h"
+#include "../panels/ModelInfoPanel.h"
+#include "../panels/SequencesPanel.h"
+#include "../panels/TexturesPanel.h"
+#include "../panels/BodypartsPanel.h"
+#include "../panels/BonesPanel.h"
+#include "../panels/ModelDisplayPanel.h"
+#include "../panels/AttachmentsPanel.h"
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
@@ -187,28 +197,46 @@ void MainWindow::createViewportContainer() {
 }
 
 void MainWindow::createDocks() {
-	// @Note: Adding the right panel, this is teh main inspector panel, loads anything
-	//        from tree view of the proejct/.pak, to sequences, animations, model info, model
-	//        and so forth. It has to be broken into multiple different panels
+	// @Note: Adding the right panel, this is the main inspector panel with tabs for:
+	//        Browser, Model Info, Sequences, Textures, Bodyparts, Bones
 
 	rightDock = new QDockWidget( "Inspector", this );
 	rightDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
 
-	QWidget *inspectorPanel = new QWidget( this );
-	// TODO: Here we can add more panels they will all be active and necessary
-	//       Will decide going on how and what is necessary to add
+	// Create tab widget for inspector panels
+	m_inspectorTabs = new QTabWidget( this );
+	m_inspectorTabs->setDocumentMode( false ); // Classic tabs
+	m_inspectorTabs->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
+	m_inspectorTabs->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
 
-	QVBoxLayout *inspLayout = new QVBoxLayout( inspectorPanel );
+	// Create all inspector panels
+	m_browserPanel = new BrowserPanel( this );
+	m_modelInfoPanel = new ModelInfoPanel( this );
+	m_sequencesPanel = new SequencesPanel( this );
+	m_texturesPanel = new TexturesPanel( this );
+	m_bodypartsPanel = new BodypartsPanel( this );
+	m_bonesPanel = new BonesPanel( this );
+	m_modelDisplayPanel = new ModelDisplayPanel( this );
+	m_attachmentsPanel = new AttachmentsPanel( this );
 
-	inspLayout->addWidget( new QLabel( "Inspector Panel Placeholder, will fill more panels", inspectorPanel ) );
-	inspectorPanel->setLayout( inspLayout );
-	inspectorPanel->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
-	inspectorPanel->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
+	// Add panels as tabs
+	m_inspectorTabs->addTab( m_browserPanel, "Browser" );
+	m_inspectorTabs->addTab( m_modelInfoPanel, "Model" );
+	m_inspectorTabs->addTab( m_sequencesPanel, "Sequences" );
+	m_inspectorTabs->addTab( m_texturesPanel, "Textures" );
+	m_inspectorTabs->addTab( m_bodypartsPanel, "Bodyparts" );
+	m_inspectorTabs->addTab( m_bonesPanel, "Bones" );
+	m_inspectorTabs->addTab( m_attachmentsPanel, "Attach" );
+	m_inspectorTabs->addTab( m_modelDisplayPanel, "Display" );
+
+	// Connect browser panel's model selection signal
+	connect( m_browserPanel, &BrowserPanel::modelFileSelected,
+	         this, &MainWindow::onBrowserModelSelected );
 
 	// Apply classic inspector panel styling
-	inspectorPanel->setStyleSheet( ThemeManager::getClassicInspectorStyle() );
+	m_inspectorTabs->setStyleSheet( ThemeManager::getClassicInspectorStyle() );
 
-	rightDock->setWidget( inspectorPanel );
+	rightDock->setWidget( m_inspectorTabs );
 	addDockWidget( Qt::RightDockWidgetArea, rightDock );
 
 	// @Note: Adding now the bottom panel dock, main console for logger messages and so forth
@@ -552,6 +580,9 @@ void MainWindow::onTabChanged( int index ) {
 
 	// Update sequence selector for the new tab's model
 	updateSequenceList( viewport );
+
+	// Update inspector panels for the new viewport
+	updateInspector( viewport );
 
 	if ( viewport->hasModelLoaded() ) {
 		viewport->update();
@@ -952,5 +983,61 @@ void MainWindow::onBackgroundColor() {
 	if ( color.isValid() ) {
 		log_info( "View", "Background color changed to: %s", color.name().toUtf8().constData() );
 		// TODO: Apply to viewport - need to add setBackgroundColor method
+	}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Inspector Panel Management
+// ═══════════════════════════════════════════════════════════════════════════
+
+void MainWindow::updateInspector( ModelViewport *viewport ) {
+	// Update all inspector panels with the current viewport
+	// Browser panel is independent and doesn't need viewport updates
+
+	m_modelInfoPanel->setViewport( viewport );
+	m_sequencesPanel->setViewport( viewport );
+	m_texturesPanel->setViewport( viewport );
+	m_bodypartsPanel->setViewport( viewport );
+	m_bonesPanel->setViewport( viewport );
+	m_modelDisplayPanel->setViewport( viewport );
+	m_attachmentsPanel->setViewport( viewport );
+}
+
+void MainWindow::onBrowserModelSelected( const QString &path ) {
+	// Load the selected model in the current viewport tab
+	ModelViewport *viewport = getCurrentViewport();
+	if ( viewport ) {
+		if ( viewport->loadModel( path ) ) {
+			// Update tab title with model name
+			int index = tabWidget->currentIndex();
+			QFileInfo fileInfo( path );
+			tabWidget->setTabText( index, fileInfo.fileName() );
+
+			// Store model info for status bar
+			TabModelInfo info;
+			info.filePath = path;
+			info.fileSize = fileInfo.size();
+			info.vertexCount = viewport->getVertexCount();
+			info.triangleCount = viewport->getTriangleCount();
+			info.boneCount = viewport->getBoneCount();
+			info.sequenceCount = viewport->getSequenceCount();
+			info.textureCount = viewport->getTextureCount();
+			m_tabModelInfo[index] = info;
+
+			// Update status bar
+			m_statusBar->setModelInfo( path, info.vertexCount, info.triangleCount,
+			                           info.boneCount, info.sequenceCount, info.textureCount );
+			m_statusBar->setFileSize( info.fileSize );
+
+			// Update sequence list
+			updateSequenceList( viewport );
+
+			// Update inspector panels
+			updateInspector( viewport );
+
+			log_info( "Browser", "Loaded model: %s", path.toUtf8().constData() );
+		} else {
+			log_error( "Browser", "Failed to load model: %s", path.toUtf8().constData() );
+		}
 	}
 }
