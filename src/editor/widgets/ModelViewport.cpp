@@ -464,31 +464,25 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 		m_cameraTarget[1] += up[1] * delta.y() * panSpeed;
 
 	} else if ( m_activeButton == Qt::RightButton ) {
-		// MODEL TRANSLATE MODE: Right-click drag moves the model itself in the scene
-		// Speed scales with camera distance (same principle as pan)
+		// MODEL TRANSLATE MODE: Right-click drag moves the model in screen space.
+		// Drag left/right  → model moves along camera right vector (screen horizontal).
+		// Drag up/down     → model moves along world Y (screen vertical).
+		// No modifier key needed — all axes are always available.
 		float moveSpeed = m_cameraDistance * 0.0003f;
 
-		// Camera-relative axes
-		math_vec3_t right;
-		right[0] = cosf( m_cameraYaw );
-		right[1] = 0.0f;
-		right[2] = -sinf( m_cameraYaw );
+		// Camera right vector (horizontal, screen-aligned)
+		math_vec3_t camRight;
+		camRight[0] = cosf( m_cameraYaw );
+		camRight[1] = 0.0f;
+		camRight[2] = -sinf( m_cameraYaw );
 
-		math_vec3_t fwd;
-		fwd[0] = sinf( m_cameraYaw );
-		fwd[1] = 0.0f;
-		fwd[2] = cosf( m_cameraYaw );
+		// Horizontal drag → move along camRight
+		m_modelOffset[0] += camRight[0] * delta.x() * moveSpeed;
+		m_modelOffset[2] += camRight[2] * delta.x() * moveSpeed;
 
-		if ( event->modifiers() & Qt::ShiftModifier ) {
-			// Shift + Right drag: translate model vertically (Y axis only)
-			m_modelOffset[1] -= delta.y() * moveSpeed;
-		} else {
-			// Right drag: translate model in XZ plane following camera orientation
-			m_modelOffset[0] += right[0] * delta.x() * moveSpeed;
-			m_modelOffset[2] += right[2] * delta.x() * moveSpeed;
-			m_modelOffset[0] -= fwd[0] * delta.y() * moveSpeed;
-			m_modelOffset[2] -= fwd[2] * delta.y() * moveSpeed;
-		}
+		// Vertical drag → move along world Y
+		// Qt Y increases downward, so negate: drag up (delta.y < 0) → offset Y increases
+		m_modelOffset[1] -= delta.y() * moveSpeed;
 	}
 
 	m_lastMousePos = currentPos;
@@ -536,7 +530,9 @@ void ModelViewport::setStatusBar( StatusBarWidget *statusBar ) {
 }
 
 void ModelViewport::enterEvent( QEnterEvent *event ) {
-	// Mouse entered viewport - timer in MainWindow will handle updates
+	// Grab keyboard focus so WASD works as soon as the mouse enters the viewport.
+	// Without this, the user would have to click first before keys register.
+	setFocus();
 	event->accept();
 }
 
@@ -638,14 +634,16 @@ void ModelViewport::updateCameraMovement( float deltaTime ) {
 	// Calculate movement distance this frame
 	float moveDistance = currentSpeed * deltaTime;
 
-	// Calculate camera forward and right vectors based on yaw
-	// Forward = direction camera is looking (horizontal plane only)
+	// Calculate camera forward and right vectors based on yaw.
+	// Camera is at target + (cos(p)*sin(yaw), sin(p), cos(p)*cos(yaw))*dist,
+	// so the true view direction (camera → target) is the negation of that offset.
+	// forward = (-sin(yaw), 0, -cos(yaw)) makes W pan INTO the scene.
 	math_vec3_t forward;
-	forward[0] = sinf( m_cameraYaw );   // X
+	forward[0] = -sinf( m_cameraYaw );  // X
 	forward[1] = 0.0f;                   // Y (no vertical in forward)
-	forward[2] = cosf( m_cameraYaw );   // Z
+	forward[2] = -cosf( m_cameraYaw );  // Z
 
-	// Right = perpendicular to forward (90 degrees clockwise)
+	// Right = cross(up, forward) → perpendicular to forward in XZ plane
 	math_vec3_t right;
 	right[0] = cosf( m_cameraYaw );     // X
 	right[1] = 0.0f;                     // Y
