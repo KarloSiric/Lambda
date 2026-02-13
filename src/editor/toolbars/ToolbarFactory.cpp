@@ -50,8 +50,7 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 	// ═══════════════════════════════════════════════════════════════════════
 	QAction *actionWireframe = toolBar->addAction( IconFactory::wireframe(), "" );
 	actionWireframe->setCheckable( true );
-	actionWireframe->setToolTip( "Wireframe (W)" );
-	actionWireframe->setShortcut( QKeySequence( "W" ) );
+	actionWireframe->setToolTip( "Wireframe" );
 
 	QAction *actionTextured = toolBar->addAction( QIcon( ":/icons/textured-icon.png" ), "" );
 	actionTextured->setCheckable( true );
@@ -76,8 +75,7 @@ void createMainToolbar( QMainWindow *mainWindow ) {
 
 	QAction *actionAttachments = toolBar->addAction( QIcon( ":/icons/draw-attachments-icon.png" ), "" );
 	actionAttachments->setCheckable( true );
-	actionAttachments->setToolTip( "Attachments (A)" );
-	actionAttachments->setShortcut( QKeySequence( "A" ) );
+	actionAttachments->setToolTip( "Attachments" );
 
 	toolBar->addSeparator();
 

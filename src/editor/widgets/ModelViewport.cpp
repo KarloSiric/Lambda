@@ -40,6 +40,7 @@
 #include <QtCore/qstringview.h>
 #include <QtCore/qtypes.h>
 #include <cmath>
+#include <cstring>
 
 
 // Static OpenGL info storage
@@ -61,6 +62,15 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_cameraDistance( 35.0f ),
 	  m_cameraTarget{ 0.0f, 0.0f, 0.0f },
 	  m_modelOffset{ 0.0f, 0.0f, 0.0f },
+	  m_modelRotationX( 0.0f ),
+	  m_modelRotationY( 0.0f ),
+	  m_modelRotationZ( 0.0f ),
+	  m_showGizmo( false ),
+	  m_gizmoHoveredAxis( -1 ),
+	  m_gizmoActiveAxis( -1 ),
+	  m_gizmoCenter{ 0.0f, 0.0f, 0.0f },
+	  m_gizmoRadius( 8.0f ),
+	  m_gizmoPrevHit{ 0.0f, 0.0f, 0.0f },
 	  m_frameCount( 0 ),
 	  m_lastFpsTime( 0 ),
 	  m_currentFps( 0.0f ),
@@ -122,17 +132,20 @@ ModelViewport::~ModelViewport() {
     
 	makeCurrent();
 
-	if ( m_model ) 
+	if ( m_model )
     {
 		free_model( m_model );
 		m_model = nullptr;
 	}
 
-	if ( m_renderInstance ) 
+	if ( m_renderInstance )
     {
 		r_qt_destroy_instance( m_renderInstance );
 		m_renderInstance = nullptr;
 	}
+
+	r_gizmo_cleanup();
+	r_compass_cleanup();
 
 	doneCurrent();
 }
@@ -171,6 +184,8 @@ void ModelViewport::initializeGL( void ) {
 	r_grid_init( 100.0f, 5.0f );
 	r_ground_init( 100.0f );
 	r_axes_init( 1000.0f );
+	r_gizmo_init();
+	r_compass_init();
 }
 
 void ModelViewport::resizeGL( int width, int height ) {
@@ -255,7 +270,17 @@ void ModelViewport::paintGL() {
 	glm_translate( T, (vec3){ 0.0f, groundOffset, 0.0f } );
 	glm_mat4_mul( T, modelMatrix, modelMatrix );
 
-	// Step 4: Apply world-space model offset (right-click drag translation)
+	// Step 4: Model rotation (all three axes, applied Ry → Rx → Rz)
+	// Applied after ground alignment so the model rotates about its own foot pivot.
+	if ( m_modelRotationX != 0.0f || m_modelRotationY != 0.0f || m_modelRotationZ != 0.0f ) {
+		mat4 R = GLM_MAT4_IDENTITY_INIT;
+		glm_rotate( R, m_modelRotationY, (vec3){ 0.0f, 1.0f, 0.0f } );
+		glm_rotate( R, m_modelRotationX, (vec3){ 1.0f, 0.0f, 0.0f } );
+		glm_rotate( R, m_modelRotationZ, (vec3){ 0.0f, 0.0f, 1.0f } );
+		glm_mat4_mul( R, modelMatrix, modelMatrix );
+	}
+
+	// Step 5: Apply world-space model offset (right-click drag translation)
 	// Applied last so it works in world space regardless of model rotation/scale
 	mat4 TOffset = GLM_MAT4_IDENTITY_INIT;
 	glm_translate( TOffset, (vec3){ m_modelOffset[0], m_modelOffset[1], m_modelOffset[2] } );
@@ -264,6 +289,42 @@ void ModelViewport::paintGL() {
 	// Render the model if loaded
 	if ( m_renderInstance && m_model && m_model->header && m_model->data ) {
 		r_qt_render_with_matrices( m_renderInstance, m_viewMatrix, m_projMatrix, modelMatrix );
+	}
+
+	// ── Rotation gizmo ───────────────────────────────────────────────────
+	// Compute and cache the gizmo centre/radius each frame so the hit-test
+	// helpers (called from mouse events) always use up-to-date values.
+	if ( m_showGizmo ) {
+		// Default gizmo radius
+		float gizmoRad = 8.0f;
+		float gizmoCenterY = 0.0f;
+
+		if ( m_model && m_model->header && m_model->data && m_model->header->numseq > 0 ) {
+			const mstudioseqdesc_t *seqs =
+				(const mstudioseqdesc_t *)( m_model->data + m_model->header->seqindex );
+			const float scale = 0.1f;
+
+			// Visual height in world units (HL Z=up → OpenGL Y)
+			float modelHeight = ( seqs[0].bbmax[2] - seqs[0].bbmin[2] ) * scale;
+			gizmoCenterY      = groundOffset + modelHeight * 0.5f;
+
+			// Bounding box extent as ring radius
+			float dx = ( seqs[0].bbmax[0] - seqs[0].bbmin[0] ) * scale;
+			float dy = ( seqs[0].bbmax[1] - seqs[0].bbmin[1] ) * scale;
+			float dz = modelHeight;
+			float extent = sqrtf( dx * dx + dy * dy + dz * dz ) * 0.5f;
+			gizmoRad = ( extent > 2.0f ) ? extent * 1.25f : 8.0f;
+		}
+
+		// Cache for mouse interaction (read in hit-test & drag helpers)
+		m_gizmoCenter[0] = m_modelOffset[0];
+		m_gizmoCenter[1] = gizmoCenterY + m_modelOffset[1];
+		m_gizmoCenter[2] = m_modelOffset[2];
+		m_gizmoRadius    = gizmoRad;
+
+		vec3 center = { m_gizmoCenter[0], m_gizmoCenter[1], m_gizmoCenter[2] };
+		r_gizmo_draw( m_viewMatrix, m_projMatrix, center, m_gizmoRadius,
+		              m_gizmoHoveredAxis, m_gizmoActiveAxis );
 	}
 
 	// @Note( Karlo ): Adding fps calculation
@@ -281,6 +342,9 @@ void ModelViewport::paintGL() {
 		m_frameCount = 0;
 		m_lastFpsTime = currentTime;
 	}
+
+	// ── Orientation compass widget (always visible, bottom-right corner) ──
+	r_compass_draw( m_viewMatrix, width(), height() );
 }
 
 void ModelViewport::onAnimationTick() {
@@ -412,20 +476,109 @@ float ModelViewport::getCurrentFps() const {
 }
 
 void ModelViewport::mousePressEvent( QMouseEvent *event ) {
-	// @Note: here we are adding button mouse support
+	// Gizmo takes priority: left-click on a ring starts rotation drag.
+	if ( m_showGizmo && event->button() == Qt::LeftButton ) {
+		int axis = gizmoHitTest( event->pos().x(), event->pos().y() );
+		if ( axis >= 0 ) {
+			m_gizmoActiveAxis = axis;
 
-	// Storing the current mouse button that is pressed
+			// Record the initial ray-plane hit so we can compute angle deltas.
+			static const float normals[3][3] = {
+				{ 1.0f, 0.0f, 0.0f },  // X ring – YZ plane
+				{ 0.0f, 1.0f, 0.0f },  // Y ring – XZ plane
+				{ 0.0f, 0.0f, 1.0f }   // Z ring – XY plane
+			};
+			float origin[3], dir[3];
+			buildRayFromMouse( event->pos().x(), event->pos().y(), origin, dir );
+			rayPlaneIntersect( origin, dir, normals[axis], m_gizmoCenter, m_gizmoPrevHit );
+
+			m_lastMousePos = event->pos();
+			event->accept();
+			return;  // Gizmo consumed this press
+		}
+	}
+
+	// Normal camera / model-transform controls
 	m_activeButton = event->button();
-
-	// Storing the last mouse position
 	m_lastMousePos = event->pos();
 
 	event->accept();
 }
 
 void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
-	// Get current mouse position and calculate delta
 	QPoint currentPos = event->pos();
+
+	// ── Gizmo: active drag ────────────────────────────────────────────────
+	if ( m_gizmoActiveAxis >= 0 ) {
+		static const float normals[3][3] = {
+			{ 1.0f, 0.0f, 0.0f },  // X ring – YZ plane
+			{ 0.0f, 1.0f, 0.0f },  // Y ring – XZ plane
+			{ 0.0f, 0.0f, 1.0f }   // Z ring – XY plane
+		};
+
+		float origin[3], dir[3];
+		buildRayFromMouse( currentPos.x(), currentPos.y(), origin, dir );
+
+		float hit[3];
+		if ( rayPlaneIntersect( origin, dir, normals[m_gizmoActiveAxis],
+		                        m_gizmoCenter, hit ) ) {
+			// Vectors from gizmo centre to previous and current hit
+			float pv[3] = { m_gizmoPrevHit[0] - m_gizmoCenter[0],
+			                m_gizmoPrevHit[1] - m_gizmoCenter[1],
+			                m_gizmoPrevHit[2] - m_gizmoCenter[2] };
+			float cv[3] = { hit[0] - m_gizmoCenter[0],
+			                hit[1] - m_gizmoCenter[1],
+			                hit[2] - m_gizmoCenter[2] };
+
+			float prevAngle = 0.0f, currAngle = 0.0f;
+			switch ( m_gizmoActiveAxis ) {
+			case 0:  // X ring (YZ plane): atan2(z, y)
+				prevAngle = atan2f( pv[2], pv[1] );
+				currAngle = atan2f( cv[2], cv[1] );
+				break;
+			case 1:  // Y ring (XZ plane): atan2(x, z)
+				prevAngle = atan2f( pv[0], pv[2] );
+				currAngle = atan2f( cv[0], cv[2] );
+				break;
+			case 2:  // Z ring (XY plane): atan2(y, x)
+				prevAngle = atan2f( pv[1], pv[0] );
+				currAngle = atan2f( cv[1], cv[0] );
+				break;
+			}
+
+			float delta = currAngle - prevAngle;
+			// Wrap to [-π, π] to avoid sign flip at the atan2 discontinuity
+			while ( delta >  (float)M_PI ) delta -= 2.0f * (float)M_PI;
+			while ( delta < -(float)M_PI ) delta += 2.0f * (float)M_PI;
+
+			switch ( m_gizmoActiveAxis ) {
+			case 0: m_modelRotationX += delta; break;
+			case 1: m_modelRotationY += delta; break;
+			case 2: m_modelRotationZ += delta; break;
+			}
+
+			m_gizmoPrevHit[0] = hit[0];
+			m_gizmoPrevHit[1] = hit[1];
+			m_gizmoPrevHit[2] = hit[2];
+
+			update();
+		}
+
+		m_lastMousePos = currentPos;
+		event->accept();
+		return;
+	}
+
+	// ── Gizmo: hover detection (no button held) ───────────────────────────
+	if ( m_showGizmo && m_activeButton == Qt::NoButton ) {
+		int hovered = gizmoHitTest( currentPos.x(), currentPos.y() );
+		if ( hovered != m_gizmoHoveredAxis ) {
+			m_gizmoHoveredAxis = hovered;
+			update();
+		}
+	}
+
+	// Get delta for camera / model controls
 	QPoint delta = currentPos - m_lastMousePos;
 
 	// HLAM-style controls: Left+Shift OR Middle button = PAN, Left alone = ORBIT
@@ -433,7 +586,7 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 
 	if ( m_activeButton == Qt::LeftButton && !isPanning ) {
 		// ORBIT MODE: Rotate camera around target (Left button without Shift)
-		float sensitivity = 0.005f;
+		float sensitivity = 0.003f;
 
 		m_cameraYaw += delta.x() * sensitivity;
 		m_cameraPitch -= delta.y() * sensitivity;
@@ -464,25 +617,41 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 		m_cameraTarget[1] += up[1] * delta.y() * panSpeed;
 
 	} else if ( m_activeButton == Qt::RightButton ) {
-		// MODEL TRANSLATE MODE: Right-click drag moves the model in screen space.
-		// Drag left/right  → model moves along camera right vector (screen horizontal).
-		// Drag up/down     → model moves along world Y (screen vertical).
-		// No modifier key needed — all axes are always available.
-		float moveSpeed = m_cameraDistance * 0.0003f;
+		// MODEL TRANSFORM MODE: Right-click drag manipulates the model.
+		//   No modifier  : translate in XZ plane (camera-relative horizontal only).
+		//   Shift held   : translate on world Y axis only (up/down).
+		//   Ctrl held    : rotate model around world Y axis (left/right drag).
+		// Speed scales with camera distance for uniform visual feel at any zoom level.
+		float moveSpeed = m_cameraDistance * 0.001f;
 
-		// Camera right vector (horizontal, screen-aligned)
+		// Camera right vector (screen-horizontal, XZ plane only)
 		math_vec3_t camRight;
 		camRight[0] = cosf( m_cameraYaw );
 		camRight[1] = 0.0f;
 		camRight[2] = -sinf( m_cameraYaw );
 
-		// Horizontal drag → move along camRight
-		m_modelOffset[0] += camRight[0] * delta.x() * moveSpeed;
-		m_modelOffset[2] += camRight[2] * delta.x() * moveSpeed;
+		if ( event->modifiers() & Qt::ControlModifier ) {
+			// Ctrl + right drag: rotate model around world Y axis.
+			// Drag right = clockwise rotation when viewed from above.
+			const float rotSpeed = 0.008f;  // radians per pixel
+			m_modelRotationY += delta.x() * rotSpeed;
+		} else if ( event->modifiers() & Qt::ShiftModifier ) {
+			// Shift + right drag: Y axis translation only.
+			// Qt Y increases downward, negate so drag-up → model goes up.
+			m_modelOffset[1] -= delta.y() * moveSpeed;
+		} else {
+			// No modifier: free XZ plane translation.
+			// Horizontal drag → camera-right (XZ only).
+			// Vertical drag   → camera-forward projected onto XZ (no Y).
+			// Qt Y increases downward, so negate delta.y() so drag-up = forward.
+			math_vec3_t camForward;
+			camForward[0] = -sinf( m_cameraYaw );
+			camForward[1] = 0.0f;
+			camForward[2] = -cosf( m_cameraYaw );
 
-		// Vertical drag → move along world Y
-		// Qt Y increases downward, so negate: drag up (delta.y < 0) → offset Y increases
-		m_modelOffset[1] -= delta.y() * moveSpeed;
+			m_modelOffset[0] += ( camRight[0] * delta.x() - camForward[0] * delta.y() ) * moveSpeed;
+			m_modelOffset[2] += ( camRight[2] * delta.x() - camForward[2] * delta.y() ) * moveSpeed;
+		}
 	}
 
 	m_lastMousePos = currentPos;
@@ -493,10 +662,14 @@ void ModelViewport::mouseMoveEvent( QMouseEvent *event ) {
 }
 
 void ModelViewport::mouseReleaseEvent( QMouseEvent *event ) {
-	// We here release the button, we clear the active button that was being used/pressed
+	// If a gizmo drag was active, end it
+	if ( m_gizmoActiveAxis >= 0 ) {
+		m_gizmoActiveAxis = -1;
+		event->accept();
+		return;
+	}
 
 	m_activeButton = Qt::NoButton;
-
 	event->accept();
 }
 
@@ -556,6 +729,13 @@ void ModelViewport::keyPressEvent( QKeyEvent *event ) {
 	// Space bar: immediate toggle for animation play/pause (not a held key)
 	if ( key == Qt::Key_Space ) {
 		playAnimation( !m_animationPlaying );
+		event->accept();
+		return;
+	}
+
+	// R key: toggle rotation gizmo visibility
+	if ( key == Qt::Key_R ) {
+		setShowGizmo( !m_showGizmo );
 		event->accept();
 		return;
 	}
@@ -983,6 +1163,158 @@ void ModelViewport::getModelOffset( float &x, float &y, float &z ) const {
 	x = m_modelOffset[0];
 	y = m_modelOffset[1];
 	z = m_modelOffset[2];
+}
+
+void ModelViewport::resetModelRotation() {
+	m_modelRotationY = 0.0f;
+	update();
+}
+
+void ModelViewport::setModelRotationY( float radians ) {
+	m_modelRotationY = radians;
+	update();
+}
+
+float ModelViewport::getModelRotationY() const {
+	return m_modelRotationY;
+}
+
+void ModelViewport::setShowGizmo( bool show ) {
+	m_showGizmo = show;
+	if ( !show ) {
+		m_gizmoHoveredAxis = -1;
+		m_gizmoActiveAxis  = -1;
+	}
+	update();
+}
+
+bool ModelViewport::isGizmoVisible() const {
+	return m_showGizmo;
+}
+
+// ── Gizmo helpers ─────────────────────────────────────────────────────────
+
+/*
+ * buildRayFromMouse
+ *   Unprojects a viewport pixel into a world-space ray.
+ *   origin[] = camera world position
+ *   dir[]    = normalised ray direction
+ */
+void ModelViewport::buildRayFromMouse( int mx, int my,
+                                       float origin[3], float dir[3] ) const
+{
+	// NDC (-1..1)
+	float ndcX =  ( 2.0f * mx / (float)width()  ) - 1.0f;
+	float ndcY = -( 2.0f * my / (float)height() ) + 1.0f;
+
+	// Clip-space ray pointing into screen
+	vec4 clipRay = { ndcX, ndcY, -1.0f, 1.0f };
+
+	// Copy matrices to mutable locals (glm_mat4_inv doesn't take const)
+	mat4 proj, view;
+	memcpy( proj, m_projMatrix, sizeof( mat4 ) );
+	memcpy( view, m_viewMatrix, sizeof( mat4 ) );
+
+	// View space
+	mat4 invProj;
+	glm_mat4_inv( proj, invProj );
+	vec4 viewRay;
+	glm_mat4_mulv( invProj, clipRay, viewRay );
+	viewRay[2] = -1.0f;
+	viewRay[3] =  0.0f;  // direction, not position
+
+	// World space
+	mat4 invView;
+	glm_mat4_inv( view, invView );
+	vec4 worldRay;
+	glm_mat4_mulv( invView, viewRay, worldRay );
+
+	dir[0] = worldRay[0];
+	dir[1] = worldRay[1];
+	dir[2] = worldRay[2];
+	// Normalise
+	float len = sqrtf( dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2] );
+	if ( len > 1e-6f ) { dir[0] /= len; dir[1] /= len; dir[2] /= len; }
+
+	// Camera world position = 4th column of the inverse view matrix
+	origin[0] = invView[3][0];
+	origin[1] = invView[3][1];
+	origin[2] = invView[3][2];
+}
+
+/*
+ * rayPlaneIntersect
+ *   Returns true and fills hit[] with the intersection point if the ray
+ *   hits the plane (defined by a normal and a point on the plane).
+ *   Only positive t values (in front of the camera) are accepted.
+ */
+bool ModelViewport::rayPlaneIntersect( const float origin[3], const float dir[3],
+                                       const float planeNorm[3], const float planePoint[3],
+                                       float hit[3] ) const
+{
+	float denom = planeNorm[0]*dir[0] + planeNorm[1]*dir[1] + planeNorm[2]*dir[2];
+	if ( fabsf( denom ) < 1e-6f ) return false;  // parallel
+
+	float d = ( planeNorm[0] * ( planePoint[0] - origin[0] ) +
+	            planeNorm[1] * ( planePoint[1] - origin[1] ) +
+	            planeNorm[2] * ( planePoint[2] - origin[2] ) ) / denom;
+	if ( d < 0.0f ) return false;  // behind camera
+
+	hit[0] = origin[0] + dir[0] * d;
+	hit[1] = origin[1] + dir[1] * d;
+	hit[2] = origin[2] + dir[2] * d;
+	return true;
+}
+
+/*
+ * gizmoHitTest
+ *   Returns the axis index (0=X, 1=Y, 2=Z) of the ring under the mouse,
+ *   or -1 if none.  Uses a tolerance of ~12% of the ring radius.
+ */
+int ModelViewport::gizmoHitTest( int mx, int my ) const
+{
+	if ( !m_showGizmo ) return -1;
+
+	float origin[3], dir[3];
+	buildRayFromMouse( mx, my, origin, dir );
+
+	const float *c   = m_gizmoCenter;
+	const float  R   = m_gizmoRadius;
+	const float  tol = R * 0.12f;   // pick tolerance ≈ 12% of ring radius
+
+	// Plane normals for each ring
+	static const float normals[3][3] = {
+		{ 1.0f, 0.0f, 0.0f },   // X ring – YZ plane
+		{ 0.0f, 1.0f, 0.0f },   // Y ring – XZ plane
+		{ 0.0f, 0.0f, 1.0f }    // Z ring – XY plane
+	};
+
+	int   bestAxis = -1;
+	float bestDist = 1e9f;
+
+	for ( int axis = 0; axis < 3; ++axis ) {
+		float hit[3];
+		if ( !rayPlaneIntersect( origin, dir, normals[axis], c, hit ) ) continue;
+
+		// Distance from hit to ring centre in the ring's plane
+		float dx = hit[0] - c[0];
+		float dy = hit[1] - c[1];
+		float dz = hit[2] - c[2];
+		float dist2D = 0.0f;
+		switch ( axis ) {
+		case 0: dist2D = sqrtf( dy*dy + dz*dz ); break;   // YZ
+		case 1: dist2D = sqrtf( dx*dx + dz*dz ); break;   // XZ
+		case 2: dist2D = sqrtf( dx*dx + dy*dy ); break;   // XY
+		}
+
+		float err = fabsf( dist2D - R );
+		if ( err < tol && err < bestDist ) {
+			bestDist = err;
+			bestAxis = axis;
+		}
+	}
+
+	return bestAxis;
 }
 
 void ModelViewport::setWireframeMode( bool enabled ) {

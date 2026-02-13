@@ -49,6 +49,8 @@ extern "C" {
 #include "mdl_animations.h"
 #include "r_draw.h"
 #include "r_grid.h"
+#include "r_gizmo.h"
+#include "r_compass.h"
 #include "r_camera.h"
 #include "math_types.h"
 #include "math_matrix.h"
@@ -105,6 +107,15 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	// @Note: Model world-space translation (separate from camera pan)
 	void resetModelPosition();
 	void getModelOffset( float &x, float &y, float &z ) const;
+
+	// @Note: Model rotation (Ctrl+right-drag, or gizmo rings)
+	void resetModelRotation();
+	void setModelRotationY( float radians );
+	float getModelRotationY() const;
+
+	// @Note: Rotation gizmo toggle (R key or external call)
+	void setShowGizmo( bool show );
+	bool isGizmoVisible() const;
 
 	// @Note: Model info getters for status bar
 	int getVertexCount() const;
@@ -182,6 +193,20 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 
 	// @Note: Model world-space offset - right-click drag translates this
 	math_vec3_t m_modelOffset;
+
+	// @Note: Model rotation (all three axes)
+	// Y = spin left/right (most common), X = tilt forward/back, Z = tilt sideways
+	float m_modelRotationX;
+	float m_modelRotationY;
+	float m_modelRotationZ;
+
+	// @Note: Rotation gizmo state
+	bool  m_showGizmo;
+	int   m_gizmoHoveredAxis;   // -1=none  0=X  1=Y  2=Z
+	int   m_gizmoActiveAxis;    // -1=none  0=X  1=Y  2=Z
+	float m_gizmoCenter[3];     // world-space pivot, updated each frame
+	float m_gizmoRadius;        // ring radius, updated each frame
+	float m_gizmoPrevHit[3];    // previous ray-plane hit for delta-angle drag
     
     // Adding fps counter variables
     int m_frameCount;
@@ -226,5 +251,12 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void setupProjectionMatrix( int width, int height );
 	void renderScene();
 	void updateCameraMovement( float deltaTime );
+
+	// Gizmo helpers
+	void  buildRayFromMouse( int mx, int my, float origin[3], float dir[3] ) const;
+	int   gizmoHitTest( int mx, int my ) const;
+	bool  rayPlaneIntersect( const float origin[3], const float dir[3],
+	                         const float planeNorm[3], const float planePoint[3],
+	                         float hit[3] ) const;
 };
 #endif
