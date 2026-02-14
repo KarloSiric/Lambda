@@ -113,10 +113,11 @@ class MainWindow : public QMainWindow {
 	QDockWidget *bottomDock;
 	QTabWidget *tabWidget;
 
-	// Inspector panel tabs (two rows)
+	// Inspector panel tabs (three rows)
 	QWidget *m_inspectorContainer;
-	QTabWidget *m_inspectorTabsRow1;
-	QTabWidget *m_inspectorTabsRow2;
+	QTabWidget *m_inspectorTabsRow1;  // Model Info, Display, Animation, Textures
+	QTabWidget *m_inspectorTabsRow2;  // Bodyparts, Bones, Attachments, Lighting
+	QTabWidget *m_inspectorTabsRow3;  // Files browser
 	BrowserPanel *m_browserPanel;
 	ModelInfoPanel *m_modelInfoPanel;
 	SequencesPanel *m_sequencesPanel;

@@ -21,16 +21,15 @@ InspectorPanel::InspectorPanel( QWidget *parent )
 	m_mainLayout->setContentsMargins( 4, 4, 4, 4 );
 	m_mainLayout->setSpacing( 4 );
 
-	// Create placeholder label
+	// Create placeholder label (centered when shown)
 	m_placeholderLabel = createPlaceholder();
-	m_mainLayout->addWidget( m_placeholderLabel );
+	m_mainLayout->addWidget( m_placeholderLabel, 1 );  // stretch to fill
 
-	// Content widget will be added by subclasses
+	// Content widget will be added by subclasses - fills all available space
 	m_contentWidget = new QWidget( this );
 	m_contentWidget->hide();
-	m_mainLayout->addWidget( m_contentWidget );
-
-	m_mainLayout->addStretch();
+	m_contentWidget->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+	m_mainLayout->addWidget( m_contentWidget, 1 );  // stretch factor 1 to fill space
 }
 
 void InspectorPanel::setViewport( ModelViewport *viewport ) {

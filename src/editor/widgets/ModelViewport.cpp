@@ -997,9 +997,14 @@ bool ModelViewport::loadModel( const QString &modelPath ) {
 		}
 	}
 
-	// NOTE: Camera does NOT auto-adjust on model load
-	// Camera stays at its default position, model appears at origin
-	// User can manually adjust camera with mouse/keyboard
+	// Reset camera and model transform when loading new model
+	resetCamera();
+	m_modelOffset[0] = 0.0f;
+	m_modelOffset[1] = 0.0f;
+	m_modelOffset[2] = 0.0f;
+	m_modelRotationX = 0.0f;
+	m_modelRotationY = 0.0f;
+	m_modelRotationZ = 0.0f;
 
 	// CRITICAL: Trigger repaint to show the newly loaded model
 	update();

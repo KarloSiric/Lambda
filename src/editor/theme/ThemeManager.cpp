@@ -259,7 +259,7 @@ QString ThemeManager::getClassicInspectorStyle() {
             color: #000000;
         }
 
-        /* Tab widget styling */
+        /* Tab widget styling - clean gray theme */
         QTabWidget {
             background-color: #c0c0c0;
         }
@@ -273,32 +273,42 @@ QString ThemeManager::getClassicInspectorStyle() {
         }
         QTabWidget::tab-bar {
             left: 0px;
+            background-color: #c0c0c0;
         }
 
-        /* Tab bar - compact Windows style */
+        /* Tab bar background - gray to match theme */
+        QTabBar {
+            background-color: #c0c0c0;
+        }
+
+        /* Tab buttons - 3D raised style */
         QTabBar::tab {
             background-color: #c0c0c0;
-            border: 1px solid #808080;
-            border-bottom: none;
-            padding: 3px 6px;
-            margin-right: 1px;
+            border: 2px solid;
+            border-top-color: #ffffff;
+            border-left-color: #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            padding: 4px 12px;
+            margin-right: 2px;
             color: #000000;
-            min-width: 40px;
             font-size: 11px;
         }
         QTabBar::tab:selected {
-            background-color: #c0c0c0;
-            border-bottom-color: #c0c0c0;
-            border-top: 2px solid #ffffff;
-            border-left: 2px solid #ffffff;
-            border-right: 2px solid #808080;
+            background-color: #0a246a;
+            border-top-color: #0d2d85;
+            border-left-color: #0d2d85;
+            border-right-color: #081d55;
+            border-bottom-color: #081d55;
+            color: #ffffff;
+            font-weight: bold;
         }
         QTabBar::tab:!selected {
             margin-top: 2px;
-            background-color: #a8a8a8;
+            background-color: #c0c0c0;
         }
         QTabBar::tab:hover:!selected {
-            background-color: #b8b8b8;
+            background-color: #d4d4d4;
         }
 
         /* Group boxes with 3D beveled borders */

@@ -226,17 +226,23 @@ void MainWindow::createDocks() {
 	inspectorLayout->setContentsMargins( 0, 0, 0, 0 );
 	inspectorLayout->setSpacing( 0 );
 
-	// Row 1: Primary panels (most used)
+	// Row 1: Model Info, Display, Animation, Textures
 	m_inspectorTabsRow1 = new QTabWidget( m_inspectorContainer );
 	m_inspectorTabsRow1->setDocumentMode( false );
-	m_inspectorTabsRow1->tabBar()->setExpanding( true );  // Tabs fill full width
+	m_inspectorTabsRow1->tabBar()->setExpanding( true );
 	m_inspectorTabsRow1->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 
-	// Row 2: Secondary panels
+	// Row 2: Bodyparts, Bones, Attachments, Lighting
 	m_inspectorTabsRow2 = new QTabWidget( m_inspectorContainer );
 	m_inspectorTabsRow2->setDocumentMode( false );
-	m_inspectorTabsRow2->tabBar()->setExpanding( true );  // Tabs fill full width
+	m_inspectorTabsRow2->tabBar()->setExpanding( true );
 	m_inspectorTabsRow2->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+
+	// Row 3: File browser
+	m_inspectorTabsRow3 = new QTabWidget( m_inspectorContainer );
+	m_inspectorTabsRow3->setDocumentMode( false );
+	m_inspectorTabsRow3->tabBar()->setExpanding( true );
+	m_inspectorTabsRow3->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 
 	// Create all inspector panels
 	m_browserPanel = new BrowserPanel( this );
@@ -249,22 +255,25 @@ void MainWindow::createDocks() {
 	m_attachmentsPanel = new AttachmentsPanel( this );
 	m_lightingPanel = new LightingPanel( this );
 
-	// Row 1 tabs: Model viewing essentials
-	m_inspectorTabsRow1->addTab( m_modelInfoPanel, "Model" );
+	// Row 1 tabs: Full names
+	m_inspectorTabsRow1->addTab( m_modelInfoPanel, "Model Info" );
 	m_inspectorTabsRow1->addTab( m_modelDisplayPanel, "Display" );
-	m_inspectorTabsRow1->addTab( m_sequencesPanel, "Anim" );
+	m_inspectorTabsRow1->addTab( m_sequencesPanel, "Animation" );
 	m_inspectorTabsRow1->addTab( m_texturesPanel, "Textures" );
-	m_inspectorTabsRow1->addTab( m_bodypartsPanel, "Body" );
 
-	// Row 2 tabs: Technical details and tools
+	// Row 2 tabs: Full names
+	m_inspectorTabsRow2->addTab( m_bodypartsPanel, "Bodyparts" );
 	m_inspectorTabsRow2->addTab( m_bonesPanel, "Bones" );
-	m_inspectorTabsRow2->addTab( m_attachmentsPanel, "Attach" );
-	m_inspectorTabsRow2->addTab( m_lightingPanel, "Light" );
-	m_inspectorTabsRow2->addTab( m_browserPanel, "Files" );
+	m_inspectorTabsRow2->addTab( m_attachmentsPanel, "Attachments" );
+	m_inspectorTabsRow2->addTab( m_lightingPanel, "Lighting" );
 
-	// Add both tab rows to container with equal stretch (50/50 split)
-	inspectorLayout->addWidget( m_inspectorTabsRow1, 1 );  // stretch factor 1
-	inspectorLayout->addWidget( m_inspectorTabsRow2, 1 );  // stretch factor 1
+	// Row 3 tabs: File browser
+	m_inspectorTabsRow3->addTab( m_browserPanel, "File Browser" );
+
+	// Add all three rows - model panels share space, files at bottom
+	inspectorLayout->addWidget( m_inspectorTabsRow1, 1 );
+	inspectorLayout->addWidget( m_inspectorTabsRow2, 1 );
+	inspectorLayout->addWidget( m_inspectorTabsRow3, 1 );
 
 	// Connect browser panel's model selection signal
 	connect( m_browserPanel, &BrowserPanel::modelFileSelected,
@@ -290,10 +299,14 @@ void MainWindow::createDocks() {
 		}
 	} );
 
-	// Apply classic inspector panel styling to both tab rows
+	// Apply classic inspector panel styling to all three tab rows
 	QString inspectorStyle = ThemeManager::getClassicInspectorStyle();
 	m_inspectorTabsRow1->setStyleSheet( inspectorStyle );
 	m_inspectorTabsRow2->setStyleSheet( inspectorStyle );
+	m_inspectorTabsRow3->setStyleSheet( inspectorStyle );
+
+	// Set container background to match gray theme
+	m_inspectorContainer->setStyleSheet( "QWidget { background-color: #c0c0c0; }" );
 
 	rightDock->setWidget( m_inspectorContainer );
 	addDockWidget( Qt::RightDockWidgetArea, rightDock );
