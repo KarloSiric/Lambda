@@ -126,19 +126,25 @@ void ModelInfoPanel::refresh() {
 	m_dumpModelBtn->setEnabled( hasModelLoaded );
 	m_dumpTextureBtn->setEnabled( hasModelLoaded );
 
+	clearProperties();
+
 	if ( !hasModelLoaded ) {
-		clearProperties();
+		// Show placeholder message when no model loaded
+		addSectionHeader( "No Model Loaded" );
+		addProperty( "", "Open a model file to see its information here." );
+		addProperty( "", "" );
+		addProperty( "", "Use File > Open or drag & drop an MDL file." );
 		return;
 	}
 
-	clearProperties();
+	// === FILE INFO ===
+	addSectionHeader( "FILE INFO" );
 
-	// === Model Header ===
 	QString filePath = m_viewport->property( "modelPath" ).toString();
 	QFileInfo fileInfo( filePath );
 
-	addProperty( "Name", fileInfo.fileName() );
-	addProperty( "Internal", m_viewport->getHeaderName() );
+	addProperty( "File Name", fileInfo.fileName() );
+	addProperty( "Internal Name", m_viewport->getHeaderName() );
 
 	// Format header ID as magic string (IDST)
 	int headerId = m_viewport->getHeaderId();
@@ -147,60 +153,61 @@ void ModelInfoPanel::refresh() {
 	magic[1] = ( headerId >> 8 ) & 0xFF;
 	magic[2] = ( headerId >> 16 ) & 0xFF;
 	magic[3] = ( headerId >> 24 ) & 0xFF;
-	addProperty( "ID", QString( "%1 (0x%2)" ).arg( magic ).arg( headerId, 8, 16, QChar( '0' ) ) );
+	addProperty( "Magic", QString( "%1 (0x%2)" ).arg( magic ).arg( headerId, 8, 16, QChar( '0' ) ) );
 
-	addProperty( "Version", QString( "MDL v%1 (HL1)" ).arg( m_viewport->getMDLVersion() ) );
+	addProperty( "Version", QString( "MDL v%1 (Half-Life 1)" ).arg( m_viewport->getMDLVersion() ) );
 	addProperty( "File Size", formatFileSize( m_viewport->getFileLength() ) );
 	addProperty( "Flags", QString( "0x%1" ).arg( m_viewport->getModelFlags(), 4, 16, QChar( '0' ) ) );
 
-	// Separator - Geometry
-	addProperty( "", "", true );
+	// === GEOMETRY ===
+	addSectionHeader( "GEOMETRY" );
 
-	// Geometry counts
 	addProperty( "Vertices", QString::number( m_viewport->getVertexCount() ) );
 	addProperty( "Triangles", QString::number( m_viewport->getTriangleCount() ) );
 	addProperty( "Bodyparts", QString::number( m_viewport->getBodypartCount() ) );
+
+	// === SKELETON ===
+	addSectionHeader( "SKELETON" );
+
 	addProperty( "Bones", QString::number( m_viewport->getBoneCount() ) );
 	addProperty( "Controllers", QString::number( m_viewport->getControllerCount() ) );
+	addProperty( "Hitboxes", QString::number( m_viewport->getHitboxCount() ) );
+	addProperty( "Attachments", QString::number( m_viewport->getAttachmentCount() ) );
 
-	// Separator - Structures
-	addProperty( "", "", true );
+	// === ANIMATION ===
+	addSectionHeader( "ANIMATION" );
 
-	// Structure counts
 	addProperty( "Sequences", QString::number( m_viewport->getSequenceCount() ) );
 	addProperty( "Seq Groups", QString::number( m_viewport->getSeqGroupCount() ) );
 	addProperty( "Transitions", QString::number( m_viewport->getTransitionCount() ) );
+
+	// === TEXTURES ===
+	addSectionHeader( "TEXTURES" );
+
 	addProperty( "Textures", QString::number( m_viewport->getTextureCount() ) );
+	addProperty( "Skin Families", QString::number( m_viewport->getNumSkinFamilies() ) );
 	addProperty( "Skin Refs", QString::number( m_viewport->getSkinRefCount() ) );
-	addProperty( "Skins", QString::number( m_viewport->getNumSkinFamilies() ) );
-	addProperty( "Attachments", QString::number( m_viewport->getAttachmentCount() ) );
-	addProperty( "Hitboxes", QString::number( m_viewport->getHitboxCount() ) );
-	addProperty( "Sound Groups", QString::number( m_viewport->getSoundGroupCount() ) );
 
-	// Separator - Bounds
-	addProperty( "", "", true );
+	// === BOUNDS ===
+	addSectionHeader( "BOUNDS" );
 
-	// Bounding boxes
 	float bbmin[3], bbmax[3];
 	m_viewport->getBoundingBox( bbmin, bbmax );
 	addProperty( "BBox Min", formatVector( bbmin[0], bbmin[1], bbmin[2] ) );
 	addProperty( "BBox Max", formatVector( bbmax[0], bbmax[1], bbmax[2] ) );
 
-	// Movement bounds (clipping hull)
 	float min[3], max[3];
 	m_viewport->getMovementBox( min, max );
 	addProperty( "Hull Min", formatVector( min[0], min[1], min[2] ) );
 	addProperty( "Hull Max", formatVector( max[0], max[1], max[2] ) );
 
-	// Eye position
 	float eyeX, eyeY, eyeZ;
 	m_viewport->getEyePosition( eyeX, eyeY, eyeZ );
-	addProperty( "Eye Pos", formatVector( eyeX, eyeY, eyeZ ) );
+	addProperty( "Eye Position", formatVector( eyeX, eyeY, eyeZ ) );
 
-	// Separator - Memory Breakdown
-	addProperty( "", "", true );
+	// === MEMORY ===
+	addSectionHeader( "MEMORY ESTIMATE" );
 
-	// Memory breakdown (estimated sizes from MDL format structure sizes)
 	int numBones = m_viewport->getBoneCount();
 	int numControllers = m_viewport->getControllerCount();
 	int numHitboxes = m_viewport->getHitboxCount();
@@ -208,22 +215,21 @@ void ModelInfoPanel::refresh() {
 	int numTextures = m_viewport->getTextureCount();
 	int numAttachments = m_viewport->getAttachmentCount();
 
-	// Calculate estimated memory for structures (approximate sizes from MDL format)
-	qint64 headerSize = 244;  // sizeof(studiohdr_t)
-	qint64 boneSize = numBones * 112;  // sizeof(mstudiobone_t) ≈ 112
-	qint64 ctrlSize = numControllers * 24;  // sizeof(mstudiobonecontroller_t) ≈ 24
-	qint64 hitboxSize = numHitboxes * 68;  // sizeof(mstudiobbox_t) ≈ 68
-	qint64 seqSize = numSeqs * 176;  // sizeof(mstudioseqdesc_t) ≈ 176
-	qint64 texInfoSize = numTextures * 80;  // sizeof(mstudiotexture_t) ≈ 80
-	qint64 attachSize = numAttachments * 88;  // sizeof(mstudioattachment_t) ≈ 88
+	qint64 headerSize = 244;
+	qint64 boneSize = numBones * 112;
+	qint64 ctrlSize = numControllers * 24;
+	qint64 hitboxSize = numHitboxes * 68;
+	qint64 seqSize = numSeqs * 176;
+	qint64 texInfoSize = numTextures * 80;
+	qint64 attachSize = numAttachments * 88;
 
 	addProperty( "Header", formatFileSize( headerSize ) );
-	addProperty( "Bones", QString( "%1 (%2)" ).arg( formatFileSize( boneSize ) ).arg( numBones ) );
-	addProperty( "Controllers", QString( "%1 (%2)" ).arg( formatFileSize( ctrlSize ) ).arg( numControllers ) );
-	addProperty( "Hitboxes", QString( "%1 (%2)" ).arg( formatFileSize( hitboxSize ) ).arg( numHitboxes ) );
-	addProperty( "Sequences", QString( "%1 (%2)" ).arg( formatFileSize( seqSize ) ).arg( numSeqs ) );
-	addProperty( "Tex Headers", QString( "%1 (%2)" ).arg( formatFileSize( texInfoSize ) ).arg( numTextures ) );
-	addProperty( "Attachments", QString( "%1 (%2)" ).arg( formatFileSize( attachSize ) ).arg( numAttachments ) );
+	if ( numBones > 0 ) addProperty( "Bones", QString( "%1 (%2)" ).arg( formatFileSize( boneSize ) ).arg( numBones ) );
+	if ( numControllers > 0 ) addProperty( "Controllers", QString( "%1 (%2)" ).arg( formatFileSize( ctrlSize ) ).arg( numControllers ) );
+	if ( numHitboxes > 0 ) addProperty( "Hitboxes", QString( "%1 (%2)" ).arg( formatFileSize( hitboxSize ) ).arg( numHitboxes ) );
+	if ( numSeqs > 0 ) addProperty( "Sequences", QString( "%1 (%2)" ).arg( formatFileSize( seqSize ) ).arg( numSeqs ) );
+	if ( numTextures > 0 ) addProperty( "Tex Headers", QString( "%1 (%2)" ).arg( formatFileSize( texInfoSize ) ).arg( numTextures ) );
+	if ( numAttachments > 0 ) addProperty( "Attachments", QString( "%1 (%2)" ).arg( formatFileSize( attachSize ) ).arg( numAttachments ) );
 }
 
 void ModelInfoPanel::addProperty( const QString &name, const QString &value, bool isSeparator ) {
@@ -249,6 +255,28 @@ void ModelInfoPanel::addProperty( const QString &name, const QString &value, boo
 
 	m_propertyTable->setItem( row, 0, nameItem );
 	m_propertyTable->setItem( row, 1, valueItem );
+}
+
+void ModelInfoPanel::addSectionHeader( const QString &title ) {
+	int row = m_propertyTable->rowCount();
+	m_propertyTable->insertRow( row );
+
+	QTableWidgetItem *headerItem = new QTableWidgetItem( title );
+	QTableWidgetItem *emptyItem = new QTableWidgetItem( "" );
+
+	// Section header style - dark blue background, white text, bold
+	QFont boldFont = headerItem->font();
+	boldFont.setBold( true );
+	headerItem->setFont( boldFont );
+	headerItem->setForeground( QColor( 0xff, 0xff, 0xff ) );
+	headerItem->setBackground( QColor( 0x0a, 0x24, 0x6a ) );  // Windows 95 selection blue
+	emptyItem->setBackground( QColor( 0x0a, 0x24, 0x6a ) );
+
+	headerItem->setFlags( Qt::NoItemFlags );
+	emptyItem->setFlags( Qt::NoItemFlags );
+
+	m_propertyTable->setItem( row, 0, headerItem );
+	m_propertyTable->setItem( row, 1, emptyItem );
 }
 
 void ModelInfoPanel::clearProperties() {

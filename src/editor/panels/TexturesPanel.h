@@ -3,12 +3,7 @@
  *   Half-Life Model Viewer/Editor ~ Lambda
  * ===========================================================================
  *
- *   TexturesPanel.h  -  Texture thumbnail browser
- *
- *   Displays model textures as clickable thumbnails with:
- *   - Skin family selector dropdown
- *   - Grid of 64x64 texture thumbnails
- *   - Selection info showing texture details
+ *   TexturesPanel.h  -  Texture thumbnail browser (BSP/Quake editor style)
  *
  * ===========================================================================
  */
@@ -19,33 +14,42 @@
 #include "InspectorPanel.h"
 #include <QComboBox>
 #include <QLabel>
-#include <QGridLayout>
 #include <QScrollArea>
-#include <QPushButton>
 #include <QVector>
 #include <QImage>
+#include "../widgets/FlowLayout.h"
 
 class QContextMenuEvent;
 
-class TextureThumbnail : public QPushButton {
+// Simple texture thumbnail widget - just image + name below
+class TextureThumbnail : public QWidget {
 	Q_OBJECT
 
   public:
 	explicit TextureThumbnail( int index, const QImage &image, const QString &name, QWidget *parent = nullptr );
 
 	int textureIndex() const { return m_index; }
+	void setSelected( bool selected );
+	bool isSelected() const { return m_selected; }
 
   signals:
+	void clicked( int index );
 	void doubleClicked( int index );
-	void openInNewTab( int index );
-	void openInSeparateWindow( int index );
+	void rightClicked( int index, const QPoint &globalPos );
 
   protected:
+	void paintEvent( QPaintEvent *event ) override;
+	void mousePressEvent( QMouseEvent *event ) override;
 	void mouseDoubleClickEvent( QMouseEvent *event ) override;
-	void contextMenuEvent( QContextMenuEvent *event ) override;
+	void enterEvent( QEnterEvent *event ) override;
+	void leaveEvent( QEvent *event ) override;
 
   private:
 	int m_index;
+	QPixmap m_pixmap;
+	QString m_name;
+	bool m_selected;
+	bool m_hovered;
 };
 
 class TexturesPanel : public InspectorPanel {
@@ -57,15 +61,13 @@ class TexturesPanel : public InspectorPanel {
 	void refresh() override;
 
   signals:
-	// Signal to MainWindow to open texture in a new viewport tab
 	void requestTextureTab( const QImage &image, const QString &name, int width, int height, int flags );
 
   private slots:
 	void onSkinFamilyChanged( int index );
-	void onThumbnailClicked();
+	void onThumbnailClicked( int index );
 	void onThumbnailDoubleClicked( int index );
-	void onOpenInNewTab( int index );
-	void onOpenInSeparateWindow( int index );
+	void onThumbnailRightClicked( int index, const QPoint &globalPos );
 
   private:
 	void setupUI();
@@ -73,15 +75,17 @@ class TexturesPanel : public InspectorPanel {
 	void updateSelectionInfo( int textureIndex );
 	void clearThumbnails();
 	void showTexturePreview( int textureIndex );
+	void selectThumbnail( int index );
 	QString formatTextureFlags( int flags ) const;
 
 	QComboBox *m_skinSelector;
+	QScrollArea *m_scrollArea;
 	QWidget *m_thumbnailContainer;
-	QGridLayout *m_thumbnailLayout;
+	FlowLayout *m_flowLayout;
 	QLabel *m_selectionInfo;
 	int m_selectedTextureIndex;
 
-	// Cached texture images for performance
+	QVector<TextureThumbnail *> m_thumbnails;
 	QVector<QImage> m_cachedFullImages;
 };
 

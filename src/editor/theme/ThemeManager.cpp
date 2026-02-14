@@ -275,15 +275,16 @@ QString ThemeManager::getClassicInspectorStyle() {
             left: 0px;
         }
 
-        /* Tab bar - classic Windows style */
+        /* Tab bar - compact Windows style */
         QTabBar::tab {
             background-color: #c0c0c0;
             border: 1px solid #808080;
             border-bottom: none;
-            padding: 4px 10px;
-            margin-right: 2px;
+            padding: 3px 6px;
+            margin-right: 1px;
             color: #000000;
-            min-width: 50px;
+            min-width: 40px;
+            font-size: 11px;
         }
         QTabBar::tab:selected {
             background-color: #c0c0c0;

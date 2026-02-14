@@ -40,8 +40,6 @@
 #include "../panels/BonesPanel.h"
 #include "../panels/ModelDisplayPanel.h"
 #include "../panels/AttachmentsPanel.h"
-#include "../panels/CameraPanel.h"
-#include "../panels/TransformPanel.h"
 #include "../panels/LightingPanel.h"
 #include "../widgets/TextureViewWidget.h"
 #include <QLabel>
@@ -127,7 +125,7 @@ MainWindow::MainWindow( QWidget *parent )
 	m_statusUpdateTimer = new QTimer( this );
 	// Setting the timer update interval time to be 100 ms and not 16.7 like before
 	// @Note: Improvement on performance for re-rendering the status bar text update
-	m_statusUpdateTimer->setInterval( 100 ); // ~10 FPS
+	m_statusUpdateTimer->setInterval( 250 ); // 4 FPS - status bar doesn't need fast updates
 	connect( m_statusUpdateTimer, &QTimer::timeout, this, &MainWindow::onStatusBarUpdate );
 	m_statusUpdateTimer->start();
 
@@ -219,11 +217,26 @@ void MainWindow::createDocks() {
 	rightDock = new QDockWidget( "Inspector", this );
 	rightDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
 
-	// Create tab widget for inspector panels
-	m_inspectorTabs = new QTabWidget( this );
-	m_inspectorTabs->setDocumentMode( false ); // Classic tabs
-	m_inspectorTabs->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
-	m_inspectorTabs->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
+	// Create container widget for two-row tab layout
+	m_inspectorContainer = new QWidget( this );
+	m_inspectorContainer->setMinimumWidth( MW_RIGHT_DOCK_MIN_WIDTH );
+	m_inspectorContainer->setMaximumWidth( MW_RIGHT_DOCK_MAX_WIDTH );
+
+	QVBoxLayout *inspectorLayout = new QVBoxLayout( m_inspectorContainer );
+	inspectorLayout->setContentsMargins( 0, 0, 0, 0 );
+	inspectorLayout->setSpacing( 0 );
+
+	// Row 1: Primary panels (most used)
+	m_inspectorTabsRow1 = new QTabWidget( m_inspectorContainer );
+	m_inspectorTabsRow1->setDocumentMode( false );
+	m_inspectorTabsRow1->tabBar()->setExpanding( true );  // Tabs fill full width
+	m_inspectorTabsRow1->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+
+	// Row 2: Secondary panels
+	m_inspectorTabsRow2 = new QTabWidget( m_inspectorContainer );
+	m_inspectorTabsRow2->setDocumentMode( false );
+	m_inspectorTabsRow2->tabBar()->setExpanding( true );  // Tabs fill full width
+	m_inspectorTabsRow2->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 
 	// Create all inspector panels
 	m_browserPanel = new BrowserPanel( this );
@@ -234,22 +247,24 @@ void MainWindow::createDocks() {
 	m_bonesPanel = new BonesPanel( this );
 	m_modelDisplayPanel = new ModelDisplayPanel( this );
 	m_attachmentsPanel = new AttachmentsPanel( this );
-	m_cameraPanel = new CameraPanel( this );
-	m_transformPanel = new TransformPanel( this );
 	m_lightingPanel = new LightingPanel( this );
 
-	// Add panels as tabs
-	m_inspectorTabs->addTab( m_browserPanel, "Browser" );
-	m_inspectorTabs->addTab( m_modelInfoPanel, "Model" );
-	m_inspectorTabs->addTab( m_sequencesPanel, "Sequences" );
-	m_inspectorTabs->addTab( m_texturesPanel, "Textures" );
-	m_inspectorTabs->addTab( m_bodypartsPanel, "Bodyparts" );
-	m_inspectorTabs->addTab( m_bonesPanel, "Bones" );
-	m_inspectorTabs->addTab( m_attachmentsPanel, "Attach" );
-	m_inspectorTabs->addTab( m_cameraPanel, "Camera" );
-	m_inspectorTabs->addTab( m_transformPanel, "Transform" );
-	m_inspectorTabs->addTab( m_lightingPanel, "Lighting" );
-	m_inspectorTabs->addTab( m_modelDisplayPanel, "Display" );
+	// Row 1 tabs: Model viewing essentials
+	m_inspectorTabsRow1->addTab( m_modelInfoPanel, "Model" );
+	m_inspectorTabsRow1->addTab( m_modelDisplayPanel, "Display" );
+	m_inspectorTabsRow1->addTab( m_sequencesPanel, "Anim" );
+	m_inspectorTabsRow1->addTab( m_texturesPanel, "Textures" );
+	m_inspectorTabsRow1->addTab( m_bodypartsPanel, "Body" );
+
+	// Row 2 tabs: Technical details and tools
+	m_inspectorTabsRow2->addTab( m_bonesPanel, "Bones" );
+	m_inspectorTabsRow2->addTab( m_attachmentsPanel, "Attach" );
+	m_inspectorTabsRow2->addTab( m_lightingPanel, "Light" );
+	m_inspectorTabsRow2->addTab( m_browserPanel, "Files" );
+
+	// Add both tab rows to container with equal stretch (50/50 split)
+	inspectorLayout->addWidget( m_inspectorTabsRow1, 1 );  // stretch factor 1
+	inspectorLayout->addWidget( m_inspectorTabsRow2, 1 );  // stretch factor 1
 
 	// Connect browser panel's model selection signal
 	connect( m_browserPanel, &BrowserPanel::modelFileSelected,
@@ -275,10 +290,12 @@ void MainWindow::createDocks() {
 		}
 	} );
 
-	// Apply classic inspector panel styling
-	m_inspectorTabs->setStyleSheet( ThemeManager::getClassicInspectorStyle() );
+	// Apply classic inspector panel styling to both tab rows
+	QString inspectorStyle = ThemeManager::getClassicInspectorStyle();
+	m_inspectorTabsRow1->setStyleSheet( inspectorStyle );
+	m_inspectorTabsRow2->setStyleSheet( inspectorStyle );
 
-	rightDock->setWidget( m_inspectorTabs );
+	rightDock->setWidget( m_inspectorContainer );
 	addDockWidget( Qt::RightDockWidgetArea, rightDock );
 
 	// @Note: Adding now the bottom panel dock, main console for logger messages and so forth
@@ -650,25 +667,30 @@ void MainWindow::onStatusBarUpdate() {
 	// Update FPS display (always shown)
 	m_statusBar->setFPS( (int)fps );
 
+	// Viewport size ALWAYS visible (not cursor-dependent)
+	m_statusBar->setViewportSize( viewport->width(), viewport->height() );
+
 	// Check if mouse is inside the viewport
 	QPoint globalPos = QCursor::pos();
 	QPoint localPos = viewport->mapFromGlobal( globalPos );
 	bool mouseInViewport = viewport->rect().contains( localPos );
 
-	// Viewport size ALWAYS visible (not cursor-dependent)
-	m_statusBar->setViewportSize( viewport->width(), viewport->height() );
-
-	// Only update cursor-dependent info when mouse is inside
+	// Only update cursor-dependent info when mouse is inside AND position changed
 	if ( mouseInViewport ) {
-		// Raycast mouse position to 3D world coordinates
-		float worldX = 0.0f, worldY = 0.0f, worldZ = 0.0f;
-		if ( viewport->raycastToGround( localPos.x(), localPos.y(), worldX, worldY, worldZ ) ) {
-			m_statusBar->setCameraPosition( worldX, worldY, worldZ );
-		} else {
-			m_statusBar->setCameraPosition( 0.0f, 0.0f, 0.0f );
+		// Only do expensive raycast if mouse moved since last update
+		if ( localPos != m_lastMousePos ) {
+			m_lastMousePos = localPos;
+
+			// Raycast mouse position to 3D world coordinates
+			float worldX = 0.0f, worldY = 0.0f, worldZ = 0.0f;
+			if ( viewport->raycastToGround( localPos.x(), localPos.y(), worldX, worldY, worldZ ) ) {
+				m_statusBar->setCameraPosition( worldX, worldY, worldZ );
+			} else {
+				m_statusBar->setCameraPosition( 0.0f, 0.0f, 0.0f );
+			}
 		}
 
-		// Update zoom level based on camera distance
+		// Update zoom level based on camera distance (cheap operation)
 		float defaultDistance = 50.0f;
 		float currentDistance = viewport->getCameraDistance();
 		float zoomPercent = ( currentDistance > 0.0f ) ? ( defaultDistance / currentDistance ) * 100.0f : 100.0f;
@@ -1113,8 +1135,6 @@ void MainWindow::updateInspector( ModelViewport *viewport ) {
 	m_bonesPanel->setViewport( viewport );
 	m_modelDisplayPanel->setViewport( viewport );
 	m_attachmentsPanel->setViewport( viewport );
-	m_cameraPanel->setViewport( viewport );
-	m_transformPanel->setViewport( viewport );
 	m_lightingPanel->setViewport( viewport );
 }
 

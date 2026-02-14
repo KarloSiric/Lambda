@@ -38,7 +38,10 @@ ModelDisplayPanel::ModelDisplayPanel( QWidget *parent )
     , m_mirrorYBtn( nullptr )
     , m_mirrorZBtn( nullptr )
     , m_fovSlider( nullptr )
+    , m_distanceSpin( nullptr )
     , m_weaponOriginBtn( nullptr )
+    , m_resetCameraBtn( nullptr )
+    , m_centerModelBtn( nullptr )
     , m_resetAllBtn( nullptr ) {
 	setupUI();
 
@@ -353,13 +356,47 @@ void ModelDisplayPanel::setupUI() {
 	connect( m_fovSlider, &QSlider::valueChanged, this, &ModelDisplayPanel::onFovChanged );
 	camLayout->addWidget( m_fovSlider, 0, 1 );
 
+	// Distance spinbox
+	QLabel *distLabel = new QLabel( "Distance:", cameraGroup );
+	distLabel->setStyleSheet( labelStyle );
+	camLayout->addWidget( distLabel, 1, 0 );
+
+	m_distanceSpin = new QDoubleSpinBox( cameraGroup );
+	m_distanceSpin->setRange( 1.0, 500.0 );
+	m_distanceSpin->setValue( 50.0 );
+	m_distanceSpin->setSingleStep( 1.0 );  // Small step for fine control
+	m_distanceSpin->setSuffix( " units" );
+	m_distanceSpin->setStyleSheet( spinStyle );
+	m_distanceSpin->setToolTip( "Camera distance from model" );
+	connect( m_distanceSpin, QOverload<double>::of( &QDoubleSpinBox::valueChanged ),
+	         this, &ModelDisplayPanel::onDistanceChanged );
+	camLayout->addWidget( m_distanceSpin, 1, 1 );
+
 	// Weapon origin toggle
 	m_weaponOriginBtn = new QPushButton( "Weapon Origin View", cameraGroup );
 	m_weaponOriginBtn->setCheckable( true );
 	m_weaponOriginBtn->setStyleSheet( toggleBtnStyle );
 	m_weaponOriginBtn->setToolTip( "Position camera for first-person weapon view" );
 	connect( m_weaponOriginBtn, &QPushButton::toggled, this, &ModelDisplayPanel::onWeaponOriginToggled );
-	camLayout->addWidget( m_weaponOriginBtn, 1, 0, 1, 2 );
+	camLayout->addWidget( m_weaponOriginBtn, 2, 0, 1, 2 );
+
+	// Camera reset buttons
+	QHBoxLayout *camBtnLayout = new QHBoxLayout();
+	camBtnLayout->setSpacing( 4 );
+
+	m_resetCameraBtn = new QPushButton( "Reset Camera", cameraGroup );
+	m_resetCameraBtn->setStyleSheet( toggleBtnStyle );
+	m_resetCameraBtn->setToolTip( "Reset camera to default position" );
+	connect( m_resetCameraBtn, &QPushButton::clicked, this, &ModelDisplayPanel::onResetCameraClicked );
+	camBtnLayout->addWidget( m_resetCameraBtn );
+
+	m_centerModelBtn = new QPushButton( "Center Model", cameraGroup );
+	m_centerModelBtn->setStyleSheet( toggleBtnStyle );
+	m_centerModelBtn->setToolTip( "Center camera on model" );
+	connect( m_centerModelBtn, &QPushButton::clicked, this, &ModelDisplayPanel::onCenterModelClicked );
+	camBtnLayout->addWidget( m_centerModelBtn );
+
+	camLayout->addLayout( camBtnLayout, 3, 0, 1, 2 );
 
 	contentLayout->addWidget( cameraGroup );
 
@@ -397,6 +434,7 @@ void ModelDisplayPanel::syncWithViewport() {
 	m_mirrorYBtn->blockSignals( true );
 	m_mirrorZBtn->blockSignals( true );
 	m_fovSlider->blockSignals( true );
+	m_distanceSpin->blockSignals( true );
 	m_weaponOriginBtn->blockSignals( true );
 
 	// Sync render toggles
@@ -423,6 +461,7 @@ void ModelDisplayPanel::syncWithViewport() {
 
 	// Sync camera
 	m_fovSlider->setValue( static_cast<int>( m_viewport->getFov() ) );
+	m_distanceSpin->setValue( m_viewport->getCameraDistance() );
 	m_weaponOriginBtn->setChecked( m_viewport->isWeaponOriginMode() );
 
 	// Unblock signals
@@ -441,6 +480,7 @@ void ModelDisplayPanel::syncWithViewport() {
 	m_mirrorYBtn->blockSignals( false );
 	m_mirrorZBtn->blockSignals( false );
 	m_fovSlider->blockSignals( false );
+	m_distanceSpin->blockSignals( false );
 	m_weaponOriginBtn->blockSignals( false );
 }
 
@@ -566,6 +606,26 @@ void ModelDisplayPanel::onFovChanged( int value ) {
 void ModelDisplayPanel::onWeaponOriginToggled( bool checked ) {
 	if ( m_viewport ) {
 		m_viewport->setWeaponOriginMode( checked );
+	}
+}
+
+void ModelDisplayPanel::onDistanceChanged( double value ) {
+	if ( m_viewport ) {
+		m_viewport->setCameraDistance( static_cast<float>( value ) );
+	}
+}
+
+void ModelDisplayPanel::onResetCameraClicked() {
+	if ( m_viewport ) {
+		m_viewport->resetCamera();
+		syncWithViewport();
+	}
+}
+
+void ModelDisplayPanel::onCenterModelClicked() {
+	if ( m_viewport ) {
+		m_viewport->frameModel();
+		syncWithViewport();
 	}
 }
 

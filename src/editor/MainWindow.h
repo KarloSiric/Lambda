@@ -28,8 +28,6 @@ class BodypartsPanel;
 class BonesPanel;
 class ModelDisplayPanel;
 class AttachmentsPanel;
-class CameraPanel;
-class TransformPanel;
 class LightingPanel;
 
 
@@ -115,8 +113,10 @@ class MainWindow : public QMainWindow {
 	QDockWidget *bottomDock;
 	QTabWidget *tabWidget;
 
-	// Inspector panel tabs
-	QTabWidget *m_inspectorTabs;
+	// Inspector panel tabs (two rows)
+	QWidget *m_inspectorContainer;
+	QTabWidget *m_inspectorTabsRow1;
+	QTabWidget *m_inspectorTabsRow2;
 	BrowserPanel *m_browserPanel;
 	ModelInfoPanel *m_modelInfoPanel;
 	SequencesPanel *m_sequencesPanel;
@@ -125,8 +125,6 @@ class MainWindow : public QMainWindow {
 	BonesPanel *m_bonesPanel;
 	ModelDisplayPanel *m_modelDisplayPanel;
 	AttachmentsPanel *m_attachmentsPanel;
-	CameraPanel *m_cameraPanel;
-	TransformPanel *m_transformPanel;
 	LightingPanel *m_lightingPanel;
 
 	// Store per-tab model info for status bar
@@ -151,6 +149,7 @@ class MainWindow : public QMainWindow {
 	QElapsedTimer m_fpsTimer;
 	int m_frameCount;
 	float m_lastFps;
+	QPoint m_lastMousePos;  // Cache mouse position to avoid expensive raycast when unchanged
 
 	// Animation state
 	bool m_loopAnimation;

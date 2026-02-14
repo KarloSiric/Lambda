@@ -60,7 +60,10 @@ class ModelDisplayPanel : public InspectorPanel {
 
 	// Camera controls
 	void onFovChanged( int value );
+	void onDistanceChanged( double value );
 	void onWeaponOriginToggled( bool checked );
+	void onResetCameraClicked();
+	void onCenterModelClicked();
 
 	// Reset
 	void onResetAll();
@@ -93,7 +96,10 @@ class ModelDisplayPanel : public InspectorPanel {
 
 	// Camera controls
 	QSlider *m_fovSlider;
+	QDoubleSpinBox *m_distanceSpin;
 	QPushButton *m_weaponOriginBtn;
+	QPushButton *m_resetCameraBtn;
+	QPushButton *m_centerModelBtn;
 
 	// Reset button
 	QPushButton *m_resetAllBtn;

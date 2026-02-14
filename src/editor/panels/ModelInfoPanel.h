@@ -36,6 +36,7 @@ class ModelInfoPanel : public InspectorPanel {
   private:
 	void setupUI();
 	void addProperty( const QString &name, const QString &value, bool isSeparator = false );
+	void addSectionHeader( const QString &title );
 	void clearProperties();
 	QString formatFileSize( qint64 bytes ) const;
 	QString formatVector( float x, float y, float z ) const;

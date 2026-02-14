@@ -77,6 +77,8 @@ ModelViewport::ModelViewport( QWidget *parent )
 	  m_frameCount( 0 ),
 	  m_lastFpsTime( 0 ),
 	  m_currentFps( 0.0f ),
+	  m_maxFps( 60.0f ),
+	  m_lastRenderTime( 0 ),
 	  m_lastAnimTime( 0 ),
 	  m_lastFrameSignalTime( 0 ),
 	  m_showGrid( true ),
@@ -400,17 +402,21 @@ void ModelViewport::paintGL() {
 }
 
 void ModelViewport::onAnimationTick() {
+	qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+
+	// HLMV-style frame limiting: skip if not enough time has passed
+	float minFrameTime = 1000.0f / m_maxFps;  // ms per frame at max FPS
+	qint64 elapsedSinceRender = currentTime - m_lastRenderTime;
+
 	// Only advance animation if playing and model loaded
 	if ( m_animationPlaying && m_model && m_model->header ) {
-		// Calculate delta time (timer fires every 16ms = 0.016 seconds)
-
-		qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
+		// Calculate delta time
 		float deltaTime = ( m_lastAnimTime > 0 )
 		                    ? ( currentTime - m_lastAnimTime ) / 1000.0f
 		                    : 0.016f;
 		m_lastAnimTime = currentTime;
 
-		// TODO(karlo): clamping values so we dont have any huge jumps
+		// Clamp delta to prevent huge jumps
 		if ( deltaTime > 0.05f ) {
 			deltaTime = 0.05f;
 		}
@@ -427,7 +433,7 @@ void ModelViewport::onAnimationTick() {
 			                         m_model->header->seqindex) + m_animState.current_sequence;
 			int frameCount = seq->numframes;
 
-			// Update animation frame (arg order: state, delta_time, header, data, seqgroups)
+			// Update animation frame
 			mdl_animation_update( &m_animState, deltaTime, m_model->header, m_model->data, m_model->seqgroups );
 
 			// Handle looping - if animation reached end and looping is disabled, stop
@@ -443,16 +449,20 @@ void ModelViewport::onAnimationTick() {
 				r_qt_set_animation_enabled( m_renderInstance, true );
 			}
 
-			// Emit frame changed signal for UI updates (throttled to 15 FPS to reduce overhead)
-			if ( currentTime - m_lastFrameSignalTime >= 66 ) {  // ~15 FPS for UI updates
+			// Emit frame changed signal for UI updates (throttled to 15 FPS)
+			if ( currentTime - m_lastFrameSignalTime >= 66 ) {
 				m_lastFrameSignalTime = currentTime;
 				emit frameChanged( m_animState.current_frame );
 			}
 		}
 	}
 
-	// Always redraw - needed for FPS counter, camera movement, and mouse tracking
-	update();
+	// HLMV-style frame skipping: only redraw if enough time has passed AND there's a reason to redraw
+	bool needsUpdate = m_animationPlaying || !m_pressedKeys.isEmpty() || ( m_activeButton != Qt::NoButton );
+	if ( needsUpdate && elapsedSinceRender >= minFrameTime ) {
+		m_lastRenderTime = currentTime;
+		update();
+	}
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

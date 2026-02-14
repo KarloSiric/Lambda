@@ -311,10 +311,12 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	float m_gizmoRadius;        // ring radius, updated each frame
 	float m_gizmoPrevHit[3];    // previous ray-plane hit for delta-angle drag
     
-    // Adding fps counter variables
+    // FPS counter and frame limiting (HLMV-style)
     int m_frameCount;
     qint64 m_lastFpsTime;
     float m_currentFps;
+    float m_maxFps;            // Target max FPS (default 60)
+    qint64 m_lastRenderTime;   // Last time we actually rendered
 
     // Animation timing for frame-rate independent playback
     qint64 m_lastAnimTime;

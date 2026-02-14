@@ -106,34 +106,36 @@ void BodypartsPanel::populateBodyparts() {
 	    "    color: #000000;"
 	    "}";
 
-	// 90s Windows 95 style for radio buttons
+	// 90s Windows 95 style for radio buttons with visible dot indicator
 	QString radioStyle =
 	    "QRadioButton {"
 	    "    color: #000000;"
 	    "    spacing: 6px;"
+	    "    padding: 2px;"
 	    "}"
 	    "QRadioButton::indicator {"
-	    "    width: 13px;"
-	    "    height: 13px;"
+	    "    width: 14px;"
+	    "    height: 14px;"
+	    "    border-radius: 8px;"
 	    "}"
 	    "QRadioButton::indicator:unchecked {"
-	    "    border: 2px inset;"
+	    "    border: 2px solid;"
 	    "    border-top-color: #808080;"
 	    "    border-left-color: #808080;"
 	    "    border-right-color: #ffffff;"
 	    "    border-bottom-color: #ffffff;"
-	    "    border-radius: 7px;"
-	    "    background: #ffffff;"
+	    "    background: qradialgradient(cx:0.5, cy:0.5, radius:0.5, fx:0.3, fy:0.3, stop:0 #ffffff, stop:1 #e0e0e0);"
 	    "}"
 	    "QRadioButton::indicator:checked {"
-	    "    border: 2px inset;"
+	    "    border: 2px solid;"
 	    "    border-top-color: #808080;"
 	    "    border-left-color: #808080;"
 	    "    border-right-color: #ffffff;"
 	    "    border-bottom-color: #ffffff;"
-	    "    border-radius: 7px;"
-	    "    background: #ffffff;"
-	    "    image: url(:/icons/radio-checked.png);"
+	    "    background: qradialgradient(cx:0.5, cy:0.5, radius:0.3, fx:0.5, fy:0.5, stop:0 #000000, stop:0.7 #000000, stop:0.71 #ffffff, stop:1 #e0e0e0);"
+	    "}"
+	    "QRadioButton:hover {"
+	    "    background-color: #d0d0d0;"
 	    "}";
 
 	for ( int bp = 0; bp < bodypartCount; ++bp ) {
