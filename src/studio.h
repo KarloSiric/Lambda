@@ -64,10 +64,10 @@ typedef unsigned char byte;
 // MAIN STUDIO HEADER
 // ============================================================================
 typedef struct {
-	int id;
-	int version;
+	int id;                
+	int version;          
 
-	char name[64];
+	char name[64];         
 	int length;
 
 	vec3_t eyeposition;

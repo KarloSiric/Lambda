@@ -38,6 +38,7 @@
 #include "../panels/TexturesPanel.h"
 #include "../panels/BodypartsPanel.h"
 #include "../panels/BonesPanel.h"
+#include "../panels/BoneControllersPanel.h"
 #include "../panels/ModelDisplayPanel.h"
 #include "../panels/AttachmentsPanel.h"
 #include "../panels/LightingPanel.h"
@@ -251,6 +252,7 @@ void MainWindow::createDocks() {
 	m_texturesPanel = new TexturesPanel( this );
 	m_bodypartsPanel = new BodypartsPanel( this );
 	m_bonesPanel = new BonesPanel( this );
+	m_boneControllersPanel = new BoneControllersPanel( this );
 	m_modelDisplayPanel = new ModelDisplayPanel( this );
 	m_attachmentsPanel = new AttachmentsPanel( this );
 	m_lightingPanel = new LightingPanel( this );
@@ -264,6 +266,7 @@ void MainWindow::createDocks() {
 	// Row 2 tabs: Full names
 	m_inspectorTabsRow2->addTab( m_bodypartsPanel, "Bodyparts" );
 	m_inspectorTabsRow2->addTab( m_bonesPanel, "Bones" );
+	m_inspectorTabsRow2->addTab( m_boneControllersPanel, "Controllers" );
 	m_inspectorTabsRow2->addTab( m_attachmentsPanel, "Attachments" );
 	m_inspectorTabsRow2->addTab( m_lightingPanel, "Lighting" );
 
@@ -1146,6 +1149,7 @@ void MainWindow::updateInspector( ModelViewport *viewport ) {
 	m_texturesPanel->setViewport( viewport );
 	m_bodypartsPanel->setViewport( viewport );
 	m_bonesPanel->setViewport( viewport );
+	m_boneControllersPanel->setViewport( viewport );
 	m_modelDisplayPanel->setViewport( viewport );
 	m_attachmentsPanel->setViewport( viewport );
 	m_lightingPanel->setViewport( viewport );

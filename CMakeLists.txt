@@ -459,6 +459,7 @@ if(Qt6_FOUND)
         src/editor/panels/TexturesPanel.cpp
         src/editor/panels/BodypartsPanel.cpp
         src/editor/panels/BonesPanel.cpp
+        src/editor/panels/BoneControllersPanel.cpp
         src/editor/panels/ModelDisplayPanel.cpp
         src/editor/panels/AttachmentsPanel.cpp
         src/editor/panels/LightingPanel.cpp
@@ -485,6 +486,7 @@ if(Qt6_FOUND)
         src/editor/panels/TexturesPanel.h
         src/editor/panels/BodypartsPanel.h
         src/editor/panels/BonesPanel.h
+        src/editor/panels/BoneControllersPanel.h
         src/editor/panels/ModelDisplayPanel.h
         src/editor/panels/AttachmentsPanel.h
         src/editor/panels/LightingPanel.h

@@ -27,6 +27,7 @@
 
 #include "mdl_bodypart.h"
 #include "mdl_bones.h"
+#include "mdl_bonecontrollers.h"
 #include "mdl_animations.h"
 #include "mdl_bounds.h"
 #include "shader.h"
@@ -1591,6 +1592,12 @@ r_qt_instance_t* r_qt_create_instance(void) {
 	// Initialize animation state
 	mdl_animation_init(&inst->anim_state);
 
+	// Initialize bone controller values to rest position (0.5 = middle of range)
+	// In Half-Life, controller value 127/255 = 0.5 is the rest position
+	for (int i = 0; i < 6; i++) {
+		inst->controller_values[i] = 0.5f;
+	}
+
 	// Create OpenGL resources (VAO/VBO for this viewport)
 	glGenBuffers(1, &inst->vbo);
 	glGenBuffers(1, &inst->bone_index_vbo);
@@ -1642,6 +1649,12 @@ r_qt_instance_t* r_qt_create_instance(void) {
 	inst->u_additive_loc = glGetUniformLocation(inst->shader_program, "u_additive");
 	inst->u_chrome_loc = glGetUniformLocation(inst->shader_program, "u_chrome");
 	inst->u_boneMatrices_loc = glGetUniformLocation(inst->shader_program, "boneMatrices");
+	inst->u_lightColor_loc = glGetUniformLocation(inst->shader_program, "lightColor");
+	inst->u_ambientIntensity_loc = glGetUniformLocation(inst->shader_program, "ambientIntensity");
+	inst->u_lightingEnabled_loc = glGetUniformLocation(inst->shader_program, "u_lightingEnabled");
+	inst->u_wireframeOverlay_loc = glGetUniformLocation(inst->shader_program, "u_wireframeOverlay");
+	inst->u_wireframeColor_loc = glGetUniformLocation(inst->shader_program, "u_wireframeColor");
+	inst->u_flatShading_loc = glGetUniformLocation(inst->shader_program, "u_flatShading");
 
 	LOG_DEBUGF("renderer", "Qt instance shader uniforms cached");
 
@@ -1667,6 +1680,19 @@ r_qt_instance_t* r_qt_create_instance(void) {
 	inst->current_skin_family = 0;
 	inst->num_ranges = 0;
 	inst->total_render_vertices = 0;
+
+	// Initialize lighting parameters
+	inst->lighting_enabled = true;
+	inst->light_pos[0] = 5.0f;
+	inst->light_pos[1] = 8.0f;
+	inst->light_pos[2] = 5.0f;
+	inst->light_color[0] = 1.0f;
+	inst->light_color[1] = 1.0f;
+	inst->light_color[2] = 1.0f;
+	inst->ambient_intensity = 0.3f;
+
+	// Initialize flat shading
+	inst->flat_shading = false;
 
 	LOG_DEBUGF("renderer", "Qt viewport instance created successfully");
 
@@ -2112,6 +2138,15 @@ void r_qt_render_with_matrices(
 		}
 	}
 
+	// Apply bone controllers (mouth, eyes, etc.) on top of base pose
+	if (inst->header && inst->data && inst->header->numbonecontrollers > 0) {
+		mdl_bonecontrollers_state_t ctrl_state;
+		for (int i = 0; i < 6; i++) {
+			ctrl_state.values[i] = inst->controller_values[i];
+		}
+		mdl_bonecontroller_apply(&ctrl_state, inst->header, inst->data, inst->bone_transformations);
+	}
+
 	// Activate shader
 	glUseProgram(inst->shader_program);
 
@@ -2132,10 +2167,31 @@ void r_qt_render_with_matrices(
 		glUniformMatrix4fv(inst->u_proj_loc, 1, GL_FALSE, (const float *)proj);
 	}
 
-	// Set lighting
-	vec3 lightPos = {5.0f, 8.0f, 5.0f};
+	// Set lighting from instance parameters
 	if (inst->u_lightPos_loc != -1) {
-		glUniform3fv(inst->u_lightPos_loc, 1, (const float *)lightPos);
+		glUniform3fv(inst->u_lightPos_loc, 1, inst->light_pos);
+	}
+	if (inst->u_lightColor_loc != -1) {
+		glUniform3fv(inst->u_lightColor_loc, 1, inst->light_color);
+	}
+	if (inst->u_ambientIntensity_loc != -1) {
+		glUniform1f(inst->u_ambientIntensity_loc, inst->ambient_intensity);
+	}
+	if (inst->u_lightingEnabled_loc != -1) {
+		glUniform1i(inst->u_lightingEnabled_loc, inst->lighting_enabled ? 1 : 0);
+	}
+
+	// Set wireframe overlay uniforms
+	if (inst->u_wireframeOverlay_loc != -1) {
+		glUniform1i(inst->u_wireframeOverlay_loc, inst->wireframe_overlay ? 1 : 0);
+	}
+	if (inst->u_wireframeColor_loc != -1) {
+		glUniform3fv(inst->u_wireframeColor_loc, 1, inst->wireframe_color);
+	}
+
+	// Set flat shading uniform
+	if (inst->u_flatShading_loc != -1) {
+		glUniform1i(inst->u_flatShading_loc, inst->flat_shading ? 1 : 0);
 	}
 
 	// Extract camera position from view matrix
@@ -2222,6 +2278,12 @@ void r_qt_set_animation_enabled( r_qt_instance_t *inst, bool enabled ) {
 	inst->animation_enabled = enabled;
 }
 
+void r_qt_set_controller_value( r_qt_instance_t *inst, int controller, float value ) {
+	if ( !inst ) return;
+	if ( controller < 0 || controller > 5 ) return;
+	inst->controller_values[controller] = value;
+}
+
 void r_qt_rebuild_mesh_data( r_qt_instance_t *inst ) {
 	if ( !inst || !inst->header || !inst->data ) return;
 
@@ -2230,4 +2292,45 @@ void r_qt_rebuild_mesh_data( r_qt_instance_t *inst ) {
 	inst->model_processed = false;
 	inst->total_render_vertices = 0;
 	inst->num_ranges = 0;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIGHTING CONTROL
+// ═══════════════════════════════════════════════════════════════════════════
+
+void r_qt_set_lighting_enabled( r_qt_instance_t *inst, bool enabled ) {
+	if ( !inst ) return;
+	inst->lighting_enabled = enabled;
+}
+
+void r_qt_set_light_position( r_qt_instance_t *inst, float x, float y, float z ) {
+	if ( !inst ) return;
+	inst->light_pos[0] = x;
+	inst->light_pos[1] = y;
+	inst->light_pos[2] = z;
+}
+
+void r_qt_set_light_color( r_qt_instance_t *inst, float r, float g, float b ) {
+	if ( !inst ) return;
+	inst->light_color[0] = r;
+	inst->light_color[1] = g;
+	inst->light_color[2] = b;
+}
+
+void r_qt_set_ambient_intensity( r_qt_instance_t *inst, float intensity ) {
+	if ( !inst ) return;
+	inst->ambient_intensity = intensity;
+}
+
+void r_qt_set_wireframe_overlay( r_qt_instance_t *inst, bool enabled, float r, float g, float b ) {
+	if ( !inst ) return;
+	inst->wireframe_overlay = enabled;
+	inst->wireframe_color[0] = r;
+	inst->wireframe_color[1] = g;
+	inst->wireframe_color[2] = b;
+}
+
+void r_qt_set_flat_shading( r_qt_instance_t *inst, bool enabled ) {
+	if ( !inst ) return;
+	inst->flat_shading = enabled;
 }

@@ -98,34 +98,36 @@ void mdl_bonecontroller_apply( const mdl_bonecontrollers_state_t *ctrl_state,
 
 			float angle_rad = angle * MATH_DEG2RAD;
 
+			// Build rotation matrix
 			math_mat4_t rotation;
 			Math_Mat4_Identity( rotation );
 
 			float c = cosf( angle_rad );
 			float s = sinf( angle_rad );
 
-			if ( axis == 0 ) {
+			if ( axis == 0 ) {  // X rotation
 				rotation[1][1] = c;
-				rotation[1][2] = -s;
-				rotation[2][1] = s;
+				rotation[1][2] = s;
+				rotation[2][1] = -s;
 				rotation[2][2] = c;
 			}
-			if ( axis == 1 ) {
+			else if ( axis == 1 ) {  // Y rotation
 				rotation[0][0] = c;
-				rotation[0][2] = s;
-				rotation[2][0] = -s;
+				rotation[0][2] = -s;
+				rotation[2][0] = s;
 				rotation[2][2] = c;
 			}
-
-			if ( axis == 2 ) {
+			else if ( axis == 2 ) {  // Z rotation
 				rotation[0][0] = c;
-				rotation[0][1] = -s;
-				rotation[1][0] = s;
+				rotation[0][1] = s;
+				rotation[1][0] = -s;
 				rotation[1][1] = c;
 			}
 
+			// PRE-multiply: rotation * bone_matrix
+			// This applies the controller rotation in the bone's local coordinate system
 			math_mat4_t result;
-			Math_Mat4_Multiply( bone_matrices[bone_index], rotation, result );
+			Math_Mat4_Multiply( rotation, bone_matrices[bone_index], result );
 
 			Math_Mat4_Copy( result, bone_matrices[bone_index] );
 		}

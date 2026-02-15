@@ -26,6 +26,7 @@ class SequencesPanel;
 class TexturesPanel;
 class BodypartsPanel;
 class BonesPanel;
+class BoneControllersPanel;
 class ModelDisplayPanel;
 class AttachmentsPanel;
 class LightingPanel;
@@ -124,6 +125,7 @@ class MainWindow : public QMainWindow {
 	TexturesPanel *m_texturesPanel;
 	BodypartsPanel *m_bodypartsPanel;
 	BonesPanel *m_bonesPanel;
+	BoneControllersPanel *m_boneControllersPanel;
 	ModelDisplayPanel *m_modelDisplayPanel;
 	AttachmentsPanel *m_attachmentsPanel;
 	LightingPanel *m_lightingPanel;

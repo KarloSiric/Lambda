@@ -71,6 +71,9 @@ typedef struct {
 	bool animation_enabled;
 	double last_frame_time;
 
+	// Bone controller state (mouth, eyes, etc.)
+	float controller_values[6];  // Controller slot values (0-5)
+
 	// Sequence groups
 	mdl_seqgroup_blob_t *seqgroups;
 	int num_seqgroups;
@@ -104,9 +107,28 @@ typedef struct {
 	GLint u_additive_loc;
 	GLint u_chrome_loc;
 	GLint u_boneMatrices_loc;
+	GLint u_lightColor_loc;
+	GLint u_ambientIntensity_loc;
+	GLint u_lightingEnabled_loc;
+	GLint u_wireframeOverlay_loc;
+	GLint u_wireframeColor_loc;
+	GLint u_flatShading_loc;
 
 	// Fallback white texture
 	GLuint white_tex;
+
+	// Lighting parameters (controlled from Qt UI)
+	bool lighting_enabled;
+	float light_pos[3];   // Light position in world space
+	float light_color[3]; // Light color RGB (0-1)
+	float ambient_intensity; // Ambient light intensity (0-1)
+
+	// Wireframe overlay state
+	bool wireframe_overlay;
+	float wireframe_color[3];
+
+	// Flat shading mode
+	bool flat_shading;
 
 } r_qt_instance_t;
 
@@ -216,7 +238,22 @@ void r_qt_set_animation_state(
 // Enable/disable animation for Qt instance
 void r_qt_set_animation_enabled( r_qt_instance_t *inst, bool enabled );
 
+// Set bone controller value (controller 0-5, value in normalized range)
+void r_qt_set_controller_value( r_qt_instance_t *inst, int controller, float value );
+
 // Rebuild mesh data after bodypart changes (triggers re-process on next frame)
 void r_qt_rebuild_mesh_data( r_qt_instance_t *inst );
+
+// Lighting control
+void r_qt_set_lighting_enabled( r_qt_instance_t *inst, bool enabled );
+void r_qt_set_light_position( r_qt_instance_t *inst, float x, float y, float z );
+void r_qt_set_light_color( r_qt_instance_t *inst, float r, float g, float b );
+void r_qt_set_ambient_intensity( r_qt_instance_t *inst, float intensity );
+
+// Wireframe overlay control
+void r_qt_set_wireframe_overlay( r_qt_instance_t *inst, bool enabled, float r, float g, float b );
+
+// Flat shading control
+void r_qt_set_flat_shading( r_qt_instance_t *inst, bool enabled );
 
 #endif

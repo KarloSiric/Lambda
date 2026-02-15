@@ -26,6 +26,7 @@
 #include <QCheckBox>
 #include <QShowEvent>
 #include <QHideEvent>
+#include <QTimer>
 
 class SequencesPanel : public InspectorPanel {
 	Q_OBJECT
@@ -48,7 +49,13 @@ class SequencesPanel : public InspectorPanel {
   private slots:
 	void onPlayClicked();
 	void onStopClicked();
-	void onLoopToggled( bool checked );
+	void onPrevFrameClicked();
+	void onNextFrameClicked();
+	void onPrevFramePressed();
+	void onNextFramePressed();
+	void onFrameButtonReleased();
+	void onFrameRepeatTimer();
+	void onLoopToggled();
 	void onFrameSliderChanged( int value );
 	void onSpeedSliderChanged( int value );
 	void onSequenceRowClicked( int row, int column );
@@ -66,7 +73,9 @@ class SequencesPanel : public InspectorPanel {
 	// Transport controls
 	QPushButton *m_playButton;
 	QPushButton *m_stopButton;
-	QCheckBox *m_loopCheckbox;
+	QPushButton *m_prevFrameButton;
+	QPushButton *m_nextFrameButton;
+	QPushButton *m_loopButton;
 
 	// Frame control
 	QSlider *m_frameSlider;
@@ -86,6 +95,10 @@ class SequencesPanel : public InspectorPanel {
 	bool m_updatingSlider;
 	int m_currentTotalFrames;
 	qint64 m_lastFrameUpdate;  // Throttle frame updates to 30 FPS
+
+	// Press-and-hold frame stepping
+	QTimer *m_frameRepeatTimer;
+	int m_frameStepDirection;  // -1 for prev, +1 for next
 };
 
 #endif // SEQUENCES_PANEL_H

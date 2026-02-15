@@ -30,6 +30,7 @@ class ModelDisplayPanel : public InspectorPanel {
 	explicit ModelDisplayPanel( QWidget *parent = nullptr );
 
 	void refresh() override;
+	void setViewport( ModelViewport *viewport ) override;
 
   signals:
 	// Emitted when any viewport display state changes (for toolbar sync)
@@ -38,11 +39,13 @@ class ModelDisplayPanel : public InspectorPanel {
   private slots:
 	// Render toggles
 	void onWireframeToggled( bool checked );
+	void onWireframeOverlayToggled( bool checked );
 	void onShowGridToggled( bool checked );
 	void onShowGroundToggled( bool checked );
 	void onShowAxesToggled( bool checked );
 	void onShowBonesToggled( bool checked );
 	void onShowHitboxesToggled( bool checked );
+	void onFlatShadingToggled( bool checked );
 
 	// Rotation controls
 	void onRotationXChanged( int value );
@@ -61,6 +64,7 @@ class ModelDisplayPanel : public InspectorPanel {
 	// Camera controls
 	void onFovChanged( int value );
 	void onDistanceChanged( double value );
+	void onCameraDistanceChanged( float distance );  // Responds to viewport zoom changes
 	void onWeaponOriginToggled( bool checked );
 	void onResetCameraClicked();
 	void onCenterModelClicked();
@@ -74,11 +78,13 @@ class ModelDisplayPanel : public InspectorPanel {
 
 	// Render toggle checkboxes
 	QCheckBox *m_wireframeCheck;
+	QCheckBox *m_wireframeOverlayCheck;
 	QCheckBox *m_showGridCheck;
 	QCheckBox *m_showGroundCheck;
 	QCheckBox *m_showAxesCheck;
 	QCheckBox *m_showBonesCheck;
 	QCheckBox *m_showHitboxesCheck;
+	QCheckBox *m_flatShadingCheck;
 
 	// Rotation controls
 	QSlider *m_rotationXSlider;

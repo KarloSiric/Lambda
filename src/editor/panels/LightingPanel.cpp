@@ -344,9 +344,9 @@ void LightingPanel::onChromeToggled( bool enabled ) {
 }
 
 void LightingPanel::onResetLightingClicked() {
-	// Reset to defaults
+	// Reset to defaults - full ambient for proper visibility (like HLMV)
 	m_lightingEnabled->setChecked( true );
-	m_ambientSlider->setValue( 20 );
+	m_ambientSlider->setValue( 100 );  // Full ambient
 	m_lightDirXSlider->setValue( 0 );
 	m_lightDirYSlider->setValue( 0 );
 	m_lightDirZSlider->setValue( -100 );

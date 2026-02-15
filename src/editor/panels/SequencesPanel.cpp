@@ -20,7 +20,9 @@ SequencesPanel::SequencesPanel( QWidget *parent )
     : InspectorPanel( parent )
     , m_playButton( nullptr )
     , m_stopButton( nullptr )
-    , m_loopCheckbox( nullptr )
+    , m_prevFrameButton( nullptr )
+    , m_nextFrameButton( nullptr )
+    , m_loopButton( nullptr )
     , m_frameSlider( nullptr )
     , m_frameLabel( nullptr )
     , m_speedSlider( nullptr )
@@ -29,8 +31,15 @@ SequencesPanel::SequencesPanel( QWidget *parent )
     , m_infoLabel( nullptr )
     , m_updatingSlider( false )
     , m_currentTotalFrames( 0 )
-    , m_lastFrameUpdate( 0 ) {
+    , m_lastFrameUpdate( 0 )
+    , m_frameRepeatTimer( nullptr )
+    , m_frameStepDirection( 0 ) {
 	setupUI();
+
+	// Setup frame repeat timer for press-and-hold
+	m_frameRepeatTimer = new QTimer( this );
+	m_frameRepeatTimer->setInterval( 50 );  // Repeat every 50ms while held
+	connect( m_frameRepeatTimer, &QTimer::timeout, this, &SequencesPanel::onFrameRepeatTimer );
 }
 
 void SequencesPanel::setupUI() {
@@ -38,28 +47,96 @@ void SequencesPanel::setupUI() {
 	contentLayout->setContentsMargins( 4, 4, 4, 4 );
 	contentLayout->setSpacing( 8 );
 
-	// Transport controls row
+	// Transport controls row with icon buttons
 	QHBoxLayout *transportLayout = new QHBoxLayout();
-	transportLayout->setSpacing( 4 );
+	transportLayout->setSpacing( 2 );
 
-	m_playButton = new QPushButton( "Play", m_contentWidget );
-	m_playButton->setFixedWidth( 60 );
-	m_playButton->setToolTip( "Play/pause the current animation sequence (Space)" );
+	// Classic 90s Windows button style for transport controls
+	QString transportButtonStyle =
+	    "QPushButton {"
+	    "    background-color: #c0c0c0;"
+	    "    border: 2px outset;"
+	    "    border-top-color: #ffffff;"
+	    "    border-left-color: #ffffff;"
+	    "    border-right-color: #808080;"
+	    "    border-bottom-color: #808080;"
+	    "    padding: 2px;"
+	    "    min-width: 28px;"
+	    "    min-height: 24px;"
+	    "}"
+	    "QPushButton:pressed {"
+	    "    border: 2px inset;"
+	    "    border-top-color: #808080;"
+	    "    border-left-color: #808080;"
+	    "    border-right-color: #ffffff;"
+	    "    border-bottom-color: #ffffff;"
+	    "}"
+	    "QPushButton:checked {"
+	    "    background-color: #a0a0a0;"
+	    "    border: 2px inset;"
+	    "    border-top-color: #808080;"
+	    "    border-left-color: #808080;"
+	    "    border-right-color: #ffffff;"
+	    "    border-bottom-color: #ffffff;"
+	    "}";
+
+	// Previous frame button (supports press-and-hold)
+	m_prevFrameButton = new QPushButton( m_contentWidget );
+	m_prevFrameButton->setIcon( QIcon( ":/icons/previous-frame-icon.png" ) );
+	m_prevFrameButton->setIconSize( QSize( 18, 18 ) );
+	m_prevFrameButton->setFixedSize( 28, 26 );
+	m_prevFrameButton->setStyleSheet( transportButtonStyle );
+	m_prevFrameButton->setToolTip( "Previous frame (hold to repeat)" );
+	m_prevFrameButton->setAutoRepeat( false );  // We handle repeat manually
+	connect( m_prevFrameButton, &QPushButton::pressed, this, &SequencesPanel::onPrevFramePressed );
+	connect( m_prevFrameButton, &QPushButton::released, this, &SequencesPanel::onFrameButtonReleased );
+
+	// Play/Pause button
+	m_playButton = new QPushButton( m_contentWidget );
+	m_playButton->setIcon( QIcon( ":/icons/play-icon.png" ) );
+	m_playButton->setIconSize( QSize( 18, 18 ) );
+	m_playButton->setFixedSize( 28, 26 );
+	m_playButton->setStyleSheet( transportButtonStyle );
+	m_playButton->setToolTip( "Play/Pause animation (Space)" );
 	connect( m_playButton, &QPushButton::clicked, this, &SequencesPanel::onPlayClicked );
 
-	m_stopButton = new QPushButton( "Stop", m_contentWidget );
-	m_stopButton->setFixedWidth( 60 );
-	m_stopButton->setToolTip( "Stop animation and reset to first frame" );
+	// Stop button
+	m_stopButton = new QPushButton( m_contentWidget );
+	m_stopButton->setIcon( QIcon( ":/icons/stop-icon.png" ) );
+	m_stopButton->setIconSize( QSize( 18, 18 ) );
+	m_stopButton->setFixedSize( 28, 26 );
+	m_stopButton->setStyleSheet( transportButtonStyle );
+	m_stopButton->setToolTip( "Stop and reset to first frame" );
 	connect( m_stopButton, &QPushButton::clicked, this, &SequencesPanel::onStopClicked );
 
-	m_loopCheckbox = new QCheckBox( "Loop", m_contentWidget );
-	m_loopCheckbox->setChecked( true );
-	m_loopCheckbox->setToolTip( "Loop animation when it reaches the end" );
-	connect( m_loopCheckbox, &QCheckBox::toggled, this, &SequencesPanel::onLoopToggled );
+	// Next frame button (supports press-and-hold)
+	m_nextFrameButton = new QPushButton( m_contentWidget );
+	m_nextFrameButton->setIcon( QIcon( ":/icons/next-frame-icon.png" ) );
+	m_nextFrameButton->setIconSize( QSize( 18, 18 ) );
+	m_nextFrameButton->setFixedSize( 28, 26 );
+	m_nextFrameButton->setStyleSheet( transportButtonStyle );
+	m_nextFrameButton->setToolTip( "Next frame (hold to repeat)" );
+	m_nextFrameButton->setAutoRepeat( false );  // We handle repeat manually
+	connect( m_nextFrameButton, &QPushButton::pressed, this, &SequencesPanel::onNextFramePressed );
+	connect( m_nextFrameButton, &QPushButton::released, this, &SequencesPanel::onFrameButtonReleased );
 
+	// Loop toggle button (checkable)
+	m_loopButton = new QPushButton( m_contentWidget );
+	m_loopButton->setIcon( QIcon( ":/icons/loop-icon.png" ) );
+	m_loopButton->setIconSize( QSize( 18, 18 ) );
+	m_loopButton->setFixedSize( 28, 26 );
+	m_loopButton->setCheckable( true );
+	m_loopButton->setChecked( true );
+	m_loopButton->setStyleSheet( transportButtonStyle );
+	m_loopButton->setToolTip( "Loop animation (currently ON)" );
+	connect( m_loopButton, &QPushButton::clicked, this, &SequencesPanel::onLoopToggled );
+
+	transportLayout->addWidget( m_prevFrameButton );
 	transportLayout->addWidget( m_playButton );
 	transportLayout->addWidget( m_stopButton );
-	transportLayout->addWidget( m_loopCheckbox );
+	transportLayout->addWidget( m_nextFrameButton );
+	transportLayout->addSpacing( 8 );
+	transportLayout->addWidget( m_loopButton );
 	transportLayout->addStretch();
 	contentLayout->addLayout( transportLayout );
 
@@ -182,36 +259,6 @@ void SequencesPanel::setupUI() {
 	    "    border-bottom-color: #ffffff;"
 	    "}" );
 	contentLayout->addWidget( m_infoLabel );
-
-	// Style buttons - 90s Windows 95 raised/sunken 3D look
-	QString buttonStyle =
-	    "QPushButton {"
-	    "    background-color: #c0c0c0;"
-	    "    border: 2px solid;"
-	    "    border-top-color: #ffffff;"
-	    "    border-left-color: #ffffff;"
-	    "    border-right-color: #808080;"
-	    "    border-bottom-color: #808080;"
-	    "    color: #000000;"
-	    "    padding: 4px 8px;"
-	    "}"
-	    "QPushButton:pressed {"
-	    "    border-top-color: #808080;"
-	    "    border-left-color: #808080;"
-	    "    border-right-color: #ffffff;"
-	    "    border-bottom-color: #ffffff;"
-	    "}"
-	    "QPushButton:hover {"
-	    "    background-color: #d4d4d4;"
-	    "}"
-	    "QPushButton:disabled {"
-	    "    color: #808080;"
-	    "}";
-	m_playButton->setStyleSheet( buttonStyle );
-	m_stopButton->setStyleSheet( buttonStyle );
-
-	// Style checkbox - 90s style
-	m_loopCheckbox->setStyleSheet( "QCheckBox { color: #000000; }" );
 }
 
 void SequencesPanel::setViewport( ModelViewport *viewport ) {
@@ -294,8 +341,10 @@ void SequencesPanel::refresh() {
 	m_speedSlider->setValue( static_cast<int>( speed * 100 ) );
 	updateSpeedLabel();
 
-	// Update loop checkbox
-	m_loopCheckbox->setChecked( m_viewport->isAnimationLooping() );
+	// Update loop button
+	bool isLooping = m_viewport->isAnimationLooping();
+	m_loopButton->setChecked( isLooping );
+	m_loopButton->setToolTip( isLooping ? "Loop animation (currently ON)" : "Loop animation (currently OFF)" );
 
 	updateTransportButtons();
 	updateFrameLabel();
@@ -333,19 +382,75 @@ void SequencesPanel::onAnimationPlayStateChanged( bool playing ) {
 
 void SequencesPanel::onPlayClicked() {
 	if ( m_viewport ) {
-		m_viewport->playAnimation( true );
+		// Toggle play/pause
+		bool isPlaying = m_viewport->isAnimationPlaying();
+		m_viewport->playAnimation( !isPlaying );
 	}
 }
 
 void SequencesPanel::onStopClicked() {
 	if ( m_viewport ) {
 		m_viewport->playAnimation( false );
+		m_viewport->setAnimationFrame( 0 );  // Reset to first frame
 	}
 }
 
-void SequencesPanel::onLoopToggled( bool checked ) {
-	if ( m_viewport ) {
-		m_viewport->setAnimationLooping( checked );
+void SequencesPanel::onPrevFrameClicked() {
+	if ( !m_viewport ) return;
+
+	// Go back one frame (don't stop animation - let user control that)
+	float currentFrame = m_viewport->getCurrentFrame();
+	float newFrame = currentFrame - 1.0f;
+	if ( newFrame < 0 ) {
+		newFrame = static_cast<float>( m_currentTotalFrames - 1 );
+	}
+	m_viewport->setAnimationFrame( newFrame );
+}
+
+void SequencesPanel::onNextFrameClicked() {
+	if ( !m_viewport ) return;
+
+	// Go forward one frame (don't stop animation - let user control that)
+	float currentFrame = m_viewport->getCurrentFrame();
+	float newFrame = currentFrame + 1.0f;
+	if ( newFrame >= m_currentTotalFrames ) {
+		newFrame = 0;
+	}
+	m_viewport->setAnimationFrame( newFrame );
+}
+
+void SequencesPanel::onPrevFramePressed() {
+	// First frame step + start repeat timer
+	onPrevFrameClicked();
+	m_frameStepDirection = -1;
+	m_frameRepeatTimer->start();
+}
+
+void SequencesPanel::onNextFramePressed() {
+	// First frame step + start repeat timer
+	onNextFrameClicked();
+	m_frameStepDirection = 1;
+	m_frameRepeatTimer->start();
+}
+
+void SequencesPanel::onFrameButtonReleased() {
+	m_frameRepeatTimer->stop();
+	m_frameStepDirection = 0;
+}
+
+void SequencesPanel::onFrameRepeatTimer() {
+	if ( m_frameStepDirection < 0 ) {
+		onPrevFrameClicked();
+	} else if ( m_frameStepDirection > 0 ) {
+		onNextFrameClicked();
+	}
+}
+
+void SequencesPanel::onLoopToggled() {
+	if ( m_viewport && m_loopButton ) {
+		bool isLooping = m_loopButton->isChecked();
+		m_viewport->setAnimationLooping( isLooping );
+		m_loopButton->setToolTip( isLooping ? "Loop animation (currently ON)" : "Loop animation (currently OFF)" );
 	}
 }
 
@@ -420,7 +525,14 @@ void SequencesPanel::updateTransportButtons() {
 	if ( !m_viewport ) return;
 
 	bool playing = m_viewport->isAnimationPlaying();
-	m_playButton->setText( playing ? "Pause" : "Play" );
+	// Update play button icon based on state
+	if ( playing ) {
+		m_playButton->setIcon( QIcon( ":/icons/pause-icon.png" ) );
+		m_playButton->setToolTip( "Pause animation (Space)" );
+	} else {
+		m_playButton->setIcon( QIcon( ":/icons/play-icon.png" ) );
+		m_playButton->setToolTip( "Play animation (Space)" );
+	}
 	m_stopButton->setEnabled( true );
 }
 
@@ -434,6 +546,7 @@ void SequencesPanel::updateInfoBox( int sequenceIndex ) {
 	int frames = m_viewport->getSequenceFrameCount( sequenceIndex );
 	float fps = m_viewport->getSequenceFPS( sequenceIndex );
 	QString activity = m_viewport->getSequenceActivityName( sequenceIndex );
+	int eventCount = m_viewport->getSequenceEventCount( sequenceIndex );
 
 	QString info = QString( "<b>%1</b>: %2 frames at %3 FPS" )
 	                   .arg( name )
@@ -442,6 +555,34 @@ void SequencesPanel::updateInfoBox( int sequenceIndex ) {
 
 	if ( !activity.isEmpty() ) {
 		info += QString( "<br>Activity: %1" ).arg( activity );
+	}
+
+	// Show events if any
+	if ( eventCount > 0 ) {
+		info += QString( "<br><br><b>Events (%1):</b>" ).arg( eventCount );
+		for ( int i = 0; i < eventCount && i < 8; i++ ) {  // Limit to 8 for display
+			int frame = m_viewport->getSequenceEventFrame( sequenceIndex, i );
+			int code = m_viewport->getSequenceEventCode( sequenceIndex, i );
+			QString options = m_viewport->getSequenceEventOptions( sequenceIndex, i );
+
+			// Format event code description
+			QString codeDesc;
+			if ( code >= 5000 && code <= 5099 ) {
+				codeDesc = "Sound";  // 5000-5099 are typically sound events
+			} else if ( code >= 1000 && code <= 1999 ) {
+				codeDesc = "Script";
+			} else {
+				codeDesc = QString::number( code );
+			}
+
+			info += QString( "<br>  Frame %1: %2" ).arg( frame ).arg( codeDesc );
+			if ( !options.isEmpty() ) {
+				info += QString( " (%1)" ).arg( options );
+			}
+		}
+		if ( eventCount > 8 ) {
+			info += QString( "<br>  ... and %1 more" ).arg( eventCount - 8 );
+		}
 	}
 
 	m_infoLabel->setText( info );

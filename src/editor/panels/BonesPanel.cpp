@@ -135,6 +135,23 @@ void BonesPanel::onBoneSelected( QTreeWidgetItem *item, int column ) {
 		info += "<br>Parent: None (root bone)";
 	}
 
+	// Count children
+	int childCount = item->childCount();
+	if ( childCount > 0 ) {
+		info += QString( "<br>Children: %1" ).arg( childCount );
+	}
+
+	// Build hierarchy path
+	QStringList path;
+	QTreeWidgetItem *current = item;
+	while ( current ) {
+		path.prepend( current->text( 0 ) );
+		current = current->parent();
+	}
+	if ( path.size() > 1 ) {
+		info += QString( "<br><small>Path: %1</small>" ).arg( path.join( " → " ) );
+	}
+
 	m_infoLabel->setText( info );
 }
 
@@ -174,6 +191,16 @@ void BonesPanel::buildBoneTree() {
 				// Parent not found, add as root (shouldn't happen in valid MDL)
 				m_boneTree->addTopLevelItem( boneItems[i] );
 			}
+		}
+	}
+
+	// Third pass: update display to show child counts for non-leaf nodes
+	for ( int i = 0; i < boneCount; ++i ) {
+		QTreeWidgetItem *item = boneItems[i];
+		int childCount = item->childCount();
+		if ( childCount > 0 ) {
+			QString name = m_viewport->getBoneName( i );
+			item->setText( 0, QString( "%1 (%2)" ).arg( name ).arg( childCount ) );
 		}
 	}
 }

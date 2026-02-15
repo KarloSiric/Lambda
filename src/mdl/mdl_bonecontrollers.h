@@ -44,8 +44,4 @@ void mdl_bonecontroller_apply( const mdl_bonecontrollers_state_t *ctrl_state, co
 
 
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* BONECONTROLLERS_H */

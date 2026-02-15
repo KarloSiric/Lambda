@@ -49,6 +49,7 @@ extern "C" {
 
 #include "mdl_loader.h"
 #include "mdl_animations.h"
+#include "mdl_bonecontrollers.h"
 #include "r_draw.h"
 #include "r_grid.h"
 #include "r_gizmo.h"
@@ -93,21 +94,25 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 
 	// @Note: Rendering toggles - uses C backend r_draw and r_grid API
 	void setWireframeMode( bool enabled );
+	void setWireframeOverlay( bool enabled );
 	void setShowGrid( bool show );
 	void setShowGround( bool show );
 	void setShowAxes( bool show );
 	void setShowBones( bool show );
 	void setShowHitboxes( bool show );
 	void setShowAttachments( bool show );
+	void setFlatShading( bool enabled );
 
 	// Getters for rendering toggles
 	bool isWireframeMode() const { return m_wireframeMode; }
+	bool isWireframeOverlay() const { return m_wireframeOverlay; }
 	bool isShowGrid() const { return m_showGrid; }
 	bool isShowGround() const { return m_showGround; }
 	bool isShowAxes() const { return m_showAxes; }
 	bool isShowBones() const { return m_showBones; }
 	bool isShowHitboxes() const { return m_showHitboxes; }
 	bool isShowAttachments() const { return m_showAttachments; }
+	bool isFlatShading() const { return m_flatShading; }
 
 	// @Note: Camera control - uses C backend r_camera API
 	void resetCamera();
@@ -146,6 +151,14 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	int getMDLVersion() const;
 	int getModelFlags() const;
 	int getControllerCount() const;
+	int getControllerBone( int index ) const;           // Which bone this controller affects
+	int getControllerType( int index ) const;           // Type of motion (X, Y, Z rot/pos, mouth)
+	float getControllerStart( int index ) const;        // Min value
+	float getControllerEnd( int index ) const;          // Max value
+	int getControllerRest( int index ) const;           // Rest position
+	int getControllerIndex( int index ) const;          // Controller slot (0-5)
+	void setControllerValue( int controller, float value );
+	float getControllerValue( int controller ) const;
 	int getSeqGroupCount() const;
 	int getAttachmentCount() const;
 	QString getAttachmentName( int index ) const;
@@ -173,6 +186,10 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	int getSequenceFrameCount( int seqIndex ) const;
 	float getSequenceFPS( int seqIndex ) const;
 	QString getSequenceActivityName( int seqIndex ) const;
+	int getSequenceEventCount( int seqIndex ) const;
+	int getSequenceEventFrame( int seqIndex, int eventIndex ) const;
+	int getSequenceEventCode( int seqIndex, int eventIndex ) const;
+	QString getSequenceEventOptions( int seqIndex, int eventIndex ) const;
 
 	// @Note: Texture info for Textures panel
 	QImage getTextureImage( int index ) const;
@@ -249,6 +266,7 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	void sequenceChanged( int sequenceIndex );
 	void frameChanged( float frame );
 	void animationPlayStateChanged( bool playing );
+	void cameraDistanceChanged( float distance );
   protected:
 	void initializeGL() override;
 	void paintGL() override;
@@ -280,6 +298,7 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 
 	// @Note: Animatons same thing, C backend manages them all
 	mdl_animation_state_t m_animState;
+	mdl_bonecontrollers_state_t m_controllerState;  // Bone controller values (mouth, eyes, etc.)
 	bool m_animationPlaying;
 	bool m_animationLooping;
 	float m_playbackSpeed;
@@ -331,9 +350,11 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	bool m_showGround;
 	bool m_showAxes;
 	bool m_wireframeMode;
+	bool m_wireframeOverlay;
 	bool m_showBones;
 	bool m_showHitboxes;
 	bool m_showAttachments;
+	bool m_flatShading;
 
 	// Skin family selection
 	int m_currentSkinFamily;
@@ -361,6 +382,12 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 
 	// FOV setting
 	float m_fov;
+	float m_savedFov;  // Saved FOV when entering weapon origin mode
+	float m_savedCameraPitch;
+	float m_savedCameraYaw;
+	float m_savedCameraDistance;
+	float m_savedCameraTarget[3];
+	float m_savedModelOffset[3];
 
 	// Weapon origin mode
 	bool m_weaponOriginMode;
@@ -395,5 +422,17 @@ class ModelViewport : public QOpenGLWidget, protected QOpenGLFunctions {
 	bool  rayPlaneIntersect( const float origin[3], const float dir[3],
 	                         const float planeNorm[3], const float planePoint[3],
 	                         float hit[3] ) const;
+
+	// Overlay rendering resources (for bones, hitboxes, attachments)
+	void initOverlayRendering();
+	void cleanupOverlayRendering();
+	GLuint m_overlayShader;
+	GLuint m_boneLineVAO, m_boneLineVBO;
+	GLuint m_bonePointVAO, m_bonePointVBO;
+	GLuint m_hitboxVAO, m_hitboxVBO;
+	GLuint m_attachmentPointVAO, m_attachmentPointVBO;
+	GLuint m_attachmentLineVAO, m_attachmentLineVBO;
+	GLint m_overlayModelLoc, m_overlayViewLoc, m_overlayProjLoc, m_overlayPointSizeLoc;
+	bool m_overlayInitialized;
 };
 #endif

@@ -24,9 +24,9 @@
 // TextureThumbnail - Clean BSP/Quake style thumbnail
 // ============================================================================
 
-static const int THUMB_SIZE = 64;      // Thumbnail image size
+static const int THUMB_SIZE = 96;      // Thumbnail image size (larger for better visibility)
 static const int THUMB_PADDING = 4;    // Padding around image
-static const int TEXT_HEIGHT = 16;     // Height for name text
+static const int TEXT_HEIGHT = 14;     // Height for name text
 static const int WIDGET_WIDTH = THUMB_SIZE + THUMB_PADDING * 2;
 static const int WIDGET_HEIGHT = THUMB_SIZE + THUMB_PADDING * 2 + TEXT_HEIGHT;
 

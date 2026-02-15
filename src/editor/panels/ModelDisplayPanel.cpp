@@ -24,11 +24,13 @@
 ModelDisplayPanel::ModelDisplayPanel( QWidget *parent )
     : InspectorPanel( parent )
     , m_wireframeCheck( nullptr )
+    , m_wireframeOverlayCheck( nullptr )
     , m_showGridCheck( nullptr )
     , m_showGroundCheck( nullptr )
     , m_showAxesCheck( nullptr )
     , m_showBonesCheck( nullptr )
     , m_showHitboxesCheck( nullptr )
+    , m_flatShadingCheck( nullptr )
     , m_rotationXSlider( nullptr )
     , m_rotationYSlider( nullptr )
     , m_rotationZSlider( nullptr )
@@ -169,41 +171,54 @@ void ModelDisplayPanel::setupUI() {
 	// Row 0
 	m_wireframeCheck = new QCheckBox( "Wireframe", renderGroup );
 	m_wireframeCheck->setStyleSheet( checkStyle );
-	m_wireframeCheck->setToolTip( "Render model as wireframe mesh" );
+	m_wireframeCheck->setToolTip( "Render model as wireframe mesh only" );
 	connect( m_wireframeCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onWireframeToggled );
 	renderLayout->addWidget( m_wireframeCheck, 0, 0 );
 
+	m_wireframeOverlayCheck = new QCheckBox( "Wire Overlay", renderGroup );
+	m_wireframeOverlayCheck->setStyleSheet( checkStyle );
+	m_wireframeOverlayCheck->setToolTip( "Overlay wireframe on top of textured model" );
+	connect( m_wireframeOverlayCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onWireframeOverlayToggled );
+	renderLayout->addWidget( m_wireframeOverlayCheck, 0, 1 );
+
+	// Row 1
 	m_showGridCheck = new QCheckBox( "Show Grid", renderGroup );
 	m_showGridCheck->setStyleSheet( checkStyle );
 	m_showGridCheck->setToolTip( "Display reference grid on the floor" );
 	connect( m_showGridCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onShowGridToggled );
-	renderLayout->addWidget( m_showGridCheck, 0, 1 );
+	renderLayout->addWidget( m_showGridCheck, 1, 0 );
 
-	// Row 1
 	m_showGroundCheck = new QCheckBox( "Show Ground", renderGroup );
 	m_showGroundCheck->setStyleSheet( checkStyle );
 	m_showGroundCheck->setToolTip( "Display solid ground plane" );
 	connect( m_showGroundCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onShowGroundToggled );
-	renderLayout->addWidget( m_showGroundCheck, 1, 0 );
+	renderLayout->addWidget( m_showGroundCheck, 1, 1 );
 
+	// Row 2
 	m_showAxesCheck = new QCheckBox( "Show Axes", renderGroup );
 	m_showAxesCheck->setStyleSheet( checkStyle );
 	m_showAxesCheck->setToolTip( "Display XYZ coordinate axes at origin" );
 	connect( m_showAxesCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onShowAxesToggled );
-	renderLayout->addWidget( m_showAxesCheck, 1, 1 );
+	renderLayout->addWidget( m_showAxesCheck, 2, 0 );
 
-	// Row 2
 	m_showBonesCheck = new QCheckBox( "Show Bones", renderGroup );
 	m_showBonesCheck->setStyleSheet( checkStyle );
 	m_showBonesCheck->setToolTip( "Display bone skeleton overlay" );
 	connect( m_showBonesCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onShowBonesToggled );
-	renderLayout->addWidget( m_showBonesCheck, 2, 0 );
+	renderLayout->addWidget( m_showBonesCheck, 2, 1 );
 
+	// Row 3
 	m_showHitboxesCheck = new QCheckBox( "Show Hitboxes", renderGroup );
 	m_showHitboxesCheck->setStyleSheet( checkStyle );
 	m_showHitboxesCheck->setToolTip( "Display hitbox collision volumes" );
 	connect( m_showHitboxesCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onShowHitboxesToggled );
-	renderLayout->addWidget( m_showHitboxesCheck, 2, 1 );
+	renderLayout->addWidget( m_showHitboxesCheck, 3, 0 );
+
+	m_flatShadingCheck = new QCheckBox( "Flat Shading", renderGroup );
+	m_flatShadingCheck->setStyleSheet( checkStyle );
+	m_flatShadingCheck->setToolTip( "Use flat/faceted shading (per-face normals)" );
+	connect( m_flatShadingCheck, &QCheckBox::toggled, this, &ModelDisplayPanel::onFlatShadingToggled );
+	renderLayout->addWidget( m_flatShadingCheck, 3, 1 );
 
 	contentLayout->addWidget( renderGroup );
 
@@ -420,11 +435,13 @@ void ModelDisplayPanel::syncWithViewport() {
 
 	// Block signals to prevent feedback loop
 	m_wireframeCheck->blockSignals( true );
+	m_wireframeOverlayCheck->blockSignals( true );
 	m_showGridCheck->blockSignals( true );
 	m_showGroundCheck->blockSignals( true );
 	m_showAxesCheck->blockSignals( true );
 	m_showBonesCheck->blockSignals( true );
 	m_showHitboxesCheck->blockSignals( true );
+	m_flatShadingCheck->blockSignals( true );
 	m_rotationXSlider->blockSignals( true );
 	m_rotationYSlider->blockSignals( true );
 	m_rotationZSlider->blockSignals( true );
@@ -439,11 +456,13 @@ void ModelDisplayPanel::syncWithViewport() {
 
 	// Sync render toggles
 	m_wireframeCheck->setChecked( m_viewport->isWireframeMode() );
+	m_wireframeOverlayCheck->setChecked( m_viewport->isWireframeOverlay() );
 	m_showGridCheck->setChecked( m_viewport->isShowGrid() );
 	m_showGroundCheck->setChecked( m_viewport->isShowGround() );
 	m_showAxesCheck->setChecked( m_viewport->isShowAxes() );
 	m_showBonesCheck->setChecked( m_viewport->isShowBones() );
 	m_showHitboxesCheck->setChecked( m_viewport->isShowHitboxes() );
+	m_flatShadingCheck->setChecked( m_viewport->isFlatShading() );
 
 	// Sync rotation (convert radians to degrees)
 	m_rotationXSlider->setValue( static_cast<int>( m_viewport->getModelRotationX() * 180.0f / M_PI ) );
@@ -466,11 +485,13 @@ void ModelDisplayPanel::syncWithViewport() {
 
 	// Unblock signals
 	m_wireframeCheck->blockSignals( false );
+	m_wireframeOverlayCheck->blockSignals( false );
 	m_showGridCheck->blockSignals( false );
 	m_showGroundCheck->blockSignals( false );
 	m_showAxesCheck->blockSignals( false );
 	m_showBonesCheck->blockSignals( false );
 	m_showHitboxesCheck->blockSignals( false );
+	m_flatShadingCheck->blockSignals( false );
 	m_rotationXSlider->blockSignals( false );
 	m_rotationYSlider->blockSignals( false );
 	m_rotationZSlider->blockSignals( false );
@@ -491,6 +512,13 @@ void ModelDisplayPanel::syncWithViewport() {
 void ModelDisplayPanel::onWireframeToggled( bool checked ) {
 	if ( m_viewport ) {
 		m_viewport->setWireframeMode( checked );
+		emit viewportStateChanged();
+	}
+}
+
+void ModelDisplayPanel::onWireframeOverlayToggled( bool checked ) {
+	if ( m_viewport ) {
+		m_viewport->setWireframeOverlay( checked );
 		emit viewportStateChanged();
 	}
 }
@@ -526,6 +554,13 @@ void ModelDisplayPanel::onShowBonesToggled( bool checked ) {
 void ModelDisplayPanel::onShowHitboxesToggled( bool checked ) {
 	if ( m_viewport ) {
 		m_viewport->setShowHitboxes( checked );
+		emit viewportStateChanged();
+	}
+}
+
+void ModelDisplayPanel::onFlatShadingToggled( bool checked ) {
+	if ( m_viewport ) {
+		m_viewport->setFlatShading( checked );
 		emit viewportStateChanged();
 	}
 }
@@ -656,4 +691,28 @@ void ModelDisplayPanel::onResetAll() {
 
 	// Sync UI
 	syncWithViewport();
+}
+
+// ============================================================================
+// Viewport override to connect additional signals
+// ============================================================================
+
+void ModelDisplayPanel::setViewport( ModelViewport *viewport ) {
+	// Call base class implementation
+	InspectorPanel::setViewport( viewport );
+
+	// Connect camera distance signal to sync spinner when zooming with mouse wheel
+	if ( m_viewport ) {
+		connect( m_viewport, &ModelViewport::cameraDistanceChanged,
+		         this, &ModelDisplayPanel::onCameraDistanceChanged );
+	}
+}
+
+void ModelDisplayPanel::onCameraDistanceChanged( float distance ) {
+	// Update the distance spinner when the viewport zoom changes (mouse wheel)
+	if ( m_distanceSpin ) {
+		m_distanceSpin->blockSignals( true );
+		m_distanceSpin->setValue( static_cast<double>( distance ) );
+		m_distanceSpin->blockSignals( false );
+	}
 }
