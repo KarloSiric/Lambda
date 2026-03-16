@@ -1,29 +1,128 @@
-Copyright © 2025 Karlo Širić
+# Lambda Model Editor - License
 
-```MIT License
-Permission is hereby granted,
-free of charge,
-to any person obtaining a copy of this software and associated documentation
-files(the “Software”),
-to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish
-,
-distribute, sublicense, and/ or sell copies of the Software,
-and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions :
+This project contains multiple components under different licenses.
 
-The above copyright notice and this permission notice shall be included in
-all copies
-or
-substantial portions of the Software.
+---
 
-THE SOFTWARE IS PROVIDED “AS IS”,
-WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
+## Lambda Model Editor Code
+
+**Copyright (c) 2025 Karlo Siric**
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Valve SDK / Half-Life SDK Components
+
+**Copyright (c) 1996-2002, Valve LLC. All rights reserved.**
+
+This product contains software technology licensed from Id Software, Inc.
+("Id Technology"). Id Technology (c) 1996 Id Software, Inc. All Rights Reserved.
+
+Use, distribution, and modification of this source code and/or resulting
+object code is restricted to non-commercial enhancements to products from
+Valve LLC. All other use, distribution, or modification is prohibited
+without written permission from Valve LLC.
+
+### Affected Files
+
+The following files contain code derived from or based on the Valve SDK:
+
+- `src/studio.h` - Half-Life Studio Model format definitions
+- MDL file format structures and constants
+
+### Usage Restrictions
+
+Per the Valve SDK License:
+- This software may only be used for non-commercial purposes
+- Commercial use requires written permission from Valve LLC
+- Modifications must be enhancements to Valve products
+
+---
+
+## Id Software / Quake Engine Technology
+
+**Copyright (c) 1996 Id Software, Inc. All Rights Reserved.**
+
+The Half-Life engine is built upon technology licensed from Id Software.
+The MDL format and related rendering concepts derive from Id Software's
+Quake engine technology.
+
+---
+
+## Third-Party Libraries
+
+This project uses the following third-party libraries under their respective licenses:
+
+### GLFW
+- License: zlib/libpng
+- Website: https://www.glfw.org/
+- Copyright (c) 2002-2006 Marcus Geelnard
+- Copyright (c) 2006-2019 Camilla Lowy
+
+### GLEW (OpenGL Extension Wrangler)
+- License: Modified BSD / MIT
+- Website: http://glew.sourceforge.net/
+- Copyright (c) 2002-2007, Milan Ikits
+- Copyright (c) 2002-2007, Marcelo E. Magallon
+- Copyright (c) 2002, Lev Povalahev
+
+### cglm
+- License: MIT
+- Website: https://github.com/recp/cglm
+- Copyright (c) 2015 Recep Aslantas
+
+### miniaudio
+- License: Public Domain (Unlicense) or MIT
+- Website: https://miniaud.io/
+- Copyright (c) David Reid
+
+### Qt6 (Editor GUI)
+- License: LGPL v3 / GPL v3 / Commercial
+- Website: https://www.qt.io/
+- Copyright (c) The Qt Company Ltd.
+
+---
+
+## Summary
+
+| Component | License | Commercial Use |
+|-----------|---------|----------------|
+| Lambda Editor Code | MIT | Yes |
+| Valve SDK Components | Valve SDK (Non-Commercial) | No |
+| Id Technology | Id Software License | No |
+| GLFW | zlib/libpng | Yes |
+| GLEW | BSD/MIT | Yes |
+| cglm | MIT | Yes |
+| miniaudio | Public Domain/MIT | Yes |
+| Qt6 | LGPL/GPL/Commercial | Depends |
+
+**Note:** Due to the inclusion of Valve SDK components, the complete application
+is restricted to non-commercial use unless explicit permission is obtained from
+Valve LLC.
+
+---
+
+## Contact
+
+For questions regarding licensing:
+- Lambda Editor: https://github.com/KarloSiric/Lambda
+- Valve SDK: https://developer.valvesoftware.com/
