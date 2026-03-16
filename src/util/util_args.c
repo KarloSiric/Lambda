@@ -244,7 +244,8 @@ void print_usage( const char *program_name ) {
  * @param      argv  The arguments array
  * @param      args  The arguments structure to hold everything that is being parsed
  *
- * @return     { int representing if parsing was successful or not [ 0 or -1 ] }
+ * @return     { int representing if parsing was successful or not [ 0 or 
+ * -1 ] }
  */
 int parse_args( int argc, const char *argv[], app_args_t *args ) {
 	// Initialize with defaults
@@ -333,7 +334,7 @@ int parse_args( int argc, const char *argv[], app_args_t *args ) {
 	}
 
 	// Validate: must have model path if not showing help or version
-	if ( !args->show_help && !args->show_version && args->model_path == NULL ) {
+	if ( !args->show_help && !args->show_version && args->model_path == NULL  ) {
 		fprintf( stderr, "ERROR: No model file specified\n" );
 		fprintf( stderr, "       Use --help for usage information\n" );
 		return ( -1 );
