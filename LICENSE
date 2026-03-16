@@ -1,12 +1,13 @@
-# Lambda Model Editor - License
+Lambda Model Editor - License
+===============================================================================
 
 This project contains multiple components under different licenses.
 
----
 
-## Lambda Model Editor Code
+LAMBDA MODEL EDITOR CODE
+-------------------------------------------------------------------------------
 
-**Copyright (c) 2025 Karlo Siric**
+Copyright (c) 2025 Karlo Siric
 
 MIT License
 
@@ -28,11 +29,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
----
 
-## Valve SDK / Half-Life SDK Components
+VALVE SDK / HALF-LIFE SDK COMPONENTS
+-------------------------------------------------------------------------------
 
-**Copyright (c) 1996-2002, Valve LLC. All rights reserved.**
+Copyright (c) 1996-2002, Valve LLC. All rights reserved.
 
 This product contains software technology licensed from Id Software, Inc.
 ("Id Technology"). Id Technology (c) 1996 Id Software, Inc. All Rights Reserved.
@@ -42,87 +43,81 @@ object code is restricted to non-commercial enhancements to products from
 Valve LLC. All other use, distribution, or modification is prohibited
 without written permission from Valve LLC.
 
-### Affected Files
+Affected Files:
+  - src/studio.h - Half-Life Studio Model format definitions
+  - MDL file format structures and constants
 
-The following files contain code derived from or based on the Valve SDK:
+Usage Restrictions:
+  - This software may only be used for non-commercial purposes
+  - Commercial use requires written permission from Valve LLC
+  - Modifications must be enhancements to Valve products
 
-- `src/studio.h` - Half-Life Studio Model format definitions
-- MDL file format structures and constants
 
-### Usage Restrictions
+ID SOFTWARE / QUAKE ENGINE TECHNOLOGY
+-------------------------------------------------------------------------------
 
-Per the Valve SDK License:
-- This software may only be used for non-commercial purposes
-- Commercial use requires written permission from Valve LLC
-- Modifications must be enhancements to Valve products
-
----
-
-## Id Software / Quake Engine Technology
-
-**Copyright (c) 1996 Id Software, Inc. All Rights Reserved.**
+Copyright (c) 1996 Id Software, Inc. All Rights Reserved.
 
 The Half-Life engine is built upon technology licensed from Id Software.
 The MDL format and related rendering concepts derive from Id Software's
 Quake engine technology.
 
----
 
-## Third-Party Libraries
+THIRD-PARTY LIBRARIES
+-------------------------------------------------------------------------------
 
-This project uses the following third-party libraries under their respective licenses:
+This project uses the following third-party libraries:
 
-### GLFW
-- License: zlib/libpng
-- Website: https://www.glfw.org/
-- Copyright (c) 2002-2006 Marcus Geelnard
-- Copyright (c) 2006-2019 Camilla Lowy
+GLFW
+  License: zlib/libpng
+  Website: https://www.glfw.org/
+  Copyright (c) 2002-2006 Marcus Geelnard
+  Copyright (c) 2006-2019 Camilla Lowy
 
-### GLEW (OpenGL Extension Wrangler)
-- License: Modified BSD / MIT
-- Website: http://glew.sourceforge.net/
-- Copyright (c) 2002-2007, Milan Ikits
-- Copyright (c) 2002-2007, Marcelo E. Magallon
-- Copyright (c) 2002, Lev Povalahev
+GLEW (OpenGL Extension Wrangler)
+  License: Modified BSD / MIT
+  Website: http://glew.sourceforge.net/
+  Copyright (c) 2002-2007, Milan Ikits
+  Copyright (c) 2002-2007, Marcelo E. Magallon
+  Copyright (c) 2002, Lev Povalahev
 
-### cglm
-- License: MIT
-- Website: https://github.com/recp/cglm
-- Copyright (c) 2015 Recep Aslantas
+cglm
+  License: MIT
+  Website: https://github.com/recp/cglm
+  Copyright (c) 2015 Recep Aslantas
 
-### miniaudio
-- License: Public Domain (Unlicense) or MIT
-- Website: https://miniaud.io/
-- Copyright (c) David Reid
+miniaudio
+  License: Public Domain (Unlicense) or MIT
+  Website: https://miniaud.io/
+  Copyright (c) David Reid
 
-### Qt6 (Editor GUI)
-- License: LGPL v3 / GPL v3 / Commercial
-- Website: https://www.qt.io/
-- Copyright (c) The Qt Company Ltd.
+Qt6 (Editor GUI)
+  License: LGPL v3 / GPL v3 / Commercial
+  Website: https://www.qt.io/
+  Copyright (c) The Qt Company Ltd.
 
----
 
-## Summary
+LICENSE SUMMARY
+-------------------------------------------------------------------------------
 
-| Component | License | Commercial Use |
-|-----------|---------|----------------|
-| Lambda Editor Code | MIT | Yes |
-| Valve SDK Components | Valve SDK (Non-Commercial) | No |
-| Id Technology | Id Software License | No |
-| GLFW | zlib/libpng | Yes |
-| GLEW | BSD/MIT | Yes |
-| cglm | MIT | Yes |
-| miniaudio | Public Domain/MIT | Yes |
-| Qt6 | LGPL/GPL/Commercial | Depends |
+Component                    License                      Commercial Use
+---------------------------------------------------------------------------
+Lambda Editor Code           MIT                          Yes
+Valve SDK Components         Valve SDK (Non-Commercial)   No
+Id Technology                Id Software License          No
+GLFW                         zlib/libpng                  Yes
+GLEW                         BSD/MIT                      Yes
+cglm                         MIT                          Yes
+miniaudio                    Public Domain/MIT            Yes
+Qt6                          LGPL/GPL/Commercial          Depends
 
-**Note:** Due to the inclusion of Valve SDK components, the complete application
-is restricted to non-commercial use unless explicit permission is obtained from
-Valve LLC.
+IMPORTANT: Due to the inclusion of Valve SDK components, the complete
+application is restricted to non-commercial use unless explicit permission
+is obtained from Valve LLC.
 
----
 
-## Contact
+CONTACT
+-------------------------------------------------------------------------------
 
-For questions regarding licensing:
-- Lambda Editor: https://github.com/KarloSiric/Lambda
-- Valve SDK: https://developer.valvesoftware.com/
+Lambda Editor: https://github.com/KarloSiric/Lambda
+Valve SDK:     https://developer.valvesoftware.com/
