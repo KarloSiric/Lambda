@@ -6,8 +6,25 @@ Lambda is a cross-platform model viewer and editor for Half-Life 1 (GoldSource e
 
 ---
 
+## Development Status
+
+**Current Version:** v0.7.0-alpha
+
+Lambda is under active development. Core model viewing and animation playback are fully functional. The following features are work-in-progress:
+
+- Model editing capabilities
+- QC decompiler / compiler integration
+- Memory inspection panel
+- Window layout management
+- Some inspector panels (bone controllers values, hitbox editing)
+
+The application is stable for model viewing and inspection. Editing features will be added in future releases.
+
+---
+
 ## Table of Contents
 
+- [Development Status](#development-status)
 - [Overview](#overview)
 - [Features](#features)
 - [Screenshots](#screenshots)
@@ -117,10 +134,12 @@ The project uses official Valve SDK structures (studio.h) and supports the compl
 - **Textures Panel** - Texture viewer with full-size display
 - **Bodyparts Panel** - Bodypart and submodel selection
 - **Bones Panel** - Bone hierarchy viewer
-- **Bone Controllers Panel** - Controller value adjustment
+- **Bone Controllers Panel** - Controller value adjustment (WIP)
 - **Attachments Panel** - Attachment point inspection
 - **Model Display Panel** - Render mode toggles
 - **Lighting Panel** - Lighting configuration
+- **Memory Panel** - Memory inspection (Planned)
+- **Hitboxes Panel** - Hitbox editing (Planned)
 
 #### Additional Widgets
 
@@ -150,17 +169,11 @@ The project uses official Valve SDK structures (studio.h) and supports the compl
 
 ## Screenshots
 
-<!-- Add your screenshots and GIFs here -->
-
 ![Model Viewer Demo](assets/showcase/HL1_ModelViewer_1.gif)
 
 ![Animation Playback](assets/showcase/HL1_ModelViewer_2.gif)
 
-<!-- Additional screenshots
-![Lambda Editor Interface](assets/showcase/editor_main.png)
-![Inspector Panels](assets/showcase/inspector_panels.png)
-![Texture Viewer](assets/showcase/texture_viewer.png)
--->
+Additional screenshots will be added as development progresses.
 
 ---
 
@@ -459,7 +472,7 @@ Lambda/
 +-- CMakeLists.txt             # Build configuration
 +-- CHANGELOG.md               # Version history
 +-- ROADMAP.md                 # Development roadmap
-+-- LICENSE                    # MIT License
++-- LICENSE                    # Project licenses
 ```
 
 ---
@@ -508,33 +521,17 @@ See [ROADMAP.md](ROADMAP.md) for the complete development roadmap.
 
 ## Changelog
 
-### v0.7.0 (Current)
-- Inspector panel with multiple tabs
-- Rotation gizmos and compass
-- Model viewport improvements
+**v0.7.0** (Current) - Inspector panel system, rotation gizmos, compass, viewport improvements
 
-### v0.4.0
-- Audio system with miniaudio
-- Skin family support
-- Sound directory fallback
-- Logger integration
+**v0.4.0** - Audio system, skin families, sound directory fallback
 
-### v0.3.0
-- Complete math library
-- Performance optimizations
-- Animation fixes
+**v0.3.0** - Math library, performance optimizations
 
-### v0.2.0-alpha.1
-- Linux platform support
-- Cross-platform GL handling
+**v0.2.0** - Linux platform support
 
-### v0.1.0-alpha.1
-- Initial release
-- Basic model loading and rendering
-- Animation playback
-- CLI interface
+**v0.1.0** - Initial release with model loading, rendering, animation
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+See [CHANGELOG.md](CHANGELOG.md) for complete version history with all changes.
 
 ---
 
@@ -605,45 +602,21 @@ When reporting bugs, please include:
 
 ## License
 
-Lambda is released under the MIT License.
+This project contains multiple components under different licenses:
 
-```
-Copyright (c) 2025 Karlo Siric
+| Component | License | Commercial Use |
+|-----------|---------|----------------|
+| Lambda Editor Code | MIT | Yes |
+| Valve SDK Components (studio.h) | Valve SDK | Non-commercial only |
+| Id Technology | Id Software | Non-commercial only |
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+**Important:** Due to the inclusion of Valve SDK structures for MDL format support, the complete application is restricted to non-commercial use unless explicit permission is obtained from Valve LLC.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Lambda editor code is Copyright (c) 2025 Karlo Siric under the MIT License.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+Valve SDK components are Copyright (c) 1996-2002 Valve LLC. This product contains software technology licensed from Id Software, Inc.
 
-### Valve SDK License Notice
-
-This project uses structures based on Valve's official Half-Life SDK:
-
-```
-Copyright (c) 1996-2002, Valve LLC. All rights reserved.
-
-This product contains software technology licensed from Id Software, Inc.
-("Id Technology"). Id Technology (c) 1996 Id Software, Inc. All Rights Reserved.
-
-Use, distribution, and modification of this source code and/or resulting
-object code is restricted to non-commercial enhancements to products from
-Valve LLC. All other use, distribution, or modification is prohibited
-without written permission from Valve LLC.
-```
+See [LICENSE](LICENSE) for complete license terms and third-party library attributions.
 
 ---
 
