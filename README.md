@@ -1,6 +1,21 @@
-# Lambda
+<p align="center">
+  <img src="assets/logo/lambda-logo.png" alt="Lambda Logo" width="128" height="128">
+</p>
 
-**A Professional Half-Life Studio Model Viewer and Editor**
+<h1 align="center">Lambda</h1>
+
+<p align="center">
+  <strong>A Professional Half-Life Studio Model Viewer and Editor</strong>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> |
+  <a href="#installation">Installation</a> |
+  <a href="#usage">Usage</a> |
+  <a href="docs/">Documentation</a>
+</p>
+
+---
 
 Lambda is a cross-platform model viewer and editor for Half-Life 1 (GoldSource engine) Studio Models (.mdl). Built with a C backend and Qt6 frontend, it provides professional-grade visualization and inspection tools for Half-Life modding and development.
 
