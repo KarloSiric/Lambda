@@ -184,11 +184,33 @@ The project uses official Valve SDK structures (studio.h) and supports the compl
 
 ## Screenshots
 
-![Model Viewer Demo](assets/showcase/HL1_ModelViewer_1.gif)
+### Demo
 
-![Animation Playback](assets/showcase/HL1_ModelViewer_2.gif)
+![Model Viewing](assets/screens_gifs/Lambda1.gif)
 
-Additional screenshots will be added as development progresses.
+![Animation Playback](assets/screens_gifs/Lambda2.gif)
+
+![Interface Overview](assets/screens_gifs/Lambda3.gif)
+
+### Interface
+
+![Main Editor Window](assets/screens_gifs/screen1.png)
+
+![Model Inspector](assets/screens_gifs/screen4.png)
+
+![Texture Panel](assets/screens_gifs/screen6.png)
+
+![Sequences Panel](assets/screens_gifs/screen10.png)
+
+![Bones Hierarchy](assets/screens_gifs/screen12.png)
+
+![Bodyparts Selection](assets/screens_gifs/screen14.png)
+
+![Lighting Controls](assets/screens_gifs/screen16.png)
+
+![Console Output](assets/screens_gifs/screen20.png)
+
+![File Browser](assets/screens_gifs/screen22.png)
 
 ---
 
